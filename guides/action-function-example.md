@@ -49,7 +49,7 @@ export async function deposit(
   const transactions: TransactionParams[] = [];
 
   // Check and prepare approve transaction if needed
-  await checkToApprove({
+  const approve = await checkToApprove({
       args: {
           account,
           target: TOKEN_ADDRESS,
@@ -61,6 +61,10 @@ export async function deposit(
     }
   );
 
+  if (approve.length > 0) {
+      await notify(`Approving ${ethers.formatEther(amountInWei)} for ${PROTOCOL_ADDRESS} contract by account ${account} ...`);
+  }
+
   // Prepare deposit transaction
   const tx: TransactionParams = {
     target: PROTOCOL_ADDRESS,
@@ -70,10 +74,13 @@ export async function deposit(
       args: [amountInWei, account],
     }),
   };
-  transactions.push(tx);
 
   await notify("Waiting for transaction confirmation...");
 
+  const transactions = [
+      ...approve,
+      tx
+  ];
   // Sign and send transaction
   const result = await sendTransactions({ chainId, account, transactions });
   const depositMessage = result.data[result.data.length - 1];
