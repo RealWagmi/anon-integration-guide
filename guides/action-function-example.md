@@ -46,7 +46,6 @@ export async function deposit(
   await notify("Preparing to deposit tokens...");
 
   const provider = getProvider(chainId);
-  const transactions: TransactionParams[] = [];
 
   // Check and prepare approve transaction if needed
   const approve = await checkToApprove({
@@ -77,7 +76,7 @@ export async function deposit(
 
   await notify("Waiting for transaction confirmation...");
 
-  const transactions = [
+  const transactions: TransactionParams[] = [
       ...approve,
       tx
   ];
