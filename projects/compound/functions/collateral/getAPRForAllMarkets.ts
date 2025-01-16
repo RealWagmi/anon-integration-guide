@@ -1,6 +1,7 @@
 import { FunctionReturn, toResult, getChainFromName, FunctionOptions } from '@heyanon/sdk';
 import { comets, supportedChains } from '../../constants';
 import { cometAbi } from '../../abis/cometAbi';
+import { formatUnits } from 'viem';
 
 interface Props {
     chainName: string;
@@ -12,7 +13,7 @@ export async function getAPRForAllMarkets({ chainName }: Props, { getProvider }:
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Protocol is not supported on ${chainName}`, true);
 
-    const secondsPerYear = 60 * 60 * 24 * 365;
+    const secondsPerYear = 60n * 60n * 24n * 365n;
     const publicClient = getProvider(chainId);
     let APRdata = 'APR data for all Compound markets:';
 
@@ -32,9 +33,8 @@ export async function getAPRForAllMarkets({ chainName }: Props, { getProvider }:
         });
 
         // calculate APR
-        const apr = Number(supplyRate / 10n ** 18n) * secondsPerYear * 100;
-
-        APRdata += `${baseAsset} Market APR: ${apr} (${utilization}% utilization)`;
+        const apr = formatUnits(supplyRate * secondsPerYear * 100n, 18);
+        APRdata += `${baseAsset} Market APR: ${apr} (${formatUnits(utilization, 18)}% utilization)\n`;
     }
 
     return toResult(APRdata);

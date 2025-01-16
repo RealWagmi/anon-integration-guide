@@ -1,6 +1,7 @@
 import { FunctionReturn, toResult, getChainFromName, FunctionOptions } from '@heyanon/sdk';
 import { comets, supportedChains } from '../../constants';
 import { cometAbi } from '../../abis/cometAbi';
+import { formatUnits } from 'viem';
 
 interface Props {
     chainName: string;
@@ -33,8 +34,8 @@ export async function getAPRForMarket({ chainName, baseAsset }: Props, { getProv
     });
 
     // calculate APR
-    const secondsPerYear = 60 * 60 * 24 * 365;
-    const apr = Number(supplyRate / 10n ** 18n) * secondsPerYear * 100;
+    const secondsPerYear = 60n * 60n * 24n * 365n;
+    const apr = formatUnits(supplyRate * secondsPerYear * 100n, 18);
 
-    return toResult(`${baseAsset} Market APR: ${apr} (${utilization}% utilization)`);
+    return toResult(`${baseAsset} Market APR: ${apr} (${formatUnits(utilization, 18)}% utilization)`);
 }
