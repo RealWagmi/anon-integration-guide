@@ -147,10 +147,6 @@ yarn add @heyanon/${MODULE_NAME}
 Example usage will be added here.
 EOF
 
-# Initialize git repository
-echo "Initializing git repository..."
-cd "$BASE_PATH" && git init
-
 # Create functions/example.ts
 echo "Creating functions/example.ts..."
 cat > "$BASE_PATH/functions/example.ts" << EOF
