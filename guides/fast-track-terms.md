@@ -14,7 +14,7 @@ This document outlines the rules and processes for applying for and managing gra
 ### 2. Eligibility
 
 - Developers of eligible protocols are encouraged to submit a pull request (PR) directly to the repository or join the designated group for coordination
-- Protocol developers must also contact Anita (specific contact information provided) to demonstrate their commitment to the integration
+- Protocol developers must fill in the form https://forms.gle/hzyJdW3e5kY4ox8r7 to demonstrate their commitment to the integration
 - Protocol forks are **not qualified** for grants **unless they demonstrate unique functionality** or innovation
 - Recently deployed protocols are eligible and encouraged to apply, provided they meet the general eligibility criteria
 
