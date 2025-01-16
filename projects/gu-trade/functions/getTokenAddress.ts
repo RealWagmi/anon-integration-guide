@@ -48,6 +48,11 @@ export async function getTokenAddress({ input }: Props ): Promise<FunctionReturn
 
     const response = await axios.get<ApiResponse>('https://api.gu.exchange/historical');
 
+    // In case API fails
+    if (!response.data.data || response.data.data.length === 0) {
+        return toResult(`API didn't respond`, true);
+    }
+
     let tokens = isSymbol
         ? response.data.data.filter((tokenData) => tokenData.symbol.toLowerCase() === searchInput.toLowerCase())
         : response.data.data.filter((tokenData) => tokenData.name.toLowerCase() === searchInput.toLowerCase());

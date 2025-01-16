@@ -7,7 +7,7 @@ import {
   	getChainFromName
 } from '@heyanon/sdk';
 import { supportedChains, FACTORY_ADDRESS } from '../constants';
-import { factoryAbi, bondingCurveAbi } from '../abis';
+import { factoryAbi, bondingCurveAbi, guCoinAbi } from '../abis';
 import { getTokenAddress } from './getTokenAddress';
 
 interface Props {
@@ -31,6 +31,8 @@ export async function sellToken(
     // Check wallet connection
 	if (!account) return toResult('Wallet not connected', true);
 
+	await notify('Checking everything...');
+
 	// Validate chain
 	const chainId = getChainFromName(chainName);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
@@ -50,12 +52,25 @@ export async function sellToken(
         abi: factoryAbi,
         functionName: 'gucoins',
         args: [token],
-    });
-	if (!isGuCoin) return toResult('Not a Gu coin', true);
+    }) as boolean;
+	const isLPd = await publicClient.readContract({
+        address: `0x${token}`,
+        abi: guCoinAbi,
+        functionName: 'isLPd',
+        args: [],
+    }) as boolean;
+	if (!isGuCoin || isLPd) return toResult('Cannot buy a token: LPd or not a Gu coin', true);
 	
 	// Validate amount
 	const amountWithDecimals = parseUnits(amount, 18);
 	if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);
+	const balance = await publicClient.readContract({
+        address: `0x${token}`,
+        abi: guCoinAbi,
+        functionName: 'balanceOf',
+        args: [account],
+    }) as bigint;
+	if (balance < amountWithDecimals) return toResult('Amount exeeds your balance', true);
 
 	// Validate slippage
 	if (slippage > 30) return toResult('Slippage too high', true);

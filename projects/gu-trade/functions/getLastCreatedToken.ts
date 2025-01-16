@@ -27,6 +27,10 @@ interface ApiResponse {
 export async function getLastCreatedToken(): Promise<FunctionReturn> {
     const response = await axios.get<ApiResponse>('https://api.gu.exchange/creations');
 
+    if (!response.data.data || response.data.data.length === 0) {
+        return toResult('No tokens found.', true);
+    }
+
     const lastCreated = response.data.data[0];
     const { token, name, symbol } = lastCreated;
 
