@@ -1,12 +1,12 @@
 import { Address } from 'viem';
 import { FunctionReturn, FunctionOptions, toResult, getChainFromName } from '@heyanon/sdk';
-import { getMarketConfigByChainAndToken, MarketBaseAssets, SECONDS_PER_YEAR, supportedChains } from '../constants';
+import { getMarketConfigByChainAndTokenAddress, SECONDS_PER_YEAR, supportedChains, SupprotedChainsType } from '../constants';
 import { cometAbi } from '../abis';
 
 interface Props {
     chainName: string;
     account: Address;
-    token: MarketBaseAssets;
+    tokenAddress: Address;
 }
 
 /**
@@ -17,17 +17,17 @@ interface Props {
  * @docs https://docs.compound.finance/interest-rates/#get-supply-rate
  * @returns
  */
-export async function getLendApr({ chainName, account, token }: Props, { getProvider }: FunctionOptions): Promise<FunctionReturn> {
+export async function getLendApr({ chainName, account, tokenAddress }: Props, { getProvider }: FunctionOptions): Promise<FunctionReturn> {
     // Check wallet connection
     if (!account) return toResult('Wallet not connected', true);
 
     // Validate chain
-    const chainId = getChainFromName(chainName);
+    const chainId = getChainFromName(chainName) as SupprotedChainsType;
     if (!chainId) return toResult('Unsupported chain name: {chainName}', true);
     if (!supportedChains.includes(chainId)) return toResult('Protocol is not supported on \${chainName}', true);
 
     // Get market config for chain and token
-    const marketConfig = getMarketConfigByChainAndToken(chainId, token);
+    const marketConfig = getMarketConfigByChainAndTokenAddress(chainId, tokenAddress);
     if (!marketConfig) return toResult('Market not found', true);
 
     const cometAddress = marketConfig.cometAddress;
@@ -54,6 +54,6 @@ export async function getLendApr({ chainName, account, token }: Props, { getProv
 
         return toResult(supplyAPR.toString());
     } catch (error) {
-        return toResult(`Failed to get supply APR for ${token}`, true);
+        return toResult(`Failed to get supply APR for ${marketConfig.name}`, true);
     }
 }

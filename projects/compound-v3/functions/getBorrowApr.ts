@@ -1,12 +1,12 @@
 import { Address } from 'viem';
 import { FunctionReturn, FunctionOptions, toResult, getChainFromName } from '@heyanon/sdk';
-import { getMarketConfigByChainAndToken, MarketBaseAssets, SECONDS_PER_YEAR, supportedChains } from '../constants';
+import { getMarketConfigByChainAndTokenAddress, SECONDS_PER_YEAR, supportedChains, SupprotedChainsType } from '../constants';
 import { cometAbi } from '../abis/cometAbi';
 
 interface Props {
     chainName: string;
     account: Address;
-    token: MarketBaseAssets;
+    tokenAddress: Address;
 }
 
 /**
@@ -16,17 +16,17 @@ interface Props {
  * @description Get borrow APR for token on specific networ for Compound protocol
  * @docs https://docs.compound.finance/interest-rates/#get-borrow-rate
  */
-export async function getBorrowApr({ chainName, account, token }: Props, { sendTransactions, notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
+export async function getBorrowApr({ chainName, account, tokenAddress }: Props, { sendTransactions, notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
     // Check wallet connection
     if (!account) return toResult('Wallet not connected', true);
 
     // Validate chain
-    const chainId = getChainFromName(chainName);
+    const chainId = getChainFromName(chainName) as SupprotedChainsType;
     if (!chainId) return toResult('Unsupported chain name: {chainName}', true);
     if (!supportedChains.includes(chainId)) return toResult('Protocol is not supported on \${chainName}', true);
 
     // Get market config for chain and token
-    const marketConfig = getMarketConfigByChainAndToken(chainId, token);
+    const marketConfig = getMarketConfigByChainAndTokenAddress(chainId, tokenAddress);
     if (!marketConfig) return toResult('Market not found', true);
 
     const cometAddress = marketConfig.cometAddress;
@@ -53,6 +53,6 @@ export async function getBorrowApr({ chainName, account, token }: Props, { sendT
 
         return toResult(borrowAPR.toString());
     } catch (error) {
-        return toResult(`Failed to get borrow APR for ${token}`, true);
+        return toResult(`Failed to get borrow APR for ${marketConfig.name}`, true);
     }
 }

@@ -14,7 +14,7 @@ const baseProps = [
         description: 'Account address that will execute the transaction',
     },
     {
-        name: 'token',
+        name: 'tokenAddress',
         type: 'string',
         description: 'Address of the token to interact with',
     },
@@ -32,31 +32,19 @@ export const tools: AiTool[] = [
     {
         name: 'getLendApr',
         description: 'Get Lend APR for tokens',
-        required: ['chainName', 'account', 'token'],
+        required: ['chainName', 'account', 'tokenAddress'],
         props: baseProps,
     },
     {
         name: 'getBorrowApr',
         description: 'Get Borrow APR for a tokens',
-        required: ['chainName', 'account', 'token'],
+        required: ['chainName', 'account', 'tokenAddress'],
         props: baseProps,
     },
     {
         name: 'lend',
         description: 'Lend assets into the protocol',
-        required: ['chainName', 'account', 'token', 'lendAmount'],
-        props: [...baseProps, ...lendProp],
-    },
-    {
-        name: 'lendNative',
-        description: 'Lend native asset into the protocol',
-        required: ['chainName', 'account', 'token', 'lendAmount'],
-        props: [...baseProps, ...lendProp],
-    },
-    {
-        name: 'lendUsdtEthereum',
-        description: 'Lend USDT into the protocol on Ethereum',
-        required: ['chainName', 'account', 'token', 'lendAmount'],
+        required: ['chainName', 'account', 'tokenAddress', 'lendAmount'],
         props: [...baseProps, ...lendProp],
     },
 ];

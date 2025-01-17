@@ -1,5 +1,5 @@
-import { ChainId } from '@heyanon/sdk';
-import { Address, parseUnits } from 'viem';
+import { ChainId, NATIVE_ADDRESS, WETH9 } from '@heyanon/sdk';
+import { Address } from 'viem';
 
 export const supportedChains = [ChainId.ETHEREUM, ChainId.ARBITRUM, ChainId.BASE];
 export type SupprotedChainsType = ChainId.ETHEREUM | ChainId.ARBITRUM | ChainId.BASE;
@@ -17,10 +17,10 @@ export enum MarketBaseAssets {
     'wstETH' = 'wstETH',
 }
 
-export const nativeTokens = {
-    [ChainId.ETHEREUM]: 'ETH',
-    [ChainId.ARBITRUM]: 'ETH',
-    [ChainId.BASE]: 'ETH',
+export const nativeTokensAddress: { [chain in SupprotedChainsType]: Address } = {
+    [ChainId.ETHEREUM]: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    [ChainId.ARBITRUM]: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
+    [ChainId.BASE]: '0x4200000000000000000000000000000000000006',
 };
 
 export type MarketConfig = {
@@ -47,7 +47,7 @@ export const MARKETS: { [chain in SupprotedChainsType]: MarketConfig[] } = {
         {
             rewardsAddress: '0x1B0e765F6224C21223AeA2af16c1C46E38885a40',
             bulkerAddress: '0xa397a8C2086C554B531c02E29f3291c9704B00c7',
-            name: 'Compound USDT Etereum',
+            name: 'Compound USDT Ethereum',
             cometAddress: '0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840',
             baseAsset: MarketBaseAssets.USDT,
             baseAssetAddress: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
@@ -56,7 +56,7 @@ export const MARKETS: { [chain in SupprotedChainsType]: MarketConfig[] } = {
         {
             rewardsAddress: '0x1B0e765F6224C21223AeA2af16c1C46E38885a40',
             bulkerAddress: '0xa397a8C2086C554B531c02E29f3291c9704B00c7',
-            name: 'Compound USDS Etereum',
+            name: 'Compound USDS Ethereum',
             cometAddress: '0x5D409e56D886231aDAf00c8775665AD0f9897b56',
             baseAsset: MarketBaseAssets.USDS,
             baseAssetAddress: '0xdC035D45d973E3EC169d2276DDab16f1e407384F',
@@ -65,7 +65,7 @@ export const MARKETS: { [chain in SupprotedChainsType]: MarketConfig[] } = {
         {
             rewardsAddress: '0x1B0e765F6224C21223AeA2af16c1C46E38885a40',
             bulkerAddress: '0xa397a8C2086C554B531c02E29f3291c9704B00c7',
-            name: 'Compound WETH Etereum',
+            name: 'Compound WETH Ethereum',
             cometAddress: '0xA17581A9E3356d9A858b789D68B4d866e593aE94',
             baseAsset: MarketBaseAssets.WETH,
             baseAssetAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
@@ -74,7 +74,7 @@ export const MARKETS: { [chain in SupprotedChainsType]: MarketConfig[] } = {
         {
             rewardsAddress: '0x1B0e765F6224C21223AeA2af16c1C46E38885a40',
             bulkerAddress: '0x2c776041CCFe903071AF44aa147368a9c8EEA518',
-            name: 'Compound wstETH Etereum',
+            name: 'Compound wstETH Ethereum',
             cometAddress: '0x3D0bb1ccaB520A66e607822fC55BC921738fAFE3',
             baseAsset: MarketBaseAssets.wstETH,
             baseAssetAddress: '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
@@ -159,17 +159,22 @@ export const MARKETS: { [chain in SupprotedChainsType]: MarketConfig[] } = {
     ],
 };
 
-export const getMarketConfigByChainAndToken = (chainId: ChainId, token: MarketBaseAssets, withNative = false): MarketConfig => {
-    if (token.toUpperCase() === 'ETH') {
-        return MARKETS[chainId].find((market) => market.baseAsset === MarketBaseAssets.WETH);
+export const getMarketConfigByChainAndTokenAddress = (chainId: SupprotedChainsType, tokenAddress: Address): MarketConfig => {
+    if (NATIVE_ADDRESS === tokenAddress) {
+        return MARKETS[chainId].find((market) => market.baseAssetAddress === WETH9[chainId].address) as MarketConfig;
     }
-    return MARKETS[chainId].find((market) => market?.baseAsset === token.toUpperCase());
+
+    return MARKETS[chainId].find((market) => market.baseAssetAddress === tokenAddress) as MarketConfig;
 };
 
-export const isNativeToken = (chainId: ChainId, token: MarketBaseAssets): boolean => {
-    return token.toUpperCase() === nativeTokens[chainId];
+export const isNativeToken = (tokenAddress: Address): boolean => {
+    return tokenAddress === NATIVE_ADDRESS;
 };
 
-export const isEthereumUsdt = (chainId: ChainId, token: MarketBaseAssets): boolean => {
-    return chainId === ChainId.ETHEREUM && token.toUpperCase() === MarketBaseAssets.USDT;
+export const getWrappedNative = (chainId: Address): boolean => {
+    return WETH9[chainId];
+};
+
+export const isUsdtOnEthereum = (chainId: ChainId, tokenAddress: Address): boolean => {
+    return chainId === ChainId.ETHEREUM && tokenAddress.toUpperCase() === getMarketConfigByChainAndTokenAddress(chainId, tokenAddress).baseAssetAddress.toUpperCase();
 };
