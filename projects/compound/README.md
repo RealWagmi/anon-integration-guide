@@ -29,7 +29,7 @@ Compound III is an EVM compatible protocol that enables supplying of crypto asse
 3. Supplying Collateral Assets
 
 -   "Supply 0.1 ETH in the USDC market in @compound on Ethereum"
--   "Supply 0.001 WBTC in the USDT market in @compound on Optimism"
+-   "Supply 0.001 cbBTC in the USDT market in @compound on Base"
 -   "Supply 1 wstETH in the AERO market in @compound on Base"
 
 4. Borrowing Base Assets
