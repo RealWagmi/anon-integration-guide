@@ -45,7 +45,3 @@ export async function getProtocols({ chainName }: Props): Promise<FunctionReturn
         return toResult(`Unknown error when fetching protocols from Enso API`, true);
     }
 }
-
-const res = await getProtocols({ chainName: 'ethereum' });
-
-console.log(res);

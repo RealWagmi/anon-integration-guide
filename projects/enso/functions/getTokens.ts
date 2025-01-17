@@ -42,7 +42,3 @@ export async function getTokens({ chainName }: Props): Promise<FunctionReturn> {
         return toResult(`Unknown error when fetching tokens from Enso API`, true);
     }
 }
-
-const res = await getTokens({ chainName: 'ethereum' });
-
-console.log(res);
