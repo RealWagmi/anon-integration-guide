@@ -1,0 +1,8 @@
+import { ChainId } from "@heyanon/sdk";
+
+export const supportedChains = [ChainId.BASE];
+
+export const USDC_ADDRESS = "0x833583083e319d110b4cc0337000349499b9a38e";
+export const IONUSDC_ADDRESS = "0xa900A17a49Bc4D442bA7F72c39FA2108865671f0";
+export const WETH_ADDRESS = "0x4200000000000000000000000000000000000006";
+export const IONWETH_ADDRESS = "0x49420311B518f3d0c94e897592014de53831cfA3";
