@@ -1,12 +1,12 @@
 import { Address } from 'viem';
 import { FunctionReturn, FunctionOptions, toResult, getChainFromName } from '@heyanon/sdk';
-import { getMarketConfigByChainAndTokenAddress, SECONDS_PER_YEAR, supportedChains, SupprotedChainsType } from '../constants';
+import { getMarketConfigByChainAndMarketAddress, getMarketConfigByChainAndTokenAddress, SECONDS_PER_YEAR, supportedChains, SupprotedChainsType } from '../constants';
 import { cometAbi } from '../abis';
 
 interface Props {
     chainName: string;
     account: Address;
-    tokenAddress: Address;
+    marketAddress: Address;
 }
 
 /**
@@ -17,7 +17,7 @@ interface Props {
  * @docs https://docs.compound.finance/interest-rates/#get-supply-rate
  * @returns
  */
-export async function getLendApr({ chainName, account, tokenAddress }: Props, { getProvider }: FunctionOptions): Promise<FunctionReturn> {
+export async function getPosition({ chainName, account, marketAddress }: Props, { getProvider }: FunctionOptions): Promise<FunctionReturn> {
     // Check wallet connection
     if (!account) return toResult('Wallet not connected', true);
 
@@ -27,32 +27,22 @@ export async function getLendApr({ chainName, account, tokenAddress }: Props, { 
     if (!supportedChains.includes(chainId)) return toResult('Protocol is not supported on \${chainName}', true);
 
     // Get market config for chain and token
-    const marketConfig = getMarketConfigByChainAndTokenAddress(chainId, tokenAddress);
+    const marketConfig = getMarketConfigByChainAndMarketAddress(chainId, marketAddress);
     if (!marketConfig) return toResult('Market not found', true);
-
-    const cometAddress = marketConfig.cometAddress;
 
     try {
         const provider = getProvider(chainId);
 
-        // https://docs.compound.finance/interest-rates/#get-supply-rate
-        const utilization = await provider.readContract({
-            address: cometAddress,
+        const balanceOf = await provider.readContract({
+            address: marketAddress,
             abi: cometAbi,
-            functionName: 'getUtilization',
+            functionName: 'balanceOf',
+            args: [account],
         });
 
-        // We cannot use multicall for optimization, as getBorrowRate requires current utilization
-        const supplyRate = await provider.readContract({
-            address: cometAddress,
-            abi: cometAbi,
-            functionName: 'getSupplyRate',
-            args: [utilization],
-        });
+        const decimalBalance = Number(balanceOf) / 10 ** marketConfig.baseAssetDecimals;
 
-        const supplyAPR = (Number(supplyRate) / 10 ** 18) * SECONDS_PER_YEAR * 100;
-
-        return toResult(`Lend APR on ${marketConfig.name}: ${supplyAPR.toFixed(2)}%`);
+        return toResult(`Position on ${marketConfig.name}: ${decimalBalance.toFixed(2)}`);
     } catch (error) {
         return toResult(`Failed to get supply APR for ${marketConfig.name}`, true);
     }

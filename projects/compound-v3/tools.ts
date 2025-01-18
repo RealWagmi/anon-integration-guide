@@ -28,6 +28,14 @@ const lendProp = [
     },
 ];
 
+const marketAddressProp = [
+    {
+        name: 'marketAddress',
+        type: 'string',
+        description: 'Market address',
+    },
+];
+
 export const tools: AiTool[] = [
     {
         name: 'getLendApr',
@@ -46,5 +54,17 @@ export const tools: AiTool[] = [
         description: 'Lend assets into the protocol',
         required: ['chainName', 'account', 'tokenAddress', 'lendAmount'],
         props: [...baseProps, ...lendProp],
+    },
+    {
+        name: 'getPosition',
+        description: 'Lend assets into the protocol',
+        required: ['chainName', 'account', 'marketAddress'],
+        props: [...baseProps.slice(2), ...marketAddressProp],
+    },
+    {
+        name: 'getAllPositionsOnChain',
+        description: 'Lend assets into the protocol',
+        required: ['chainName', 'account'],
+        props: [...baseProps.slice(2)],
     },
 ];

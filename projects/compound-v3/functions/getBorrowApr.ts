@@ -51,7 +51,7 @@ export async function getBorrowApr({ chainName, account, tokenAddress }: Props, 
 
         const borrowAPR = (Number(borrowRate) / 10 ** 18) * SECONDS_PER_YEAR * 100;
 
-        return toResult(borrowAPR.toString());
+        return toResult(`Lend APR on ${marketConfig.name}: ${borrowAPR.toFixed(2)}%`);
     } catch (error) {
         return toResult(`Failed to get borrow APR for ${marketConfig.name}`, true);
     }

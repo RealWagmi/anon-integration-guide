@@ -8,6 +8,8 @@ Compound V3 Protocol is a Tier-1 decentrilized lending and borrowing protocols. 
 
 - Lend WETH, ETH, USDC, USDbC, USDC.e, USDT and AERO
 - Query current lending and borrowing APRs
+- Get lend position on chain on specific market
+- Get all lend positions on chain
 
 ## Supported Networks
 
@@ -26,10 +28,15 @@ Compound V3 Protocol is a Tier-1 decentrilized lending and borrowing protocols. 
     - "Deposit 222 USDS in @compound-v3"
 
 2. APR Queries
+
     - "Get lend APR for USDC on Ethereum in @compound-v3"
     - "What is the borrow APR on Base for WETH in @compound-v3"
     - "View supply APR for wstETH from Compound V3"
     - "Check borrow APR for AERO on base on Compound"
+
+3. Position Queries
+    - "Get lend position for USDT on Ethereum in @compound-v3"
+    - "Show all lend position on Arbitrum in @compound-v3"
 
 ## Pain Points Solved
 
@@ -40,9 +47,14 @@ Compound V3 Protocol is a Tier-1 decentrilized lending and borrowing protocols. 
     - Support of all lend assets accross all supproted networks
 
 2. **APR managment**
+
     - The support of all lend APR metrics
     - The support of all borrow APR metrics
     - Real-time APRs
+
+3. **Position managment**
+    - Receive lend position for specific market
+    - Receive lend positions for specific market
 
 ## Installation
 

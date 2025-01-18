@@ -167,6 +167,10 @@ export const getMarketConfigByChainAndTokenAddress = (chainId: SupprotedChainsTy
     return MARKETS[chainId].find((market) => market.baseAssetAddress === tokenAddress) as MarketConfig;
 };
 
+export const getMarketConfigByChainAndMarketAddress = (chainId: SupprotedChainsType, marketAddress: Address): MarketConfig => {
+    return MARKETS[chainId].find((market) => market.cometAddress.toUpperCase() === marketAddress.toUpperCase()) as MarketConfig;
+};
+
 export const isNativeToken = (tokenAddress: Address): boolean => {
     return tokenAddress === NATIVE_ADDRESS;
 };
@@ -177,4 +181,8 @@ export const getWrappedNative = (chainId: Address): boolean => {
 
 export const isUsdtOnEthereum = (chainId: ChainId, tokenAddress: Address): boolean => {
     return chainId === ChainId.ETHEREUM && tokenAddress.toUpperCase() === getMarketConfigByChainAndTokenAddress(chainId, tokenAddress).baseAssetAddress.toUpperCase();
+};
+
+export const getAllMarketsOnChain = (chainId: SupprotedChainsType): MarketConfig[] => {
+    return MARKETS[chainId];
 };
