@@ -3,7 +3,7 @@ import { Address, encodeFunctionData } from "viem";
 import {
     FunctionReturn,
     FunctionOptions,
-    TransactionParams,  // Make sure this is properly imported
+    TransactionParams,  
     toResult,
     getChainFromName
 } from "@heyanon/sdk";
