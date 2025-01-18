@@ -1,0 +1,20 @@
+{
+    "name": "@heyanon/pendle-v2",
+    "version": "1.0.0",
+    "description": "Pendle Finance v2 integration for HeyAnon",
+    "main": "index.ts",
+    "license": "MIT",
+    "scripts": {
+        "build": "tsc",
+        "test": "ts-node test.ts"
+    },
+    "dependencies": {
+        "@heyanon/sdk": "^1.0.0",
+        "viem": "^2.22.9"
+    },
+    "devDependencies": {
+        "@types/node": "^20.0.0",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.0.0"
+    }
+}

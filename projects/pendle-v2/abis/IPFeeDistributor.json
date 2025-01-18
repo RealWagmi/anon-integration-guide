@@ -1,0 +1,65 @@
+{
+  "name": "IPFeeDistributor",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "pool",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "claimReward",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "totalReward",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "pool",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "userInfo",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint128",
+              "name": "firstUnclaimedWeek",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "iter",
+              "type": "uint128"
+            }
+          ],
+          "internalType": "struct UserInfo",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+} 
