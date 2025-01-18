@@ -2,11 +2,16 @@
     "name": "@projects/flatcoin",
     "version": "1.0.0",
     "scripts": {
-        "yarn": "yarn install"
+        "yarn": "yarn install",
+        "build": "tsc",
+        "test": "tsc --noEmit"
     },
     "dependencies": {
         "@heyanon/sdk": "^1.0.4",
         "viem": "^2.22.9"
+    },
+    "devDependencies": {
+        "typescript": "^5.0.0"
     },
     "license": "MIT",
     "engines": {

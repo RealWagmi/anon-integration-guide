@@ -9,14 +9,21 @@ import {
 } from "@heyanon/sdk";
 import { ADDRESSES } from "../constants";
 import { delayedOrderAbi } from "../abis/delayedOrder";
+import { getKeeperFee } from "./getKeeperFee";
 
 interface Props {
-    chainName: string;
-    unitAmount: string;
-    minAmountOut: string;
-    account: Address;
+    chainName: string;      // Network name (BASE)
+    unitAmount: string;     // Amount of UNIT tokens to redeem
+    minAmountOut: string;   // Minimum rETH to receive after fees
+    account: Address;       // User's wallet address
 }
 
+/**
+ * Redeems UNIT tokens for the underlying rETH
+ * @param props - The redemption parameters including UNIT amount and minimum output
+ * @param options - System tools for blockchain interactions
+ * @returns Transaction result
+ */
 export async function redeemUnit(
     { chainName, unitAmount, minAmountOut, account }: Props,
     { sendTransactions, notify, getProvider }: FunctionOptions
@@ -31,10 +38,16 @@ export async function redeemUnit(
     try {
         await notify("Preparing to redeem UNIT tokens...");
         const provider = getProvider(chainId);
-        const transactions: TransactionParams[] = [];
+        
+        // Get keeper fee using the standalone function
+        let keeperFee;
+        try {
+            keeperFee = await getKeeperFee(provider);
+        } catch (feeError) {
+            return toResult("Failed to get keeper fee", true);
+        }
 
-        // Get keeper fee
-        const keeperFee = await getKeeperFee(provider);
+        const transactions: TransactionParams[] = [];
 
         // Prepare redemption transaction
         const tx: TransactionParams = {
@@ -43,29 +56,30 @@ export async function redeemUnit(
                 abi: delayedOrderAbi,
                 functionName: "announceStableWithdraw",
                 args: [
-                    BigInt(unitAmount),
-                    BigInt(minAmountOut),
-                    keeperFee
+                    BigInt(unitAmount),    // Amount of UNIT to redeem
+                    BigInt(minAmountOut),  // Minimum rETH to receive
+                    keeperFee              // Fee for keeper execution
                 ]
             })
         };
 
         transactions.push(tx);
 
+        // Notify user of pending confirmation
         await notify("Waiting for transaction confirmation...");
         
+        // Send transaction and wait for confirmation
         const result = await sendTransactions({ chainId, account, transactions });
         
         return toResult(
             `Successfully announced UNIT redemption order. ${result.data[result.data.length - 1].message}`
         );
     } catch (error) {
-        return toResult(`Error redeeming UNIT: ${error.message}`, true);
+        // Handle any errors that occur during execution
+        const errorMessage = error instanceof Error 
+            ? error.message 
+            : 'An unknown error occurred';
+        return toResult(`Error redeeming UNIT: ${errorMessage}`, true);
     }
 }
 
-// Helper function to get keeper fee
-async function getKeeperFee(provider: any): Promise<bigint> {
-    // Implementation needed
-    return 0n; // Placeholder
-}

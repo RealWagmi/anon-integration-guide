@@ -10,28 +10,51 @@ import {
 } from "@heyanon/sdk";
 import { ADDRESSES } from "../constants";
 import { delayedOrderAbi } from "../abis/delayedOrder";
+import { getKeeperFee } from "./getKeeperFee";
 
 interface Props {
-    chainName: string;
-    marginAmount: string;
-    leverage: string;
-    account: Address;
+    chainName: string;      // Network name (BASE)
+    marginAmount: string;   // Amount of rETH to use as collateral
+    leverage: string;       // Leverage multiplier (2x, 5x, 10x, 15x, 25x)
+    account: Address;       // User's wallet address
 }
 
+/**
+ * Opens a leveraged long position using rETH as collateral
+ * @param props - The position parameters including margin and leverage
+ * @param options - System tools for blockchain interactions
+ * @returns Transaction result
+ */
 export async function openLongPosition(
     { chainName, marginAmount, leverage, account }: Props,
     { sendTransactions, notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
+    // Validate wallet connection
     if (!account) return toResult("Wallet not connected", true);
 
+    // Validate chain
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
+
+    // Validate leverage options
+    const allowedLeverage = ["2", "5", "10", "15", "25"];
+    if (!allowedLeverage.includes(leverage)) {
+        return toResult(`Invalid leverage value. Allowed values: ${allowedLeverage.join(", ")}`, true);
+    }
 
     try {
         await notify("Preparing to open long position...");
         const provider = getProvider(chainId);
-        const transactions: TransactionParams[] = [];
 
+        // Get keeper fee using the standalone function
+        let keeperFee;
+        try {
+            keeperFee = await getKeeperFee(provider);
+        } catch (feeError) {
+            return toResult("Failed to get keeper fee", true);
+        }
+
+        const transactions: TransactionParams[] = [];
         const marginAmountBigInt = BigInt(marginAmount);
 
         // Check and prepare rETH approval if needed
@@ -40,30 +63,27 @@ export async function openLongPosition(
                 account,
                 target: ADDRESSES.RETH_TOKEN as `0x${string}`,
                 spender: ADDRESSES.DELAYED_ORDER as `0x${string}`,
-                amount: marginAmountBigInt  // Now using BigInt
+                amount: marginAmountBigInt
             },
             provider,
             transactions
         });
 
-        // Get keeper fee
-        const keeperFee = await getKeeperFee(provider);
-
-        // Calculate additional size based on leverage
+        // Calculate position size based on leverage
         const additionalSize = marginAmountBigInt * (BigInt(leverage) - 1n);
-        const maxFillPrice = 0n; // Will be determined at execution
+        const maxFillPrice = 0n; // Price will be determined at execution time
 
-        // Prepare open position transaction
+        // Prepare transaction to open position
         const tx: TransactionParams = {
             target: ADDRESSES.DELAYED_ORDER as `0x${string}`,
             data: encodeFunctionData({
                 abi: delayedOrderAbi,
                 functionName: "announceLeverageOpen",
                 args: [
-                    marginAmountBigInt,
-                    additionalSize,
-                    maxFillPrice,
-                    keeperFee
+                    marginAmountBigInt,  // Initial margin amount
+                    additionalSize,      // Additional borrowed amount based on leverage
+                    maxFillPrice,        // Maximum acceptable entry price
+                    keeperFee           // Fee for keeper execution
                 ]
             })
         };
@@ -78,12 +98,10 @@ export async function openLongPosition(
             `Successfully announced leverage position order. ${result.data[result.data.length - 1].message}`
         );
     } catch (error) {
-        return toResult(`Error opening position: ${error.message}`, true);
+        const errorMessage = error instanceof Error 
+            ? error.message 
+            : 'An unknown error occurred';
+        return toResult(`Error opening position: ${errorMessage}`, true);
     }
 }
 
-// Helper function to get keeper fee
-async function getKeeperFee(provider: any): Promise<bigint> {
-    // Implementation needed
-    return 0n; // Placeholder
-}
