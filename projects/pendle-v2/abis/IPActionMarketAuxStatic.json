@@ -1,0 +1,310 @@
+{
+    "name": "IPActionMarketAuxStatic",
+    "abi": [
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "market",
+                    "type": "address"
+                },
+                {
+                    "internalType": "int256",
+                    "name": "netPtOut",
+                    "type": "int256"
+                }
+            ],
+            "name": "calcPriceImpactPY",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "market",
+                    "type": "address"
+                },
+                {
+                    "internalType": "int256",
+                    "name": "netPtOut",
+                    "type": "int256"
+                }
+            ],
+            "name": "calcPriceImpactPt",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "market",
+                    "type": "address"
+                },
+                {
+                    "internalType": "int256",
+                    "name": "netPtOut",
+                    "type": "int256"
+                }
+            ],
+            "name": "calcPriceImpactYt",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "market",
+                    "type": "address"
+                }
+            ],
+            "name": "getMarketState",
+            "outputs": [
+                {
+                    "internalType": "address",
+                    "name": "pt",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "yt",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "sy",
+                    "type": "address"
+                },
+                {
+                    "internalType": "int256",
+                    "name": "impliedYield",
+                    "type": "int256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "marketExchangeRateExcludeFee",
+                    "type": "uint256"
+                },
+                {
+                    "components": [
+                        {
+                            "internalType": "uint256",
+                            "name": "totalPt",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "totalSy",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "totalLp",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "treasury",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "scalarRoot",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "expiry",
+                            "type": "uint256"
+                        }
+                    ],
+                    "internalType": "struct MarketState",
+                    "name": "state",
+                    "type": "tuple"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "market",
+                    "type": "address"
+                },
+                {
+                    "components": [
+                        {
+                            "internalType": "uint256",
+                            "name": "totalPt",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "totalSy",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "totalLp",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "treasury",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "scalarRoot",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "expiry",
+                            "type": "uint256"
+                        }
+                    ],
+                    "internalType": "struct MarketState",
+                    "name": "state",
+                    "type": "tuple"
+                }
+            ],
+            "name": "getTradeExchangeRateExcludeFee",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "market",
+                    "type": "address"
+                },
+                {
+                    "internalType": "int256",
+                    "name": "netPtOut",
+                    "type": "int256"
+                }
+            ],
+            "name": "getTradeExchangeRateIncludeFee",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "market",
+                    "type": "address"
+                }
+            ],
+            "name": "getYieldTokenAndPtRate",
+            "outputs": [
+                {
+                    "internalType": "address",
+                    "name": "yieldToken",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netPtOut",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netYieldTokenOut",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "market",
+                    "type": "address"
+                }
+            ],
+            "name": "getYieldTokenAndYtRate",
+            "outputs": [
+                {
+                    "internalType": "address",
+                    "name": "yieldToken",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netYtOut",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netYieldTokenOut",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "market",
+                    "type": "address"
+                }
+            ],
+            "name": "getLpToSyRate",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        }
+    ]
+} 

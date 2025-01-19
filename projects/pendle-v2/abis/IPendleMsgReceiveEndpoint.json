@@ -1,0 +1,80 @@
+{
+    "name": "IPendleMsgReceiveEndpoint",
+    "abi": [
+        {
+            "inputs": [
+                {
+                    "internalType": "bytes",
+                    "name": "message",
+                    "type": "bytes"
+                }
+            ],
+            "name": "executeMessage",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "dstAddress",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "dstChainId",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "bytes",
+                    "name": "payload",
+                    "type": "bytes"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "estimatedGasAmount",
+                    "type": "uint256"
+                }
+            ],
+            "name": "calcFee",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "fee",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "dstAddress",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "dstChainId",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "bytes",
+                    "name": "payload",
+                    "type": "bytes"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "estimatedGasAmount",
+                    "type": "uint256"
+                }
+            ],
+            "name": "sendMessage",
+            "outputs": [],
+            "stateMutability": "payable",
+            "type": "function"
+        }
+    ]
+} 

@@ -8,41 +8,45 @@ import { supportedChains } from './constants';
 export const tools: AiTool[] = [
     {
         name: 'addLiquidity',
-        description: 'Adds liquidity to a Pendle market by providing multiple tokens',
-        required: ['chainName', 'account', 'marketAddress', 'tokenIn', 'amounts', 'minLpOut'],
+        description: 'Adds liquidity to a Pendle market',
+        required: ['marketAddress', 'syDesired', 'ptDesired', 'blockTime'],
         props: [
-            {
-                name: 'chainName',
-                type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Name of the blockchain network'
-            },
-            {
-                name: 'account',
-                type: 'string',
-                description: 'User\'s wallet address'
-            },
             {
                 name: 'marketAddress',
                 type: 'string',
                 description: 'Address of the Pendle market'
             },
             {
-                name: 'tokenIn',
-                type: 'array',
-                items: { type: 'string' },
-                description: 'Array of token addresses to provide as liquidity'
-            },
-            {
-                name: 'amounts',
-                type: 'array',
-                items: { type: 'string' },
-                description: 'Array of token amounts to provide (in decimal format)'
-            },
-            {
-                name: 'minLpOut',
+                name: 'syDesired',
                 type: 'string',
-                description: 'Minimum LP tokens expected to receive'
+                description: 'Amount of SY desired'
+            },
+            {
+                name: 'ptDesired',
+                type: 'string',
+                description: 'Amount of PT desired'
+            },
+            {
+                name: 'blockTime',
+                type: 'number',
+                description: 'Block time for the transaction'
+            }
+        ]
+    },
+    {
+        name: 'removeLiquidity',
+        description: 'Removes liquidity from a Pendle market',
+        required: ['marketAddress', 'lpToRemove'],
+        props: [
+            {
+                name: 'marketAddress',
+                type: 'string',
+                description: 'Address of the Pendle market'
+            },
+            {
+                name: 'lpToRemove',
+                type: 'string',
+                description: 'Amount of LP to remove'
             }
         ]
     },
@@ -84,6 +88,35 @@ export const tools: AiTool[] = [
                 name: 'marketAddress',
                 type: 'string',
                 description: 'Address of the Pendle market'
+            }
+        ]
+    },
+    {
+        name: 'redeemRewards',
+        description: 'Redeems rewards for a user from the Pendle gauge',
+        required: ['user', 'gaugeAddress'],
+        props: [
+            {
+                name: 'user',
+                type: 'string',
+                description: 'User\'s wallet address'
+            },
+            {
+                name: 'gaugeAddress',
+                type: 'string',
+                description: 'Address of the Pendle gauge'
+            }
+        ]
+    },
+    {
+        name: 'redeemExternalReward',
+        description: 'Redeems external rewards from the Pendle gauge',
+        required: ['gaugeAddress'],
+        props: [
+            {
+                name: 'gaugeAddress',
+                type: 'string',
+                description: 'Address of the Pendle gauge'
             }
         ]
     }
