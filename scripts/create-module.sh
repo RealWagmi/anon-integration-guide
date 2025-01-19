@@ -57,7 +57,7 @@ EOF
 # Create index.ts
 echo "Creating index.ts..."
 cat > "$BASE_PATH/index.ts" << EOF
-import { AdapterExport } from '@heyanon/sdk'';
+import { AdapterExport } from '@heyanon/sdk';
 import { tools } from './tools';
 import * as functions from './functions';
 
