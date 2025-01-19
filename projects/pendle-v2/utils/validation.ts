@@ -1,22 +1,18 @@
-import { ChainId } from '@heyanon/sdk';
-import { Address } from 'viem';
-import { PendleError, ERRORS } from './errors';
-import { supportedChains } from '../constants';
+import { type Address } from 'viem';
+import { ValidationError } from './errors';
 
-export function validateChain(chainId: ChainId): void {
-    if (!supportedChains.includes(chainId)) {
-        throw new PendleError('Chain not supported', ERRORS.INVALID_CHAIN);
+export function validateAddress(address: Address): void {
+    if (!address || address === '0x0000000000000000000000000000000000000000') {
+        throw new ValidationError('Invalid address: zero address');
+    }
+    if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
+        throw new ValidationError('Invalid address format');
     }
 }
 
-export function validateMarket(marketAddress: Address, isExpired: boolean): void {
-    if (isExpired) {
-        throw new PendleError('Market has expired', ERRORS.MARKET_EXPIRED);
-    }
-}
-
-export function validateAmount(amount: bigint, balance: bigint): void {
-    if (amount > balance) {
-        throw new PendleError('Insufficient balance', ERRORS.INSUFFICIENT_BALANCE);
+export function validateChainName(chainName: string): void {
+    const validChains = ['ethereum', 'arbitrum-one', 'sepolia'];
+    if (!validChains.includes(chainName)) {
+        throw new ValidationError(`Invalid chain name: ${chainName}`);
     }
 } 

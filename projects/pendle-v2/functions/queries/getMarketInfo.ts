@@ -1,16 +1,8 @@
 import { type Address } from 'viem';
-import { FunctionReturn, toResult, getChainFromName } from '@heyanon/sdk';
-import { supportedChains, ADDRESSES } from '../../constants';
-import { marketAbi, gaugeControllerAbi, marketFactoryAbi } from '../../abis';
-import { MarketInfo } from '../../types';
-import { handleError, PendleError, ERRORS } from '../../utils/errors';
-import { validateChain, validateMarket } from '../../utils/validation';
+import { type MarketInfo, type GetMarketInfoParams, type Result } from '../../types';
+import { ValidationError } from '../../utils/errors';
+import { validateAddress, validateChainName } from '../../utils/validation';
 import { provider } from '../../utils/provider';
-
-interface Props {
-    chainName: string;
-    marketAddress: Address;
-}
 
 interface RewardData {
     pendlePerSec: bigint;
@@ -19,38 +11,65 @@ interface RewardData {
     incentiveEndsAt: bigint;
 }
 
-export async function getMarketInfo({
-    chainName,
-    marketAddress
-}: Props): Promise<FunctionReturn> {
+export async function getMarketInfo(params: GetMarketInfoParams): Promise<Result<MarketInfo>> {
     try {
-        const chainId = getChainFromName(chainName);
+        const { chainName, marketAddress } = params;
 
-        try {
-            const isExpired = await provider.readContract({
-                address: marketAddress,
-                abi: marketAbi,
-                functionName: 'isExpired'
-            }) as boolean;
+        // Validate inputs
+        validateChainName(chainName);
+        validateAddress(marketAddress);
 
-            const rewardData = await provider.readContract({
-                address: marketAddress,
-                abi: marketAbi,
-                functionName: 'rewardData'
-            }) as RewardData;
+        // Check if market is expired
+        const isExpired = await provider.readContract({
+            address: marketAddress,
+            abi: [{
+                name: 'isExpired',
+                type: 'function',
+                stateMutability: 'view',
+                inputs: [],
+                outputs: [{ type: 'bool' }]
+            }],
+            functionName: 'isExpired',
+            args: []
+        }) as boolean;
 
-            const result = {
+        // Get reward data
+        const rewardData = await provider.readContract({
+            address: marketAddress,
+            abi: [{
+                name: 'rewardData',
+                type: 'function',
+                stateMutability: 'view',
+                inputs: [],
+                outputs: [{
+                    type: 'tuple',
+                    components: [
+                        { name: 'pendlePerSec', type: 'uint256' },
+                        { name: 'accumulatedPendle', type: 'uint256' },
+                        { name: 'lastUpdated', type: 'uint256' },
+                        { name: 'incentiveEndsAt', type: 'uint256' }
+                    ]
+                }]
+            }],
+            functionName: 'rewardData',
+            args: []
+        }) as RewardData;
+
+        return {
+            success: true,
+            data: {
                 isExpired,
-                pendlePerSec: rewardData.pendlePerSec.toString(),
-                accumulatedPendle: rewardData.accumulatedPendle.toString(),
-                lastUpdated: rewardData.lastUpdated.toString(),
-                incentiveEndsAt: rewardData.incentiveEndsAt.toString()
-            };
-            return { success: true, data: JSON.stringify(result) };
-        } catch (error: any) {
-            return { success: false, data: `ERROR: Invalid market address: ${marketAddress}` };
-        }
-    } catch (error: any) {
-        return { success: false, data: `ERROR: ${error.message}` };
+                pendlePerSec: rewardData.pendlePerSec,
+                accumulatedPendle: rewardData.accumulatedPendle,
+                lastUpdated: rewardData.lastUpdated,
+                incentiveEndsAt: rewardData.incentiveEndsAt
+            }
+        };
+    } catch (error) {
+        console.error('Error in getMarketInfo:', error);
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error occurred'
+        };
     }
 } 

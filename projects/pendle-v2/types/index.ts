@@ -1,15 +1,32 @@
-import { Address } from 'viem';
+import { type Address } from 'viem';
 
 export interface MarketInfo {
     isExpired: boolean;
-    pendlePerSec: string;
-    accumulatedPendle: string;
-    lastUpdated: string;
-    incentiveEndsAt: string;
+    pendlePerSec: bigint;
+    accumulatedPendle: bigint;
+    lastUpdated: bigint;
+    incentiveEndsAt: bigint;
 }
 
-export interface TransactionResult {
+export interface GetMarketInfoParams {
+    chainName: string;
+    marketAddress: Address;
+}
+
+export interface ClaimRewardsParams {
+    chainName: string;
+    account: Address;
+    marketAddress: Address;
+}
+
+export interface ClaimRewardsCallbacks {
+    sendTransactions: (params: any) => Promise<any>;
+    notify: (message: string) => Promise<void>;
+    getProvider: () => any;
+}
+
+export interface Result<T> {
     success: boolean;
-    message: string;
-    hash?: string;
+    data?: T;
+    error?: string;
 } 
