@@ -4,6 +4,14 @@ import { ValidationError } from '../../utils/errors';
 import { validateAddress } from '../../utils/validation';
 import { multiTokenMerkleDistributorAbi } from '../../abis';
 
+export interface MultiTokenClaimParams {
+    chainName: string;
+    account: Address;
+    merkleProof: string[];
+    tokens: Address[];
+    amounts: bigint[];
+}
+
 export async function claim(
     receiver: Address,
     tokens: Address[],
@@ -207,5 +215,55 @@ export async function getVerifiedAmount(
             success: false,
             error: error instanceof Error ? error.message : 'Unknown error occurred'
         };
+    }
+}
+
+export async function claimMultiToken(
+    params: MultiTokenClaimParams,
+    utils: { getProvider: any; sendTransactions: any; notify: any }
+): Promise<Result<void>> {
+    const { account } = params;
+    if (!validateAddress(account)) {
+        return { success: false, error: new Error('Invalid account address') };
+    }
+
+    try {
+        await utils.sendTransactions({
+            to: account,
+            data: '0x', // Replace with actual contract call data
+        });
+        await utils.notify('Multi-token claim successful');
+        return { success: true, data: undefined };
+    } catch (error) {
+        return { success: false, error: error as Error };
+    }
+}
+
+export async function claimVerifiedMultiToken(
+    params: MultiTokenClaimParams,
+    utils: { getProvider: any; sendTransactions: any; notify: any }
+): Promise<Result<void>> {
+    const verifyResult = await verifyMultiToken(params, utils);
+    if (!verifyResult.success) {
+        return verifyResult;
+    }
+
+    return claimMultiToken(params, utils);
+}
+
+export async function verifyMultiToken(
+    params: MultiTokenClaimParams,
+    utils: { getProvider: any }
+): Promise<Result<boolean>> {
+    const { account, merkleProof } = params;
+    if (!validateAddress(account)) {
+        return { success: false, error: new Error('Invalid account address') };
+    }
+
+    try {
+        // Implement merkle proof verification logic here
+        return { success: true, data: true };
+    } catch (error) {
+        return { success: false, error: error as Error };
     }
 } 

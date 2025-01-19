@@ -37,6 +37,8 @@ export const gaugeControllerAbi = require("./IPGaugeController.json").abi;
 export const feeDistributorAbi = require("./IPFeeDistributor.json").abi;
 export const marketFactoryAbi = require("./IPMarketFactory.json").abi;
 export const votingEscrowAbi = require("./IPVotingEscrow.json").abi;
+export const routerAbi = require("./IPRouter.json").abi;
+export const pendleMsgReceiveEndpointAbi = require("./IPendleMsgReceiveEndpoint.json").abi;
 export const pendleGaugeAbi = [
     {
         inputs: [],
@@ -74,6 +76,8 @@ export type { IPGaugeController } from "./types/IPGaugeController";
 export type { IPFeeDistributor } from "./types/IPFeeDistributor";
 export type { IPMarketFactory } from "./types/IPMarketFactory";
 export type { IPVotingEscrow } from "./types/IPVotingEscrow";
+export type { IPRouter } from "./types/IPRouter";
+export type { IPendleMsgReceiveEndpoint } from "./types/IPendleMsgReceiveEndpoint";
 
 // PY Index ABI
 export const pyIndexAbi = [
@@ -524,7 +528,7 @@ export const votingControllerAbi = [
     {
         inputs: [
             { type: 'address[]', name: 'pools' },
-            { type: 'uint64[]', name: 'weights' }
+            { type: 'uint256[]', name: 'weights' }
         ],
         name: 'vote',
         outputs: [],
@@ -539,6 +543,30 @@ export const votingControllerAbi = [
         type: 'function'
     },
     {
+        inputs: [
+            { type: 'uint256', name: 'wTime' },
+            { type: 'address[]', name: 'pools' }
+        ],
+        name: 'getWeekData',
+        outputs: [
+            { type: 'bool', name: 'isEpochFinalized' },
+            { type: 'uint256', name: 'totalVotes' },
+            { type: 'uint256[]', name: 'poolVotes' }
+        ],
+        stateMutability: 'view',
+        type: 'function'
+    },
+    {
+        inputs: [
+            { type: 'address', name: 'pool' },
+            { type: 'uint256', name: 'wTime' }
+        ],
+        name: 'getPoolTotalVoteAt',
+        outputs: [{ type: 'uint256', name: '' }],
+        stateMutability: 'view',
+        type: 'function'
+    },
+    {
         inputs: [],
         name: 'finalizeEpoch',
         outputs: [],
@@ -546,51 +574,17 @@ export const votingControllerAbi = [
         type: 'function'
     },
     {
-        inputs: [{ type: 'uint64', name: 'chainId' }],
-        name: 'broadcastResults',
-        outputs: [],
-        stateMutability: 'payable',
-        type: 'function'
-    },
-    {
-        inputs: [
-            { type: 'uint64', name: 'chainId' },
-            { type: 'address', name: 'pool' }
-        ],
-        name: 'addPool',
-        outputs: [],
-        stateMutability: 'nonpayable',
-        type: 'function'
-    },
-    {
-        inputs: [
-            { type: 'uint64[]', name: 'chainIds' },
-            { type: 'address[]', name: 'pools' }
-        ],
-        name: 'addMultiPools',
-        outputs: [],
-        stateMutability: 'nonpayable',
-        type: 'function'
-    },
-    {
-        inputs: [{ type: 'address', name: 'pool' }],
-        name: 'removePool',
-        outputs: [],
-        stateMutability: 'nonpayable',
-        type: 'function'
-    },
-    {
-        inputs: [{ type: 'uint128', name: 'newPendlePerSec' }],
-        name: 'setPendlePerSec',
-        outputs: [],
-        stateMutability: 'nonpayable',
-        type: 'function'
-    },
-    {
-        inputs: [{ type: 'uint64', name: 'chainId' }],
+        inputs: [{ type: 'uint256', name: 'chainId' }],
         name: 'getBroadcastResultFee',
         outputs: [{ type: 'uint256', name: '' }],
         stateMutability: 'view',
+        type: 'function'
+    },
+    {
+        inputs: [{ type: 'uint256', name: 'chainId' }],
+        name: 'broadcastResults',
+        outputs: [],
+        stateMutability: 'payable',
         type: 'function'
     }
 ] as const;
@@ -1117,4 +1111,159 @@ export const actionAddRemoveLiqV3Abi = [
         stateMutability: 'nonpayable',
         type: 'function'
     }
+] as const;
+
+export const yieldTokenAbi = [
+    {
+        inputs: [
+            { name: 'receiverPT', type: 'address' },
+            { name: 'receiverYT', type: 'address' }
+        ],
+        name: 'mintPY',
+        outputs: [{ name: 'amountPYOut', type: 'uint256' }],
+        stateMutability: 'nonpayable',
+        type: 'function'
+    },
+    {
+        inputs: [{ name: 'receiver', type: 'address' }],
+        name: 'redeemPY',
+        outputs: [{ name: 'amountSyOut', type: 'uint256' }],
+        stateMutability: 'nonpayable',
+        type: 'function'
+    },
+    {
+        inputs: [
+            { name: 'receivers', type: 'address[]' },
+            { name: 'amountPYToRedeems', type: 'uint256[]' }
+        ],
+        name: 'redeemPYMulti',
+        outputs: [{ name: 'amountSyOuts', type: 'uint256[]' }],
+        stateMutability: 'nonpayable',
+        type: 'function'
+    },
+    {
+        inputs: [
+            { name: 'user', type: 'address' },
+            { name: 'redeemInterest', type: 'bool' },
+            { name: 'redeemRewards', type: 'bool' }
+        ],
+        name: 'redeemDueInterestAndRewards',
+        outputs: [
+            { name: 'interestOut', type: 'uint256' },
+            { name: 'rewardsOut', type: 'uint256[]' }
+        ],
+        stateMutability: 'nonpayable',
+        type: 'function'
+    }
+] as const;
+
+export const standardizedYieldAbi = [
+  {
+    name: 'deposit',
+    type: 'function',
+    stateMutability: 'payable',
+    inputs: [
+      { name: 'receiver', type: 'address' },
+      { name: 'tokenIn', type: 'address' },
+      { name: 'amountTokenToDeposit', type: 'uint256' },
+      { name: 'minSharesOut', type: 'uint256' }
+    ],
+    outputs: [{ name: 'amountSharesOut', type: 'uint256' }]
+  },
+  {
+    name: 'redeem',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'receiver', type: 'address' },
+      { name: 'amountSharesToRedeem', type: 'uint256' },
+      { name: 'tokenOut', type: 'address' },
+      { name: 'minTokenOut', type: 'uint256' },
+      { name: 'burnFromInternalBalance', type: 'bool' }
+    ],
+    outputs: [{ name: 'amountTokenOut', type: 'uint256' }]
+  },
+  {
+    name: 'exchangeRate',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: 'res', type: 'uint256' }]
+  },
+  {
+    name: 'claimRewards',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'user', type: 'address' }],
+    outputs: [{ name: 'rewardAmounts', type: 'uint256[]' }]
+  },
+  {
+    name: 'accruedRewards',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'user', type: 'address' }],
+    outputs: [{ name: 'rewardAmounts', type: 'uint256[]' }]
+  },
+  {
+    name: 'getRewardTokens',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'address[]' }]
+  },
+  {
+    name: 'yieldToken',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'address' }]
+  },
+  {
+    name: 'getTokensIn',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: 'res', type: 'address[]' }]
+  },
+  {
+    name: 'getTokensOut',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: 'res', type: 'address[]' }]
+  },
+  {
+    name: 'isValidTokenIn',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'token', type: 'address' }],
+    outputs: [{ name: '', type: 'bool' }]
+  },
+  {
+    name: 'isValidTokenOut',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'token', type: 'address' }],
+    outputs: [{ name: '', type: 'bool' }]
+  },
+  {
+    name: 'previewDeposit',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'tokenIn', type: 'address' },
+      { name: 'amountTokenToDeposit', type: 'uint256' }
+    ],
+    outputs: [{ name: 'amountSharesOut', type: 'uint256' }]
+  },
+  {
+    name: 'previewRedeem',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'tokenOut', type: 'address' },
+      { name: 'amountSharesToRedeem', type: 'uint256' }
+    ],
+    outputs: [{ name: 'amountTokenOut', type: 'uint256' }]
+  }
 ] as const; 

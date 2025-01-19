@@ -4,36 +4,42 @@ import { ValidationError } from '../../utils/errors';
 import { validateAddress } from '../../utils/validation';
 import { votingControllerAbi } from '../../abis';
 
-export async function vote(
-    pools: Address[],
-    weights: string[],
-    { sendTransactions, notify, getProvider }: { sendTransactions: Function, notify: Function, getProvider: Function }
-): Promise<Result<boolean>> {
-    try {
-        pools.forEach(validateAddress);
+export interface WeekData {
+    isEpochFinalized: boolean;
+    totalVotes: string;
+    poolVotes: string[];
+}
 
-        if (pools.length !== weights.length) {
-            throw new ValidationError('Array lengths must match');
+export interface VoteParams {
+    pools: Address[];
+    weights: number[];
+}
+
+export async function vote(
+    params: VoteParams,
+    { getProvider, sendTransactions, notify }: { getProvider: Function; sendTransactions: Function; notify: Function }
+): Promise<Result<void>> {
+    try {
+        // Validate all pool addresses
+        params.pools.forEach(validateAddress);
+
+        // Validate weights sum to 100%
+        const totalWeight = params.weights.reduce((a, b) => a + b, 0);
+        if (totalWeight !== 100) {
+            throw new ValidationError('Vote weights must sum to 100');
         }
 
-        // Prepare transaction
-        await notify('Preparing to vote...');
-        const tx = {
-            target: 'votingController',
-            data: {
-                abi: votingControllerAbi,
-                functionName: 'vote',
-                args: [pools, weights]
-            }
+        const provider = getProvider();
+        const txParams = {
+            abi: votingControllerAbi,
+            functionName: 'vote',
+            args: [params.pools, params.weights]
         };
 
-        await notify('Waiting for transaction confirmation...');
-        await sendTransactions({ transactions: [tx] });
+        await sendTransactions({ params: txParams });
+        await notify('Successfully submitted votes');
 
-        return {
-            success: true,
-            data: true
-        };
+        return { success: true };
     } catch (error) {
         return {
             success: false,
@@ -44,28 +50,82 @@ export async function vote(
 
 export async function applyPoolSlopeChanges(
     pool: Address,
-    { sendTransactions, notify, getProvider }: { sendTransactions: Function, notify: Function, getProvider: Function }
-): Promise<Result<boolean>> {
+    { getProvider, sendTransactions, notify }: { getProvider: Function; sendTransactions: Function; notify: Function }
+): Promise<Result<void>> {
     try {
         validateAddress(pool);
 
-        // Prepare transaction
-        await notify('Preparing to apply pool slope changes...');
-        const tx = {
-            target: 'votingController',
-            data: {
-                abi: votingControllerAbi,
-                functionName: 'applyPoolSlopeChanges',
-                args: [pool]
-            }
+        const provider = getProvider();
+        const txParams = {
+            abi: votingControllerAbi,
+            functionName: 'applyPoolSlopeChanges',
+            args: [pool]
         };
 
-        await notify('Waiting for transaction confirmation...');
-        await sendTransactions({ transactions: [tx] });
+        await sendTransactions({ params: txParams });
+        await notify('Successfully applied pool slope changes');
 
+        return { success: true };
+    } catch (error) {
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error occurred'
+        };
+    }
+}
+
+export async function getWeekData(
+    wTime: number,
+    pools: Address[],
+    { getProvider }: { getProvider: Function }
+): Promise<Result<WeekData>> {
+    try {
+        // Validate all pool addresses
+        pools.forEach(validateAddress);
+
+        const provider = getProvider();
+        const params = {
+            abi: votingControllerAbi,
+            functionName: 'getWeekData',
+            args: [wTime, pools]
+        };
+
+        const result = await provider.readContract(params);
         return {
             success: true,
-            data: true
+            data: {
+                isEpochFinalized: result.isEpochFinalized,
+                totalVotes: result.totalVotes.toString(),
+                poolVotes: result.poolVotes.map((vote: bigint) => vote.toString())
+            }
+        };
+    } catch (error) {
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error occurred'
+        };
+    }
+}
+
+export async function getPoolTotalVoteAt(
+    pool: Address,
+    wTime: number,
+    { getProvider }: { getProvider: Function }
+): Promise<Result<string>> {
+    try {
+        validateAddress(pool);
+
+        const provider = getProvider();
+        const params = {
+            abi: votingControllerAbi,
+            functionName: 'getPoolTotalVoteAt',
+            args: [pool, wTime]
+        };
+
+        const result = await provider.readContract(params);
+        return {
+            success: true,
+            data: result.toString()
         };
     } catch (error) {
         return {
@@ -76,26 +136,44 @@ export async function applyPoolSlopeChanges(
 }
 
 export async function finalizeEpoch(
-    { sendTransactions, notify, getProvider }: { sendTransactions: Function, notify: Function, getProvider: Function }
-): Promise<Result<boolean>> {
+    { getProvider, sendTransactions, notify }: { getProvider: Function; sendTransactions: Function; notify: Function }
+): Promise<Result<void>> {
     try {
-        // Prepare transaction
-        await notify('Preparing to finalize epoch...');
-        const tx = {
-            target: 'votingController',
-            data: {
-                abi: votingControllerAbi,
-                functionName: 'finalizeEpoch',
-                args: []
-            }
+        const provider = getProvider();
+        const txParams = {
+            abi: votingControllerAbi,
+            functionName: 'finalizeEpoch',
+            args: []
         };
 
-        await notify('Waiting for transaction confirmation...');
-        await sendTransactions({ transactions: [tx] });
+        await sendTransactions({ params: txParams });
+        await notify('Successfully finalized epoch');
 
+        return { success: true };
+    } catch (error) {
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error occurred'
+        };
+    }
+}
+
+export async function getBroadcastResultFee(
+    chainId: number,
+    { getProvider }: { getProvider: Function }
+): Promise<Result<string>> {
+    try {
+        const provider = getProvider();
+        const params = {
+            abi: votingControllerAbi,
+            functionName: 'getBroadcastResultFee',
+            args: [chainId]
+        };
+
+        const result = await provider.readContract(params);
         return {
             success: true,
-            data: true
+            data: result.toString()
         };
     } catch (error) {
         return {
@@ -106,28 +184,29 @@ export async function finalizeEpoch(
 }
 
 export async function broadcastResults(
-    chainId: string,
-    { sendTransactions, notify, getProvider }: { sendTransactions: Function, notify: Function, getProvider: Function }
-): Promise<Result<boolean>> {
+    chainId: number,
+    { getProvider, sendTransactions, notify }: { getProvider: Function; sendTransactions: Function; notify: Function }
+): Promise<Result<void>> {
     try {
-        // Prepare transaction
-        await notify('Preparing to broadcast results...');
-        const tx = {
-            target: 'votingController',
-            data: {
-                abi: votingControllerAbi,
-                functionName: 'broadcastResults',
-                args: [chainId]
-            }
+        const provider = getProvider();
+        
+        // First get the required fee
+        const feeResult = await getBroadcastResultFee(chainId, { getProvider });
+        if (!feeResult.success) {
+            throw new Error(feeResult.error);
+        }
+
+        const txParams = {
+            abi: votingControllerAbi,
+            functionName: 'broadcastResults',
+            args: [chainId],
+            value: feeResult.data
         };
 
-        await notify('Waiting for transaction confirmation...');
-        await sendTransactions({ transactions: [tx] });
+        await sendTransactions({ params: txParams });
+        await notify('Successfully broadcasted results');
 
-        return {
-            success: true,
-            data: true
-        };
+        return { success: true };
     } catch (error) {
         return {
             success: false,
@@ -263,31 +342,6 @@ export async function setPendlePerSec(
         return {
             success: true,
             data: true
-        };
-    } catch (error) {
-        return {
-            success: false,
-            error: error instanceof Error ? error.message : 'Unknown error occurred'
-        };
-    }
-}
-
-export async function getBroadcastResultFee(
-    chainId: string,
-    { getProvider }: { getProvider: Function }
-): Promise<Result<string>> {
-    try {
-        const provider = getProvider();
-        const result = await provider.readContract({
-            address: 'votingController',
-            abi: votingControllerAbi,
-            functionName: 'getBroadcastResultFee',
-            args: [chainId]
-        });
-
-        return {
-            success: true,
-            data: result.toString()
         };
     } catch (error) {
         return {

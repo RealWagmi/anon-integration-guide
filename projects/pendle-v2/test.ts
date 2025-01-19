@@ -1,5 +1,5 @@
 import { type Address } from 'viem';
-import { provider } from './utils/provider';
+import { provider, getProvider, sendTransactions, notify } from './utils/provider';
 import { getMarketInfo } from './functions/queries/getMarketInfo';
 import { claimRewards } from './functions/actions/claimRewards';
 import { redeemRewards } from './functions/actions/redeemRewards';
@@ -48,6 +48,59 @@ import { observe, getOracleState, getObservation } from './functions/queries/mar
 import { claimRetail, claimProtocol, getProtocolClaimables, getProtocolTotalAccrued } from './functions/actions/feeDistributorV2';
 import { fillOrders, cancelBatchOrders, cancelOrder, getOrderStatuses, getDomainSeparator, simulate } from './functions/actions/limitOrder';
 import { addLiquidityDualTokenAndPt, addLiquidityDualSyAndPt, addLiquiditySinglePt, addLiquiditySingleToken, addLiquiditySingleSy, removeLiquidityDualSyAndPt, removeLiquiditySingleToken, removeLiquiditySingleSy } from './functions/actions/actionAddRemoveLiq';
+import {
+    vote,
+    applyPoolSlopeChanges,
+    getWeekData,
+    getPoolTotalVoteAt,
+    finalizeEpoch,
+    getBroadcastResultFee,
+    broadcastResults
+} from './functions/actions/votingController';
+import {
+    fundPendle,
+    withdrawPendle,
+    getPendleAddress,
+    redeemMarketReward,
+    getRewardData
+} from './functions/actions/gaugeController';
+import {
+    mintPY,
+    redeemPY,
+    redeemPYMulti,
+    redeemDueInterestAndRewards
+} from './functions/actions/yieldToken';
+import {
+    deposit,
+    redeem,
+    getExchangeRate,
+    getAccruedRewards,
+    getRewardTokens,
+    getYieldToken,
+    getTokensIn,
+    getTokensOut,
+    isValidTokenIn,
+    isValidTokenOut,
+    previewDeposit,
+    previewRedeem
+} from './functions/actions/standardizedYield';
+import {
+    claim,
+    claimVerified,
+    verify,
+    type ClaimParams
+} from './functions/actions/merkleDistributor';
+import {
+    claimMultiToken,
+    claimVerifiedMultiToken,
+    verifyMultiToken
+} from './functions/actions/multiTokenMerkleDistributor';
+import {
+    swapExactTokenForPt,
+    swapExactSyForPt,
+    swapExactPtForToken
+} from './functions/actions/swapFunctions';
+import { type Result } from './types';
 
 // Add type definitions at the top of the file
 interface AggregatorV3Interface {
@@ -82,6 +135,32 @@ enum ChainId {
     ZKSYNC = 324,
     SEPOLIA = 11155111
 }
+
+interface TransactionParams {
+    transactions: { target: string; data: any; value?: bigint }[];
+}
+
+interface TransactionResult {
+    success: boolean;
+    data: string;
+}
+
+interface TestCallbacks {
+    sendTransactions: (params: TransactionParams) => Promise<TransactionResult>;
+    notify: (message: string) => Promise<void>;
+    getProvider: () => typeof provider;
+}
+
+const mockCallbacks: TestCallbacks = {
+    sendTransactions: async (params: TransactionParams): Promise<TransactionResult> => {
+        console.log('Transaction params:', params);
+        return { success: true, data: 'Transaction successful' };
+    },
+    notify: async (message: string): Promise<void> => {
+        console.log('Notification:', message);
+    },
+    getProvider: () => provider
+};
 
 // Market Core Actions Tests
 async function testMarketCoreActions() {
@@ -273,25 +352,21 @@ async function testMarketInfo(chainName: string, marketAddress: Address) {
 }
 
 // Reward Tests
-async function testClaimRewards(chainName: string, account: Address, marketAddress: Address) {
+async function testClaimRewards(chainName: string, account: Address, marketAddress: Address): Promise<boolean> {
     console.log(`\nTesting claimRewards on ${chainName}...`);
     try {
-        const claimResult = await claimRewards({
-            chainName,
-            account,
-            marketAddress
-        }, {
-            sendTransactions: async (params) => {
-                console.log('Transaction params:', params);
-                return { data: [{ message: 'Transaction would be sent' }], isMultisig: false };
+        const claimResult = await claimRewards(
+            {
+                chainName,
+                account,
+                marketAddress
             },
-            notify: async (message) => console.log('Notification:', message),
-            getProvider: () => provider
-        });
+            mockCallbacks
+        );
         console.log('Claim Result:', claimResult);
         return claimResult.success;
     } catch (error) {
-        console.error('Claim Error:', error);
+        console.error('Error in testClaimRewards:', error);
         return false;
     }
 }
@@ -335,10 +410,16 @@ async function testRedeemExternalReward(gaugeAddress: Address) {
 }
 
 // Router Function Tests
-async function testInitialize(factory: Address, WETH: Address) {
-    console.log(`\nTesting initialize with factory: ${factory} and WETH: ${WETH}...`);
+async function testRouterFunctions(user: Address): Promise<boolean> {
+    console.log('Testing router functions...');
     try {
-        const result = await initialize(factory, WETH, {
+        const factory = '0x1234567890123456789012345678901234567890' as Address;
+        const WETH = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' as Address;
+        const token = '0x2FCb47B58350cD377f94d3821e7373Df60bD9Ced' as Address;
+        const deadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
+
+        // Test initialize
+        const initializeResult = await initialize(factory, WETH, {
             sendTransactions: async (params: any) => {
                 console.log('Transaction params:', params);
                 return { success: true, data: 'Router initialized successfully' };
@@ -346,29 +427,109 @@ async function testInitialize(factory: Address, WETH: Address) {
             notify: async (message: string) => console.log('Notification:', message),
             getProvider: () => provider
         });
-        console.log('Initialize Result:', result);
-        return result.success;
-    } catch (error) {
-        console.error('Initialize Error:', error);
-        return false;
-    }
-}
+        console.log('Initialize result:', initializeResult);
 
-async function testAddLiquidity(tokenA: Address, tokenB: Address, amountADesired: string, amountBDesired: string, amountAMin: string, amountBMin: string, to: Address, deadline: number) {
-    console.log(`\nTesting addLiquidity with tokenA: ${tokenA}, tokenB: ${tokenB}...`);
-    try {
-        const result = await addLiquidity(tokenA, tokenB, amountADesired, amountBDesired, amountAMin, amountBMin, to, deadline, {
-            sendTransactions: async (params: any) => {
-                console.log('Transaction params:', params);
-                return { success: true, data: 'Liquidity added successfully' };
-            },
-            notify: async (message: string) => console.log('Notification:', message),
-            getProvider: () => provider
-        });
-        console.log('Add Liquidity Result:', result);
-        return result.success;
+        // Test addLiquidityETH
+        const addLiquidityETHResult = await addLiquidityETH(
+            token,
+            '1000000000000000000', // 1 token
+            '900000000000000000',  // min 0.9 token
+            '1000000000000000000', // min 1 ETH
+            user,
+            deadline,
+            {
+                sendTransactions: async (params: any) => {
+                    console.log('Transaction params:', params);
+                    return {
+                        success: true,
+                        data: {
+                            amountToken: '1000000000000000000',
+                            amountETH: '1000000000000000000',
+                            liquidity: '1000000000000000000'
+                        }
+                    };
+                },
+                notify: async (message: string) => console.log('Notification:', message),
+                getProvider: () => provider
+            }
+        );
+        console.log('Add Liquidity ETH result:', addLiquidityETHResult);
+
+        // Test removeLiquidityETH
+        const removeLiquidityETHResult = await removeLiquidityETH(
+            token,
+            '1000000000000000000', // 1 LP token
+            '900000000000000000',  // min 0.9 token
+            '900000000000000000',  // min 0.9 ETH
+            user,
+            deadline,
+            {
+                sendTransactions: async (params: any) => {
+                    console.log('Transaction params:', params);
+                    return {
+                        success: true,
+                        data: {
+                            amountToken: '1000000000000000000',
+                            amountETH: '1000000000000000000'
+                        }
+                    };
+                },
+                notify: async (message: string) => console.log('Notification:', message),
+                getProvider: () => provider
+            }
+        );
+        console.log('Remove Liquidity ETH result:', removeLiquidityETHResult);
+
+        // Test swapExactTokensForTokens
+        const path = [token, WETH] as Address[];
+        const swapExactResult = await swapExactTokensForTokens(
+            '1000000000000000000', // 1 token in
+            '900000000000000000',  // min 0.9 token out
+            path,
+            user,
+            deadline,
+            {
+                sendTransactions: async (params: any) => {
+                    console.log('Transaction params:', params);
+                    return {
+                        success: true,
+                        data: {
+                            amounts: ['1000000000000000000', '950000000000000000']
+                        }
+                    };
+                },
+                notify: async (message: string) => console.log('Notification:', message),
+                getProvider: () => provider
+            }
+        );
+        console.log('Swap Exact Tokens result:', swapExactResult);
+
+        // Test swapTokensForExactTokens
+        const swapExactOutResult = await swapTokensForExactTokens(
+            '1000000000000000000', // 1 token out
+            '1100000000000000000', // max 1.1 token in
+            path,
+            user,
+            deadline,
+            {
+                sendTransactions: async (params: any) => {
+                    console.log('Transaction params:', params);
+                    return {
+                        success: true,
+                        data: {
+                            amounts: ['1050000000000000000', '1000000000000000000']
+                        }
+                    };
+                },
+                notify: async (message: string) => console.log('Notification:', message),
+                getProvider: () => provider
+            }
+        );
+        console.log('Swap Tokens For Exact result:', swapExactOutResult);
+
+        return true;
     } catch (error) {
-        console.error('Add Liquidity Error:', error);
+        console.error('Error in router function tests:', error);
         return false;
     }
 }
@@ -782,8 +943,407 @@ async function testAddRemoveLiquidity(user: Address): Promise<boolean> {
     }
 }
 
+// Voting Controller Tests
+async function testVotingController(user: Address): Promise<boolean> {
+    console.log('Testing voting controller functions...');
+
+    try {
+        // Test vote function
+        const voteResult = await vote(
+            {
+                pools: ['0x1234567890123456789012345678901234567890', '0x0987654321098765432109876543210987654321'],
+                weights: [50, 50]
+            },
+            { getProvider, sendTransactions, notify }
+        );
+        console.log('Vote result:', voteResult);
+
+        // Test applyPoolSlopeChanges function
+        const applyResult = await applyPoolSlopeChanges(
+            '0x1234567890123456789012345678901234567890',
+            { getProvider, sendTransactions, notify }
+        );
+        console.log('Apply pool slope changes result:', applyResult);
+
+        // Test getWeekData function
+        const weekDataResult = await getWeekData(
+            Math.floor(Date.now() / 1000),
+            ['0x1234567890123456789012345678901234567890', '0x0987654321098765432109876543210987654321'],
+            { getProvider }
+        );
+        console.log('Week data result:', weekDataResult);
+
+        // Test getPoolTotalVoteAt function
+        const poolVoteResult = await getPoolTotalVoteAt(
+            '0x1234567890123456789012345678901234567890',
+            Math.floor(Date.now() / 1000),
+            { getProvider }
+        );
+        console.log('Pool total vote result:', poolVoteResult);
+
+        // Test finalizeEpoch function
+        const finalizeResult = await finalizeEpoch({ getProvider, sendTransactions, notify });
+        console.log('Finalize epoch result:', finalizeResult);
+
+        // Test getBroadcastResultFee function
+        const feeResult = await getBroadcastResultFee(1, { getProvider });
+        console.log('Broadcast result fee:', feeResult);
+
+        // Test broadcastResults function
+        const broadcastResult = await broadcastResults(1, { getProvider, sendTransactions, notify });
+        console.log('Broadcast results result:', broadcastResult);
+
+        return true;
+    } catch (error) {
+        console.error('Error testing voting controller functions:', error);
+        return false;
+    }
+}
+
+// Gauge Controller Tests
+async function testGaugeController(): Promise<boolean> {
+    console.log('Testing gauge controller functions...');
+
+    try {
+        // Test fundPendle function
+        const fundResult = await fundPendle(
+            '1000000000000000000',
+            { getProvider, sendTransactions, notify }
+        );
+        console.log('Fund PENDLE result:', fundResult);
+
+        // Test withdrawPendle function
+        const withdrawResult = await withdrawPendle(
+            '500000000000000000',
+            { getProvider, sendTransactions, notify }
+        );
+        console.log('Withdraw PENDLE result:', withdrawResult);
+
+        // Test getPendleAddress function
+        const addressResult = await getPendleAddress({ getProvider });
+        console.log('PENDLE address:', addressResult);
+
+        // Test redeemMarketReward function
+        const redeemResult = await redeemMarketReward({ getProvider, sendTransactions, notify });
+        console.log('Redeem market reward result:', redeemResult);
+
+        // Test getRewardData function
+        const rewardDataResult = await getRewardData(
+            '0x1234567890123456789012345678901234567890' as Address,
+            { getProvider }
+        );
+        console.log('Reward data result:', rewardDataResult);
+
+        return true;
+    } catch (error) {
+        console.error('Error testing gauge controller functions:', error);
+        return false;
+    }
+}
+
+// Yield Token Tests
+async function testYieldToken(user: Address): Promise<boolean> {
+    console.log('Testing yield token functions...');
+    try {
+        // Test mintPY
+        const mintResult = await mintPY(
+            user,
+            user,
+            { getProvider, sendTransactions, notify }
+        );
+        console.log('Mint PY result:', mintResult);
+
+        // Test redeemPY
+        const redeemResult = await redeemPY(
+            user,
+            { getProvider, sendTransactions, notify }
+        );
+        console.log('Redeem PY result:', redeemResult);
+
+        // Test redeemPYMulti
+        const receivers = [user, user];
+        const amounts = ['1000000000000000000', '1000000000000000000'];
+        const redeemMultiResult = await redeemPYMulti(
+            receivers,
+            amounts,
+            { getProvider, sendTransactions, notify }
+        );
+        console.log('Redeem PY Multi result:', redeemMultiResult);
+
+        // Test redeemDueInterestAndRewards
+        const redeemRewardsResult = await redeemDueInterestAndRewards(
+            user,
+            true,
+            true,
+            { getProvider, sendTransactions, notify }
+        );
+        console.log('Redeem Due Interest and Rewards result:', redeemRewardsResult);
+
+        return true;
+    } catch (error) {
+        console.error('Error testing yield token functions:', error);
+        return false;
+    }
+}
+
+// Standardized Yield Tests
+async function testStandardizedYield(user: Address): Promise<boolean> {
+    console.log('Testing Standardized Yield functions...');
+
+    try {
+        // Test deposit
+        const depositResult = await deposit(
+            user,
+            '0x1234567890123456789012345678901234567890',
+            '1000000000000000000',
+            '900000000000000000',
+            { getProvider, sendTransactions, notify }
+        );
+        console.log('Deposit result:', depositResult);
+
+        // Test redeem
+        const redeemResult = await redeem(
+            user,
+            '1000000000000000000',
+            '0x1234567890123456789012345678901234567890',
+            '900000000000000000',
+            false,
+            { getProvider, sendTransactions, notify }
+        );
+        console.log('Redeem result:', redeemResult);
+
+        // Test exchange rate
+        const exchangeRateResult = await getExchangeRate({ getProvider });
+        console.log('Exchange rate:', exchangeRateResult);
+
+        // Test claim rewards
+        const claimRewardsResult = await claimRewards({
+            chainName: 'ethereum',
+            account: user,
+            marketAddress: '0x1234567890123456789012345678901234567890' as Address
+        }, {
+            sendTransactions,
+            notify,
+            getProvider
+        });
+        console.log('Claim rewards result:', claimRewardsResult);
+
+        // Test accrued rewards
+        const accruedRewardsResult = await getAccruedRewards(user, { getProvider });
+        console.log('Accrued rewards:', accruedRewardsResult);
+
+        // Test get reward tokens
+        const rewardTokensResult = await getRewardTokens({ getProvider });
+        console.log('Reward tokens:', rewardTokensResult);
+
+        // Test get yield token
+        const yieldTokenResult = await getYieldToken({ getProvider });
+        console.log('Yield token:', yieldTokenResult);
+
+        // Test get tokens in
+        const tokensInResult = await getTokensIn({ getProvider });
+        console.log('Tokens in:', tokensInResult);
+
+        // Test get tokens out
+        const tokensOutResult = await getTokensOut({ getProvider });
+        console.log('Tokens out:', tokensOutResult);
+
+        // Test is valid token in
+        const isValidTokenInResult = await isValidTokenIn('0x1234567890123456789012345678901234567890', { getProvider });
+        console.log('Is valid token in:', isValidTokenInResult);
+
+        // Test is valid token out
+        const isValidTokenOutResult = await isValidTokenOut('0x1234567890123456789012345678901234567890', { getProvider });
+        console.log('Is valid token out:', isValidTokenOutResult);
+
+        // Test preview deposit
+        const previewDepositResult = await previewDeposit(
+            '0x1234567890123456789012345678901234567890',
+            '1000000000000000000',
+            { getProvider }
+        );
+        console.log('Preview deposit:', previewDepositResult);
+
+        // Test preview redeem
+        const previewRedeemResult = await previewRedeem(
+            '0x1234567890123456789012345678901234567890',
+            '1000000000000000000',
+            { getProvider }
+        );
+        console.log('Preview redeem:', previewRedeemResult);
+
+        return true;
+    } catch (error) {
+        console.error('Error testing standardized yield functions:', error);
+        return false;
+    }
+}
+
+// Cross-Chain Messaging Tests
+async function testCrossChainMessaging(): Promise<void> {
+    const endpointAddress = '0x1234...' as Address;
+    const dstAddress = '0x5678...' as Address;
+    const dstChainId = 1;
+    const message = '0x';
+    const estimatedGasAmount = 100000;
+
+    const sendResult = await sendMessage(
+        endpointAddress,
+        {
+            dstAddress,
+            dstChainId,
+            payload: message,
+            estimatedGasAmount
+        },
+        mockCallbacks
+    );
+    console.log('Send message result:', sendResult);
+}
+
+// Merkle Distributor Tests
+async function testMerkleDistributor() {
+    const testAccount = '0x1234567890123456789012345678901234567890' as Address;
+    const merkleProof = ['0x123...'] as string[];
+
+    // Test claim
+    const claimResult = await claim(
+        {
+            chainName: 'ethereum',
+            account: testAccount,
+            merkleProof,
+            amount: BigInt(1000)
+        },
+        mockCallbacks
+    );
+    console.log('Claim result:', claimResult);
+
+    // Test claimVerified
+    const claimVerifiedResult = await claimVerified(
+        {
+            chainName: 'ethereum',
+            account: testAccount,
+            merkleProof,
+            amount: BigInt(1000)
+        },
+        mockCallbacks
+    );
+    console.log('Claim verified result:', claimVerifiedResult);
+
+    // Test verify
+    const verifyResult = await verify(
+        {
+            chainName: 'ethereum',
+            account: testAccount,
+            merkleProof,
+            amount: BigInt(1000)
+        },
+        { getProvider: mockCallbacks.getProvider }
+    );
+    console.log('Verify result:', verifyResult);
+}
+
+// Multi-Token Merkle Distributor Tests
+async function testMultiTokenMerkleDistributor() {
+    const testAccount = '0x1234567890123456789012345678901234567890' as Address;
+    const merkleProof = ['0x123...'] as string[];
+    const tokens = [
+        '0x1111111111111111111111111111111111111111',
+        '0x2222222222222222222222222222222222222222'
+    ] as Address[];
+    const amounts = [BigInt(1000), BigInt(2000)];
+
+    // Test claimMultiToken
+    const claimResult = await claimMultiToken({
+        chainName: 'ethereum',
+        account: testAccount,
+        merkleProof,
+        tokens,
+        amounts
+    }, {
+        getProvider,
+        sendTransactions,
+        notify
+    });
+    console.log('Multi-token claim result:', claimResult);
+
+    // Test claimVerifiedMultiToken
+    const claimVerifiedResult = await claimVerifiedMultiToken({
+        chainName: 'ethereum',
+        account: testAccount,
+        merkleProof,
+        tokens,
+        amounts
+    }, {
+        getProvider,
+        sendTransactions,
+        notify
+    });
+    console.log('Multi-token claim verified result:', claimVerifiedResult);
+
+    // Test verifyMultiToken
+    const verifyResult = await verifyMultiToken({
+        chainName: 'ethereum',
+        account: testAccount,
+        merkleProof,
+        tokens,
+        amounts
+    }, {
+        getProvider
+    });
+    console.log('Multi-token verify result:', verifyResult);
+}
+
+// Swap Function Tests
+async function testSwapFunctions() {
+    const testAccount = '0x1234567890123456789012345678901234567890' as Address;
+    const tokenIn = '0x1111111111111111111111111111111111111111' as Address;
+    const tokenOut = '0x2222222222222222222222222222222222222222' as Address;
+    const swapParams = {
+        chainName: 'ethereum',
+        account: testAccount,
+        tokenIn,
+        tokenOut,
+        amountIn: BigInt(1000),
+        amountOutMin: BigInt(900),
+        deadline: Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
+    };
+
+    // Test swapExactTokenForPt
+    const tokenSwapResult = await swapExactTokenForPt(
+        swapParams,
+        {
+            getProvider,
+            sendTransactions,
+            notify
+        }
+    );
+    console.log('Token swap result:', tokenSwapResult);
+
+    // Test swapExactSyForPt
+    const sySwapResult = await swapExactSyForPt(
+        swapParams,
+        {
+            getProvider,
+            sendTransactions,
+            notify
+        }
+    );
+    console.log('SY swap result:', sySwapResult);
+
+    // Test swapExactPtForToken
+    const ptSwapResult = await swapExactPtForToken(
+        swapParams,
+        {
+            getProvider,
+            sendTransactions,
+            notify
+        }
+    );
+    console.log('PT swap result:', ptSwapResult);
+}
+
 // Main Integration Test
-async function testIntegration() {
+export async function runIntegrationTests(user: Address): Promise<void> {
     console.log('Starting integration tests...\n');
 
     const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -791,15 +1351,6 @@ async function testIntegration() {
         '0x27b1dAcd74688aF24a64BD3C9C1B143118740784',
         '0x2FCb47B58350cD377f94d3821e7373Df60bD9Ced'
     ];
-
-    const mockSendTransactions = async (params: any) => {
-        console.log('Transaction params:', params);
-        return { success: true, data: 'Successfully executed transaction' };
-    };
-
-    const mockNotify = async (message: string) => {
-        console.log('Notification:', message);
-    };
 
     try {
         // Test Market Core Actions
@@ -836,11 +1387,8 @@ async function testIntegration() {
 
         // Test Router Functions
         console.log('\nTesting Router Functions...');
-        const routerResult = await testInitialize(
-            VALID_MARKETS[0] as Address,
-            '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' as Address
-        );
-        console.log('Router Tests:', routerResult ? 'PASSED' : 'FAILED');
+        const routerTestResult = await testRouterFunctions(user);
+        console.log('Router function tests completed:', routerTestResult);
 
         // Test Market Oracle Functions
         console.log('\nTesting Market Oracle Functions...');
@@ -868,6 +1416,46 @@ async function testIntegration() {
         );
         console.log('Add/Remove Liquidity Tests:', addRemoveLiqResult ? 'PASSED' : 'FAILED');
 
+        // Test Voting Controller Functions
+        console.log('\nTesting Voting Controller Functions...');
+        const votingControllerTestResult = await testVotingController(user);
+        console.log('Voting controller tests completed:', votingControllerTestResult);
+
+        // Test Gauge Controller Functions
+        console.log('\nTesting Gauge Controller Functions...');
+        const gaugeControllerTestResult = await testGaugeController();
+        console.log('Gauge controller tests completed:', gaugeControllerTestResult);
+
+        // Test Yield Token Functions
+        console.log('\nTesting Yield Token Functions...');
+        const yieldTokenTestResult = await testYieldToken(user);
+        console.log('Yield token tests completed:', yieldTokenTestResult);
+
+        // Test Standardized Yield Functions
+        console.log('\nTesting Standardized Yield Functions...');
+        const standardizedYieldTestResult = await testStandardizedYield(user);
+        console.log('Standardized yield test result:', standardizedYieldTestResult);
+
+        // Test Cross-Chain Messaging
+        console.log('\nTesting Cross-Chain Messaging Functions...');
+        const messagingTestResult = await testCrossChainMessaging();
+        console.log('Cross-chain messaging tests completed:', messagingTestResult);
+
+        // Test Merkle Distributor Functions
+        console.log('\nTesting Merkle Distributor Functions...');
+        const merkleDistributorResult = await testMerkleDistributor();
+        console.log('Merkle Distributor tests completed:', merkleDistributorResult);
+
+        // Test Multi-Token Merkle Distributor Functions
+        console.log('\nTesting Multi-Token Merkle Distributor Functions...');
+        const multiTokenMerkleResult = await testMultiTokenMerkleDistributor();
+        console.log('Multi-Token Merkle Distributor tests completed:', multiTokenMerkleResult);
+
+        // Test Swap Functions
+        console.log('\nTesting Swap Functions...');
+        const swapFunctionsResult = await testSwapFunctions();
+        console.log('Swap function tests completed:', swapFunctionsResult);
+
         console.log('\nAll integration tests completed.');
     } catch (error) {
         console.error('Integration Test Error:', error);
@@ -875,4 +1463,4 @@ async function testIntegration() {
 }
 
 // Run the integration tests
-testIntegration().catch(console.error); 
+runIntegrationTests('0x742d35Cc6634C0532925a3b844Bc454e4438f44e' as Address).catch(console.error); 

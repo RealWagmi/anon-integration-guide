@@ -219,6 +219,103 @@ export const provider = {
                         netSyFee: 10000000000000000n
                     };
 
+                case 'vote':
+                    return undefined;
+                case 'applyPoolSlopeChanges':
+                    return undefined;
+                case 'getWeekData':
+                    return {
+                        isEpochFinalized: true,
+                        totalVotes: BigInt('1000000000000000000'),
+                        poolVotes: [BigInt('500000000000000000'), BigInt('500000000000000000')]
+                    };
+                case 'getPoolTotalVoteAt':
+                    return BigInt('500000000000000000');
+                case 'finalizeEpoch':
+                    return undefined;
+                case 'getBroadcastResultFee':
+                    return BigInt('100000000000000000');
+                case 'broadcastResults':
+                    return undefined;
+
+                // Gauge Controller functions
+                case 'fundPendle':
+                case 'withdrawPendle':
+                case 'redeemMarketReward':
+                    return undefined;
+
+                case 'pendle':
+                    return '0x0000000000000000000000000000000000000001' as Address;
+
+                case 'rewardData':
+                    return [
+                        BigInt('1000000000000000000'), // pendlePerSec
+                        BigInt('5000000000000000000'), // accumulatedPendle
+                        BigInt(Math.floor(Date.now() / 1000)), // lastUpdated
+                        BigInt(Math.floor(Date.now() / 1000) + 86400) // incentiveEndsAt
+                    ];
+
+                // Yield Token functions
+                case 'mintPY':
+                    return {
+                        amountPYOut: BigInt('1000000000000000000')
+                    };
+
+                case 'redeemPY':
+                    return {
+                        amountSyOut: BigInt('1000000000000000000')
+                    };
+
+                case 'redeemPYMulti':
+                    return {
+                        amountSyOuts: [BigInt('1000000000000000000'), BigInt('1000000000000000000')]
+                    };
+
+                case 'redeemDueInterestAndRewards':
+                    return {
+                        interestOut: BigInt('1000000000000000000'),
+                        rewardsOut: [BigInt('500000000000000000'), BigInt('500000000000000000')]
+                    };
+
+                case 'deposit':
+                    return BigInt('1000000000000000000'); // 1 share out
+
+                case 'redeem':
+                    return BigInt('1000000000000000000'); // 1 token out
+
+                case 'exchangeRate':
+                    return BigInt('1000000000000000000'); // 1:1 exchange rate
+
+                case 'claimRewards':
+                    return [BigInt('500000000000000000'), BigInt('500000000000000000')]; // Two rewards of 0.5 each
+
+                case 'accruedRewards':
+                    return [BigInt('500000000000000000'), BigInt('500000000000000000')]; // Two rewards of 0.5 each
+
+                case 'getRewardTokens':
+                    return ['0x1234567890123456789012345678901234567890', '0x0987654321098765432109876543210987654321']; // Two mock reward token addresses
+
+                case 'yieldToken':
+                    return '0x1234567890123456789012345678901234567890'; // Mock yield token address
+
+                case 'getTokensIn':
+                    return ['0x1234567890123456789012345678901234567890', '0x0987654321098765432109876543210987654321']; // Two mock input token addresses
+
+                case 'getTokensOut':
+                    return ['0x1234567890123456789012345678901234567890', '0x0987654321098765432109876543210987654321']; // Two mock output token addresses
+
+                case 'isValidTokenIn':
+                    return true; // Mock token validity check
+
+                case 'isValidTokenOut':
+                    return true; // Mock token validity check
+
+                case 'previewDeposit':
+                    return BigInt('1000000000000000000'); // 1 share out preview
+
+                case 'previewRedeem':
+                    return BigInt('1000000000000000000'); // 1 token out preview
+
                 default:
                     throw new Error(`Unknown function: ${functionName}`);
             }
@@ -231,4 +328,15 @@ export const provider = {
     sendTransaction: async (params: any) => {
         return { hash: '0x123...', wait: async () => ({ status: 1 }) };
     }
-} as const; 
+} as const;
+
+export const getProvider = () => provider;
+
+export const sendTransactions = async ({ params }: { params: any }) => {
+    console.log('Mock transaction sent:', params);
+    return { success: true };
+};
+
+export const notify = async (message: string) => {
+    console.log('Notification:', message);
+}; 
