@@ -19,7 +19,7 @@ interface Props {
 /**
  * Fetches user's points.
  * @param props - The request parameters. 
- * @returns Last created token info.
+ * @returns User's points.
  */
 export async function getUserPoints({ account }: Props): Promise<FunctionReturn> {
     const response = await axios.get<ApiResponse>(`https://common.kerneldao.com/points/${account}`);

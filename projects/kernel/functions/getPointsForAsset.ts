@@ -19,6 +19,7 @@ export async function getPointsForAsset({ chainName, token }: Props, { getProvid
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Kernel is not supported on ${chainName}`, true);
 
+    // Searching through array for a given asset
     const provider = getProvider(chainId);
 
     const managedAssets = await provider.readContract({
