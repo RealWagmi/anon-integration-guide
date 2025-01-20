@@ -24,11 +24,10 @@ export const tools: AiTool[] = [
                 description: 'Amount of tokens for deposit in decimal format',
             },
             {
-                name: 'market',
+                name: 'marketName',
                 type: 'string',
                 enum: Object.keys(QI_MARKETS),
-                description:
-                    'Market name used for deposit. See https://docs.benqi.fi/benqi-markets/core-markets for list of available markets. Note that for AVAX you should use depositCollateralAvax',
+                description: 'Market name used for deposit. See https://docs.benqi.fi/benqi-markets/core-markets for list of available markets',
             },
         ],
     },
