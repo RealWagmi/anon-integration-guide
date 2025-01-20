@@ -7,24 +7,23 @@ import {
 	getChainFromName,
     checkToApprove
 } from '@heyanon/sdk';
-import { STKSCETH_SONIC_ADDRESS, supportedChains, VEETH_SONIC_ADDRESS } from '../constants';
-import { veEthAbi } from '../abis';
+import { SCUSD_SONIC_ADDRESS, STKSCUSD_SONIC_ADDRESS, STKSCUSD_SONIC_WITHDRAW_ADDRESS, supportedChains } from '../constants';
+import { stkscUsdWithdrawQueueAbi } from '../abis';
 
 interface Props {
 	chainName: string;
 	account: Address;
 	amount: string;
-	weeks: number;
 }
 
 /**
- * Locks stkscEth in the Rings protocol for the opportunity to vote.
- * @param props - The lock parameters.
+ * Unstakes scUSD from the Rings protocol.
+ * @param props - The unstake parameters.
  * @param tools - System tools for blockchain interactions.
- * @returns ERC-721 token ID.
+ * @returns Request ID.
  */
-export async function lockStkscEth(
-	{ chainName, account, amount, weeks }: Props,
+export async function unstakeUsd(
+	{ chainName, account, amount }: Props,
 	{ sendTransactions, notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
 	// Check wallet connection
@@ -39,20 +38,17 @@ export async function lockStkscEth(
 
     // Validate amount
     const provider = getProvider(chainId);
-    const amountWithDecimals = parseUnits(amount, 18);
+    const amountWithDecimals = parseUnits(amount, 6);
     if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);
     const balance = await provider.readContract({
-        address: STKSCETH_SONIC_ADDRESS,
+        address: STKSCUSD_SONIC_ADDRESS,
         abi: erc20Abi,
         functionName: 'balanceOf',
         args: [account],
     })
     if (balance < amountWithDecimals) return toResult('Amount exceeds your balance', true);
 
-	// Validate lock duration
-	if (weeks < 1 || weeks > 104) return toResult('Lock duration must be between 1 and 104 weeks', true);
-
-    await notify('Locking stkscETH...');
+    await notify('Sending request to unstake scUSD...');
 
     const transactions: TransactionParams[] = [];
 
@@ -60,29 +56,30 @@ export async function lockStkscEth(
     await checkToApprove({
         args: {
             account,
-            target: STKSCETH_SONIC_ADDRESS,
-            spender: VEETH_SONIC_ADDRESS,
+            target: STKSCUSD_SONIC_ADDRESS,
+            spender: STKSCUSD_SONIC_WITHDRAW_ADDRESS,
             amount: amountWithDecimals
         },
         transactions,
         provider,
     });
     
-	// Prepare lock transaction
-	const lockDuration = weeks * 7 * 24 * 60 * 60;
+	// Prepare unstake transaction
+	const discount = 1;
+	const secondsToDeadline = 432000;
 	const tx: TransactionParams = {
-			target: VEETH_SONIC_ADDRESS,
+			target: STKSCUSD_SONIC_WITHDRAW_ADDRESS,
 			data: encodeFunctionData({
-					abi: veEthAbi,
-					functionName: 'create_lock',
-					args: [amountWithDecimals, lockDuration],
+					abi: stkscUsdWithdrawQueueAbi,
+					functionName: 'requestOnChainWithdraw',
+					args: [SCUSD_SONIC_ADDRESS, amountWithDecimals, discount, secondsToDeadline],
 			}),
 	};
 	transactions.push(tx);
 
 	// Sign and send transaction
 	const result = await sendTransactions({ chainId, account, transactions });
-	const lockMessage = result.data[result.data.length - 1];
+	const unstakeMessage = result.data[result.data.length - 1];
 
-	return toResult(result.isMultisig ? lockMessage.message : `Successfully locked stkscETH for ${weeks} weeks. Your NFT ID is ${lockMessage.message}`);
+	return toResult(result.isMultisig ? unstakeMessage.message : `Successfully requested unstake for scUSD. scUSD will be deposited in 5 days.`);
 }

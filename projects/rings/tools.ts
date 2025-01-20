@@ -39,7 +39,7 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'cancelUnstakeScEth',
+        name: 'cancelUnstakeEth',
         description: 'Cancel the unstaking of scETH from the Rings protocol',
         required: ['chainName', 'account'],
         props: [
@@ -57,7 +57,7 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'cancelUnstakeScUsd',
+        name: 'cancelUnstakeUsd',
         description: 'Cancel the unstaking of scUSD from the Rings protocol',
         required: ['chainName', 'account'],
         props: [
@@ -225,7 +225,7 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'increaseLockedStkscEth',
+        name: 'increaseLockedEth',
         description: 'Increase amount of locked stkscETH in the protocol for extra voting power',
         required: ['chainName', 'account', 'amount'],
         props: [
@@ -248,7 +248,7 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'increaseLockedStkscUsd',
+        name: 'increaseLockedUsd',
         description: 'Increase amount of locked stkscUSD in the protocol for extra voting power',
         required: ['chainName', 'account', 'amount'],
         props: [
@@ -271,7 +271,7 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'lockStkscEth',
+        name: 'lockEth',
         description: 'Lock stkscETH for the opportunity to vote',
         required: ['chainName', 'account', 'amount', 'weeks'],
         props: [
@@ -299,7 +299,7 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'lockStkscUsd',
+        name: 'lockUsd',
         description: 'Lock stkscUSD for the opportunity to vote',
         required: ['chainName', 'account', 'amount', 'weeks'],
         props: [
@@ -373,7 +373,7 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'stakeScEth',
+        name: 'stakeEth',
         description: 'Stake scETH in the Rings protocol for earning yield',
         required: ['chainName', 'account', 'amount'],
         props: [
@@ -396,7 +396,7 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'stakeScUsd',
+        name: 'stakeUsd',
         description: 'Stake scUSD in the Rings protocol for earning yield',
         required: ['chainName', 'account', 'amount'],
         props: [
@@ -419,7 +419,7 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'unstakeScEth',
+        name: 'unstakeEth',
         description: 'Unstake scETH from the Rings protocol',
         required: ['chainName', 'account', 'amount'],
         props: [
@@ -442,7 +442,7 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'unstakeScUsd',
+        name: 'unstakeUsd',
         description: 'Unstake scUSD from the Rings protocol',
         required: ['chainName', 'account', 'amount'],
         props: [
@@ -465,7 +465,7 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'unlockStkscEth',
+        name: 'unlockEth',
         description: 'Unlock stkscETH from the Rings protocol in exchange for veETH',
         required: ['chainName', 'account'],
         props: [
@@ -483,7 +483,7 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'unlockStkscUsd',
+        name: 'unlockUsd',
         description: 'Unlock stkscUSD from the Rings protocol in exchange for veUSD',
         required: ['chainName', 'account'],
         props: [

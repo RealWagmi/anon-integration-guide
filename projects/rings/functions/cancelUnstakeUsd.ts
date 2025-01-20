@@ -20,7 +20,7 @@ interface Props {
  * @param tools - System tools for blockchain interactions.
  * @returns Success message.
  */
-export async function cancelUnstakeScUsd(
+export async function cancelUnstakeUsd(
 	{ chainName, account }: Props,
 	{ sendTransactions, notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {

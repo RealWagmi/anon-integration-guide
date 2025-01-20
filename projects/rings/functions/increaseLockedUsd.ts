@@ -7,8 +7,8 @@ import {
 	getChainFromName,
     checkToApprove
 } from '@heyanon/sdk';
-import { SCETH_SONIC_ADDRESS, STKSCETH_SONIC_TELLER_ADDRESS, supportedChains } from '../constants';
-import { stkscEthTellerAbi } from '../abis';
+import { STKSCUSD_SONIC_ADDRESS, supportedChains, VEUSD_SONIC_ADDRESS } from '../constants';
+import { veUsdAbi } from '../abis';
 
 interface Props {
 	chainName: string;
@@ -17,12 +17,12 @@ interface Props {
 }
 
 /**
- * Stakes scETH in the Rings protocol in exchange for stkscETH.
- * @param props - The stake parameters.
+ * Increases locked stkscUSD in the Rings protocol.
+ * @param props - The lock parameters.
  * @param tools - System tools for blockchain interactions.
- * @returns Amount of stkscETH tokens.
+ * @returns Success message.
  */
-export async function stakeScEth(
+export async function increaseLockedUsd(
 	{ chainName, account, amount }: Props,
 	{ sendTransactions, notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
@@ -36,48 +36,56 @@ export async function stakeScEth(
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Rings is not supported on ${chainName}`, true);
 
-    // Validate amount
+	// Validate amount
     const provider = getProvider(chainId);
-    const amountWithDecimals = parseUnits(amount, 18);
+    const amountWithDecimals = parseUnits(amount, 6);
     if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);
     const balance = await provider.readContract({
-        address: SCETH_SONIC_ADDRESS,
+        address: STKSCUSD_SONIC_ADDRESS,
         abi: erc20Abi,
         functionName: 'balanceOf',
         args: [account],
     })
     if (balance < amountWithDecimals) return toResult('Amount exceeds your balance', true);
 
-    await notify('Staking scETH...');
+    await notify('Locking more stkscUSD...');
 
-    const transactions: TransactionParams[] = [];
+	const transactions: TransactionParams[] = [];
 
     // Approve the asset beforehand
     await checkToApprove({
         args: {
             account,
-            target: SCETH_SONIC_ADDRESS,
-            spender: STKSCETH_SONIC_TELLER_ADDRESS,
+            target: STKSCUSD_SONIC_ADDRESS,
+            spender: VEUSD_SONIC_ADDRESS,
             amount: amountWithDecimals
         },
         transactions,
         provider,
     });
     
-	// Prepare stake transaction
+	// Prepare lock transaction
+    const tokenId = await provider.readContract({
+        address: VEUSD_SONIC_ADDRESS,
+        abi: veUsdAbi,
+        functionName: 'tokenOfOwnerByIndex',
+        args: [account, 0],
+    })
+    if (tokenId === 0) return toResult('No locked stkscUSD', true);
+
 	const tx: TransactionParams = {
-			target: STKSCETH_SONIC_TELLER_ADDRESS,
+			target: VEUSD_SONIC_ADDRESS,
 			data: encodeFunctionData({
-					abi: stkscEthTellerAbi,
-					functionName: 'deposit',
-					args: [SCETH_SONIC_ADDRESS, amountWithDecimals, 0],
+					abi: veUsdAbi,
+					functionName: 'increase_amount',
+					args: [tokenId, amountWithDecimals],
 			}),
 	};
 	transactions.push(tx);
 
 	// Sign and send transaction
 	const result = await sendTransactions({ chainId, account, transactions });
-	const stakeMessage = result.data[result.data.length - 1];
+	const lockMessage = result.data[result.data.length - 1];
 
-	return toResult(result.isMultisig ? stakeMessage.message : `Successfully staked scETH for ${stakeMessage.message} stkscETH`);
+	return toResult(result.isMultisig ? lockMessage.message : `Successfully locked ${amount} stkscUSD.`);
 }

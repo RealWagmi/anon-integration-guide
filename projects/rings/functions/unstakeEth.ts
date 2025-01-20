@@ -7,8 +7,8 @@ import {
 	getChainFromName,
     checkToApprove
 } from '@heyanon/sdk';
-import { SCUSD_SONIC_ADDRESS, STKSCUSD_SONIC_TELLER_ADDRESS, supportedChains } from '../constants';
-import { stkscUsdTellerAbi } from '../abis';
+import { SCETH_SONIC_ADDRESS, STKSCETH_SONIC_ADDRESS, STKSCETH_SONIC_WITHDRAW_ADDRESS, supportedChains } from '../constants';
+import { stkscEthWithdrawQueueAbi } from '../abis';
 
 interface Props {
 	chainName: string;
@@ -17,12 +17,12 @@ interface Props {
 }
 
 /**
- * Stakes scUSD in the Rings protocol in exchange for stkscUSD.
- * @param props - The stake parameters.
+ * Unstakes scETH from the Rings protocol.
+ * @param props - The unstake parameters.
  * @param tools - System tools for blockchain interactions.
- * @returns Amount of stkscUSD tokens.
+ * @returns Request ID.
  */
-export async function stakeScUsd(
+export async function unstakeEth(
 	{ chainName, account, amount }: Props,
 	{ sendTransactions, notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
@@ -38,17 +38,17 @@ export async function stakeScUsd(
 
     // Validate amount
     const provider = getProvider(chainId);
-    const amountWithDecimals = parseUnits(amount, 6);
+    const amountWithDecimals = parseUnits(amount, 18);
     if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);
     const balance = await provider.readContract({
-        address: SCUSD_SONIC_ADDRESS,
+        address: STKSCETH_SONIC_ADDRESS,
         abi: erc20Abi,
         functionName: 'balanceOf',
         args: [account],
     })
     if (balance < amountWithDecimals) return toResult('Amount exceeds your balance', true);
 
-    await notify('Staking scUSD...');
+    await notify('Sending request to unstake scETH...');
 
     const transactions: TransactionParams[] = [];
 
@@ -56,28 +56,30 @@ export async function stakeScUsd(
     await checkToApprove({
         args: {
             account,
-            target: SCUSD_SONIC_ADDRESS,
-            spender: STKSCUSD_SONIC_TELLER_ADDRESS,
+            target: STKSCETH_SONIC_ADDRESS,
+            spender: STKSCETH_SONIC_WITHDRAW_ADDRESS,
             amount: amountWithDecimals
         },
         transactions,
         provider,
     });
     
-	// Prepare stake transaction
+	// Prepare unstake transaction
+	const discount = 1;
+	const secondsToDeadline = 432000;
 	const tx: TransactionParams = {
-			target: STKSCUSD_SONIC_TELLER_ADDRESS,
+			target: STKSCETH_SONIC_WITHDRAW_ADDRESS,
 			data: encodeFunctionData({
-					abi: stkscUsdTellerAbi,
-					functionName: 'deposit',
-					args: [SCUSD_SONIC_ADDRESS, amountWithDecimals, 0],
+					abi: stkscEthWithdrawQueueAbi,
+					functionName: 'requestOnChainWithdraw',
+					args: [SCETH_SONIC_ADDRESS, amountWithDecimals, discount, secondsToDeadline],
 			}),
 	};
 	transactions.push(tx);
 
 	// Sign and send transaction
 	const result = await sendTransactions({ chainId, account, transactions });
-	const stakeMessage = result.data[result.data.length - 1];
+	const unstakeMessage = result.data[result.data.length - 1];
 
-	return toResult(result.isMultisig ? stakeMessage.message : `Successfully staked scUSD for ${stakeMessage.message} stkscUSD`);
+	return toResult(result.isMultisig ? unstakeMessage.message : `Successfully requested unstake for scETH. scETH will be deposited in 5 days.`);
 }

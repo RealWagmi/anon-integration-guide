@@ -20,7 +20,7 @@ interface Props {
  * @param tools - System tools for blockchain interactions.
  * @returns Success message.
  */
-export async function cancelUnstakeScEth(
+export async function cancelUnstakeEth(
 	{ chainName, account }: Props,
 	{ sendTransactions, notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {

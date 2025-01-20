@@ -23,7 +23,7 @@ interface Props {
  * @param tools - System tools for blockchain interactions.
  * @returns ERC-721 token ID.
  */
-export async function lockStkscUsd(
+export async function lockUsd(
 	{ chainName, account, amount, weeks }: Props,
 	{ sendTransactions, notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {

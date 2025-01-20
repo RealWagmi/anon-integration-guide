@@ -20,7 +20,7 @@ interface Props {
  * @param tools - System tools for blockchain interactions.
  * @returns Success message.
  */
-export async function unlockStkscEth(
+export async function unlockEth(
 	{ chainName, account }: Props,
 	{ sendTransactions, notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {

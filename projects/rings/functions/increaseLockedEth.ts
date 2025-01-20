@@ -7,8 +7,8 @@ import {
 	getChainFromName,
     checkToApprove
 } from '@heyanon/sdk';
-import { SCUSD_SONIC_ADDRESS, STKSCUSD_SONIC_ADDRESS, STKSCUSD_SONIC_WITHDRAW_ADDRESS, supportedChains } from '../constants';
-import { stkscUsdWithdrawQueueAbi } from '../abis';
+import { STKSCETH_SONIC_ADDRESS, supportedChains, VEETH_SONIC_ADDRESS } from '../constants';
+import { veEthAbi } from '../abis';
 
 interface Props {
 	chainName: string;
@@ -17,12 +17,12 @@ interface Props {
 }
 
 /**
- * Unstakes scUSD from the Rings protocol.
- * @param props - The unstake parameters.
+ * Increases locked stkscETH in the Rings protocol.
+ * @param props - The lock parameters.
  * @param tools - System tools for blockchain interactions.
- * @returns Request ID.
+ * @returns Success message.
  */
-export async function unstakeScUsd(
+export async function increaseLockedEth(
 	{ chainName, account, amount }: Props,
 	{ sendTransactions, notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
@@ -36,50 +36,56 @@ export async function unstakeScUsd(
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Rings is not supported on ${chainName}`, true);
 
-    // Validate amount
+	// Validate amount
     const provider = getProvider(chainId);
-    const amountWithDecimals = parseUnits(amount, 6);
+    const amountWithDecimals = parseUnits(amount, 18);
     if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);
     const balance = await provider.readContract({
-        address: STKSCUSD_SONIC_ADDRESS,
+        address: STKSCETH_SONIC_ADDRESS,
         abi: erc20Abi,
         functionName: 'balanceOf',
         args: [account],
     })
     if (balance < amountWithDecimals) return toResult('Amount exceeds your balance', true);
 
-    await notify('Sending request to unstake scUSD...');
+    await notify('Locking more stkscETH...');
 
-    const transactions: TransactionParams[] = [];
+	const transactions: TransactionParams[] = [];
 
     // Approve the asset beforehand
     await checkToApprove({
         args: {
             account,
-            target: STKSCUSD_SONIC_ADDRESS,
-            spender: STKSCUSD_SONIC_WITHDRAW_ADDRESS,
+            target: STKSCETH_SONIC_ADDRESS,
+            spender: VEETH_SONIC_ADDRESS,
             amount: amountWithDecimals
         },
         transactions,
         provider,
     });
     
-	// Prepare unstake transaction
-	const discount = 1;
-	const secondsToDeadline = 432000;
+	// Prepare lock transaction
+    const tokenId = await provider.readContract({
+        address: VEETH_SONIC_ADDRESS,
+        abi: veEthAbi,
+        functionName: 'tokenOfOwnerByIndex',
+        args: [account, 0],
+    })
+    if (tokenId === 0) return toResult('No locked stkscETH', true);
+
 	const tx: TransactionParams = {
-			target: STKSCUSD_SONIC_WITHDRAW_ADDRESS,
+			target: VEETH_SONIC_ADDRESS,
 			data: encodeFunctionData({
-					abi: stkscUsdWithdrawQueueAbi,
-					functionName: 'requestOnChainWithdraw',
-					args: [SCUSD_SONIC_ADDRESS, amountWithDecimals, discount, secondsToDeadline],
+					abi: veEthAbi,
+					functionName: 'increase_amount',
+					args: [tokenId, amountWithDecimals],
 			}),
 	};
 	transactions.push(tx);
 
 	// Sign and send transaction
 	const result = await sendTransactions({ chainId, account, transactions });
-	const unstakeMessage = result.data[result.data.length - 1];
+	const lockMessage = result.data[result.data.length - 1];
 
-	return toResult(result.isMultisig ? unstakeMessage.message : `Successfully requested unstake for scUSD. scUSD will be deposited in 5 days.`);
+	return toResult(result.isMultisig ? lockMessage.message : `Successfully locked ${amount} stkscETH.`);
 }
