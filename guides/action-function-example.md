@@ -1,6 +1,3 @@
-# Action Function Example
-
-```typescript
 import { Address, encodeFunctionData, parseUnits } from "viem";
 import {
   FunctionReturn,
@@ -46,9 +43,10 @@ export async function deposit(
   await notify("Preparing to deposit tokens...");
 
   const provider = getProvider(chainId);
+  const transactions: TransactionParams[] = [];
 
   // Check and prepare approve transaction if needed
-  const approve = await checkToApprove({
+  await checkToApprove({
       args: {
           account,
           target: TOKEN_ADDRESS,
@@ -60,10 +58,6 @@ export async function deposit(
     }
   );
 
-  if (approve.length > 0) {
-      await notify(`Approving ${ethers.formatEther(amountInWei)} for ${PROTOCOL_ADDRESS} contract by account ${account} ...`);
-  }
-
   // Prepare deposit transaction
   const tx: TransactionParams = {
     target: PROTOCOL_ADDRESS,
@@ -73,13 +67,10 @@ export async function deposit(
       args: [amountInWei, account],
     }),
   };
+  transactions.push(tx);
 
   await notify("Waiting for transaction confirmation...");
 
-  const transactions: TransactionParams[] = [
-      ...approve,
-      tx
-  ];
   // Sign and send transaction
   const result = await sendTransactions({ chainId, account, transactions });
   const depositMessage = result.data[result.data.length - 1];
@@ -90,13 +81,3 @@ export async function deposit(
       : `Successfully deposited ${amount} tokens. ${depositMessage.message}`
   );
 }
-```
-
-**Key Points**:
-
-- Validates input arguments.
-- Uses `notify` to inform the user.
-- Calls `sendTransactions` only once with the transaction array.
-- Returns the result using `toResult`.
-- Includes JSDoc comments.
-  </code_block_to_apply_changes_from>
