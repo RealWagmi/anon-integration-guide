@@ -1,15 +1,15 @@
-import { FunctionOptions, FunctionReturn, TransactionParams, checkToApprove, getChainFromName, toResult } from '@heyanon/sdk';
-import { Address, encodeFunctionData, parseUnits } from 'viem';
+import { checkToApprove, FunctionOptions, FunctionReturn, toResult, TransactionParams } from '@heyanon/sdk';
+import { Address, encodeFunctionData } from 'viem';
 import qiAvaxAbi from '../abis/qiAvax';
 import qiERC20Abi from '../abis/qiERC20';
-import { QI_AVAX_NAME, QI_MARKETS, QI_MARKETS_DECIMALS, type QiMarketName, supportedChains } from '../constants';
+import { MarketProps } from '../constants';
+import { isERC20Based, parseAmount, parseMarket, parseWallet } from '../utils';
 
-interface Props {
+type Props = MarketProps & {
     chainName: string;
     account: Address;
     amount: string;
-    marketName: QiMarketName;
-}
+};
 
 /**
  * Repays a borrowed amount on the specified market.
@@ -17,46 +17,30 @@ interface Props {
  * @param tools - System tools for blockchain interactions
  * @returns Transaction result
  */
-export async function repayBorrow(
-    { chainName, account, amount: maybeAmount, marketName }: Props,
-    { sendTransactions, notify, getProvider }: FunctionOptions,
-): Promise<FunctionReturn> {
-    // Check wallet connection
-    if (!account) return toResult('Wallet not connected', true);
+export async function repayBorrow(props: Props, { sendTransactions, notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
+    const wallet = parseWallet(props);
 
-    // Validate chain
-    const chainId = getChainFromName(chainName);
-    if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
-    if (!supportedChains.includes(chainId)) return toResult(`Protocol is not supported on ${chainName}`, true);
+    if (!wallet.success) {
+        return toResult(wallet.errorMessage, true);
+    }
 
-    // Validate amount
-    if (!maybeAmount || typeof maybeAmount !== 'string') return toResult('Amount must be a string', true);
+    const { account, chainId } = wallet.data;
 
-    const amount = parseUnits(maybeAmount, QI_MARKETS_DECIMALS);
-    if (amount === 0n) return toResult('Amount must be greater than 0', true);
+    const amount = parseAmount(props);
 
-    // Validate market
-    if (!marketName || !QI_MARKETS[marketName]) return toResult('Incorrect market specified', true);
+    if (!amount.success) {
+        return toResult(amount.errorMessage, true);
+    }
 
-    const marketAddress = QI_MARKETS[marketName];
+    const market = parseMarket(props);
+
+    if (!market.success) {
+        return toResult(market.errorMessage, true);
+    }
+
     const transactions: TransactionParams[] = [];
 
-    // Handle qiAVAX differently as it's not ERC-20 based
-    if (marketName === QI_AVAX_NAME) {
-        await notify('Preparing repayBorrow transaction...');
-
-        const tx: TransactionParams = {
-            target: marketAddress,
-            data: encodeFunctionData({
-                abi: qiAvaxAbi,
-                functionName: 'repayBorrow',
-                args: [],
-            }),
-            value: amount,
-        };
-
-        transactions.push(tx);
-    } else {
+    if (isERC20Based(market.data)) {
         // Underlying asset
         const provider = getProvider(chainId);
 
@@ -64,7 +48,7 @@ export async function repayBorrow(
 
         const underlyingAssetAddress = await provider.readContract({
             abi: qiERC20Abi,
-            address: marketAddress,
+            address: market.data.marketAddress,
             functionName: 'underlying',
             args: [],
         });
@@ -75,8 +59,8 @@ export async function repayBorrow(
             args: {
                 account,
                 target: underlyingAssetAddress,
-                spender: marketAddress,
-                amount,
+                spender: market.data.marketAddress,
+                amount: amount.data,
             },
             provider,
             transactions,
@@ -85,12 +69,26 @@ export async function repayBorrow(
         await notify('Preparing repayBorrow transaction...');
 
         const tx: TransactionParams = {
-            target: marketAddress,
+            target: market.data.marketAddress,
             data: encodeFunctionData({
                 abi: qiERC20Abi,
                 functionName: 'repayBorrow',
-                args: [amount],
+                args: [amount.data],
             }),
+        };
+
+        transactions.push(tx);
+    } else {
+        await notify('Preparing repayBorrow transaction...');
+
+        const tx: TransactionParams = {
+            target: market.data.marketAddress,
+            data: encodeFunctionData({
+                abi: qiAvaxAbi,
+                functionName: 'repayBorrow',
+                args: [],
+            }),
+            value: amount.data,
         };
 
         transactions.push(tx);
@@ -102,5 +100,5 @@ export async function repayBorrow(
     const result = await sendTransactions({ chainId, account, transactions });
     const message = result.data[result.data.length - 1];
 
-    return toResult(result.isMultisig ? message.message : `Successfully repaid borrow of ${amount} tokens. ${message.message}`);
+    return toResult(result.isMultisig ? message.message : `Successfully repaid borrow of ${amount.data} tokens. ${message.message}`);
 }
