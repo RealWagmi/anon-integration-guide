@@ -116,4 +116,33 @@ export const tools: AiTool[] = [
             },
         ],
     },
+    {
+        name: 'withdrawCollateral',
+        description: 'Withdraws a specified amount of tokens from the protocol.',
+        required: ['chainName', 'account', 'amount', 'marketName'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'The name of the chain on which the transaction will be executed.',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Account address that will execute transaction',
+            },
+            {
+                name: 'amount',
+                type: 'string',
+                description: 'Amount of tokens in decimal format',
+            },
+            {
+                name: 'marketName',
+                type: 'string',
+                enum: Object.keys(QI_MARKETS),
+                description: 'Market name used for withdraw. See https://docs.benqi.fi/benqi-markets/core-markets for list of available markets',
+            },
+        ],
+    },
 ];

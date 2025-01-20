@@ -1,4 +1,4 @@
-import { FunctionOptions, FunctionReturn, TransactionParams, checkToApprove, getChainFromName, toResult } from '@heyanon/sdk';
+import { FunctionOptions, FunctionReturn, TransactionParams, getChainFromName, toResult } from '@heyanon/sdk';
 import { Address, encodeFunctionData, parseUnits } from 'viem';
 import qiAvaxAbi from '../abis/qiAvax';
 import qiERC20Abi from '../abis/qiERC20';
@@ -12,15 +12,12 @@ interface Props {
 }
 
 /**
- * Repays a borrowed amount on the specified market.
+ * Withdraws a specified amount of tokens from the protocol.
  * @param props - The function `Props`
  * @param tools - System tools for blockchain interactions
  * @returns Transaction result
  */
-export async function repayBorrow(
-    { chainName, account, amount: maybeAmount, marketName }: Props,
-    { sendTransactions, notify, getProvider }: FunctionOptions,
-): Promise<FunctionReturn> {
+export async function withdrawCollateral({ chainName, account, amount: maybeAmount, marketName }: Props, { sendTransactions, notify }: FunctionOptions): Promise<FunctionReturn> {
     // Check wallet connection
     if (!account) return toResult('Wallet not connected', true);
 
@@ -43,52 +40,26 @@ export async function repayBorrow(
 
     // Handle qiAVAX differently as it's not ERC-20 based
     if (marketName === QI_AVAX_NAME) {
-        await notify('Preparing repayBorrow transaction...');
+        await notify('Preparing redeemUnderlying transaction...');
 
         const tx: TransactionParams = {
             target: marketAddress,
             data: encodeFunctionData({
                 abi: qiAvaxAbi,
-                functionName: 'repayBorrow',
-                args: [],
+                functionName: 'redeemUnderlying',
+                args: [amount],
             }),
-            value: amount,
         };
 
         transactions.push(tx);
     } else {
-        // Underlying asset
-        const provider = getProvider(chainId);
-
-        await notify('Checking underlying contract address...');
-
-        const underlyingAssetAddress = await provider.readContract({
-            abi: qiERC20Abi,
-            address: marketAddress,
-            functionName: 'underlying',
-            args: [],
-        });
-
-        await notify('Checking underlying contract allowance...');
-
-        await checkToApprove({
-            args: {
-                account,
-                target: underlyingAssetAddress,
-                spender: marketAddress,
-                amount,
-            },
-            provider,
-            transactions,
-        });
-
-        await notify('Preparing repayBorrow transaction...');
+        await notify('Preparing redeemUnderlying transaction...');
 
         const tx: TransactionParams = {
             target: marketAddress,
             data: encodeFunctionData({
                 abi: qiERC20Abi,
-                functionName: 'repayBorrow',
+                functionName: 'redeemUnderlying',
                 args: [amount],
             }),
         };
@@ -102,5 +73,5 @@ export async function repayBorrow(
     const result = await sendTransactions({ chainId, account, transactions });
     const message = result.data[result.data.length - 1];
 
-    return toResult(result.isMultisig ? message.message : `Successfully repaid borrow of ${amount} tokens. ${message.message}`);
+    return toResult(result.isMultisig ? message.message : `Successfully withdrawn collateral of ${amount} tokens. ${message.message}`);
 }
