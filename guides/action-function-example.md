@@ -1,3 +1,6 @@
+# Action Function Example
+
+```typescript
 import { Address, encodeFunctionData, parseUnits } from "viem";
 import {
   FunctionReturn,
@@ -81,3 +84,13 @@ export async function deposit(
       : `Successfully deposited ${amount} tokens. ${depositMessage.message}`
   );
 }
+```
+
+**Key Points**:
+
+- Validates input arguments.
+- Uses `notify` to inform the user.
+- Calls `sendTransactions` only once with the transaction array.
+- Returns the result using `toResult`.
+- Includes JSDoc comments.
+  </code_block_to_apply_changes_from>
