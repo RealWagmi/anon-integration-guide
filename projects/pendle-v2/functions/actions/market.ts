@@ -13,8 +13,12 @@ export async function addLiquidity(
     { sendTransactions, notify, getProvider }: { sendTransactions: Function, notify: Function, getProvider: Function }
 ): Promise<Result<string>> {
     try {
-        validateAddress(receiver);
-        validateAddress(marketAddress);
+        if (!validateAddress(receiver)) {
+            return { success: false, error: new ValidationError('Invalid receiver address') };
+        }
+        if (!validateAddress(marketAddress)) {
+            return { success: false, error: new ValidationError('Invalid market address') };
+        }
         tokenIn.forEach(validateAddress);
 
         if (tokenIn.length !== netTokenIn.length) {
@@ -45,7 +49,7 @@ export async function addLiquidity(
     } catch (error) {
         return {
             success: false,
-            error: error instanceof Error ? error.message : 'Unknown error occurred'
+            error: error instanceof Error ? error : new Error('Unknown error occurred')
         };
     }
 }
@@ -59,8 +63,12 @@ export async function removeLiquidity(
     { sendTransactions, notify, getProvider }: { sendTransactions: Function, notify: Function, getProvider: Function }
 ): Promise<Result<string[]>> {
     try {
-        validateAddress(receiver);
-        validateAddress(marketAddress);
+        if (!validateAddress(receiver)) {
+            return { success: false, error: new ValidationError('Invalid receiver address') };
+        }
+        if (!validateAddress(marketAddress)) {
+            return { success: false, error: new ValidationError('Invalid market address') };
+        }
         tokenOut.forEach(validateAddress);
 
         if (tokenOut.length !== minTokenOut.length) {
@@ -92,7 +100,7 @@ export async function removeLiquidity(
     } catch (error) {
         return {
             success: false,
-            error: error instanceof Error ? error.message : 'Unknown error occurred'
+            error: error instanceof Error ? error : new Error('Unknown error occurred')
         };
     }
 }
@@ -102,7 +110,9 @@ export async function redeemRewards(
     { sendTransactions, notify, getProvider }: { sendTransactions: Function, notify: Function, getProvider: Function }
 ): Promise<Result<void>> {
     try {
-        validateAddress(marketAddress);
+        if (!validateAddress(marketAddress)) {
+            return { success: false, error: new ValidationError('Invalid market address') };
+        }
 
         // Check if market is expired
         const provider = getProvider();
@@ -135,7 +145,7 @@ export async function redeemRewards(
     } catch (error) {
         return {
             success: false,
-            error: error instanceof Error ? error.message : 'Unknown error occurred'
+            error: error instanceof Error ? error : new Error('Unknown error occurred')
         };
     }
 }
@@ -145,7 +155,9 @@ export async function isExpired(
     { getProvider }: { getProvider: Function }
 ): Promise<Result<boolean>> {
     try {
-        validateAddress(marketAddress);
+        if (!validateAddress(marketAddress)) {
+            return { success: false, error: new ValidationError('Invalid market address') };
+        }
 
         const provider = getProvider();
         const result = await provider.readContract({
@@ -161,7 +173,7 @@ export async function isExpired(
     } catch (error) {
         return {
             success: false,
-            error: error instanceof Error ? error.message : 'Unknown error occurred'
+            error: error instanceof Error ? error : new Error('Unknown error occurred')
         };
     }
 } 
