@@ -1,0 +1,17 @@
+{
+    "name": "@projects/rss3",
+    "version": "1.0.0",
+    "scripts": {
+        "yarn": "yarn install"
+    },
+    "dependencies": {
+        "@heyanon/sdk": "^1.0.4",
+        "@rss3/sdk": "^0.0.25"
+    },
+    "license": "MIT",
+    "engines": {
+        "npm": "please-use-yarn",
+        "node": ">=18.x",
+        "yarn": ">=1.22"
+    }
+}
