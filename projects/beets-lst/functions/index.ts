@@ -1,1 +1,2 @@
-export { example } from './example';
+export { getStakedBalance } from './getStakedBalance';
+export { stake } from './stake';

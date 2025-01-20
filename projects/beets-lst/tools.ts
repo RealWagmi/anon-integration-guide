@@ -3,20 +3,38 @@ import { supportedChains } from './constants';
 
 export const tools: AiTool[] = [
     {
-        name: 'example',
-        description: 'Example function that demonstrates how to interact with the protocol. It shows basic transaction flow, including checking balances, preparing transaction data, and handling approvals if needed.',
+        name: 'getStakedBalance',
+        description: 'Get balance of staked Sonic tokens (stS)',
+        required: ['chainName', 'account'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Account address to check',
+            },
+        ],
+    },
+    {
+        name: 'stake',
+        description: 'Stake Sonic tokens (S) and obtain in return staked Sonic tokens (stS)',
         required: ['chainName', 'account', 'amount'],
         props: [
             {
                 name: 'chainName',
                 type: 'string',
                 enum: supportedChains.map(getChainName),
-                description: 'Chain name where to execute the example',
+                description: 'Name of chain where to stake tokens',
             },
             {
                 name: 'account',
                 type: 'string',
-                description: 'Account address that will execute the example',
+                description: 'Account address that will stake tokens',
             },
             {
                 name: 'amount',
