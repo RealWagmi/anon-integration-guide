@@ -31,4 +31,31 @@ export const tools: AiTool[] = [
             },
         ],
     },
+    {
+        name: 'enterMarkets',
+        description: 'Enters a list of markets on the specified chain for the given account.',
+        required: ['chainName', 'account', 'marketNames'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name where to deposit tokens',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Account address that will execute transaction',
+            },
+            {
+                name: 'marketName',
+                type: 'array',
+                items: {
+                    type: 'string',
+                    enum: supportedChains.map(getChainName),
+                },
+                description: 'Market names user wishes to enter. See https://docs.benqi.fi/benqi-markets/core-markets for list of available markets',
+            },
+        ],
+    },
 ];
