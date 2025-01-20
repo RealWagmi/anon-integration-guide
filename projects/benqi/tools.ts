@@ -32,27 +32,4 @@ export const tools: AiTool[] = [
             },
         ],
     },
-    {
-        name: 'depositCollateralAvax',
-        description: 'Deposits a specified amount of AVAX into the protocol. Necessary first step for borrowing.',
-        required: ['chainName', 'account', 'amount'],
-        props: [
-            {
-                name: 'chainName',
-                type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Chain name where to deposit AVAX',
-            },
-            {
-                name: 'account',
-                type: 'string',
-                description: 'Account address that will execute transaction',
-            },
-            {
-                name: 'amount',
-                type: 'string',
-                description: 'Amount of AVAX for deposit in decimal format',
-            },
-        ],
-    },
 ];

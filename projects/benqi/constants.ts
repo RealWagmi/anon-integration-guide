@@ -3,9 +3,9 @@ import { ChainId } from '@heyanon/sdk';
 export const supportedChains = [ChainId.AVALANCHE];
 
 export const COMPTROLLER_ADDRESS = '0xfc8C7271BdC3816D7AB1fc802216bad387692Ce1';
-export const QI_AVAX_ADDRESS = '0x5C0401e81Bc07Ca70fAD469b451682c0d747Ef1c';
 
 export const QI_MARKETS = {
+    qiAVAX: '0x5C0401e81Bc07Ca70fAD469b451682c0d747Ef1c',
     qisAVAX: '0xF362feA9659cf036792c9cb02f8ff8198E21B4cB',
     'qiBTC.b': '0x89a415b3D20098E6A6C8f7a59001C67BD3129821',
     qiBTC: '0xe194c4c5aC32a3C9ffDb358d9Bfd523a0B6d1568',
@@ -20,6 +20,8 @@ export const QI_MARKETS = {
     qiQI: '0x35Bd6aedA81a7E5FC7A7832490e71F757b0cD9Ce',
 } as const;
 
-export type QiMarket = keyof typeof QI_MARKETS;
+export type QiMarketName = keyof typeof QI_MARKETS;
 
 export const QI_MARKETS_DECIMALS = 8;
+
+export const QI_AVAX_NAME = 'qiAVAX';

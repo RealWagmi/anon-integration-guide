@@ -1,23 +1,24 @@
 import { FunctionOptions, FunctionReturn, TransactionParams, checkToApprove, getChainFromName, toResult } from '@heyanon/sdk';
 import { Address, encodeFunctionData, parseUnits } from 'viem';
+import qiAvaxAbi from '../abis/qiAvax';
 import qiERC20Abi from '../abis/qiERC20';
-import { QI_MARKETS, QI_MARKETS_DECIMALS, type QiMarket, supportedChains } from '../constants';
+import { QI_AVAX_NAME, QI_MARKETS, QI_MARKETS_DECIMALS, type QiMarketName, supportedChains } from '../constants';
 
 interface Props {
     chainName: string;
     account: Address;
     amount: string;
-    market: QiMarket;
+    marketName: QiMarketName;
 }
 
 /**
- * Example function that demonstrates protocol interaction pattern.
+ * Deposit collateral on QiMarkets
  * @param props - The function `Props`
  * @param tools - System tools for blockchain interactions
  * @returns Transaction result
  */
 export async function depositCollateral(
-    { chainName, account, amount: maybeAmount, market: maybeMarket }: Props,
+    { chainName, account, amount: maybeAmount, marketName }: Props,
     { sendTransactions, notify, getProvider }: FunctionOptions,
 ): Promise<FunctionReturn> {
     // Check wallet connection
@@ -35,48 +36,65 @@ export async function depositCollateral(
     if (amount === 0n) return toResult('Amount must be greater than 0', true);
 
     // Validate market
-    if (!maybeMarket || !QI_MARKETS[maybeMarket]) return toResult('Incorrect market specified', true);
+    if (!marketName || !QI_MARKETS[marketName]) return toResult('Incorrect market specified', true);
 
-    const marketAddress = QI_MARKETS[maybeMarket];
-
-    const provider = getProvider(chainId);
+    const marketAddress = QI_MARKETS[marketName];
     const transactions: TransactionParams[] = [];
 
-    // Underlying asset
-    await notify('Checking underlying contract address...');
+    // Handle qiAVAX differently as it's not ERC-20 based
+    if (marketName === QI_AVAX_NAME) {
+        await notify('Preparing mint transaction...');
 
-    const underlyingAssetAddress = await provider.readContract({
-        abi: qiERC20Abi,
-        address: marketAddress,
-        functionName: 'underlying',
-        args: [],
-    });
+        const tx: TransactionParams = {
+            target: marketAddress,
+            data: encodeFunctionData({
+                abi: qiAvaxAbi,
+                functionName: 'mint',
+                args: [],
+            }),
+            value: amount,
+        };
 
-    await notify('Checking underlying contract allowance...');
+        transactions.push(tx);
+    } else {
+        // Underlying asset
+        const provider = getProvider(chainId);
 
-    await checkToApprove({
-        args: {
-            account,
-            target: underlyingAssetAddress,
-            spender: marketAddress,
-            amount,
-        },
-        provider,
-        transactions,
-    });
+        await notify('Checking underlying contract address...');
 
-    await notify('Preparing mint transaction...');
-
-    const tx: TransactionParams = {
-        target: marketAddress,
-        data: encodeFunctionData({
+        const underlyingAssetAddress = await provider.readContract({
             abi: qiERC20Abi,
-            functionName: 'mint',
-            args: [amount],
-        }),
-    };
+            address: marketAddress,
+            functionName: 'underlying',
+            args: [],
+        });
 
-    transactions.push(tx);
+        await notify('Checking underlying contract allowance...');
+
+        await checkToApprove({
+            args: {
+                account,
+                target: underlyingAssetAddress,
+                spender: marketAddress,
+                amount,
+            },
+            provider,
+            transactions,
+        });
+
+        await notify('Preparing mint transaction...');
+
+        const tx: TransactionParams = {
+            target: marketAddress,
+            data: encodeFunctionData({
+                abi: qiERC20Abi,
+                functionName: 'mint',
+                args: [amount],
+            }),
+        };
+
+        transactions.push(tx);
+    }
 
     await notify('Waiting for transaction confirmation...');
 
