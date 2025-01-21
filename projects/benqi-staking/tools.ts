@@ -29,6 +29,12 @@ const amountRequiredProps = ['amount'];
 
 export const tools: AiTool[] = [
     {
+        name: 'redeemUnstakedAvax',
+        description: 'Reedems previously unstaked AVAX from the sAVAX contract',
+        required: [...walletRequiredProps],
+        props: [...walletProps],
+    },
+    {
         name: 'stakeAvax',
         description: 'Stakes specified amount of AVAX on the sAVAX contract',
         required: [...walletRequiredProps, ...amountRequiredProps],
