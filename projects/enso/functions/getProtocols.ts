@@ -6,7 +6,7 @@ interface Props {
     chainName: string;
 }
 
-interface EnsoApiProtocol {
+export interface EnsoApiProtocol {
     chains: { name: string; id: number }[];
     name: string | null;
     description: string | null;

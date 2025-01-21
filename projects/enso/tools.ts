@@ -1,5 +1,5 @@
 import { AiTool, getChainName } from '@heyanon/sdk';
-import { ENSO_ROUTING_STRATEGIES, supportedChains } from './constants';
+import { supportedChains } from './constants';
 
 export const tools: AiTool[] = [
     {
@@ -16,6 +16,24 @@ export const tools: AiTool[] = [
         ],
     },
     {
+        name: 'getProtocol',
+        description: 'Search for a protocol by its slug on specified chain',
+        required: ['chainName', 'protocol'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name',
+            },
+            {
+                name: 'protocol',
+                type: 'string',
+                description: 'Protocol slug',
+            },
+        ],
+    },
+    {
         name: 'getTokens',
         description: 'Get tokens that are supported by Enso on specified chain',
         required: ['chainName'],
@@ -25,6 +43,24 @@ export const tools: AiTool[] = [
                 type: 'string',
                 enum: supportedChains.map(getChainName),
                 description: 'Chain name',
+            },
+        ],
+    },
+    {
+        name: 'getToken',
+        description: 'Search for a token by its address on specified chain',
+        required: ['chainName', 'address'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name',
+            },
+            {
+                name: 'address',
+                type: 'string',
+                description: 'Token address',
             },
         ],
     },

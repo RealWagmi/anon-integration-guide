@@ -6,7 +6,7 @@ interface Props {
     chainName: string;
 }
 
-interface EnsoApiToken {
+export interface EnsoApiToken {
     chainId: number;
     address: string;
     decimals: number;
