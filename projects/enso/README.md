@@ -18,15 +18,15 @@ Enso
 ## Common Tasks
 
 1. Basic Operations
-   - "Execute example operation with 100 USDT in @enso on Ethereum network"
-   - "Run example transaction with 50 USDC in @enso"
-   - "Perform example action with 1000 tokens in @enso"
+
+    - "Swap 1000 USDT to WETH on @enso on Ethereum network"
 
 2. Information Queries
-   - "Show my current status in @enso"
-   - "Check my balance in @enso"
-   - "Get example statistics from @enso"
-   - "Calculate expected results for my position in @enso"
+
+    - "Show me supported tokens on @enso"
+    - "Is USDC supported on @enso on Base network"
+    - "Show me supported protocols on @enso on Etheruem network"
+    - "Is Uniswap supported on @enso on Ethereum network"
 
 ## Available Functions
 
@@ -40,6 +40,12 @@ Enso
 - getProtocols
 - getToken
 - getTokens
+
+## Documentation
+
+- [Router API reference](https://api-docs.enso.build/router-api/introduction)
+- [Tokens API reference](https://api-docs.enso.build/metadata-api/api-reference/tokens)
+- [Protocols API reference](https://api-docs.enso.build/metadata-api/api-reference/protocols)
 
 ## Installation
 
