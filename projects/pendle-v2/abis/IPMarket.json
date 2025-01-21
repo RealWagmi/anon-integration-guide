@@ -1,0 +1,93 @@
+{
+  "name": "IPMarket",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "receiver",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "netLpToRemove",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "minTokenOut",
+          "type": "uint256[]"
+        },
+        {
+          "internalType": "address[]",
+          "name": "tokenOut",
+          "type": "address[]"
+        }
+      ],
+      "name": "removeLiquidity",
+      "outputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "tokenAmountOut",
+          "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "receiver",
+          "type": "address"
+        },
+        {
+          "internalType": "address[]",
+          "name": "tokenIn",
+          "type": "address[]"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "netTokenIn",
+          "type": "uint256[]"
+        },
+        {
+          "internalType": "uint256",
+          "name": "minLpOut",
+          "type": "uint256"
+        }
+      ],
+      "name": "addLiquidity",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "lpOut",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable", 
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "redeemRewards",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "isExpired",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+} 

@@ -1,0 +1,53 @@
+{
+  "name": "IPGaugeController",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "redeemMarketReward",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "market",
+          "type": "address"
+        }
+      ],
+      "name": "rewardData",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint128",
+              "name": "pendlePerSec",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "accumulatedPendle",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "lastUpdated",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "incentiveEndsAt",
+              "type": "uint128"
+            }
+          ],
+          "internalType": "struct MarketRewardData",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+} 

@@ -1,0 +1,176 @@
+{
+    "name": "IPActionMarketCoreStatic",
+    "abi": [
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "market",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netSyDesired",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netPtDesired",
+                    "type": "uint256"
+                }
+            ],
+            "name": "addLiquidityDualSyAndPtStatic",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "netLpOut",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netSyUsed",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netPtUsed",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "market",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "tokenIn",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netTokenDesired",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netPtDesired",
+                    "type": "uint256"
+                }
+            ],
+            "name": "addLiquidityDualTokenAndPtStatic",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "netLpOut",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netTokenUsed",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netPtUsed",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netSyUsed",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netSyDesired",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "market",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netPtIn",
+                    "type": "uint256"
+                }
+            ],
+            "name": "addLiquiditySinglePtStatic",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "netLpOut",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netPtToSwap",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netSyFee",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "priceImpact",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "exchangeRateAfter",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netSyFromSwap",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "market",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netSyIn",
+                    "type": "uint256"
+                }
+            ],
+            "name": "addLiquiditySingleSyKeepYtStatic",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "netLpOut",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netSyFee",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        }
+    ]
+} 

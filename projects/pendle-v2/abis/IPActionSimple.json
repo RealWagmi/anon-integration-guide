@@ -1,0 +1,254 @@
+{
+    "name": "IPActionSimple",
+    "abi": [
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "receiver",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "market",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netPtIn",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "minLpOut",
+                    "type": "uint256"
+                }
+            ],
+            "name": "addLiquiditySinglePtSimple",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "netLpOut",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netSyFee",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "receiver",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "market",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "minLpOut",
+                    "type": "uint256"
+                },
+                {
+                    "components": [
+                        {
+                            "internalType": "address",
+                            "name": "tokenIn",
+                            "type": "address"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "amountIn",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "address",
+                            "name": "tokenMintSy",
+                            "type": "address"
+                        },
+                        {
+                            "internalType": "bool",
+                            "name": "bulk",
+                            "type": "bool"
+                        }
+                    ],
+                    "internalType": "struct TokenInput",
+                    "name": "input",
+                    "type": "tuple"
+                }
+            ],
+            "name": "addLiquiditySingleTokenSimple",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "netLpOut",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netSyFee",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netSyInterm",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "payable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "receiver",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "market",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netSyIn",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "minLpOut",
+                    "type": "uint256"
+                }
+            ],
+            "name": "addLiquiditySingleSySimple",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "netLpOut",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netSyFee",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "receiver",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "market",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netLpToRemove",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "minPtOut",
+                    "type": "uint256"
+                }
+            ],
+            "name": "removeLiquiditySinglePtSimple",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "netPtOut",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netSyFee",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "receiver",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "market",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "minPtOut",
+                    "type": "uint256"
+                },
+                {
+                    "components": [
+                        {
+                            "internalType": "address",
+                            "name": "tokenIn",
+                            "type": "address"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "amountIn",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "address",
+                            "name": "tokenMintSy",
+                            "type": "address"
+                        },
+                        {
+                            "internalType": "bool",
+                            "name": "bulk",
+                            "type": "bool"
+                        }
+                    ],
+                    "internalType": "struct TokenInput",
+                    "name": "input",
+                    "type": "tuple"
+                }
+            ],
+            "name": "swapExactTokenForPtSimple",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "netPtOut",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netSyFee",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netSyInterm",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "payable",
+            "type": "function"
+        }
+    ]
+} 

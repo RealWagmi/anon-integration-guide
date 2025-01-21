@@ -1,0 +1,217 @@
+{
+    "name": "IPActionMintRedeemStatic",
+    "abi": [
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "SY",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "tokenIn",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netSyOut",
+                    "type": "uint256"
+                }
+            ],
+            "name": "getAmountTokenToMintSy",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "netTokenIn",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "YT",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netSyToMint",
+                    "type": "uint256"
+                }
+            ],
+            "name": "mintPyFromSyStatic",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "netPYOut",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "YT",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "tokenIn",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netTokenIn",
+                    "type": "uint256"
+                }
+            ],
+            "name": "mintPyFromTokenStatic",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "netPyOut",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "SY",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "tokenIn",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netTokenIn",
+                    "type": "uint256"
+                }
+            ],
+            "name": "mintSyFromTokenStatic",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "netSyOut",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "YT",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netPYToRedeem",
+                    "type": "uint256"
+                }
+            ],
+            "name": "redeemPyToSyStatic",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "netSyOut",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "YT",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netPYToRedeem",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "address",
+                    "name": "tokenOut",
+                    "type": "address"
+                }
+            ],
+            "name": "redeemPyToTokenStatic",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "netTokenOut",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "SY",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "tokenOut",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netSyIn",
+                    "type": "uint256"
+                }
+            ],
+            "name": "redeemSyToTokenStatic",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "netTokenOut",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "market",
+                    "type": "address"
+                }
+            ],
+            "name": "pyIndexCurrentViewMarket",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        }
+    ]
+} 

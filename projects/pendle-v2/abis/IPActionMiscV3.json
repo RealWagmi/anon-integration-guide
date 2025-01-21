@@ -1,0 +1,168 @@
+{
+    "name": "IPActionMiscV3",
+    "abi": [
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "receiver",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "SY",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "minSyOut",
+                    "type": "uint256"
+                },
+                {
+                    "components": [
+                        {
+                            "internalType": "address",
+                            "name": "tokenIn",
+                            "type": "address"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "amountIn",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "address",
+                            "name": "tokenMintSy",
+                            "type": "address"
+                        },
+                        {
+                            "internalType": "bool",
+                            "name": "bulk",
+                            "type": "bool"
+                        }
+                    ],
+                    "internalType": "struct TokenInput",
+                    "name": "input",
+                    "type": "tuple"
+                }
+            ],
+            "name": "mintSyFromToken",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "netSyOut",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "payable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "receiver",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "SY",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "netSyIn",
+                    "type": "uint256"
+                },
+                {
+                    "components": [
+                        {
+                            "internalType": "address",
+                            "name": "tokenOut",
+                            "type": "address"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "minTokenOut",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "bool",
+                            "name": "bulk",
+                            "type": "bool"
+                        }
+                    ],
+                    "internalType": "struct TokenOutput",
+                    "name": "output",
+                    "type": "tuple"
+                }
+            ],
+            "name": "redeemSyToToken",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "netTokenOut",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "receiver",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "YT",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "minPyOut",
+                    "type": "uint256"
+                },
+                {
+                    "components": [
+                        {
+                            "internalType": "address",
+                            "name": "tokenIn",
+                            "type": "address"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "amountIn",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "address",
+                            "name": "tokenMintSy",
+                            "type": "address"
+                        },
+                        {
+                            "internalType": "bool",
+                            "name": "bulk",
+                            "type": "bool"
+                        }
+                    ],
+                    "internalType": "struct TokenInput",
+                    "name": "input",
+                    "type": "tuple"
+                }
+            ],
+            "name": "mintPyFromToken",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "netPyOut",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "payable",
+            "type": "function"
+        }
+    ]
+} 
