@@ -115,8 +115,10 @@ export async function getMatchingVaults({ chainName, protocolName, assets }: Pro
         return {
             id: vault.id,
             name: vault.name,
+            type: vault.type,
             token: vault.token,
-            tokenAddress: vault.tokenAddress,
+            assets: vault.assets,
+            risks: vault.risks,
         };
     });
 
