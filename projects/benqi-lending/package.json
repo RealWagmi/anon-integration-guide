@@ -1,5 +1,5 @@
 {
-    "name": "@projects/-lending",
+    "name": "@projects/benqi-lending",
     "version": "1.0.0",
     "scripts": {
         "yarn": "yarn install"

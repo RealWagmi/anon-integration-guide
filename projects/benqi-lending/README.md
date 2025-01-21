@@ -31,7 +31,7 @@ List of available functions will be added here.
 ## Installation
 
 ```bash
-yarn add @heyanon/-lending
+yarn add @heyanon/benqi-lending
 ```
 
 ## Usage
