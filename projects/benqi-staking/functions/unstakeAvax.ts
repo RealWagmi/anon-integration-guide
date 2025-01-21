@@ -11,12 +11,12 @@ type Props = {
 };
 
 /**
- * Stakes specified amount of AVAX on the sAVAX contract
+ * Unstakes specified amount of AVAX from the sAVAX contract
  * @param props - The function `Props`
  * @param tools - System tools for blockchain interactions
  * @returns Transaction result
  */
-export async function stakeAvax(props: Props, { sendTransactions, notify }: FunctionOptions): Promise<FunctionReturn> {
+export async function unstakeAvax(props: Props, { sendTransactions, notify }: FunctionOptions): Promise<FunctionReturn> {
     const wallet = parseWallet(props);
 
     if (!wallet.success) {
@@ -33,16 +33,15 @@ export async function stakeAvax(props: Props, { sendTransactions, notify }: Func
 
     const transactions: TransactionParams[] = [];
 
-    await notify('Preparing stake AVAX transaction...');
+    await notify('Preparing requestUnlock AVAX transaction...');
 
     const tx: TransactionParams = {
         target: SAVAX_ADDRESS,
         data: encodeFunctionData({
             abi: sAvaxAbi,
-            functionName: 'submit',
-            args: [],
+            functionName: 'requestUnlock',
+            args: [amount.data],
         }),
-        value: amount.data,
     };
 
     transactions.push(tx);
@@ -53,5 +52,5 @@ export async function stakeAvax(props: Props, { sendTransactions, notify }: Func
     const result = await sendTransactions({ chainId, account, transactions });
     const message = result.data[result.data.length - 1];
 
-    return toResult(result.isMultisig ? message.message : `Successfully staked ${props.amount} tokens. ${message.message}`);
+    return toResult(result.isMultisig ? message.message : `Successfully requested unstake for ${props.amount} tokens. ${message.message}`);
 }
