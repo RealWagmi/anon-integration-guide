@@ -1,55 +1,45 @@
 import { Address, encodeFunctionData, parseUnits } from 'viem';
 import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName, checkToApprove } from '@heyanon/sdk';
-import { supportedChains, STR_ADDRESS, USDS_ADDRESS } from '../constants';
-import { strAbi } from '../abis';
+import { supportedChains, DSR_ADDRESS, STR_ADDRESS, DAI_ADDRESS } from '../constants';
+import dsrManagerAbi from '../abis/DsrManager.abi.json';
 
 interface Props {
     chainName: string;
     account: Address;
+    destination: Address
     amount: string;
 }
-export async function stakeSTR({ chainName, account, amount }: Props, { sendTransactions, getProvider, notify }: FunctionOptions): Promise<FunctionReturn> {
+
+export async function exit({ chainName, account, destination, amount }: Props, { sendTransactions, notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
     if (!account) return toResult('Wallet not connected', true);
 
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Sky protocol is not supported on ${chainName}`, true);
 
-    await notify('Preparing to stake USDS tokens in Sky Token Rewards...');
+    await notify('Preparing to withdraw DAI from pot...');
 
     const amountInWei = parseUnits(amount, 18);
     if (amountInWei === 0n) return toResult('Amount must be greater than 0', true);
 
-    const provider = getProvider(chainId);
     const transactions: TransactionParams[] = [];
 
-    // Check and prepare approve transaction if needed
-    await checkToApprove({
-        args: {
-            account,
-            target: USDS_ADDRESS,
-            spender: STR_ADDRESS,
-            amount: amountInWei
-        },
-        transactions,
-        provider,
-    });
-    
-    // Prepare stake transaction
+    // Prepare exit transaction
     const tx: TransactionParams = {
-        target: STR_ADDRESS,
+        target: DSR_ADDRESS,
         data: encodeFunctionData({
-            abi: strAbi,
-            functionName: 'stake',
-            args: [amountInWei],
+            abi: dsrManagerAbi,
+            functionName: 'exit',
+            args: [destination, amountInWei],
         }),
     };
+
     transactions.push(tx);
 
     await notify('Waiting for transaction confirmation...');
 
     const result = await sendTransactions({ chainId, account, transactions });
-    const stakeMessage = result.data[result.data.length - 1];
+    const exitMessage = result.data[result.data.length - 1];
 
-    return toResult(result.isMultisig ? stakeMessage.message : `Successfully staked ${amount} USDS in STR. ${stakeMessage.message}`);
+    return toResult(result.isMultisig ? exitMessage.message : `Successfully exited DAI from pot. ${exitMessage.message}`);
 }

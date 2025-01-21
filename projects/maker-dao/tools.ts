@@ -3,299 +3,100 @@ import { supportedChains } from './constants';
 
 export const tools: AiTool[] = [
     {
-        name: 'stakeSTR',
-        description: 'Stake (supply) USDS tokens in Sky Token Rewards (STR) module to earn SKY rewards',
-        required: ['chainName', 'account', 'amount'],
+        name: 'join',
+        description: 'Deposit DAI tokens into the Dai Savings Rate (DSR) pot to earn savings',
+        required: ['chainName', 'account', 'destination', 'amount'],
         props: [
             {
                 name: 'chainName',
                 type: 'string',
                 enum: supportedChains.map(getChainName),
-                description: 'Chain name where to stake tokens',
+                description: 'Chain name where to deposit DAI',
             },
             {
                 name: 'account',
                 type: 'string',
-                description: 'Account address that will stake tokens',
+                description: 'Account address that will deposit DAI',
+            },
+            {
+                name: 'destination',
+                type: 'string',
+                description: 'Destination address for the DSR position',
             },
             {
                 name: 'amount',
                 type: 'string',
-                description: 'Amount of USDS tokens to stake in decimal format',
+                description: 'Amount of DAI tokens to deposit in decimal format',
             },
         ],
     },
     {
-        name: 'withdrawSTR',
-        description: 'Withdraw staked USDS tokens from Sky Token Rewards (STR) module',
-        required: ['chainName', 'account', 'amount'],
+        name: 'exit',
+        description: 'Withdraw DAI tokens from the Dai Savings Rate (DSR) pot',
+        required: ['chainName', 'account', 'destination', 'amount'],
         props: [
             {
                 name: 'chainName',
                 type: 'string',
                 enum: supportedChains.map(getChainName),
-                description: 'Chain name where to withdraw tokens',
+                description: 'Chain name where to withdraw DAI',
             },
             {
                 name: 'account',
                 type: 'string',
-                description: 'Account address that will withdraw tokens',
+                description: 'Account address that will withdraw DAI',
+            },
+            {
+                name: 'destination',
+                type: 'string',
+                description: 'Destination address to receive the withdrawn DAI',
             },
             {
                 name: 'amount',
                 type: 'string',
-                description: 'Amount of USDS tokens to withdraw in decimal format',
+                description: 'Amount of DAI tokens to withdraw in decimal format',
             },
         ],
     },
     {
-        name: 'claimRewardSTR',
-        description: 'Claim earned SKY rewards from Sky Token Rewards (STR) module',
-        required: ['chainName', 'account'],
+        name: 'exitAll',
+        description: 'Withdraw all DAI tokens from the Dai Savings Rate (DSR) pots',
+        required: ['chainName', 'account', 'destination'],
         props: [
             {
                 name: 'chainName',
                 type: 'string',
                 enum: supportedChains.map(getChainName),
-                description: 'Chain name where to claim rewards',
+                description: 'Chain name where to withdraw DAI',
             },
             {
                 name: 'account',
                 type: 'string',
-                description: 'Account address that will claim rewards',
+                description: 'Account address that will withdraw DAI',
+            },
+            {
+                name: 'destination',
+                type: 'string',
+                description: 'Destination address to receive the withdrawn DAI',
             },
         ],
     },
     {
-        name: 'exitSTR',
-        description: 'Withdraw all staked USDS tokens and claim all SKY rewards from Sky Token Rewards (STR) module',
-        required: ['chainName', 'account'],
+        name: 'getDaiBalance',
+        description: 'Get the total DAI balance in the DSR pot including earned savings',
+        required: ['chainName', 'userAddress'],
         props: [
             {
                 name: 'chainName',
                 type: 'string',
                 enum: supportedChains.map(getChainName),
-                description: 'Chain name where to exit staking',
+                description: 'Chain name to check balance',
             },
             {
-                name: 'account',
+                name: 'userAddress',
                 type: 'string',
-                description: 'Account address that will exit staking',
+                description: 'Address to check DAI balance for',
             },
         ],
-    },
-    {
-        name: 'depositSSR',
-        description: 'Deposit (stake,supply) USDS tokens to Sky Savings Rate (SSR) module to mint sUSDS tokens with auto-compounding rewards',
-        required: ['chainName', 'account', 'amount'],
-        props: [
-            {
-                name: 'chainName',
-                type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Chain name where to deposit tokens',
-            },
-            {
-                name: 'account',
-                type: 'string',
-                description: 'Account address that will deposit tokens',
-            },
-            {
-                name: 'amount',
-                type: 'string',
-                description: 'Amount of USDS tokens to deposit in decimal format',
-            },
-        ],
-    },
-    {
-        name: 'withdrawSSR',
-        description: 'Withdraw (burn,withdraw) USDS tokens from Sky Savings Rate (SSR) module by burning sUSDS tokens',
-        required: ['chainName', 'account', 'amount'],
-        props: [
-            {
-                name: 'chainName',
-                type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Chain name where to withdraw tokens',
-            },
-            {
-                name: 'account',
-                type: 'string',
-                description: 'Account address that will withdraw tokens',
-            },
-            {
-                name: 'amount',
-                type: 'string',
-                description: 'Amount of USDS tokens to withdraw in decimal format',
-            },
-        ],
-    },
-    {
-        name: 'convertToSharesSSR',
-        description: 'Calculate how many sUSDS tokens you will receive for a given amount of USDS',
-        required: ['chainName', 'amount'],
-        props: [
-            {
-                name: 'chainName',
-                type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Chain name',
-            },
-            {
-                name: 'amount',
-                type: 'string',
-                description: 'Amount of USDS tokens in decimal format',
-            },
-        ],
-    },
-    {
-        name: 'convertToAssetsSSR',
-        description: 'Calculate how many USDS tokens you will receive for a given amount of sUSDS',
-        required: ['chainName', 'amount'],
-        props: [
-            {
-                name: 'chainName',
-                type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Chain name',
-            },
-            {
-                name: 'amount',
-                type: 'string',
-                description: 'Amount of sUSDS tokens in decimal format',
-            },
-        ],
-    },
-    {
-        name: 'maxWithdrawSSR',
-        description: 'Get maximum amount of USDS that can be withdrawn by an account',
-        required: ['chainName', 'account'],
-        props: [
-            {
-                name: 'chainName',
-                type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Chain name',
-            },
-            {
-                name: 'account',
-                type: 'string',
-                description: 'Account address to check',
-            },
-        ],
-    },
-    {
-        name: 'redeemSSR',
-        description: 'Redeem (burn,withdraw) sUSDS tokens for USDS tokens',
-        required: ['chainName', 'account', 'shares'],
-        props: [
-            {
-                name: 'chainName',
-                type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Chain name',
-            },
-            {
-                name: 'account',
-                type: 'string',
-                description: 'Account address',
-            },
-            {
-                name: 'shares',
-                type: 'string',
-                description: 'Amount of sUSDS tokens to redeem in decimal format',
-            },
-        ],
-    },
-    {
-        name: 'maxRedeemSSR',
-        description: 'Get maximum amount of sUSDS that can be redeemed by an account',
-        required: ['chainName', 'account'],
-        props: [
-            {
-                name: 'chainName',
-                type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Chain name',
-            },
-            {
-                name: 'account',
-                type: 'string',
-                description: 'Account address to check',
-            },
-        ],
-    },
-    {
-        name: 'getStakedBalanceSTR',
-        description: 'Get staked USDS balance in Sky Token Rewards (STR) module',
-        required: ['chainName', 'account'],
-        props: [
-            {
-                name: 'chainName',
-                type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Chain name',
-            },
-            {
-                name: 'account',
-                type: 'string',
-                description: 'Account address to check',
-            },
-        ],
-    },
-    {
-        name: 'getPendingRewardSTR',
-        description: 'Get pending SKY rewards in Sky Token Rewards (STR) module',
-        required: ['chainName', 'account'],
-        props: [
-            {
-                name: 'chainName',
-                type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Chain name',
-            },
-            {
-                name: 'account',
-                type: 'string',
-                description: 'Account address to check',
-            },
-        ],
-    },
-    {
-        name: 'rewardPerTokenSTR',
-        description: 'Get current reward rate per staked token in Sky Token Rewards (STR) module',
-        required: ['chainName'],
-        props: [
-            {
-                name: 'chainName',
-                type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Chain name',
-            },
-        ],
-    },
-    {
-        name: 'getUserPositionOnSKY',
-        description: 'Get complete user position in Sky protocol including STR staking and SSR positions',
-        required: ['chainName', 'account'],
-        props: [
-            {
-                name: 'chainName',
-                type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Chain name',
-            },
-            {
-                name: 'account',
-                type: 'string',
-                description: 'Account address to check',
-            },
-        ],
-    },
-    {
-        name: 'getSkySupportedChains',
-        description: 'Get a list of Sky supported networks with their names and Chain IDs',
-        required: [],
-        props: [],
     },
 ];
