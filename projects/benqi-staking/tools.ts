@@ -52,4 +52,10 @@ export const tools: AiTool[] = [
         required: [...walletRequiredProps, ...amountRequiredProps],
         props: [...walletProps, ...amountProps],
     },
+    {
+        name: 'unstakeAvax',
+        description: 'Unstakes specified amount of Qi on the veQi contract',
+        required: [...walletRequiredProps, ...amountRequiredProps],
+        props: [...walletProps, ...amountProps],
+    },
 ];
