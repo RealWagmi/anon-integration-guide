@@ -1,0 +1,1 @@
+export { stakeAvax } from './stakeAvax';

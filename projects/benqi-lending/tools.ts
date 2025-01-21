@@ -1,5 +1,5 @@
 import { AiTool, getChainName } from '@heyanon/sdk';
-import { CORE_MARKETS, ECOSYSTEM_MARKETS, supportedChains } from './constants';
+import { supportedChains } from './constants';
 
 const walletProps = [
     {
