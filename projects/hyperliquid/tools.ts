@@ -3,25 +3,25 @@ import { supportedChains } from './constants';
 
 export const tools: AiTool[] = [
     {
-        name: 'example',
-        description: 'Example function that demonstrates how to interact with the protocol. It shows basic transaction flow, including checking balances, preparing transaction data, and handling approvals if needed.',
+        name: 'bridgeToHyperliquid',
+        description: 'Bridges native USDC tokens from Arbitrum to Hyperliquid.',
         required: ['chainName', 'account', 'amount'],
         props: [
             {
                 name: 'chainName',
                 type: 'string',
                 enum: supportedChains.map(getChainName),
-                description: 'Chain name where to execute the example',
+                description: 'Chain name where the bridge transaction is executed. (must be Arbitrum)',
             },
             {
                 name: 'account',
                 type: 'string',
-                description: 'Account address that will execute the example',
+                description: 'Account address that will execute transaction.',
             },
             {
                 name: 'amount',
                 type: 'string',
-                description: 'Amount of tokens for the example in decimal format',
+                description: 'Amount of USDC tokens to bridge. (minimum 5 USDC)',
             },
         ],
     },
