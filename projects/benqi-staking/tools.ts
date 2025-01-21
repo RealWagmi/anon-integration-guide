@@ -85,8 +85,14 @@ export const tools: AiTool[] = [
         props: [...walletProps, ...amountProps],
     },
     {
+        name: 'unvoteNodes',
+        description: 'Updates votes for specified nodes. This method will decrease previously existing votes',
+        required: [...walletRequiredProps, ...nodesRequiredProps, ...weightsRequiredProps],
+        props: [...walletProps, ...nodesProps, ...weightsProps],
+    },
+    {
         name: 'voteNodes',
-        description: 'Updates votes for specified nodes',
+        description: 'Updates votes for specified nodes. This method will increase previously existing votes',
         required: [...walletRequiredProps, ...nodesRequiredProps, ...weightsRequiredProps],
         props: [...walletProps, ...nodesProps, ...weightsProps],
     },
