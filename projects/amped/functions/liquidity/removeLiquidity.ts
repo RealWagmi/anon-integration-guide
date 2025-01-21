@@ -7,7 +7,7 @@ import {
     checkToApprove 
 } from '@heyanon/sdk';
 import { NETWORK_CONFIGS, RemoveLiquidityProps } from './types';
-import GLPManagerABI from '../abis/GLPManager.json';
+import GLPManagerABI from '../../abis/GLPManager.json';
 
 /**
  * Removes liquidity from the GLP pool

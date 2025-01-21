@@ -1,0 +1,16 @@
+{
+  "name": "anon-integration-guide",
+  "version": "1.0.0",
+  "description": "Welcome to the technical documentation for developing additional project modules for the HeyAnon AI Chatbot.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@vitest/coverage-v8": "^3.0.2",
+    "vitest": "^3.0.2"
+  }
+}

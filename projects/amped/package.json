@@ -2,7 +2,11 @@
     "name": "@projects/amped",
     "version": "1.0.0",
     "scripts": {
-        "yarn": "yarn install"
+        "yarn": "yarn install",
+        "test": "vitest",
+        "test:watch": "vitest --watch",
+        "test:coverage": "vitest --coverage",
+        "test:ui": "vitest --ui"
     },
     "dependencies": {
         "@heyanon/sdk": "^1.0.4"
