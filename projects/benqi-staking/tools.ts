@@ -27,6 +27,32 @@ const amountProps = [
 
 const amountRequiredProps = ['amount'];
 
+const nodesProps = [
+    {
+        name: 'nodeIds',
+        type: 'array',
+        items: {
+            type: 'string',
+            description: 'Validator node ids',
+        },
+    },
+];
+
+const nodesRequiredProps = ['nodeIds'];
+
+const weightsProps = [
+    {
+        name: 'weights',
+        type: 'array',
+        items: {
+            type: 'string',
+            description: 'Validator node weights. Specified as floating point values with up to 2 decimal places in string format',
+        },
+    },
+];
+
+const weightsRequiredProps = ['weights'];
+
 export const tools: AiTool[] = [
     {
         name: 'redeemUnstakedAvax',
@@ -57,5 +83,11 @@ export const tools: AiTool[] = [
         description: 'Unstakes specified amount of Qi on the veQi contract',
         required: [...walletRequiredProps, ...amountRequiredProps],
         props: [...walletProps, ...amountProps],
+    },
+    {
+        name: 'voteNodes',
+        description: 'Updates votes for specified nodes',
+        required: [...walletRequiredProps, ...nodesRequiredProps, ...weightsRequiredProps],
+        props: [...walletProps, ...nodesProps, ...weightsProps],
     },
 ];
