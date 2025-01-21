@@ -41,6 +41,12 @@ export const tools: AiTool[] = [
         props: [...walletProps, ...amountProps],
     },
     {
+        name: 'stakeQi',
+        description: 'Stakes specified amount of Qi on the veQi contract',
+        required: [...walletRequiredProps, ...amountRequiredProps],
+        props: [...walletProps, ...amountProps],
+    },
+    {
         name: 'unstakeAvax',
         description: 'Unstakes specified amount of AVAX from the sAVAX contract',
         required: [...walletRequiredProps, ...amountRequiredProps],
