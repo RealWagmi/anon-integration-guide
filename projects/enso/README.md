@@ -1,4 +1,4 @@
-# enso
+# Enso
 
 Enso
 
@@ -6,7 +6,7 @@ Enso
 
 - ETHEREUM
 - OPTIMISM
-- BSC 
+- BSC
 - GNOSIS
 - POLYGON
 - ZKSYNC
@@ -28,10 +28,18 @@ Enso
    - "Get example statistics from @enso"
    - "Calculate expected results for my position in @enso"
 
-
 ## Available Functions
 
-List of available functions will be added here.
+### Actions
+
+- route
+
+### Getters
+
+- getProtocol
+- getProtocols
+- getToken
+- getTokens
 
 ## Installation
 
