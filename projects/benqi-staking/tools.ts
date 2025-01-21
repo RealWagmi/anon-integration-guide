@@ -55,6 +55,12 @@ const weightsRequiredProps = ['weights'];
 
 export const tools: AiTool[] = [
     {
+        name: 'cancelPendingUnlockRequests',
+        description: 'Cancel pending unlock requests in the sAVAX contract',
+        required: [...walletRequiredProps],
+        props: [...walletProps],
+    },
+    {
         name: 'redeemUnstakedAvax',
         description: 'Reedems previously unstaked AVAX from the sAVAX contract',
         required: [...walletRequiredProps],
