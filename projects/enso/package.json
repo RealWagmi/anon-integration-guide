@@ -5,6 +5,7 @@
         "yarn": "yarn install"
     },
     "dependencies": {
+        "@ensofinance/sdk": "^1.0.8",
         "@heyanon/sdk": "^1.0.4",
         "axios": "^1.7.9",
         "viem": "^2.22.10"

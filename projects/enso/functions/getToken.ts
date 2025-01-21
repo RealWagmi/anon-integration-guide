@@ -1,8 +1,8 @@
 import { FunctionReturn, toResult, getChainFromName } from '@heyanon/sdk';
-import { ENSO_API, ENSO_API_TOKEN, supportedChains } from '../constants';
+import { ENSO_API_TOKEN, supportedChains } from '../constants';
 import axios from 'axios';
 import { Address } from 'viem';
-import { EnsoApiToken } from './getTokens';
+import { EnsoClient } from '@ensofinance/sdk';
 
 interface Props {
     chainName: string;
@@ -21,14 +21,14 @@ export async function getToken({ chainName, address }: Props): Promise<FunctionR
     if (!supportedChains.includes(chainId)) return toResult(`Enso is not supported on ${chainName}`, true);
 
     try {
-        const url = `${ENSO_API}/tokens?chainId=${chainId}&address=${address}&page=1`;
-        const res = await axios.get<{ data: EnsoApiToken[] }>(url, { headers: { Authorization: `Bearer ${ENSO_API_TOKEN}` } });
+        const ensoClient = new EnsoClient({ apiKey: ENSO_API_TOKEN });
+        const tokenData = await ensoClient.getTokenData({ chainId, address });
 
-        if (res.data.data.length === 0) {
+        if (tokenData.data.length === 0) {
             return toResult('Token not found', true);
         }
 
-        return toResult(JSON.stringify(res.data.data[0]));
+        return toResult(JSON.stringify(tokenData.data[0]));
     } catch (e) {
         if (axios.isAxiosError(e)) {
             return toResult(`API error: ${e.message}`, true);

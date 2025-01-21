@@ -7,6 +7,13 @@
   resolved "https://registry.yarnpkg.com/@adraffy/ens-normalize/-/ens-normalize-1.11.0.tgz#42cc67c5baa407ac25059fcd7d405cc5ecdb0c33"
   integrity sha512-/3DDPKHqqIqxUULp8yP4zODUY1i+2xvVWsv8A79xGWdCAG+8sb0hRh0Rk2QyOJUnnbyPUAZYcpBuRe3nS2OIUg==
 
+"@ensofinance/sdk@^1.0.7":
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/@ensofinance/sdk/-/sdk-1.0.7.tgz#6384d915b767ed150ac395ca3191932249de736c"
+  integrity sha512-BNphPW8Ur710KmXSzyqq5JRpy3BPJAjQxsS9PkUAxx0/700hgCV81ImkZ7J5119bXKsi1qah6N/Os4h33FBXYg==
+  dependencies:
+    axios "^1.7.9"
+
 "@esbuild/aix-ppc64@0.21.5":
   version "0.21.5"
   resolved "https://registry.yarnpkg.com/@esbuild/aix-ppc64/-/aix-ppc64-0.21.5.tgz#c7184a326533fcdf1b8ee0733e21c713b975575f"

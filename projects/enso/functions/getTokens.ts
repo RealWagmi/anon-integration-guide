@@ -13,6 +13,8 @@ export interface EnsoApiToken {
     type: string;
 }
 
+// NOTE: Not sure if this should be kept or getToken is enough
+// This method in Enso SDK is not supported
 /**
  * Get tokens that are supported by Enso on specified chain
  * @param props - The function parameters
@@ -24,7 +26,6 @@ export async function getTokens({ chainName }: Props): Promise<FunctionReturn> {
     if (!supportedChains.includes(chainId)) return toResult(`Enso is not supported on ${chainName}`, true);
 
     try {
-        // NOTE: Not sure if page should be passed in from Props
         const url = `${ENSO_API}/tokens?chainId=${chainId}&page=1`;
         const res = await axios.get<{ data: EnsoApiToken[] }>(url, { headers: { Authorization: `Bearer ${ENSO_API_TOKEN}` } });
 

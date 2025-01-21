@@ -1,7 +1,8 @@
 import { FunctionReturn, toResult, getChainFromName } from '@heyanon/sdk';
-import { ENSO_API, ENSO_API_TOKEN, supportedChains } from '../constants';
+import { ENSO_API_TOKEN, supportedChains } from '../constants';
 import axios from 'axios';
 import { EnsoApiProtocol } from './getProtocols';
+import { EnsoClient } from '@ensofinance/sdk';
 
 interface Props {
     chainName: string;
@@ -20,18 +21,19 @@ export async function getProtocol({ chainName, protocol }: Props): Promise<Funct
     if (!supportedChains.includes(chainId)) return toResult(`Enso is not supported on ${chainName}`, true);
 
     try {
-        const url = `${ENSO_API}/protocols?slug=${protocol}`;
-        const res = await axios.get<EnsoApiProtocol[]>(url, { headers: { Authorization: `Bearer ${ENSO_API_TOKEN}` } });
+        const ensoClient = new EnsoClient({
+            apiKey: ENSO_API_TOKEN,
+        });
+        const protocolData = await ensoClient.getProtocolData({ slug: protocol });
 
-        if (res.data.length == 0) {
+        if (protocolData.length == 0) {
             return toResult(`Protocol ${protocol} not found`, true);
         }
 
-        const protocolData = res.data[0];
-        const isChainSupported = protocolData.chains.some((chain) => chain.id === chainId);
+        const isChainSupported = protocolData[0].chains.some((chain) => chain.id === chainId);
         if (!isChainSupported) return toResult(`Protocol ${protocol} is not supported on ${chainName}`, true);
 
-        delete (protocolData as Partial<EnsoApiProtocol>).chains;
+        delete (protocolData[0] as Partial<EnsoApiProtocol>).chains;
         return toResult(JSON.stringify(protocolData));
     } catch (e) {
         if (axios.isAxiosError(e)) {
