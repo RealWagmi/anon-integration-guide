@@ -2,7 +2,31 @@ import { type Address } from 'viem';
 import { type Result } from '../../types';
 import { ValidationError } from '../../utils/errors';
 import { validateAddress } from '../../utils/validation';
-import { merkleDistributorAbi } from '../../abis';
+
+const merkleDistributorAbi = [
+    {
+        name: 'claim',
+        type: 'function',
+        stateMutability: 'nonpayable',
+        inputs: [
+            { name: 'account', type: 'address' },
+            { name: 'merkleProof', type: 'bytes32[]' },
+            { name: 'amount', type: 'uint256' }
+        ],
+        outputs: []
+    },
+    {
+        name: 'claimVerified',
+        type: 'function',
+        stateMutability: 'nonpayable',
+        inputs: [
+            { name: 'account', type: 'address' },
+            { name: 'merkleProof', type: 'bytes32[]' },
+            { name: 'amount', type: 'uint256' }
+        ],
+        outputs: []
+    }
+];
 
 export interface ClaimParams {
     chainName: string;
@@ -13,35 +37,68 @@ export interface ClaimParams {
 
 export async function claim(
     params: ClaimParams,
-    utils: { getProvider: any; sendTransactions: any; notify: any }
-): Promise<Result<void>> {
-    const { account } = params;
-    if (!validateAddress(account)) {
-        return { success: false, error: new Error('Invalid account address') };
-    }
-
+    { getProvider, sendTransactions, notify }: { getProvider: Function; sendTransactions: Function; notify: Function }
+): Promise<Result<string>> {
     try {
-        await utils.sendTransactions({
-            to: account,
-            data: '0x', // Replace with actual contract call data
-        });
-        await utils.notify('Claim successful');
-        return { success: true, data: undefined };
+        validateAddress(params.account);
+
+        // Prepare transaction
+        await notify('Preparing to claim rewards...');
+        const tx = {
+            target: 'merkleDistributor',
+            data: {
+                abi: merkleDistributorAbi,
+                functionName: 'claim',
+                args: [params.account, params.merkleProof, params.amount]
+            }
+        };
+
+        await notify('Waiting for transaction confirmation...');
+        const result = await sendTransactions({ transactions: [tx] });
+
+        return {
+            success: true,
+            data: 'Successfully claimed rewards'
+        };
     } catch (error) {
-        return { success: false, error: error as Error };
+        return {
+            success: false,
+            error: error instanceof Error ? error : new Error('Unknown error occurred')
+        };
     }
 }
 
 export async function claimVerified(
     params: ClaimParams,
-    utils: { getProvider: any; sendTransactions: any; notify: any }
-): Promise<Result<void>> {
-    const verifyResult = await verify(params, { getProvider: utils.getProvider });
-    if (!verifyResult.success) {
-        return verifyResult;
-    }
+    utils: { getProvider: Function; sendTransactions: Function; notify: Function }
+): Promise<Result<string>> {
+    try {
+        validateAddress(params.account);
 
-    return claim(params, utils);
+        // Prepare transaction
+        await utils.notify('Preparing to claim verified rewards...');
+        const tx = {
+            target: 'merkleDistributor',
+            data: {
+                abi: merkleDistributorAbi,
+                functionName: 'claimVerified',
+                args: [params.account, params.merkleProof, params.amount]
+            }
+        };
+
+        await utils.notify('Waiting for transaction confirmation...');
+        const result = await utils.sendTransactions({ transactions: [tx] });
+
+        return {
+            success: true,
+            data: 'Successfully claimed verified rewards'
+        };
+    } catch (error) {
+        return {
+            success: false,
+            error: error instanceof Error ? error : new Error('Unknown error occurred')
+        };
+    }
 }
 
 export async function verify(

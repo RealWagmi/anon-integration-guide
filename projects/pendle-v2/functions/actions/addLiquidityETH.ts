@@ -2,13 +2,12 @@ import { type Address } from 'viem';
 import { type Result } from '../../types';
 import { type Utils } from '../../utils/types';
 
-export async function removeLiquidity(
+export async function addLiquidityETH(
     router: Address,
-    tokenA: Address,
-    tokenB: Address,
-    liquidity: string,
-    amountAMin: string,
-    amountBMin: string,
+    token: Address,
+    amountTokenDesired: string,
+    amountTokenMin: string,
+    amountETHMin: string,
     to: Address,
     deadline: number,
     utils: Utils
@@ -16,7 +15,7 @@ export async function removeLiquidity(
     try {
         const { sendTransactions, notify } = utils;
 
-        notify('Preparing to remove liquidity...');
+        notify('Preparing to add liquidity ETH...');
         notify('Waiting for transaction confirmation...');
 
         const result = await sendTransactions({
@@ -26,9 +25,9 @@ export async function removeLiquidity(
             }]
         });
 
-        return { success: true, data: 'Successfully removed liquidity' };
+        return { success: true, data: 'Successfully added liquidity ETH' };
     } catch (error) {
-        console.error('Error in removeLiquidity:', error);
+        console.error('Error in addLiquidityETH:', error);
         return { success: false, error: error instanceof Error ? error : new Error('Unknown error occurred') };
     }
 } 

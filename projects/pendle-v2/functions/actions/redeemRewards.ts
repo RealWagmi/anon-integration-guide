@@ -2,7 +2,18 @@ import { type Address } from 'viem';
 import { type Result } from '../../types';
 import { ValidationError } from '../../utils/errors';
 import { validateAddress } from '../../utils/validation';
-import { pendleGaugeAbi } from '../../abis';
+
+const pendleGaugeAbi = [
+    {
+        name: 'redeemRewards',
+        type: 'function',
+        stateMutability: 'nonpayable',
+        inputs: [
+            { name: 'user', type: 'address' }
+        ],
+        outputs: []
+    }
+];
 
 export async function redeemRewards(
     user: Address,
@@ -35,7 +46,7 @@ export async function redeemRewards(
     } catch (error) {
         return {
             success: false,
-            error: error instanceof Error ? error.message : 'Unknown error occurred'
+            error: error instanceof Error ? error : new Error('Unknown error occurred')
         };
     }
 } 

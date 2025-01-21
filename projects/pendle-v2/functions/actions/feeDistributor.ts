@@ -2,7 +2,32 @@ import { type Address } from 'viem';
 import { type Result } from '../../types';
 import { ValidationError } from '../../utils/errors';
 import { validateAddress } from '../../utils/validation';
-import { feeDistributorAbi } from '../../abis';
+
+const feeDistributorAbi = [
+    {
+        name: 'claimReward',
+        type: 'function',
+        stateMutability: 'nonpayable',
+        inputs: [
+            { name: 'pool', type: 'address' },
+            { name: 'user', type: 'address' }
+        ],
+        outputs: []
+    },
+    {
+        name: 'userInfo',
+        type: 'function',
+        stateMutability: 'view',
+        inputs: [
+            { name: 'pool', type: 'address' },
+            { name: 'user', type: 'address' }
+        ],
+        outputs: [
+            { name: 'firstUnclaimedWeek', type: 'uint256' },
+            { name: 'iter', type: 'uint256' }
+        ]
+    }
+];
 
 export async function claimReward(
     pool: Address,
@@ -34,7 +59,7 @@ export async function claimReward(
     } catch (error) {
         return {
             success: false,
-            error: error instanceof Error ? error.message : 'Unknown error occurred'
+            error: error instanceof Error ? error : new Error('Unknown error occurred')
         };
     }
 }
@@ -69,7 +94,7 @@ export async function getUserInfo(
     } catch (error) {
         return {
             success: false,
-            error: error instanceof Error ? error.message : 'Unknown error occurred'
+            error: error instanceof Error ? error : new Error('Unknown error occurred')
         };
     }
 } 

@@ -3,7 +3,29 @@ import { type Result } from '../../types';
 import { ValidationError } from '../../utils/errors';
 import { validateAddress } from '../../utils/validation';
 
-const actionMiscAbi = require('../../abis/IPActionMiscV3.json').abi;
+const actionMiscAbi = [
+    {
+        name: 'mintSyFromToken',
+        type: 'function',
+        stateMutability: 'nonpayable',
+        inputs: [
+            { name: 'receiver', type: 'address' },
+            { name: 'SY', type: 'address' },
+            { name: 'minSyOut', type: 'uint256' },
+            {
+                name: 'input',
+                type: 'tuple',
+                components: [
+                    { name: 'tokenIn', type: 'address' },
+                    { name: 'amountIn', type: 'uint256' },
+                    { name: 'tokenMintSy', type: 'address' },
+                    { name: 'bulk', type: 'bool' }
+                ]
+            }
+        ],
+        outputs: [{ type: 'uint256' }]
+    }
+];
 
 interface TokenInput {
     tokenIn: Address;

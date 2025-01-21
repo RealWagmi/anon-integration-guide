@@ -2,7 +2,6 @@ import { type Address } from 'viem';
 import { type MarketInfo, type GetMarketInfoParams, type Result } from '../../types';
 import { ValidationError } from '../../utils/errors';
 import { validateAddress, validateChainName } from '../../utils/validation';
-import { provider } from '../../utils/provider';
 
 interface RewardData {
     pendlePerSec: bigint;
@@ -11,13 +10,18 @@ interface RewardData {
     incentiveEndsAt: bigint;
 }
 
-export async function getMarketInfo(params: GetMarketInfoParams): Promise<Result<MarketInfo>> {
+export async function getMarketInfo(
+    params: GetMarketInfoParams,
+    { getProvider }: { getProvider: () => any }
+): Promise<Result<MarketInfo>> {
     try {
         const { chainName, marketAddress } = params;
 
         // Validate inputs
         validateChainName(chainName);
         validateAddress(marketAddress);
+
+        const provider = getProvider();
 
         // Check if market is expired
         const isExpired = await provider.readContract({

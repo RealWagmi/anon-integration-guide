@@ -2,40 +2,57 @@ import { type Address } from 'viem';
 import { type Result } from '../../types';
 import { ValidationError } from '../../utils/errors';
 import { validateAddress } from '../../utils/validation';
-import { marketAbi } from '../../abis';
+
+const marketAbi = [
+    {
+        name: 'addLiquidity',
+        type: 'function',
+        stateMutability: 'nonpayable',
+        inputs: [
+            { name: 'receiver', type: 'address' },
+            { name: 'netPtDesired', type: 'uint256' },
+            { name: 'netSyDesired', type: 'uint256' },
+            { name: 'minLpOut', type: 'uint256' }
+        ],
+        outputs: [{ type: 'uint256' }]
+    },
+    {
+        name: 'removeLiquidity',
+        type: 'function',
+        stateMutability: 'nonpayable',
+        inputs: [
+            { name: 'receiver', type: 'address' },
+            { name: 'netLpToRemove', type: 'uint256' },
+            { name: 'minPtOut', type: 'uint256' },
+            { name: 'minSyOut', type: 'uint256' }
+        ],
+        outputs: [
+            { name: 'netPtOut', type: 'uint256' },
+            { name: 'netSyOut', type: 'uint256' }
+        ]
+    }
+];
 
 export async function addLiquidity(
     receiver: Address,
-    marketAddress: Address,
-    tokenIn: Address[],
-    netTokenIn: string[],
+    market: Address,
+    netPtDesired: string,
+    netSyDesired: string,
     minLpOut: string,
     { sendTransactions, notify, getProvider }: { sendTransactions: Function, notify: Function, getProvider: Function }
 ): Promise<Result<string>> {
     try {
-        if (!validateAddress(receiver)) {
-            return { success: false, error: new ValidationError('Invalid receiver address') };
-        }
-        if (!validateAddress(marketAddress)) {
-            return { success: false, error: new ValidationError('Invalid market address') };
-        }
-        tokenIn.forEach(validateAddress);
-
-        if (tokenIn.length !== netTokenIn.length) {
-            throw new ValidationError('Token and amount arrays must have same length');
-        }
-
-        // Convert string amounts to BigInt
-        const netTokenInBigInt = netTokenIn.map((amount: string): bigint => BigInt(amount));
+        validateAddress(receiver);
+        validateAddress(market);
 
         // Prepare transaction
         await notify('Preparing to add liquidity...');
         const tx = {
-            target: marketAddress,
+            target: market,
             data: {
                 abi: marketAbi,
                 functionName: 'addLiquidity',
-                args: [receiver, tokenIn, netTokenInBigInt, BigInt(minLpOut)]
+                args: [receiver, netPtDesired, netSyDesired, minLpOut]
             }
         };
 
@@ -44,49 +61,39 @@ export async function addLiquidity(
 
         return {
             success: true,
-            data: 'Successfully added liquidity'
+            data: result.toString()
         };
     } catch (error) {
         return {
             success: false,
-            error: error instanceof Error ? error : new Error('Unknown error occurred')
+            error: error instanceof Error ? error.message : 'Unknown error occurred'
         };
     }
 }
 
 export async function removeLiquidity(
     receiver: Address,
-    marketAddress: Address,
+    market: Address,
     netLpToRemove: string,
-    minTokenOut: string[],
-    tokenOut: Address[],
+    minPtOut: string,
+    minSyOut: string,
     { sendTransactions, notify, getProvider }: { sendTransactions: Function, notify: Function, getProvider: Function }
-): Promise<Result<string[]>> {
+): Promise<Result<{
+    netPtOut: string;
+    netSyOut: string;
+}>> {
     try {
-        if (!validateAddress(receiver)) {
-            return { success: false, error: new ValidationError('Invalid receiver address') };
-        }
-        if (!validateAddress(marketAddress)) {
-            return { success: false, error: new ValidationError('Invalid market address') };
-        }
-        tokenOut.forEach(validateAddress);
-
-        if (tokenOut.length !== minTokenOut.length) {
-            throw new ValidationError('Token and minimum amount arrays must have same length');
-        }
-
-        // Convert string amounts to BigInt
-        const minTokenOutBigInt = minTokenOut.map((amount: string): bigint => BigInt(amount));
-        const netLpToRemoveBigInt = BigInt(netLpToRemove);
+        validateAddress(receiver);
+        validateAddress(market);
 
         // Prepare transaction
         await notify('Preparing to remove liquidity...');
         const tx = {
-            target: marketAddress,
+            target: market,
             data: {
                 abi: marketAbi,
                 functionName: 'removeLiquidity',
-                args: [receiver, netLpToRemoveBigInt, minTokenOutBigInt, tokenOut]
+                args: [receiver, netLpToRemove, minPtOut, minSyOut]
             }
         };
 
@@ -95,12 +102,15 @@ export async function removeLiquidity(
 
         return {
             success: true,
-            data: result.tokenAmountOut.map((amount: bigint): string => amount.toString())
+            data: {
+                netPtOut: result.netPtOut.toString(),
+                netSyOut: result.netSyOut.toString()
+            }
         };
     } catch (error) {
         return {
             success: false,
-            error: error instanceof Error ? error : new Error('Unknown error occurred')
+            error: error instanceof Error ? error.message : 'Unknown error occurred'
         };
     }
 }
@@ -110,9 +120,7 @@ export async function redeemRewards(
     { sendTransactions, notify, getProvider }: { sendTransactions: Function, notify: Function, getProvider: Function }
 ): Promise<Result<void>> {
     try {
-        if (!validateAddress(marketAddress)) {
-            return { success: false, error: new ValidationError('Invalid market address') };
-        }
+        validateAddress(marketAddress);
 
         // Check if market is expired
         const provider = getProvider();
@@ -145,7 +153,7 @@ export async function redeemRewards(
     } catch (error) {
         return {
             success: false,
-            error: error instanceof Error ? error : new Error('Unknown error occurred')
+            error: error instanceof Error ? error.message : 'Unknown error occurred'
         };
     }
 }
@@ -155,9 +163,7 @@ export async function isExpired(
     { getProvider }: { getProvider: Function }
 ): Promise<Result<boolean>> {
     try {
-        if (!validateAddress(marketAddress)) {
-            return { success: false, error: new ValidationError('Invalid market address') };
-        }
+        validateAddress(marketAddress);
 
         const provider = getProvider();
         const result = await provider.readContract({
@@ -173,7 +179,7 @@ export async function isExpired(
     } catch (error) {
         return {
             success: false,
-            error: error instanceof Error ? error : new Error('Unknown error occurred')
+            error: error instanceof Error ? error.message : 'Unknown error occurred'
         };
     }
 } 

@@ -2,13 +2,11 @@ import { type Address } from 'viem';
 import { type Result } from '../../types';
 import { type Utils } from '../../utils/types';
 
-export async function removeLiquidity(
+export async function swapExactTokensForTokens(
     router: Address,
-    tokenA: Address,
-    tokenB: Address,
-    liquidity: string,
-    amountAMin: string,
-    amountBMin: string,
+    amountIn: string,
+    amountOutMin: string,
+    path: Address[],
     to: Address,
     deadline: number,
     utils: Utils
@@ -16,7 +14,7 @@ export async function removeLiquidity(
     try {
         const { sendTransactions, notify } = utils;
 
-        notify('Preparing to remove liquidity...');
+        notify('Preparing to swap exact tokens for tokens...');
         notify('Waiting for transaction confirmation...');
 
         const result = await sendTransactions({
@@ -26,9 +24,9 @@ export async function removeLiquidity(
             }]
         });
 
-        return { success: true, data: 'Successfully removed liquidity' };
+        return { success: true, data: 'Successfully swapped tokens' };
     } catch (error) {
-        console.error('Error in removeLiquidity:', error);
+        console.error('Error in swapExactTokensForTokens:', error);
         return { success: false, error: error instanceof Error ? error : new Error('Unknown error occurred') };
     }
 } 

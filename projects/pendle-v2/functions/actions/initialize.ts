@@ -2,21 +2,14 @@ import { type Address } from 'viem';
 import { type Result } from '../../types';
 import { type Utils } from '../../utils/types';
 
-export async function removeLiquidity(
+export async function initialize(
     router: Address,
-    tokenA: Address,
-    tokenB: Address,
-    liquidity: string,
-    amountAMin: string,
-    amountBMin: string,
-    to: Address,
-    deadline: number,
     utils: Utils
 ): Promise<Result<string>> {
     try {
         const { sendTransactions, notify } = utils;
 
-        notify('Preparing to remove liquidity...');
+        notify('Preparing to initialize router...');
         notify('Waiting for transaction confirmation...');
 
         const result = await sendTransactions({
@@ -26,9 +19,9 @@ export async function removeLiquidity(
             }]
         });
 
-        return { success: true, data: 'Successfully removed liquidity' };
+        return { success: true, data: 'Successfully initialized router' };
     } catch (error) {
-        console.error('Error in removeLiquidity:', error);
+        console.error('Error in initialize:', error);
         return { success: false, error: error instanceof Error ? error : new Error('Unknown error occurred') };
     }
 } 

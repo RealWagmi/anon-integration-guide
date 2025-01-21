@@ -2,7 +2,22 @@ import { type Address } from 'viem';
 import { type Result } from '../../types';
 import { ValidationError } from '../../utils/errors';
 import { validateAddress } from '../../utils/validation';
-import { marketAbi } from '../../abis';
+
+const marketAbi = [
+    {
+        name: 'observations',
+        type: 'function',
+        stateMutability: 'view',
+        inputs: [
+            { name: 'index', type: 'uint256' }
+        ],
+        outputs: [
+            { name: 'blockTimestamp', type: 'uint256' },
+            { name: 'lnImpliedRateCumulative', type: 'uint256' },
+            { name: 'initialized', type: 'bool' }
+        ]
+    }
+];
 
 export interface Observation {
     blockTimestamp: number;

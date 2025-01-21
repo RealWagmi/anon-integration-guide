@@ -2,6 +2,14 @@
 
 Integration with Pendle Finance v2 Protocol - a DeFi protocol for liquid staking derivatives and yield trading.
 
+## Introduction
+
+Pendle Finance v2 is a DeFi protocol that enables users to trade and manage yield positions through its innovative Principal Token (PT) and Yield Token (YT) system. The protocol allows users to:
+- Trade future yields separately from principal
+- Provide liquidity to yield trading markets
+- Earn protocol rewards through vePENDLE staking
+- Access yield opportunities across multiple chains
+
 ## Supported Networks
 
 - Ethereum (1)
@@ -13,84 +21,104 @@ Integration with Pendle Finance v2 Protocol - a DeFi protocol for liquid staking
 
 ## Features
 
-- Add/remove liquidity to Pendle markets
-- Claim rewards from gauge controller
-- Lock PENDLE tokens for vePENDLE
-- View market information and rewards
+### Core Features
+- Add/remove liquidity in various forms (single-sided, dual token)
+- Swap tokens, PT, and YT
+- Stake PENDLE for vePENDLE
+- Claim protocol rewards
+- Cross-chain messaging and operations
 
-## Common Tasks
+### Key Capabilities
+- Automated slippage protection
+- Gas-optimized transactions
+- Real-time market data access
+- Advanced order types support
+- Comprehensive reward tracking
 
-1. Market Liquidity Operations
+## Example Tasks
 
-   - "Add 5 ETH and 5 stETH to Pendle ETH-stETH market on Ethereum with 1% slippage"
-   - "Add 1000 USDC and 1000 USDT to Pendle market on Arbitrum"
-   - "Remove 50% of my liquidity from Pendle ETH-stETH market on Ethereum"
-   - "Exit my entire position from Pendle USDC-USDT market on Base"
-   - "What's my current liquidity position in Pendle ETH-stETH market?"
-   - "Calculate expected LP tokens for adding 1000 USDC to Pendle market"
+1. Basic Liquidity Operations
+   ```typescript
+   // Add single-sided liquidity
+   "Add 1000 USDC to the USDC-USDT Pendle market on Arbitrum with 1% slippage"
+   Parameters:
+   - Market: 0x27b1dAcd74688aF24a64BD3C9C1B143118740784
+   - Amount: 1000 USDC
+   - MinLpOut: 990 (accounting for 1% slippage)
+   
+   // Remove liquidity
+   "Remove 50% of my LP tokens from the ETH-stETH market on Ethereum"
+   Parameters:
+   - Market: 0x742d35Cc6634C0532925a3b844Bc454e4438f44e
+   - LpAmount: 50% of balance
+   - MinTokenOut: Calculated based on current market price
+   ```
 
-2. Rewards Management
+2. Advanced Market Operations
+   ```typescript
+   // Dual-token liquidity addition
+   "Add liquidity with 5 ETH and 5 stETH to the ETH-stETH market"
+   Parameters:
+   - Market: 0x742d35Cc6634C0532925a3b844Bc454e4438f44e
+   - Amount1: 5 ETH
+   - Amount2: 5 stETH
+   - MinLpOut: Calculated with 0.5% slippage
 
-   - "Claim PENDLE rewards from my ETH-stETH market position on Ethereum"
-   - "Show my unclaimed rewards across all Pendle markets"
-   - "What's the current APR for providing liquidity to ETH-stETH market?"
-   - "When do my market incentives expire?"
-   - "Compare reward rates between different Pendle markets"
-   - "How much PENDLE can I earn per week in the ETH-stETH market?"
+   // Swap with specific parameters
+   "Swap 1000 USDC for PT-USDC with max 0.1% price impact"
+   Parameters:
+   - TokenIn: USDC address
+   - AmountIn: 1000e6
+   - MaxPriceImpact: 0.001e18
+   ```
 
-3. Market Analysis
+3. Reward Management
+   ```typescript
+   // Claim rewards
+   "Claim all my PENDLE rewards from ETH-stETH market"
+   Parameters:
+   - Market: 0x742d35Cc6634C0532925a3b844Bc454e4438f44e
+   - Account: User's address
 
-   - "Show TVL and volume for Pendle ETH-stETH market"
-   - "Compare APYs between different Pendle markets on Arbitrum"
-   - "List all active Pendle markets sorted by TVL"
-   - "What's the token composition of ETH-stETH market?"
-   - "Show historical APY for USDC-USDT market"
-   - "When does the current market expire?"
+   // Lock PENDLE
+   "Lock 10000 PENDLE tokens for 2 years"
+   Parameters:
+   - Amount: 10000e18
+   - LockDuration: 63072000 (2 years in seconds)
+   ```
 
-4. vePENDLE Operations
+## Pain Points Solved
 
-   - "Lock 10000 PENDLE tokens for maximum duration (2 years)"
-   - "Extend my current PENDLE lock by 1 year"
-   - "What's my current vePENDLE voting power?"
-   - "When can I unlock my vePENDLE position?"
-   - "Calculate expected boost from locking 5000 PENDLE"
-   - "Show my fee earnings from vePENDLE"
+1. Complex Position Management
+   - Simplified liquidity provision process
+   - Automated reward optimization
+   - One-click position adjustments
+   - Clear position tracking and analytics
 
-## Example Interactions with Parameters
+2. Market Analysis
+   - Real-time APY calculations
+   - Automated price impact checks
+   - Historical yield data access
+   - Market comparison tools
 
-```typescript
-// Adding Liquidity
-"Add liquidity to Pendle ETH-stETH market on Ethereum with 10 ETH and 10 stETH, minimum LP out: 19.5"
+3. Gas Optimization
+   - Batched transactions
+   - Optimized approval flows
+   - Smart contract interaction efficiency
+   - Cross-chain operation optimization
 
-// Complex Position Management
-"Remove 500 USDC worth of liquidity from Pendle market on Arbitrum, accept USDC only as output"
-
-// Reward Optimization
-"Show which Pendle market on Ethereum has the highest APR including both trading fees and PENDLE rewards"
-
-// Advanced vePENDLE Strategy
-"Calculate optimal lock duration for 20000 PENDLE tokens based on current market incentives"
-```
+4. Risk Management
+   - Slippage protection
+   - Price impact warnings
+   - Liquidity depth analysis
+   - Expiration tracking
 
 ## Additional Resources
 
 ### Official Documentation
 - [Pendle Documentation](https://docs.pendle.finance/)
-- [Pendle V2 Whitepaper](https://github.com/pendle-finance/pendle-v2-resources/tree/main/whitepapers)
 - [Technical Documentation](https://docs.pendle.finance/developers)
 - [Smart Contract Reference](https://docs.pendle.finance/developers/smart-contracts)
-
-### Analytics & Tools
-- [Pendle Market Analytics](https://info.pendle.finance/)
-- [Pendle Yield Calculator](https://pendle.finance/calculator)
-- [vePENDLE Simulator](https://pendle.finance/vependle)
-- [Pendle Market Explorer](https://app.pendle.finance/markets)
-
-### Community & Governance
-- [Pendle Forum](https://forum.pendle.finance/)
-- [Governance Portal](https://vote.pendle.finance/)
-- [Discord Community](https://discord.gg/pendle)
-- [Blog](https://medium.com/pendle)
 
 ### Development Resources
 - [GitHub Repository](https://github.com/pendle-finance/pendle-core-v2)
@@ -98,56 +126,7 @@ Integration with Pendle Finance v2 Protocol - a DeFi protocol for liquid staking
 - [Contract Addresses](https://docs.pendle.finance/developers/deployments)
 - [Security Audits](https://docs.pendle.finance/protocol/security)
 
-### Network Deployments
-- [Ethereum Deployment](https://docs.pendle.finance/developers/deployments#ethereum-mainnet)
-- [Arbitrum Deployment](https://docs.pendle.finance/developers/deployments#arbitrum)
-- [Other Network Deployments](https://docs.pendle.finance/developers/deployments#other-networks)
-
-## Pain Points Solved
-
-1. Complex Liquidity Management
-   - One-click liquidity provision for multiple tokens
-   - Automatic slippage calculation and protection
-   - Smart gas optimization for approvals
-   - Simplified position tracking across multiple markets
-   - Clear preview of expected LP tokens before transactions
-
-2. Reward Optimization
-   - Consolidated view of rewards across all positions
-   - Real-time APR calculations including:
-     - PENDLE emissions
-     - Trading fees
-     - Boost multipliers
-   - Automated reward claiming across multiple markets
-   - Reward schedule tracking and notifications
-
-3. Market Analysis & Decision Making
-   - Real-time market data aggregation
-   - Comparative analysis between markets:
-     - TVL and volume metrics
-     - Historical APY trends
-     - Token composition analysis
-   - Expiration tracking and rollover suggestions
-   - Risk assessment based on market parameters
-
-4. vePENDLE Management
-   - Optimal lock duration calculations
-   - Lock extension recommendations
-   - Clear visualization of:
-     - Voting power
-     - Fee earnings
-     - Boost multipliers
-   - Lock expiry management and reminders
-
-5. Cross-chain Operations
-   - Unified interface across all supported chains
-   - Chain-specific gas estimations
-   - Network status monitoring
-   - Cross-chain market comparisons
-
-6. Transaction Management
-   - Batched transactions for gas savings
-   - Clear transaction previews
-   - Detailed error messages and suggestions
-   - Transaction status tracking
-   - Multisig support
+### Community & Support
+- [Discord Community](https://discord.gg/pendle)
+- [Governance Forum](https://forum.pendle.finance/)
+- [Blog](https://medium.com/pendle)

@@ -28,5 +28,5 @@ export interface ClaimRewardsCallbacks {
 export interface Result<T> {
     success: boolean;
     data?: T;
-    error?: string;
+    error?: Error | string;
 } 

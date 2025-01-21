@@ -2,33 +2,27 @@ import { type Address } from 'viem';
 import { type Result } from '../../types';
 import { type Utils } from '../../utils/types';
 
-export async function removeLiquidity(
-    router: Address,
-    tokenA: Address,
-    tokenB: Address,
-    liquidity: string,
-    amountAMin: string,
-    amountBMin: string,
-    to: Address,
-    deadline: number,
+export async function mintPyFromToken(
+    token: Address,
+    amount: string,
     utils: Utils
 ): Promise<Result<string>> {
     try {
         const { sendTransactions, notify } = utils;
 
-        notify('Preparing to remove liquidity...');
+        notify('Preparing to mint PY from token...');
         notify('Waiting for transaction confirmation...');
 
         const result = await sendTransactions({
             transactions: [{
-                target: router,
+                target: token,
                 data: '0x'
             }]
         });
 
-        return { success: true, data: 'Successfully removed liquidity' };
+        return { success: true, data: 'Successfully minted PY from token' };
     } catch (error) {
-        console.error('Error in removeLiquidity:', error);
+        console.error('Error in mintPyFromToken:', error);
         return { success: false, error: error instanceof Error ? error : new Error('Unknown error occurred') };
     }
 } 

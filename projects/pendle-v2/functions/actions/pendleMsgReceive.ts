@@ -3,7 +3,41 @@ import { type Result } from '../../types';
 import { ValidationError } from '../../utils/errors';
 import { validateAddress } from '../../utils/validation';
 
-const pendleMsgReceiveEndpointAbi = require('../../abis/IPendleMsgReceiveEndpoint.json').abi;
+const pendleMsgReceiveEndpointAbi = [
+    {
+        name: 'calcFee',
+        type: 'function',
+        stateMutability: 'view',
+        inputs: [
+            { name: 'dstAddress', type: 'address' },
+            { name: 'dstChainId', type: 'uint256' },
+            { name: 'payload', type: 'bytes' },
+            { name: 'estimatedGasAmount', type: 'uint256' }
+        ],
+        outputs: [{ type: 'uint256' }]
+    },
+    {
+        name: 'sendMessage',
+        type: 'function',
+        stateMutability: 'payable',
+        inputs: [
+            { name: 'dstAddress', type: 'address' },
+            { name: 'dstChainId', type: 'uint256' },
+            { name: 'payload', type: 'bytes' },
+            { name: 'estimatedGasAmount', type: 'uint256' }
+        ],
+        outputs: []
+    },
+    {
+        name: 'executeMessage',
+        type: 'function',
+        stateMutability: 'nonpayable',
+        inputs: [
+            { name: 'message', type: 'bytes' }
+        ],
+        outputs: []
+    }
+];
 
 export interface SendMessageParams {
     dstAddress: Address;
@@ -36,7 +70,7 @@ export async function calcMessageFee(
     } catch (error) {
         return {
             success: false,
-            error: error instanceof Error ? error.message : 'Unknown error occurred'
+            error: error instanceof Error ? error : new Error('Unknown error occurred')
         };
     }
 }
@@ -78,7 +112,7 @@ export async function sendMessage(
     } catch (error) {
         return {
             success: false,
-            error: error instanceof Error ? error.message : 'Unknown error occurred'
+            error: error instanceof Error ? error : new Error('Unknown error occurred')
         };
     }
 }
@@ -112,7 +146,7 @@ export async function executeMessage(
     } catch (error) {
         return {
             success: false,
-            error: error instanceof Error ? error.message : 'Unknown error occurred'
+            error: error instanceof Error ? error : new Error('Unknown error occurred')
         };
     }
 } 

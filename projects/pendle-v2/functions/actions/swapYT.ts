@@ -2,8 +2,75 @@ import { type Address } from 'viem';
 import { type Result } from '../../types';
 import { ValidationError } from '../../utils/errors';
 import { validateAddress } from '../../utils/validation';
-import { actionSwapYTV3Abi } from '../../abis';
-import { type TokenInput, type TokenOutput, type ApproxParams, type LimitOrderData } from './swapPT';
+
+const actionSwapYTV3Abi = [
+    {
+        name: 'swapExactSyForYt',
+        type: 'function',
+        stateMutability: 'nonpayable',
+        inputs: [
+            { name: 'receiver', type: 'address' },
+            { name: 'market', type: 'address' },
+            { name: 'exactSyIn', type: 'uint256' },
+            { name: 'minYtOut', type: 'uint256' },
+            {
+                name: 'guessYtOut',
+                type: 'tuple',
+                components: [
+                    { name: 'guessMin', type: 'uint256' },
+                    { name: 'guessMax', type: 'uint256' },
+                    { name: 'guessOffchain', type: 'uint256' },
+                    { name: 'maxIteration', type: 'uint256' },
+                    { name: 'eps', type: 'uint256' }
+                ]
+            },
+            {
+                name: 'limit',
+                type: 'tuple',
+                components: [
+                    { name: 'deadline', type: 'uint256' },
+                    { name: 'maxPriceImpact', type: 'uint256' }
+                ]
+            }
+        ],
+        outputs: [
+            {
+                name: '',
+                type: 'tuple',
+                components: [
+                    { name: 'netYtOut', type: 'uint256' },
+                    { name: 'netSyFee', type: 'uint256' }
+                ]
+            }
+        ]
+    }
+];
+
+export interface TokenInput {
+    tokenIn: Address;
+    amountIn: string;
+    tokenMintSy: Address;
+    bulk: boolean;
+}
+
+export interface TokenOutput {
+    tokenOut: Address;
+    minTokenOut: string;
+    bulk: boolean;
+}
+
+export interface ApproxParams {
+    guessMin: string;
+    guessMax: string;
+    guessOffchain: string;
+    maxIteration: string;
+    eps: string;
+}
+
+export interface LimitOrderData {
+    deadline: string;
+    maxPriceImpact: string;
+}
 
 export async function swapExactTokenForYt(
     receiver: Address,
