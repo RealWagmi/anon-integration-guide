@@ -1,10 +1,9 @@
 import { FunctionReturn, toResult, getChainFromName, FunctionOptions, TransactionParams, checkToApprove } from '@heyanon/sdk';
-import { ENSO_API, ENSO_API_TOKEN, ENSO_ETH, ENSO_ROUTING_STRATEGIES, supportedChains } from '../constants';
+import { ENSO_API, ENSO_API_TOKEN, ENSO_ETH, supportedChains } from '../constants';
 import axios from 'axios';
 import { Address, Hex, isAddress } from 'viem';
 
-type EnsoRoutingStrategies = (typeof ENSO_ROUTING_STRATEGIES)[number];
-
+// probably we should leave: chainId, fromAddress, receiver, spender, amountIn, amountOut, slippage, fee, feeReceiver, tokenIn, tokenOut
 interface Props {
     chainName: string;
     account: Address;
@@ -12,13 +11,11 @@ interface Props {
     tokenOut: Address;
     amountIn: string;
     amountOut?: string;
-    routingStrategy?: EnsoRoutingStrategies;
     receiver?: Address;
     spender?: Address;
     slippage?: number;
-    disableRFQs?: boolean;
-    ignoreAggregators?: string[];
-    ignoreStandards?: string[];
+    fee?: number;
+    feeReceiver?: Address;
 }
 
 interface EnsoHop {
@@ -50,7 +47,7 @@ interface EnsoApiRouteResponse {
  * @param props - The function parameters
  */
 export async function route(
-    { chainName, tokenIn, tokenOut, amountIn, ignoreStandards, ignoreAggregators, spender, receiver, slippage, amountOut, disableRFQs, account, routingStrategy }: Props,
+    { chainName, tokenIn, tokenOut, amountIn, spender, receiver, slippage, amountOut, account, fee, feeReceiver }: Props,
     { sendTransactions, notify, getProvider }: FunctionOptions,
 ): Promise<FunctionReturn> {
     if (!account) return toResult('No account provided', true);
@@ -67,12 +64,6 @@ export async function route(
         fromAddress: account,
     });
 
-    if (routingStrategy) {
-        if (!ENSO_ROUTING_STRATEGIES.includes(routingStrategy)) {
-            return toResult(`Strategy ${routingStrategy} is not supported by Enso`, true);
-        }
-        params.set('routingStrategy', routingStrategy);
-    }
     if (receiver) {
         if (!isAddress(receiver)) {
             return toResult('Receiver is not an address', true);
@@ -92,9 +83,18 @@ export async function route(
         }
         params.set('slippage', slippage.toString());
     }
-    if (disableRFQs !== undefined) params.set('disableRFQs', String(disableRFQs));
-    if (ignoreAggregators) params.set('ignoreAggregators', ignoreAggregators.join(','));
-    if (ignoreStandards) params.set('ignoreStandards', ignoreStandards.join(','));
+    if (fee) {
+        if (fee > 100 || fee < 0) {
+            return toResult('Fee is outside of 0-100 range', true);
+        }
+        params.set('fee', fee.toString());
+    }
+    if (feeReceiver) {
+        if (!isAddress(feeReceiver)) {
+            return toResult('Fee receiver is not an address', true);
+        }
+        params.set('feeReceiver', feeReceiver);
+    }
 
     try {
         const url = `${ENSO_API}/shortcuts/route?${params}`;
@@ -126,7 +126,6 @@ export async function route(
 
         return toResult(result.isMultisig ? depositMessage.message : `Successfully executed route. ${depositMessage.message}`);
     } catch (e) {
-        console.log(e);
         if (axios.isAxiosError(e)) {
             return toResult(`API error: ${e.message}`, true);
         }

@@ -65,12 +65,6 @@ export const tools: AiTool[] = [
                 description: 'Amount of tokenOut to receive',
             },
             {
-                name: 'routingStrategy',
-                enum: ENSO_ROUTING_STRATEGIES,
-                type: 'string',
-                description: 'Routing strategy to use',
-            },
-            {
                 name: 'receiver',
                 type: 'string',
                 description: 'Ethereum address of the receiver of the tokenOut. Default - account',
@@ -86,19 +80,14 @@ export const tools: AiTool[] = [
                 description: 'Slippage in basis points (1/10000)',
             },
             {
-                name: 'disableRFQs',
-                type: 'boolean',
-                description: 'Indicate whether to exexcute RFQ sources from routes',
+                name: 'fee',
+                type: 'number',
+                description: 'Fee in basis points (1/10000), must be in range 0-100',
             },
             {
-                name: 'ignoreAggregators',
-                type: 'string[]',
-                description: 'A list of swap aggregators to be ignored from consideration',
-            },
-            {
-                name: 'ignoreStandards',
-                type: 'string[]',
-                description: 'A list of standards to be ignored from consideration',
+                name: 'feeReceiver',
+                type: 'string',
+                description: 'Fee in basis points (1/10000), must be in range 0-100',
             },
         ],
     },
