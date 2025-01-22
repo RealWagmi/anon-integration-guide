@@ -3,7 +3,8 @@
     "version": "1.0.0",
     "scripts": {
         "yarn": "yarn install",
-        "test": "jest"
+        "test": "jest",
+        "test:coverage": "jest --coverage"
     },
     "dependencies": {
         "@heyanon/sdk": "^1.0.4"
