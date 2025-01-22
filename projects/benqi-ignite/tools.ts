@@ -1,5 +1,5 @@
 import { AiTool, getChainName } from '@heyanon/sdk';
-import { ALL_DURATIONS, supportedChains } from './constants';
+import { ALL_DURATIONS, ERC20_PAYMENT_METHODS, supportedChains } from './constants';
 
 const walletProps = [
     {
@@ -38,11 +38,28 @@ const registerProps = [
 
 const registerRequiredProps = ['nodeId', 'blsProofOfPossession', 'validationDuration'];
 
+const paymentMethodProps = [
+    {
+        name: 'paymentMethod',
+        type: 'string',
+        enum: Object.keys(ERC20_PAYMENT_METHODS),
+        description: 'The payment method to use for the transaction.',
+    },
+];
+
+export const paymentMethodRequiredProps = ['paymentMethod'];
+
 export const tools: AiTool[] = [
     {
         name: 'registerWithAvaxFee',
         description: 'Register nodeId with AVAX.',
         required: [...walletRequiredProps, ...registerRequiredProps],
         props: [...walletProps, ...registerProps],
+    },
+    {
+        name: 'registerWithErc20Fee',
+        description: 'Register nodeId with fee paid in ERC20 based currency.',
+        required: [...walletRequiredProps, ...registerRequiredProps, ...paymentMethodRequiredProps],
+        props: [...walletProps, ...registerProps, ...paymentMethodProps],
     },
 ];
