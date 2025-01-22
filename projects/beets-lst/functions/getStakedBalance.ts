@@ -8,12 +8,14 @@ interface Props {
     account: Address;
 }
 
-export async function getStakedBalance({ chainName, account }: Props, { getProvider }: FunctionOptions): Promise<FunctionReturn> {
+export async function getStakedBalance({ chainName, account }: Props, { notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
 
     const publicClient = getProvider(chainId);
+
+    await notify(`Getting stS balance`);
 
     const balance = await publicClient.readContract({
         address: STS_ADDRESS,
