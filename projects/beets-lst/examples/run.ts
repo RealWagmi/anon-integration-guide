@@ -17,8 +17,8 @@ async function main() {
         console.error(`${result.data}`);
         process.exit(0);
     }
-    console.log(`Q: ${question}`);
-    console.log(`A: ${result.data}`);
+    console.log(`Response:`);
+    console.log(result.data);
 }
 
 main().catch(console.error);
