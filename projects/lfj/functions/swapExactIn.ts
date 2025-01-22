@@ -1,21 +1,24 @@
-import { Address, parseUnits, encodeFunctionData, erc20Abi } from 'viem';
+import { Address, parseUnits, encodeFunctionData } from 'viem';
 import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName, checkToApprove, WETH9 } from '@heyanon/sdk';
 import { supportedChains, swapBases } from '../constants';
-import { PairV2, TradeV2 } from '@traderjoe-xyz/sdk-v2';
-import { Token } from '@traderjoe-xyz/sdk-core';
+import { LBRouterV22ABI, LB_ROUTER_V22_ADDRESS, PairV2, RouteV2, TradeOptions, TradeV2 } from '@traderjoe-xyz/sdk-v2';
+import { Percent, TokenAmount } from '@traderjoe-xyz/sdk-core';
+
+import { getTokenInfo } from '../utils';
 
 interface Props {
     chainName: string;
     account: Address;
     amount: string;
+    recipient?: Address;
 
-    slippage?: number;
-    buyToken: Address;
-    sellToken: Address;
+    maxSlippageInPercentage?: number;
+    inputTokenAddress: Address;
+    outputTokenAddress: Address;
 }
 
 export async function swapExactIn(
-    { chainName, account, amount, buyToken, sellToken, slippage = 0.5 }: Props,
+    { chainName, account, amount, inputTokenAddress, outputTokenAddress, maxSlippageInPercentage = 0.5, recipient = account }: Props,
     { sendTransactions, notify, getProvider }: FunctionOptions,
 ): Promise<FunctionReturn> {
     // Check wallet connection
@@ -26,20 +29,75 @@ export async function swapExactIn(
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Protocol is not supported on ${chainName}`, true);
 
-    // Validate amount
-    const amountInWei = parseUnits(amount, 18);
-    if (amountInWei === 0n) return toResult('Amount must be greater than 0', true);
+    if (inputTokenAddress == outputTokenAddress) return toResult('`inputTokenAddress` cannot be the same as `outputTokenAddress`', true);
 
-    const wrappedNative = WETH9[chainId];
+    // Make sure that `buyTokenAddress` and `sellTokenAddress` is a valid ERC20 token
+    const provider = getProvider(chainId);
+    const inputToken = await getTokenInfo(chainId as number, provider, inputTokenAddress);
+    const outputToken = await getTokenInfo(chainId as number, provider, outputTokenAddress);
 
-    let isNativeIn = buyToken == wrappedNative.address;
-    let isNativeOut = sellToken == wrappedNative.address;
+    if (!inputToken) return toResult('Invalid ERC20 address for `buyToken`', true);
+    if (!outputToken) return toResult('Invalid ERC20 address for `sellToken`', true);
 
-    if (isNativeIn && isNativeOut) return toResult('Invalid arguments', true);
+    await notify('Calculating the best route ...');
 
     const bases = swapBases[chainId];
+    const allTokenPairs = PairV2.createAllTokenPairs(inputToken, outputToken, bases);
+    const allPairs = PairV2.initPairs(allTokenPairs);
+    const allRoutes = RouteV2.createAllRoutes(allPairs, inputToken, outputToken);
 
-    PairV2.createAllTokenPairs(sellToken, buyToken, bases);
+    const wrappedNative = WETH9[chainId];
+    const isNativeIn = inputTokenAddress == wrappedNative.address;
+    const isNativeOut = outputTokenAddress == wrappedNative.address;
 
-    return {};
+    const amountInParsed = parseUnits(amount, inputToken.decimals);
+    const amountIn = new TokenAmount(inputToken, amountInParsed);
+    const trades = (await TradeV2.getTradesExactIn(allRoutes, amountIn, outputToken, isNativeIn, isNativeOut, provider, chainId as number)) as TradeV2[];
+
+    const bestTrade = TradeV2.chooseBestTrade(trades, true);
+    if (!bestTrade) {
+        return toResult('Cannot find a valid route', true);
+    }
+
+    const userSlippageTolerance = new Percent('50', '10000');
+    const swapOptions: TradeOptions = {
+        allowedSlippage: userSlippageTolerance,
+        ttl: 3600,
+        recipient,
+        feeOnTransfer: false,
+    };
+
+    await notify(`Swapping ${bestTrade.inputAmount} ${inputToken.symbol} to ${bestTrade.outputAmount} ${outputToken.symbol} ...`);
+
+    await checkToApprove({
+        args: {
+            account,
+            target: inputTokenAddress,
+            spender: LB_ROUTER_V22_ADDRESS[chainId],
+            amount: amountInParsed,
+        },
+        transactions: [],
+        provider,
+    });
+
+    const { methodName, args, value } = bestTrade.swapCallParameters(swapOptions);
+    const tx: TransactionParams = {
+        target: LB_ROUTER_V22_ADDRESS[chainId],
+        data: encodeFunctionData({
+            abi: LBRouterV22ABI,
+            methodName: methodName,
+            // @ts-ignore
+            args: args,
+        }),
+        value: BigInt(value),
+    };
+
+    const result = await sendTransactions({ chainId, account, transactions: [tx] });
+    const swapMessage = result.data[result.data.length - 1];
+
+    return toResult(
+        result.isMultisig
+            ? swapMessage.message
+            : `Successfully swapped ${bestTrade.inputAmount} ${inputToken.symbol} to ${bestTrade.outputAmount} ${outputToken.symbol}. ${swapMessage.message}`,
+    );
 }

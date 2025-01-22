@@ -1,25 +1,19 @@
-import { WETH9 } from '@heyanon/sdk';
 import { ChainId, Token } from '@traderjoe-xyz/sdk-core';
-import { Address, erc20Abi, PublicClient } from 'viem';
+import { Address, erc20Abi, PublicClient, getContract } from 'viem';
 
 export async function getTokenInfo(chainId: ChainId, provider: PublicClient, tokenAddress: Address): Promise<Token | null> {
-    const decimals = await provider.readContract({
-        abi: erc20Abi,
+    const contract = getContract({
         address: tokenAddress,
-        functionName: 'decimals',
+        abi: erc20Abi,
+        client: provider,
     });
 
-    const name = await provider.readContract({
-        abi: erc20Abi,
-        address: tokenAddress,
-        functionName: 'name',
-    });
-
-    const symbol = await provider.readContract({
-        abi: erc20Abi,
-        address: tokenAddress,
-        functionName: 'symbol',
-    });
-
-    return new Token(chainId, tokenAddress, decimals, name, symbol);
+    try {
+        const decimals = await contract.read.decimals();
+        const name = await contract.read.name();
+        const symbol = await contract.read.symbol();
+        return new Token(chainId, tokenAddress, decimals, name, symbol);
+    } catch (error) {
+        return null;
+    }
 }
