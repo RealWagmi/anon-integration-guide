@@ -12,13 +12,13 @@ interface Props {
     amount: string;
     recipient?: Address;
 
-    maxSlippageInPercentage?: number;
+    maxSlippageInPercentage?: string;
     inputTokenAddress: Address;
     outputTokenAddress: Address;
 }
 
 export async function swapExactIn(
-    { chainName, account, amount, inputTokenAddress, outputTokenAddress, maxSlippageInPercentage = 0.5, recipient = account }: Props,
+    { chainName, account, amount, inputTokenAddress, outputTokenAddress, maxSlippageInPercentage = '0.5', recipient = account }: Props,
     { sendTransactions, notify, getProvider }: FunctionOptions,
 ): Promise<FunctionReturn> {
     // Check wallet connection
@@ -36,8 +36,8 @@ export async function swapExactIn(
     const inputToken = await getTokenInfo(chainId as number, provider, inputTokenAddress);
     const outputToken = await getTokenInfo(chainId as number, provider, outputTokenAddress);
 
-    if (!inputToken) return toResult('Invalid ERC20 address for `buyToken`', true);
-    if (!outputToken) return toResult('Invalid ERC20 address for `sellToken`', true);
+    if (!inputToken) return toResult('Invalid ERC20 address for `inputToken`', true);
+    if (!outputToken) return toResult('Invalid ERC20 address for `outputToken`', true);
 
     await notify('Calculating the best route ...');
 
@@ -52,14 +52,15 @@ export async function swapExactIn(
 
     const amountInParsed = parseUnits(amount, inputToken.decimals);
     const amountIn = new TokenAmount(inputToken, amountInParsed);
-    const trades = (await TradeV2.getTradesExactIn(allRoutes, amountIn, outputToken, isNativeIn, isNativeOut, provider, chainId as number)) as TradeV2[];
+    const trades = await TradeV2.getTradesExactIn(allRoutes, amountIn, outputToken, isNativeIn, isNativeOut, provider, chainId as number);
 
-    const bestTrade = TradeV2.chooseBestTrade(trades, true);
+    const bestTrade = TradeV2.chooseBestTrade(trades as TradeV2[], true);
     if (!bestTrade) {
         return toResult('Cannot find a valid route', true);
     }
 
-    const userSlippageTolerance = new Percent('50', '10000');
+    const maxSlippageInDecimal = (parseInt(maxSlippageInPercentage) * 100).toString();
+    const userSlippageTolerance = new Percent(maxSlippageInDecimal, '10000');
     const swapOptions: TradeOptions = {
         allowedSlippage: userSlippageTolerance,
         ttl: 3600,
