@@ -43,4 +43,28 @@ export const tools: AiTool[] = [
             },
         ],
     },
+    // TODO: check if "unstake all of my stS" works
+    {
+        name: 'unStake',
+        description: 'Initiate undelegation of staked Sonic tokens (stS). Tokens can be withdrawn after 14 days.',
+        required: ['chainName', 'account', 'amount'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Name of chain where to unstake tokens',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Account address that will unstake tokens',
+            },
+            {
+                name: 'amount',
+                type: 'string',
+                description: 'Amount of stS tokens to undelegate in decimal format',
+            },
+        ],
+    },
 ];

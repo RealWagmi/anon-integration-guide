@@ -8,6 +8,10 @@ interface Props {
     account: Address;
     amount: string;
 }
+
+/**
+ * Stake Sonic tokens (S) in Beets.fi liquid staking module
+ */
 export async function stake({ chainName, account, amount }: Props, { sendTransactions, getProvider, notify }: FunctionOptions): Promise<FunctionReturn> {
     if (!account) return toResult('Wallet not connected', true);
 
