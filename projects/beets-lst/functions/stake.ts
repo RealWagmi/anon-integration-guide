@@ -23,6 +23,7 @@ export async function stake({ chainName, account, amount }: Props, { sendTransac
 
     const amountInWei = parseUnits(amount, 18);
     if (amountInWei === 0n) return toResult('Amount must be greater than 0', true);
+    if (amountInWei < parseUnits('0.01', 18)) return toResult('Amount must be greater than 0.01 S', true);
 
     const transactions: TransactionParams[] = [];
 
@@ -38,7 +39,7 @@ export async function stake({ chainName, account, amount }: Props, { sendTransac
     };
     transactions.push(tx);
 
-    await notify('Waiting for transaction confirmation...');
+    await notify('Sending transaction...');
 
     const result = await sendTransactions({ chainId, account, transactions });
 

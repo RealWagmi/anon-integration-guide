@@ -9,11 +9,13 @@ if (!question) {
     process.exit(1);
 }
 
+const verbose = process.argv.includes('--verbose');
+
 async function main() {
-    const result = await askBeets(question);
+    const result = await askBeets(question, { verbose });
     if (!result.success) {
-        console.error(`Error: ${result.data}`);
-        process.exit(1);
+        console.error(`${result.data}`);
+        process.exit(0);
     }
     console.log(`Q: ${question}`);
     console.log(`A: ${result.data}`);

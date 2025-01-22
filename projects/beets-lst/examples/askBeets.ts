@@ -1,12 +1,13 @@
 import OpenAI from 'openai';
 import { privateKeyToAccount } from 'viem/accounts';
-import { createPublicClient, http } from 'viem';
+import { createPublicClient, http, createWalletClient } from 'viem';
 import { sonic } from 'viem/chains';
 import { FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { tools } from '../tools';
 import * as functions from '../functions';
 import util from 'util';
 import { fromHeyAnonToolsToOpenAiTools } from '../helpers/openai';
+import { parseEther } from 'viem';
 
 interface AskBeetsOptions {
     verbose?: boolean;
@@ -27,7 +28,7 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
 
     const notify = options?.notify || (async (message: string) => console.log(`[Notification] ${message}`));
 
-    const account = privateKeyToAccount(`0x${privateKey}`);
+    const signer = privateKeyToAccount(`0x${privateKey}`);
     const provider = createPublicClient({
         chain: sonic,
         transport: http(),
@@ -36,8 +37,36 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
     // Create minimal FunctionOptions object
     const functionOptions: FunctionOptions = {
         getProvider: () => provider,
-        sendTransactions: async () => {
-            throw new Error('Not implemented');
+        sendTransactions: async ({ chainId, account, transactions }) => {
+            // Create wallet client
+            const walletClient = createWalletClient({
+                account: signer,
+                chain: provider.chain,
+                transport: http(),
+            });
+
+            const results = [];
+
+            // Send transactions sequentially
+            for (const tx of transactions) {
+                const hash = await walletClient.sendTransaction({
+                    to: tx.target,
+                    data: tx.data,
+                    value: tx.value || 0n,
+                });
+
+                const receipt = await provider.waitForTransactionReceipt({ hash });
+
+                results.push({
+                    hash: receipt.transactionHash,
+                    message: `Transaction confirmed with hash: ${receipt.transactionHash}`,
+                });
+            }
+
+            return {
+                isMultisig: false,
+                data: results,
+            };
         },
         notify,
     };
@@ -50,7 +79,7 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
             {
                 role: 'system',
                 content: `You are a helpful assistant that can help me interact with the Beets protocol. You will be given a question and you will need to determine which tools to call.  All functions will need the chainName and account arguments,
-                that you will need to fill in this way: chainName: "sonic", account: "${account.address}".`,
+                that you will need to fill in this way: chainName: "sonic", account: "${signer.address}".`,
             },
             { role: 'user', content: question },
         ],
@@ -86,7 +115,7 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
 
     // Replace chain & address for good measure
     functionArgs.chainName = 'sonic';
-    functionArgs.account = account.address;
+    functionArgs.account = signer.address;
 
     // Call the function with the parsed arguments
     return await func(functionArgs, functionOptions);

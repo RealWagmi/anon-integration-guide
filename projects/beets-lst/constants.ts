@@ -2,4 +2,4 @@ import { ChainId } from '@heyanon/sdk';
 
 export const supportedChains = [ChainId.SONIC];
 
-export const STS_ADDRESS = '0xd5f7fc8ba92756a34693baa386edcc8dd5b3f141';
+export const STS_ADDRESS = '0xe5da20f15420ad15de0fa650600afc998bbe3955';

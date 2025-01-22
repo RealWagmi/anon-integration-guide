@@ -1,4 +1,4 @@
-import { Address, encodeFunctionData, parseUnits } from 'viem';
+import { Address, encodeFunctionData, formatUnits, parseUnits } from 'viem';
 import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName } from '@heyanon/sdk';
 import { supportedChains, STS_ADDRESS } from '../constants';
 import { stsAbi } from '../abis';
@@ -32,7 +32,9 @@ export async function unStake({ chainName, account, amount }: Props, { sendTrans
     // Get the public client to read contract data
     const publicClient = getProvider(chainId);
 
-    // Convert asset amount to shares amount
+    await notify('Preparing to unstake...');
+
+    // Convert amount to undelegate to shares amount
     const sharesAmount = await publicClient.readContract({
         address: STS_ADDRESS,
         abi: stsAbi,
@@ -40,21 +42,29 @@ export async function unStake({ chainName, account, amount }: Props, { sendTrans
         args: [amountInWei],
     });
 
-    await notify('Fetching staking data...');
+    // Check that the user has enough stS to undelegate
+    const balance = await publicClient.readContract({
+        address: STS_ADDRESS,
+        abi: stsAbi,
+        functionName: 'balanceOf',
+        args: [account],
+    });
+    if (balance < sharesAmount) {
+        return toResult(`You do not have enough stS to undelegate. Current balance: ${formatUnits(balance, 18)} stS`, true);
+    }
 
     try {
+        // Find the validator with the highest amount of assets delegated
         const validators = await fetchValidators();
         if (!validators.length) {
             return toResult('No validators found', true);
         }
-
         const targetValidator = findHighestDelegatedValidator(validators);
 
-        if (BigInt(targetValidator.assetsDelegated) < amountInWei) {
+        // Check if validator has enough staked assets
+        if (parseUnits(targetValidator.assetsDelegated, 18) < amountInWei) {
             return toResult(`Validator does not have enough staked assets. Maximum available: ${targetValidator.assetsDelegated}`, true);
         }
-
-        await notify('Preparing to undelegate Sonic tokens from Beets.fi liquid staking module...');
 
         const transactions: TransactionParams[] = [];
         const tx: TransactionParams = {
@@ -70,7 +80,7 @@ export async function unStake({ chainName, account, amount }: Props, { sendTrans
         };
         transactions.push(tx);
 
-        await notify('Waiting for transaction confirmation...');
+        await notify('Sending transaction...');
 
         const result = await sendTransactions({ chainId, account, transactions });
         return toResult(

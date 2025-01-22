@@ -54,5 +54,12 @@ export async function fetchValidators(): Promise<ValidatorData[]> {
  * Find the validator with the highest amount of assets delegated.
  */
 export function findHighestDelegatedValidator(validators: ValidatorData[]): ValidatorData {
-    return validators.reduce((max, current) => (BigInt(current.assetsDelegated) > BigInt(max.assetsDelegated) ? current : max));
+    return validators.reduce((max, current) => {
+        const currentValue = parseFloat(current.assetsDelegated);
+        const maxValue = parseFloat(max.assetsDelegated);
+        if (isNaN(currentValue) || isNaN(maxValue)) {
+            throw new Error('Invalid asset delegation value encountered');
+        }
+        return currentValue > maxValue ? current : max;
+    });
 }
