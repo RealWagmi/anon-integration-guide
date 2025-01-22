@@ -5,7 +5,9 @@
         "yarn": "yarn install"
     },
     "dependencies": {
-        "@heyanon/sdk": "^1.0.4"
+        "@heyanon/sdk": "^1.0.4",
+        "bignumber.js": "^9.1.2",
+        "viem": "^2.22.11"
     },
     "license": "MIT",
     "engines": {
