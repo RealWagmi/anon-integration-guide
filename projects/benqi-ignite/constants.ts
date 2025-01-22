@@ -37,3 +37,5 @@ export const ERC20_PAYMENT_METHODS = {
 } as const;
 
 export type ERC20PaymentMethod = keyof typeof ERC20_PAYMENT_METHODS;
+
+export const STAKE_LIMIT_IN_AVAX = parseUnits('2000', AVAX_DECIMALS);

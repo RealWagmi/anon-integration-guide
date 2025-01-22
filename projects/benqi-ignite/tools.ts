@@ -17,6 +17,16 @@ const walletProps = [
 
 const walletRequiredProps = ['chainName', 'account'];
 
+const amountProps = [
+    {
+        name: 'amount',
+        type: 'string',
+        description: 'Amount of tokens in decimal format',
+    },
+];
+
+const amountRequiredProps = ['amount'];
+
 const registerProps = [
     {
         name: 'nodeId',
@@ -61,5 +71,11 @@ export const tools: AiTool[] = [
         description: 'Register nodeId with fee paid in ERC20 based currency.',
         required: [...walletRequiredProps, ...registerRequiredProps, ...paymentMethodRequiredProps],
         props: [...walletProps, ...registerProps, ...paymentMethodProps],
+    },
+    {
+        name: 'registerWithStake',
+        description: 'Register nodeId with staking fee.',
+        required: [...walletRequiredProps, ...registerRequiredProps, ...amountRequiredProps],
+        props: [...walletProps, ...registerProps, ...amountProps],
     },
 ];
