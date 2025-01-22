@@ -8,21 +8,31 @@ Integration with SwapX Protocol
 
 ## Common Tasks
 
-1. Basic Operations
+-   "Show list of vaults information in @SwapX"
+-   "Add liquidity with 100 wS to vault in @SwapX"
+-   "Remove all liquidity from vault in @SwapX"
+-   "Show my LP positions in @SwapX"
+-   "Stake LP to gauge in @SwapX"
+-   "Unstake LP from gauge in @SwapX"
+-   "Unstake LP and claim all rewards from gauge in @SwapX"
+-   "Show gauge balance in @SwapX"
+-   "Show pending rewards from gauge in @SwapX"
+-   "Claim rewards from gauge in @SwapX"
 
-    - "Execute example operation with 100 USDT in @SwapX on Ethereum network"
-    - "Run example transaction with 50 USDC in @SwapX"
-    - "Perform example action with 1000 tokens in @SwapX"
+## Available Functions (as of now)
 
-2. Information Queries
-    - "Show my current status in @SwapX"
-    - "Check my balance in @SwapX"
-    - "Get example statistics from @SwapX"
-    - "Calculate expected results for my position in @SwapX"
-
-## Available Functions
-
-List of available functions will be added here.
+-   LP
+    -   addLiquidity
+    -   getLPBalance
+    -   removeLiquidity
+    -   get list of vaults information
+-   Gauge
+    -   claimRewards
+    -   getGaugeBalance
+    -   getPendingRewards
+    -   stakeLP
+    -   unstakeAllLPAndHarvest
+    -   unstakeLP
 
 ## Installation
 
