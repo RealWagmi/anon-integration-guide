@@ -14,4 +14,4 @@ export const supportedChains = [
     ChainId.GNOSIS,
 ];
 
-export const DEBRIDGE_API_URL = 'https://api.dln.trade/v1.0/dln';
+export const DEBRIDGE_API_URL = 'https://deswap.debridge.finance/v1.0';

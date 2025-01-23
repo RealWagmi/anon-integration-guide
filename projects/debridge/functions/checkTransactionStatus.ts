@@ -2,7 +2,7 @@ import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
 import { DEBRIDGE_API_URL } from '../constants';
 
 interface Props {
-    orderId: string;
+    txHash: string;
 }
 
 type OrderStatus =
@@ -21,6 +21,10 @@ interface OrderStatusResponse {
     orderLink: string;
 }
 
+interface OrderIdsResponse {
+    orderIds: string[];
+}
+
 /**
  * Check the status of a bridge transaction.
  * 
@@ -35,50 +39,66 @@ interface OrderStatusResponse {
  * - ClaimedOrderCancel: Cancellation has been completed and tokens returned
  * 
  * @param props - The function parameters
- * @param props.orderId - ID of the order to check
+ * @param props.txHash - Transaction hash to check status for
  * @param tools - System tools for blockchain interactions
  * @returns Order status information
  */
 export async function checkTransactionStatus(
-    { orderId }: Props,
+    { txHash }: Props,
     { notify }: FunctionOptions
 ): Promise<FunctionReturn> {
     try {
-        // Validate orderId
-        if (!orderId) {
-            return toResult('Order ID is required', true);
+        // Validate txHash
+        if (!txHash) {
+            return toResult('Transaction hash is required', true);
+        }
+
+        if (!txHash.match(/^0x[a-fA-F0-9]{64}$/)) {
+            return toResult('Invalid transaction hash format', true);
         }
 
         await notify('Checking transaction status...');
 
-        // Construct parameters
-        const params = new URLSearchParams();
-        params.append("orderId", orderId);
-
-        const url = `${DEBRIDGE_API_URL}/dln/order/status?${params}`;
+        // First get the order IDs for the transaction
+        const orderIdsUrl = `${DEBRIDGE_API_URL}/dln/tx/${txHash}/order-ids`;
+        const orderIdsResponse = await fetch(orderIdsUrl);
         
-        const response = await fetch(url);
-        if (!response.ok) {
-            const text = await response.text();
-            return toResult(`Failed to check transaction status: ${text}`, true);
+        if (!orderIdsResponse.ok) {
+            return toResult(`Failed to get order IDs: ${await orderIdsResponse.text()}`, true);
         }
 
-        const data = await response.json() as OrderStatusResponse;
-        if ('error' in data) {
-            return toResult(`API Error: ${data.error}`, true);
+        const orderIdsData = await orderIdsResponse.json() as OrderIdsResponse;
+        if (!orderIdsData.orderIds || orderIdsData.orderIds.length === 0) {
+            return toResult('No order IDs found for this transaction', true);
         }
 
-        // Get human-readable status description
-        const statusDescription = getStatusDescription(data.status);
+        // Get status for each order
+        const statuses = await Promise.all(orderIdsData.orderIds.map(async (orderId) => {
+            const statusUrl = `${DEBRIDGE_API_URL}/dln/order/${orderId}/status`;
+            const statusResponse = await fetch(statusUrl);
+            
+            if (!statusResponse.ok) {
+                throw new Error(`Failed to get status for order ${orderId}: ${await statusResponse.text()}`);
+            }
 
-        const message = `Transaction Status:
-Order ID: ${data.orderId}
-Status: ${data.status} - ${statusDescription}
-Track your order: ${data.orderLink}`;
+            const status = await statusResponse.json() as OrderStatusResponse;
+            return {
+                ...status,
+                orderLink: `https://app.debridge.finance/order?orderId=${orderId}`,
+                description: getStatusDescription(status.status)
+            };
+        }));
+
+        // Format the response message
+        const message = statuses.map(status => 
+            `Order ID: ${status.orderId}
+Status: ${status.status} - ${status.description}
+Track your order: ${status.orderLink}`
+        ).join('\n\n');
 
         return toResult(message);
     } catch (error) {
-        return toResult(`Failed to check transaction status: ${error}`, true);
+        return toResult(`ERROR: Failed to check transaction status: ${error}`, true);
     }
 }
 
@@ -90,19 +110,19 @@ function getStatusDescription(status: OrderStatus): string {
         case 'None':
             return 'Order not found or invalid';
         case 'Created':
-            return 'Order has been created and is awaiting processing';
+            return 'Order created but not yet processed';
         case 'Fulfilled':
             return 'Order has been processed and tokens are being transferred';
         case 'SentUnlock':
             return 'Tokens have been unlocked on the destination chain';
         case 'OrderCancelled':
-            return 'Order was cancelled';
+            return 'Order was cancelled by the user or system';
         case 'SentOrderCancel':
             return 'Cancellation request has been sent';
         case 'ClaimedUnlock':
-            return 'Tokens have been successfully claimed by the recipient';
+            return 'Tokens have been claimed by the recipient';
         case 'ClaimedOrderCancel':
-            return 'Cancellation has been completed and tokens have been returned';
+            return 'Cancellation has been completed and tokens returned';
         default:
             return 'Unknown status';
     }

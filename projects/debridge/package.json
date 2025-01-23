@@ -2,7 +2,8 @@
     "name": "@projects/debridge",
     "version": "1.0.0",
     "scripts": {
-        "yarn": "yarn install"
+        "yarn": "yarn install",
+        "test": "ts-node test.ts"
     },
     "dependencies": {
         "@heyanon/sdk": "^1.0.4",

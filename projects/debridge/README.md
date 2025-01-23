@@ -29,11 +29,46 @@ deBridge is DeFi's internet of liquidity, enabling real-time movement of assets 
    - Execute a bridge transaction on the blockchain
    - Takes transaction data from createBridgeOrder
    - Handles transaction signing and submission
+   - Returns transaction hash and success status
 
 6. **checkTransactionStatus**
-   - Check the status of a bridge transaction
+   - Check the status of a bridge transaction by its transaction hash
+   - Retrieves order IDs associated with the transaction
    - Provides detailed status information and tracking link
-   - Supports multiple status types (Created, Fulfilled, etc.)
+   - Supports multiple status types:
+     - None: Order not found or invalid
+     - Created: Order created but not yet processed
+     - Fulfilled: Order has been processed and tokens are being transferred
+     - SentUnlock: Tokens have been unlocked on the destination chain
+     - OrderCancelled: Order was cancelled by the user or system
+     - SentOrderCancel: Cancellation request has been sent
+     - ClaimedUnlock: Tokens have been claimed by the recipient
+     - ClaimedOrderCancel: Cancellation has been completed and tokens returned
+
+## Tests
+
+Current test coverage:
+
+### Implemented Tests
+- `getSupportedChains`: Verifies supported chains list and their IDs
+- `getTokenInfo (ETH)`: Lists Ethereum tokens, verifies USDT, USDC, WETH presence
+- `getTokenInfo (SOL)`: Checks DBR token on Solana with specific address
+- `getBridgeQuote`: Tests both cross-chain (Base -> Solana DBR) and same-chain (Base ETH -> USDbC) quotes
+- `executeBridgeTransaction`: Tests execution of both same-chain and cross-chain transactions
+- `checkTransactionStatus`: Verifies transaction status retrieval and order tracking
+
+### Planned Tests
+- Token search functionality across chains
+- Invalid token address handling
+- Unsupported chain ID error cases
+- Error handling for failed transactions
+- Cancellation flow testing
+
+## Running Tests
+
+```bash
+yarn test
+```
 
 ## Sample Questions
 
@@ -89,17 +124,12 @@ The module provides clear error messages for common issues:
 ## Development
 
 ### Requirements
-- Node.js 16+
-- pnpm or yarn
+- Node.js
+- yarn
 
 ### Installation
 ```bash
-pnpm install
-# or
+
 yarn install
 ```
 
-### Dependencies
-- @heyanon/sdk: Core framework functionality
-- axios: HTTP client for API requests
-- viem: Ethereum utility functions

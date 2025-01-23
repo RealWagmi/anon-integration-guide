@@ -1,7 +1,7 @@
 import { FunctionReturn, FunctionOptions, toResult, TransactionParams } from '@heyanon/sdk';
 import { Address } from 'viem';
 
-interface Props {
+export interface Props {
     chainId: string;
     account: Address;
     transactionData: {
