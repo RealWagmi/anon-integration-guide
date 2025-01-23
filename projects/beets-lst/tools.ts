@@ -49,6 +49,47 @@ export const tools: AiTool[] = [
         ],
     },
     {
+        name: 'withdraw',
+        description: 'Claim Sonic tokens (S) for the withdrawal request identified by the provided ID',
+        required: ['chainName', 'account', 'withdrawId'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Account address to withdraw tokens to',
+            },
+            {
+                name: 'withdrawId',
+                type: 'string',
+                description: 'ID of the withdrawal request to process',
+            },
+        ],
+    },
+    {
+        name: 'withdrawAll',
+        description: 'Claim Sonic tokens (S) from all withdrawal requests that have completed the 14-day waiting period',
+        required: ['chainName', 'account'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Account address to withdraw tokens to',
+            },
+        ],
+    },
+    {
         name: 'getSonicBalance',
         description: 'Get the account balance of Sonic tokens (S)',
         required: ['chainName', 'account'],
@@ -138,9 +179,9 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'getWithdrawalRequests',
+        name: 'getOpenWithdrawalRequests',
         description:
-            'Get the list of pending withdrawals for an account, along with their Withdraw ID, showing which ones are ready to be claimed and which ones are still waiting for the 14-day period to elapse',
+            'Get the list of open withdrawals for the user.  A withdrawal is open if it is either ready to be claimed or waiting for the 14-day period to elapse.  The withdrawal ID will be shown for each withdrawal.',
         required: ['chainName', 'account'],
         props: [
             {

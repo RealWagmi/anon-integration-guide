@@ -161,7 +161,7 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
 
     // Combine results into a single response
     if (results.length === 0) {
-        return toResult('No operations were performed.', true);
+        return toResult('Could not identify any operations to perform.', true);
     } else if (results.length === 1) {
         return results[0];
     }
