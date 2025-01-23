@@ -83,6 +83,12 @@ export const tools: AiTool[] = [
         props: [...walletProps, ...marketListProps],
     },
     {
+        name: 'exitMarket',
+        description: 'Enters a list of markets on the specified chain for the given account.',
+        required: [...walletRequiredProps, ...marketRequiredProps],
+        props: [...walletProps, ...marketProps],
+    },
+    {
         name: 'repayBorrow',
         description: 'Repays a borrowed amount on the specified market.',
         required: [...walletRequiredProps, ...amountRequiredProps, ...marketRequiredProps],
