@@ -7,7 +7,6 @@ import { tools } from '../tools';
 import * as functions from '../functions';
 import util from 'util';
 import { fromHeyAnonToolsToOpenAiTools } from '../helpers/openai';
-import { parseEther } from 'viem';
 
 interface AskBeetsOptions {
     verbose?: boolean;

@@ -3,6 +3,24 @@ import { supportedChains } from './constants';
 
 export const tools: AiTool[] = [
     {
+        name: 'getSonicBalance',
+        description: 'Get the account balance of Sonic tokens (S)',
+        required: ['chainName', 'account'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Account address to check',
+            },
+        ],
+    },
+    {
         name: 'getStakedSonicBalance',
         description: 'Get the account balance of staked Sonic tokens (stS)',
         required: ['chainName', 'account'],
