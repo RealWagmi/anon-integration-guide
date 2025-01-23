@@ -61,6 +61,12 @@ export const tools: AiTool[] = [
         props: [...walletProps],
     },
     {
+        name: 'getUserVotesLength',
+        description: 'Get amount of votes a user has',
+        required: [...walletRequiredProps],
+        props: [...walletProps],
+    },
+    {
         name: 'redeemUnstakedAvax',
         description: 'Reedems previously unstaked AVAX from the sAVAX contract',
         required: [...walletRequiredProps],
