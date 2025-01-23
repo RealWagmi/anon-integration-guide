@@ -34,23 +34,15 @@ export async function unStake({ chainName, account, amount }: Props, { sendTrans
 
     await notify('Preparing to unstake...');
 
-    // Convert amount to undelegate to shares amount
-    const sharesAmount = await publicClient.readContract({
-        address: STS_ADDRESS,
-        abi: stsAbi,
-        functionName: 'convertToShares',
-        args: [amountInWei],
-    });
-
     // Check that the user has enough stS to undelegate
-    const balance = await publicClient.readContract({
+    const stsBalance = await publicClient.readContract({
         address: STS_ADDRESS,
         abi: stsAbi,
         functionName: 'balanceOf',
         args: [account],
     });
-    if (balance < sharesAmount) {
-        return toResult(`You do not have enough stS to undelegate. Current balance: ${formatUnits(balance, 18)} stS`, true);
+    if (stsBalance < amountInWei) {
+        return toResult(`You do not have enough stS to undelegate. Current balance: ${formatUnits(stsBalance, 18)} stS`, true);
     }
 
     try {
@@ -72,10 +64,7 @@ export async function unStake({ chainName, account, amount }: Props, { sendTrans
             data: encodeFunctionData({
                 abi: stsAbi,
                 functionName: 'undelegateMany',
-                args: [
-                    [BigInt(targetValidator.validatorId)], // validatorIds array
-                    [sharesAmount], // amountShares array - now using converted shares amount
-                ],
+                args: [[BigInt(targetValidator.validatorId)], [amountInWei]],
             }),
         };
         transactions.push(tx);
