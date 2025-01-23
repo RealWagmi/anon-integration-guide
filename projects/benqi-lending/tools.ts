@@ -100,4 +100,10 @@ export const tools: AiTool[] = [
         required: [...walletRequiredProps, 'marketType'],
         props: [...walletProps, ...marketTypeProps],
     },
+    {
+        name: 'getMarketBorrowLimit',
+        description: 'Get specified market borrow limit.',
+        required: [...walletRequiredProps, ...marketRequiredProps],
+        props: [...walletProps, ...marketProps],
+    },
 ];

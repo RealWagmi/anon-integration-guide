@@ -16,7 +16,7 @@ type Props = {
  * @param tools - System tools for blockchain interactions
  * @returns liquidity and shortfall in USD
  */
-export async function getAccountLiquidity(props: Props, { sendTransactions, notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
+export async function getAccountLiquidity(props: Props, { getProvider }: FunctionOptions): Promise<FunctionReturn> {
     const wallet = parseWallet(props);
 
     if (!wallet.success) {
