@@ -1,4 +1,5 @@
 import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
+import axios from 'axios';
 import { DEBRIDGE_API_URL } from '../constants';
 
 interface Props {
@@ -39,60 +40,64 @@ export async function getTokenInfo(
 
         const url = `${DEBRIDGE_API_URL}/token-list?chainId=${chainId}`;
         
-        const response = await fetch(url);
-        if (!response.ok) {
-            const text = await response.text();
-            return toResult(`Failed to fetch token information: ${text}`, true);
-        }
+        try {
+            const response = await axios.get<TokenListResponse>(url);
+            const data = response.data;
 
-        const responseData = await response.json() as TokenListResponse;
-        const tokens = responseData.tokens;
+            const tokens = data.tokens;
 
-        // If a specific token address is provided
-        if (tokenAddress) {
-            const tokenInfo = tokens[tokenAddress];
-            if (!tokenInfo) {
-                return toResult(`Token ${tokenAddress} not found on chain ${chainId}`, true);
-            }
-            return toResult(`Token Information:
+            // If a specific token address is provided
+            if (tokenAddress) {
+                const tokenInfo = tokens[tokenAddress];
+                if (!tokenInfo) {
+                    return toResult(`Token ${tokenAddress} not found on chain ${chainId}`, true);
+                }
+                return toResult(`Token Information:
 Name: ${tokenInfo.name}
 Symbol: ${tokenInfo.symbol}
 Address: ${tokenAddress}
 Decimals: ${tokenInfo.decimals}`);
-        }
+            }
 
-        // If search term is provided, filter tokens
-        let filteredTokens = Object.entries(tokens);
-        if (search) {
-            const searchLower = search.toLowerCase();
-            filteredTokens = filteredTokens.filter(([_, token]) =>
-                token.name.toLowerCase().includes(searchLower) ||
-                token.symbol.toLowerCase().includes(searchLower)
-            );
-        }
+            // If search term is provided, filter tokens
+            let filteredTokens = Object.entries(tokens);
+            if (search) {
+                const searchLower = search.toLowerCase();
+                filteredTokens = filteredTokens.filter(([_, token]) =>
+                    token.name.toLowerCase().includes(searchLower) ||
+                    token.symbol.toLowerCase().includes(searchLower)
+                );
+            }
 
-        // Limit results to avoid overwhelming response
-        const limitedTokens = filteredTokens.slice(0, 10);
-        
-        if (limitedTokens.length === 0) {
-            return toResult(search 
-                ? `No tokens found matching "${search}" on chain ${chainId}`
-                : `No tokens found on chain ${chainId}`, 
-                true
-            );
-        }
+            // Limit results to avoid overwhelming response
+            const limitedTokens = filteredTokens.slice(0, 10);
+            
+            if (limitedTokens.length === 0) {
+                return toResult(search 
+                    ? `No tokens found matching "${search}" on chain ${chainId}`
+                    : `No tokens found on chain ${chainId}`, 
+                    true
+                );
+            }
 
-        const tokenList = limitedTokens
-            .map(([address, token]) => 
-                `${token.name} (${token.symbol})
+            const tokenList = limitedTokens
+                .map(([address, token]) => 
+                    `${token.name} (${token.symbol})
 Address: ${address}
 Decimals: ${token.decimals}
 ---`
-            )
-            .join('\n');
+                )
+                .join('\n');
 
-        return toResult(`Found ${filteredTokens.length} tokens${search ? ` matching "${search}"` : ''}.
+            return toResult(`Found ${filteredTokens.length} tokens${search ? ` matching "${search}"` : ''}.
 Showing first ${limitedTokens.length}:\n\n${tokenList}`);
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                const text = error.response?.data;
+                return toResult(`Failed to fetch token information: ${text}`, true);
+            }
+            throw error;
+        }
     } catch (error) {
         return toResult(`Failed to get token information: ${error}`, true);
     }

@@ -1,4 +1,5 @@
 import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
+import axios from 'axios';
 import { DEBRIDGE_API_URL } from '../constants';
 
 interface Props {
@@ -27,13 +28,12 @@ export async function getSupportedChains({}: Props, { notify }: FunctionOptions)
 
         const url = `${DEBRIDGE_API_URL}/supported-chains-info`;
         
-        const response = await fetch(url);
-        if (!response.ok) {
-            const text = await response.text();
-            return toResult(`Failed to fetch supported chains: ${text}`, true);
+        const response = await axios.get(url);
+        if (response.status !== 200) {
+            return toResult(`Failed to fetch supported chains: ${response.statusText}`, true);
         }
 
-        const data = await response.json() as SupportedChainsResponse;
+        const data = response.data as SupportedChainsResponse;
         if ('error' in data) {
             return toResult(`API Error: ${data.error}`, true);
         }
@@ -45,6 +45,9 @@ export async function getSupportedChains({}: Props, { notify }: FunctionOptions)
 
         return toResult(`Supported chains:\n${chainList}`);
     } catch (error) {
+        if (axios.isAxiosError(error)) {
+            return toResult(`Failed to get supported chains: ${error.message}`, true);
+        }
         return toResult(`Failed to get supported chains: ${error}`, true);
     }
 }

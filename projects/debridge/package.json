@@ -5,7 +5,8 @@
         "yarn": "yarn install"
     },
     "dependencies": {
-        "@heyanon/sdk": "^1.0.4"
+        "@heyanon/sdk": "^1.0.4",
+        "axios": "^1.7.9"
     },
     "license": "MIT",
     "engines": {
