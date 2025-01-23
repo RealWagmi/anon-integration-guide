@@ -32,7 +32,7 @@ export async function unStake({ chainName, account, amount }: Props, { sendTrans
     // Get the public client to read contract data
     const publicClient = getProvider(chainId);
 
-    await notify('Preparing to unstake...');
+    await notify(`Preparing to unstake ${amount} stS...`);
 
     // Check that the user has enough stS to undelegate
     const stsBalance = await publicClient.readContract({
@@ -72,12 +72,9 @@ export async function unStake({ chainName, account, amount }: Props, { sendTrans
         await notify('Sending transaction...');
 
         const result = await sendTransactions({ chainId, account, transactions });
-        return toResult(
-            result.isMultisig
-                ? result.data[result.data.length - 1].message
-                : `Successfully initiated undelegation of ${amount} stS from Beets.fi liquid staking module. You can withdraw your Sonic tokens after 14 days.`,
-        );
+        const message = result.data[result.data.length - 1].message;
+        return toResult(result.isMultisig ? message : `Successfully initiated unstaking of ${amount} stS. You can withdraw your Sonic tokens after 14 days. ${message}`);
     } catch (error) {
-        return toResult(`Failed to undelegate: ${error instanceof Error ? error.message : 'Unknown error'}`, true);
+        return toResult(`Failed to ustake: ${error instanceof Error ? error.message : 'Unknown error'}`, true);
     }
 }
