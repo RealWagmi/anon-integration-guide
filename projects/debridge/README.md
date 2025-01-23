@@ -1,6 +1,35 @@
 # deBridge Module
 
-deBridge is DeFi's internet of liquidity, enabling real-time movement of assets and information across the DeFi landscape.
+deBridge is DeFi's internet of liquidity, enabling real-time movement of assets and information across the DeFi landscape. The protocol supports cross-chain token transfers and swaps across multiple networks including Ethereum, Base, Solana, Arbitrum, Optimism, and more.
+
+## Common Tasks
+
+1. Cross-Chain Token Transfers
+
+   - "Bridge 5000 ETH from Base to Solana as DBR tokens"
+   - "Send 1000 USDC from Ethereum to Arbitrum"
+   - "Transfer 500 USDT from Optimism to Base"
+   - "Move 10 ETH from Base to Arbitrum with 0.5% slippage"
+
+2. Same-Chain Token Swaps
+
+   - "Swap 1 ETH for USDbC on Base"
+   - "Exchange 1000 USDC for ETH on Ethereum"
+   - "Trade 500 USDT for WETH on Arbitrum"
+
+3. Transaction Status Checks
+
+   - "Check status of my bridge transaction 0x19fa026c..."
+   - "Track my token transfer from Base to Solana"
+   - "Get order status for my cross-chain swap"
+   - "View all orders for my bridge transaction"
+
+4. Information Queries
+
+   - "List all supported chains in @deBridge"
+   - "Get token info for USDC on Ethereum"
+   - "Show supported tokens on Solana"
+   - "Get bridge quote for ETH to DBR transfer"
 
 ## Features
 
@@ -20,18 +49,13 @@ deBridge is DeFi's internet of liquidity, enabling real-time movement of assets 
    - Includes fees and estimated amounts
    - Supports slippage configuration
 
-4. **createBridgeOrder**
-   - Create a cross-chain bridge order
-   - Supports EVM-to-EVM, EVM-to-Solana, and Solana-to-EVM transfers
-   - Handles native tokens and ERC20/SPL tokens
-
-5. **executeBridgeTransaction**
+4. **executeBridgeTransaction**
    - Execute a bridge transaction on the blockchain
    - Takes transaction data from createBridgeOrder
    - Handles transaction signing and submission
    - Returns transaction hash and success status
 
-6. **checkTransactionStatus**
+5. **checkTransactionStatus**
    - Check the status of a bridge transaction by its transaction hash
    - Retrieves order IDs associated with the transaction
    - Provides detailed status information and tracking link
@@ -44,6 +68,28 @@ deBridge is DeFi's internet of liquidity, enabling real-time movement of assets 
      - SentOrderCancel: Cancellation request has been sent
      - ClaimedUnlock: Tokens have been claimed by the recipient
      - ClaimedOrderCancel: Cancellation has been completed and tokens returned
+
+## Pain Points Solved
+
+1. **Cross-Chain Complexity**
+   - Simplifies cross-chain token transfers with a unified API
+   - Handles complex bridging logic and transaction routing
+   - Provides real-time status updates and tracking
+
+2. **Transaction Monitoring**
+   - Easy tracking of cross-chain transactions
+   - Clear status messages and descriptions
+   - Direct links to transaction explorer
+
+3. **Token Discovery**
+   - Comprehensive token information across chains
+   - Easy verification of token addresses and decimals
+   - Support for both EVM and Solana tokens
+
+4. **Quote Accuracy**
+   - Real-time price quotes for transfers
+   - Includes all fees and slippage
+   - Supports both same-chain and cross-chain quotes
 
 ## Tests
 
@@ -64,63 +110,6 @@ Current test coverage:
 - Error handling for failed transactions
 - Cancellation flow testing
 
-## Running Tests
-
-```bash
-yarn test
-```
-
-## Sample Questions
-
-1. **Chain Information**
-   - "What chains does deBridge support?"
-   - "Is Solana supported on deBridge?"
-   - "Show me the supported chain IDs"
-
-2. **Token Information**
-   - "Get information about USDC on Ethereum"
-   - "Search for tokens with 'USD' in their name on BSC"
-   - "What's the token address for WETH on Arbitrum?"
-
-3. **Bridge Quotes**
-   - "How much ETH will I receive if I bridge 1000 USDC from Ethereum to BSC?"
-   - "What are the fees for bridging tokens from Solana to Ethereum?"
-   - "Get a quote for bridging 0.5 ETH to Arbitrum"
-
-4. **Bridge Operations**
-   - "Bridge 100 USDC from Ethereum to BSC"
-   - "Send 1 ETH from Ethereum to Arbitrum"
-   - "Transfer 1000 USDT from BSC to my Solana wallet"
-
-5. **Transaction Status**
-   - "Check the status of my bridge transaction"
-   - "Is my token transfer complete?"
-   - "Track my cross-chain transaction"
-
-## Special Considerations
-
-### Chain-Specific Requirements
-
-1. **EVM to EVM Transfers**
-   - Use 0x-prefixed addresses
-   - Native token address: 0x0000000000000000000000000000000000000000
-
-2. **To Solana (Chain ID: 7565164)**
-   - Recipient must be a base58 Solana address
-   - Token must be a Solana token mint address (base58)
-
-3. **From Solana**
-   - Recipient must be an EVM address (0x-prefixed)
-   - Token must be an ERC-20 format address
-
-### Error Handling
-
-The module provides clear error messages for common issues:
-- Invalid addresses
-- Insufficient balance
-- Network errors
-- Unsupported chains/tokens
-
 ## Development
 
 ### Requirements
@@ -129,7 +118,9 @@ The module provides clear error messages for common issues:
 
 ### Installation
 ```bash
-
 yarn install
 ```
 
+### Running Tests
+```bash
+yarn test
