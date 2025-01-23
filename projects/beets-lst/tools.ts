@@ -137,4 +137,23 @@ export const tools: AiTool[] = [
             },
         ],
     },
+    {
+        name: 'getWithdrawalRequests',
+        description:
+            'Get the list of pending withdrawals for an account, along with their Withdraw ID, showing which ones are ready to be claimed and which ones are still waiting for the 14-day period to elapse',
+        required: ['chainName', 'account'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Account address to check withdrawals for',
+            },
+        ],
+    },
 ];

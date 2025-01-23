@@ -13,6 +13,7 @@ Integration with beets.fi Sonic liquid staking module (stS). The integration sup
     - "Stake 100 S in @beets-lst"
     - "Stake half of my Sonic in @beets-lst"
     - "Unstake 100 stS from @beets-lst"
+    - "Unstake 100 S worth of stS from @beets-lst"
     - "Unstake all of my stS from @beets-lst"
     - "Withdraw all of my stS from @beets-lst"
     - "How much is worth 1 stS in @beets-lst?"
