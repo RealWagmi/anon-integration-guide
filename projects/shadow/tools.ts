@@ -329,14 +329,12 @@ export const tools: AiTool[] = [
                 description: 'Address querying positions.',
             },
             {
-                name: 'tokenA',
-                type: 'string',
-                description: 'Optional filter for token A.',
-            },
-            {
-                name: 'tokenB',
-                type: 'string',
-                description: 'Optional filter for token B.',
+                name: 'tokens',
+                type: 'array',
+                items: {
+                    type: 'string',
+                },
+                description: 'Get only positions with any of the specified tokens.',
             },
         ],
     },

@@ -29,22 +29,15 @@ export interface Props {
     tokenB: Address;
     amountA: string;
     amountB: string;
-    tickSpacing?: number;
     slippageTolerance?: number;
-    lowerPrice?: string; // lower price as tokenB / tokenA
-    upperPrice?: string; // upper price as tokenB / tokenA
+    lowerPrice?: string; // Assuming price is calculated as tokenB / tokenA (on DEX price is denominated as token1 / token0)
+    upperPrice?: string; // Assuming price is calculated as tokenB / tokenA (on DEX price is denominated as token1 / token0)
     lowerPricePercentage?: number;
     upperPricePercentage?: number;
     recipient?: Address;
 }
 
-/**
- * Mints a new liquidity position on Shadow Exchange V3
- * @param props - The function `Props`
- * @param tools - System tools for blockchain interactions
- * @returns Transaction result
- */
-export async function mintFunction(
+export async function increaseLiquidityFunction(
     props: Props,
     { sendTransactions, notify, getProvider }: FunctionOptions,
 ): Promise<FunctionReturn> {
@@ -125,7 +118,7 @@ export async function mintFunction(
     }
 }
 
-export async function mint(
+export async function increaseLiquidity(
     props: Props,
     sdk: ShadowSDK,
     provider: PublicClient,

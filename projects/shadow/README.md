@@ -39,7 +39,7 @@ Shadow Exchange is a concentrated liquidity layer and exchange built on the Soni
    - "Collect rewards from S/USDC pool in @shadow where tokenId is 123456 on Sonic network"
 
 2. Information Queries
-   - "Get my LP position in @shadow on Sonic network" 
+   - "Get my LP positions in @shadow on Sonic network" 
    - "Quote 100 USDT to ETH in @shadow on Sonic network"
    - "Quote USDC to exactly 0.1 S in @shadow on Sonic network"
 
