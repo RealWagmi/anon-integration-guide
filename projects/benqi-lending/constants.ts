@@ -3,6 +3,7 @@ import { ChainId } from '@heyanon/sdk';
 export const supportedChains = [ChainId.AVALANCHE];
 
 export const MARKET_DECIMALS = 8;
+export const LIQUIDITY_DECIMALS = 18;
 
 export const CORE_COMPTROLLER_ADDRESS = '0x486Af39519B4Dc9a7fCcd318217352830E8AD9b4';
 export const ECOSYSTEM_UNITROLLER_ADDRESS = '0xD7c4006d33DA2A0A8525791ed212bbCD7Aca763F';

@@ -1,7 +1,7 @@
 import { FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
-import { Address } from 'viem';
+import { Address, formatUnits } from 'viem';
 import comptrollerAbi from '../abis/comptroller';
-import { CORE_COMPTROLLER_ADDRESS, ECOSYSTEM_UNITROLLER_ADDRESS, MarketProps } from '../constants';
+import { CORE_COMPTROLLER_ADDRESS, ECOSYSTEM_UNITROLLER_ADDRESS, LIQUIDITY_DECIMALS, MarketProps } from '../constants';
 import { parseWallet } from '../utils';
 
 type Props = {
@@ -45,5 +45,5 @@ export async function getAccountLiquidity(props: Props, { sendTransactions, noti
         return toResult(`Error while fetching account liquidity: Error code ${error}`, true);
     }
 
-    return toResult(`Account liquidity: ${liquidity} USD, Shortfall: ${shortfall} USD`);
+    return toResult(`Account liquidity: ${formatUnits(liquidity, LIQUIDITY_DECIMALS)} USD, Shortfall: ${formatUnits(shortfall, LIQUIDITY_DECIMALS)} USD`);
 }
