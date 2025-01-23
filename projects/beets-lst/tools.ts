@@ -85,8 +85,21 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'getTotalStakedSonic',
-        description: 'Get the total amount of Sonic tokens (S) in the protocol, including delegated and undelegated tokens',
+        name: 'getTotalSonicInProtocol',
+        description: 'Gets the total amount of Sonic tokens (S) in the protocol, including staked (delegated) and undelegated (pool) tokens',
+        required: ['chainName'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name',
+            },
+        ],
+    },
+    {
+        name: 'getTotalStakedSonicInProtocol',
+        description: 'Protocol function that gets the total amount of Sonic tokens (S) staked in the protocol; this includes only staked tokens, not pool tokens',
         required: ['chainName'],
         props: [
             {
