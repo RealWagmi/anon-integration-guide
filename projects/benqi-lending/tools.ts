@@ -27,13 +27,17 @@ const amountProps = [
 
 const amountRequiredProps = ['amount'];
 
-const marketProps = [
+const marketTypeProps = [
     {
         name: 'marketType',
         type: 'string',
         enum: ['core', 'ecosystem'],
         description: 'Market type used for transaction',
     },
+];
+
+const marketProps = [
+    ...marketTypeProps,
     {
         name: 'marketName',
         type: 'string',
@@ -45,12 +49,7 @@ const marketProps = [
 const marketRequiredProps = ['marketType', 'marketName'];
 
 const marketListProps = [
-    {
-        name: 'marketType',
-        type: 'string',
-        enum: ['core', 'ecosystem'],
-        description: 'Market type used for transaction',
-    },
+    ...marketTypeProps,
     {
         name: 'marketNames',
         type: 'array',
@@ -94,5 +93,11 @@ export const tools: AiTool[] = [
         description: 'Withdraws a specified amount of tokens from the protocol.',
         required: [...walletRequiredProps, ...amountRequiredProps, ...marketRequiredProps],
         props: [...walletProps, ...amountProps, ...marketProps],
+    },
+    {
+        name: 'getAccountLiquidity',
+        description: 'Get account liquidity in USD',
+        required: [...walletRequiredProps, 'marketType'],
+        props: [...walletProps, ...marketTypeProps],
     },
 ];
