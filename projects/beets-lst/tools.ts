@@ -3,7 +3,7 @@ import { supportedChains } from './constants';
 
 export const tools: AiTool[] = [
     {
-        name: 'getStakedBalance',
+        name: 'getStakedSonicBalance',
         description: 'Get the account balance of staked Sonic tokens (stS)',
         required: ['chainName', 'account'],
         props: [

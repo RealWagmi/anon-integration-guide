@@ -85,7 +85,7 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
             content: `You will interact with the Beets protocol via your tools. Given a request, you will need to determine which tools to call.
             For operations that require multiple steps (like "unstake all"), you should first get required information before executing actions.
             For example, to unstake all tokens:
-            1. First call getStakedBalance to get the current balance
+            1. First call getStakedSonicBalance to get the current balance
             2. Then use that balance amount to call unStake
             After each tool response, determine if additional steps are needed.
             All tools will need the chainName and account arguments: chainName: "sonic", account: "${signer.address}".`,
