@@ -33,9 +33,9 @@ export async function getMatchingVaults({ chainName, protocolName, assets }: Pro
     // Get vaults
     matchingAssets.map((vault) => {
         return {
+            id: vault.id,
             name: vault.name,
             type: vault.type,
-            vaultAddress: vault.earnContractAddress,
             tokenToDeposit: vault.token,
             tokenToDepositAddress: vault.tokenAddress,
         };
