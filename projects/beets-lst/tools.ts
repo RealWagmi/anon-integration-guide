@@ -110,4 +110,31 @@ export const tools: AiTool[] = [
             },
         ],
     },
+    {
+        name: 'getProtocolStakedSonicToSonicExchangeRate',
+        description: 'Protocol function that gets how much is worth a staked Sonic token (stS) in Sonic tokens (S); this is defined to be equal to the share conversion rate',
+        required: ['chainName'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name',
+            },
+        ],
+    },
+    {
+        name: 'getProtocolSonicToStakedSonicExchangeRate',
+        description:
+            'Protocol function that gets how much is worth a Sonic token (S) in stakedSonic tokens (stS); this is defined to be equal to the inverse of the share conversion rate',
+        required: ['chainName'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name',
+            },
+        ],
+    },
 ];
