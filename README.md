@@ -1,121 +1,77 @@
-# HeyAnon AI Module Development Documentation
+# beets-lst
 
-Welcome to the technical documentation for developing additional project modules for the HeyAnon AI Chatbot.
-
-[Fast track terms](./guides/fast-track-terms.md)
-
-## Contents
-
-- [Introduction](./guides/introduction.md)
-- [Requirements](./guides/requirements.md)
-- [Architecture and Design](./guides/architecture-and-design.md)
-- [Action Functions Implementation Guide](./guides/action-functions.md)
-- [Getter Functions Implementation Guide](./guides/getter-functions.md)
-- [Tools Implementation Guide](./guides/tools-implementation.md)
-- [Module README Guidelines](./guides/module-readme-guidelines.md)
-- [Conclusion](./guides/conclusion.md)
-- [Additional Resources](./guides/additional-resources.md)
-
-## Quick Links
-
-- [Action Function Example](./guides/action-function-example.md)
-- [Getter Function Example](./guides/getter-function-example.md)
-
-## Quick Start
-
-To create a new module, use the provided bash script:
-
-```bash
-cd scripts
-chmod +x create-module.sh
-./create-module.sh <module-name> "<description>" "<chains>"
-```
-
-Parameters:
-
-- `module-name`: Name of your module (e.g., "example-protocol")
-- `description`: Short description of your module in quotes
-- `chains`: Comma-separated list of supported chains in quotes (e.g., "ETHEREUM,ARBITRUM")
-
-Example:
-
-```bash
-./create-module.sh example-protocol "Integration with Example Protocol" "ETHEREUM,ARBITRUM"
-cd projects/example-protocol
-yarn install
-```
-
-The script will create:
-
-1. Module directory structure in [projects](./projects) folder:
-   - `abis/` - for contract ABIs
-   - `functions/` - for action and getter functions
-   - Configuration files (index.ts, tools.ts, etc.)
-2. Basic README.md with template documentation
-3. Git repository initialization
-4. Package.json with correct naming
-
-After creation, follow the printed instructions to complete module setup.
-
-## Contribution Guide
-
-### Module Structure
-
-All modules must be placed in the [projects](./projects) directory. This ensures consistent organization and easier maintenance of the codebase.
-
-### Development Process
-
-1. Fork the repository
-2. Create a new branch for your module:
-   ```bash
-   git checkout -b feature/module-name
-   ```
-3. Create your module using the provided script
-4. Implement required functionality following the guides
-5. Test your implementation thoroughly
-6. Create documentation for your module
-
-### Pull Request Process
-
-1. Ensure your code follows the project's coding standards
-2. Update the documentation as needed
-3. Create a Pull Request with:
-   - Clear description of the module's functionality
-   - List of supported chains
-   - Any special configuration requirements
-   - Test results or coverage reports
-4. Wait for review from maintainers
-
-### Code Standards
-
-- Use TypeScript for all implementations
-- Follow existing code style and formatting
-- Include proper error handling
-- Add comprehensive comments
-- Ensure type safety
-
-### Testing
-
-- Test all functions with different input scenarios
-- Verify error handling
-- Test on all supported networks
+Integration with beets.fi Sonic liquid staking module (stS). The integration supports staking S into stS and unstaking back to S. The unstaking is a 2-step process: first undelegate, then claim Sonic after 14 days.
 
 ## Supported Networks
 
-[Available networks for integration:](https://github.com/RealWagmi/heyanon-sdk/blob/main/src/blockchain/constants/chains.ts)
+- SONIC
 
-### Mainnet Networks
+## Common Tasks
 
-- ETHEREUM (Ethereum Mainnet, 1)
-- BSC (BNB Smart Chain, 56)
-- KAVA (Kava EVM, 2222)
-- BASE (Base, 8453)
-- IOTA (IOTA EVM, 1074)
-- AVALANCHE (Avalanche C-Chain, 43114)
-- ARBITRUM (Arbitrum One, 42161)
-- SONIC (Sonic, 146)
+1. Basic Operations
 
-### Testnet Networks
+    - "Stake 100 S in @beets-lst"
+    - "Stake half of my Sonic in @beets-lst"
+    - "Unstake 100 stS from @beets-lst"
+    - "Unstake all of my stS from @beets-lst"
+    - "Withdraw all of my stS from @beets-lst"
 
-- SEPOLIA (Ethereum Testnet Sepolia, 11155111)
-- ONE_SEPOLIA (Arbitrum Sepolia Testnet, 421614)
+2. Information Queries
+    - "Get my stS balance in @beets-lst"
+    - "How long before I can withdraw S from @beets-lst?"
+
+## Available Functions
+
+List of available functions will be added here.
+
+## Installation
+
+```bash
+yarn add @heyanon/beets-lst
+```
+
+## Usage
+
+Example usage will be added here.
+
+## Contracts and transactions
+
+- Liquid staking contract: https://sonicscan.org/address/0xe5da20f15420ad15de0fa650600afc998bbe3955
+- Stake Sonic (`deposit`): https://sonicscan.org/tx/0x19545670b77c9ab7e1eabdab292c1aa9d0abd6e11777ab3147f343cb900c728b
+- Initiate unstake (`undelegateMany`): https://sonicscan.org/tx/0xb64c4fd6ae4667a3b7ce9d6ba9679fbd2c591173a0895a5616adc3b039b10c27
+- Withdraw Sonic (`withdraw`): https://sonicscan.org/tx/0xb93b07384ccbace4236d07fac46874039821c84707f69fbee101e9ae5506f470
+- Claim rewards (`claimRewards`): https://sonicscan.org/tx/0xf46de5d07b1feeaf132e58ae0a87075a2cf9308698ab4837c76c0a2b7dd62aa5
+
+## Test integration
+
+I've built a simple agent called `askBeets` to test the integration. To run it, you need to configure .env:
+
+```bash
+cd projects/beets-lst
+yarn install
+cp .env.example .env
+# insert test wallet private key into .env
+# insert OpenAI API key into .env
+```
+
+and then you can ask questions directly:
+
+```bash
+yarn run ask "What is my stS balance?"
+yarn run ask "Stake 0.1 S"
+yarn run ask "Unstake all of my stS"
+```
+
+The agent will perform one or more tasks to execute your request; see for example this GIF where I asked to bot to unstake all of my stS:
+
+
+
+https://github.com/user-attachments/assets/2ce0d109-85b5-4548-8bad-2c4bfadaeacf
+
+
+
+If you need to see the OpenAI messages, for debug purposes, run with `--verbose` flag:
+
+```bash
+yarn run ask "What is my stS balance?" --verbose
+```
