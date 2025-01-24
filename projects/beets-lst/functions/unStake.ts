@@ -1,6 +1,6 @@
 import { Address, encodeFunctionData, formatUnits, parseUnits } from 'viem';
 import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName } from '@heyanon/sdk';
-import { supportedChains, STS_ADDRESS } from '../constants';
+import { supportedChains, STS_ADDRESS, MIN_UNDELEGATE_IN_WEI } from '../constants';
 import { stsAbi } from '../abis';
 import { fetchValidators, findHighestDelegatedValidator } from '../helpers/client';
 
@@ -27,7 +27,7 @@ export async function unStake({ chainName, account, amount }: Props, { sendTrans
     if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
 
     const amountInWei = parseUnits(amount, 18);
-    if (amountInWei === 0n) return toResult('Amount must be greater than 0', true);
+    if (amountInWei < MIN_UNDELEGATE_IN_WEI) return toResult(`Amount must be greater than ${formatUnits(MIN_UNDELEGATE_IN_WEI, 18)} stS`, true);
 
     // Get the public client to read contract data
     const publicClient = getProvider(chainId);

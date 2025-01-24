@@ -1,4 +1,4 @@
-import { Address, formatUnits } from 'viem';
+import { formatUnits } from 'viem';
 import { FunctionReturn, toResult, getChainFromName, FunctionOptions } from '@heyanon/sdk';
 import { supportedChains, STS_ADDRESS } from '../constants';
 import { stsAbi } from '../abis';
