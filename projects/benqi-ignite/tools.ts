@@ -31,7 +31,7 @@ const registerProps = [
     {
         name: 'nodeId',
         type: 'string',
-        description: 'Node id used for registration',
+        description: 'Node ID of the validator',
     },
     {
         name: 'blsProofOfPossession',
@@ -77,5 +77,18 @@ export const tools: AiTool[] = [
         description: 'Register nodeId with staking fee.',
         required: [...walletRequiredProps, ...registerRequiredProps, ...amountRequiredProps],
         props: [...walletProps, ...registerProps, ...amountProps],
+    },
+    {
+        name: 'redeemAfterExpiry',
+        description: 'To be called after the validation period has expired and the staker wants to redeem their deposited tokens and potential rewards.',
+        required: [...walletRequiredProps, 'nodeId'],
+        props: [
+            ...walletProps,
+            {
+                name: 'nodeId',
+                type: 'string',
+                description: 'Node ID of the validator',
+            },
+        ],
     },
 ];
