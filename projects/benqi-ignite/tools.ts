@@ -97,4 +97,10 @@ export const tools: AiTool[] = [
         required: [...walletRequiredProps, 'from', 'to'],
         props: [...walletProps, { name: 'from', type: 'number' }, { name: 'to', type: 'number' }],
     },
+    {
+        name: 'getAccountRegistrationCount',
+        description: 'Returns the number of registrations made by the given account.',
+        required: [...walletRequiredProps],
+        props: [...walletProps],
+    },
 ];

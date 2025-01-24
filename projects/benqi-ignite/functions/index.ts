@@ -1,3 +1,4 @@
+export { getAccountRegistrationCount } from './getAccountRegistrationCount';
 export { getRegistrationsByAccount } from './getRegistrationsByAccount';
 export { redeemAfterExpiry } from './redeemAfterExpiry';
 export { registerWithAvaxFee } from './registerWithAvaxFee';
