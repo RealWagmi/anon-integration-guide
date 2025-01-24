@@ -1,24 +1,24 @@
 import { Address } from 'viem';
 import { FunctionReturn, toResult, getChainFromName, FunctionOptions } from '@heyanon/sdk';
 import { supportedChains } from '../constants';
-import { getOpenWithdrawalRequests as getOpenWithdrawalRequestsHelper } from '../helpers/withdrawals';
+import { getOpenWithdrawRequests as getOpenWithdrawRequestsHelper } from '../helpers/withdrawals';
 
 interface Props {
     chainName: string;
     account: Address;
 }
 
-export async function getOpenWithdrawalRequests({ chainName, account }: Props, { notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
+export async function getOpenWithdrawRequests({ chainName, account }: Props, { notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
 
     const publicClient = getProvider(chainId);
 
-    await notify(`Getting existing withdrawal requests...`);
+    await notify(`Getting existing withdraw requests...`);
 
     // Get all withdraws for the user, including non-claimable ones
-    const withdraws = await getOpenWithdrawalRequestsHelper(account, publicClient, false);
+    const withdraws = await getOpenWithdrawRequestsHelper(account, publicClient, false);
 
     if (withdraws.length === 0) {
         return toResult('No pending or unclaimed withdrawals found');

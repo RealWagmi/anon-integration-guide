@@ -8,4 +8,4 @@ export { getTotalSonicInProtocol } from './getTotalSonicInProtocol';
 export { getTotalStakedSonicInProtocol } from './getTotalStakedSonicInProtocol';
 export { getProtocolStakedSonicToSonicExchangeRate } from './getProtocolStakedSonicToSonicExchangeRate';
 export { getProtocolSonicToStakedSonicExchangeRate } from './getProtocolSonicToStakedSonicExchangeRate';
-export { getOpenWithdrawalRequests } from './getOpenWithdrawalRequests';
+export { getOpenWithdrawRequests } from './getOpenWithdrawRequests';

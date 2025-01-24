@@ -1,6 +1,6 @@
 # beets-lst
 
-Integration with beets.fi Sonic liquid staking module (stS). The integration supports staking S into stS and unstaking back to S. The unstaking is a 2-step process: first undelegate, then claim Sonic after 14 days.
+Integration with beets.fi Sonic liquid staking module (stS).
 
 ## Supported Networks
 
@@ -13,16 +13,16 @@ Integration with beets.fi Sonic liquid staking module (stS). The integration sup
     - **Staking**
         - "Stake 100 S in @beets-lst"
         - "Stake half of my Sonic in @beets-lst"
-        - "How many stS do I have in @beets-lst
+        - "How many stS do I have in @beets-lst?"
     - **Unstaking**
         - "Unstake 100 stS from @beets-lst"
         - "Unstake all of my stS from @beets-lst"
         - "Unstake 100 S worth of stS from @beets-lst"
     - **Withdrawing**
         - "How long before I can withdraw from @beets-lst?"
-        - "Show open withdrawals from @beets-lst"
-        - "Claim <withdraw_id> from @beets-lst"
-        - "Claim all from @beets-lst"
+        - "Show withdrawal requests from @beets-lst"
+        - "Withdraw <withdraw_id> from @beets-lst"
+        - "Withdraw all from @beets-lst"
     - **Info**
         - "How much is worth 1 stS in @beets-lst?"
         - "How much is worth 1 S in @beets-lst?"
@@ -30,7 +30,17 @@ Integration with beets.fi Sonic liquid staking module (stS). The integration sup
 
 ## Available Functions
 
-List of available functions will be added here.
+- [stake](functions/stake.ts)
+- [unStake](functions/unStake.ts)
+- [withdraw](functions/withdraw.ts)
+- [withdrawAll](functions/withdrawAll.ts)
+- [getSonicBalance](functions/getSonicBalance.ts)
+- [getStakedSonicBalance](functions/getStakedSonicBalance.ts)
+- [getOpenWithdrawRequests](functions/getOpenWithdrawRequests.ts)
+- [getProtocolSonicToStakedSonicExchangeRate](functions/getProtocolSonicToStakedSonicExchangeRate.ts)
+- [getProtocolStakedSonicToSonicExchangeRate](functions/getProtocolStakedSonicToSonicExchangeRate.ts)
+- [getTotalSonicInProtocol](functions/getTotalSonicInProtocol.ts)
+- [getTotalStakedSonicInProtocol](functions/getTotalStakedSonicInProtocol.ts)
 
 ## Installation
 

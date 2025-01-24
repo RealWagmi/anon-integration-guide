@@ -2,7 +2,7 @@ import { Address, encodeFunctionData } from 'viem';
 import { FunctionReturn, toResult, getChainFromName, FunctionOptions, TransactionParams } from '@heyanon/sdk';
 import { supportedChains, STS_ADDRESS } from '../constants';
 import { stsAbi } from '../abis';
-import { getOpenWithdrawalRequests } from '../helpers/withdrawals';
+import { getOpenWithdrawRequests } from '../helpers/withdrawals';
 
 interface Props {
     chainName: string;
@@ -18,14 +18,14 @@ export async function withdrawAll({ chainName, account }: Props, { sendTransacti
 
     await notify('Checking for claimable withdrawals...');
 
-    const claimableWithdraws = await getOpenWithdrawalRequests(account, publicClient, true);
+    const claimableWithdrawals = await getOpenWithdrawRequests(account, publicClient, true);
 
-    if (claimableWithdraws.length === 0) {
+    if (claimableWithdrawals.length === 0) {
         return toResult(`No withdrawals ready to be claimed`);
     }
 
-    const withdrawIds = claimableWithdraws.map((w) => BigInt(w.id));
-    const totalAmount = claimableWithdraws.reduce((sum, w) => sum + Number(w.amount), 0);
+    const withdrawIds = claimableWithdrawals.map((w) => BigInt(w.id));
+    const totalAmount = claimableWithdrawals.reduce((sum, w) => sum + Number(w.amount), 0);
 
     const transactions: TransactionParams[] = [];
     const tx: TransactionParams = {
@@ -38,9 +38,9 @@ export async function withdrawAll({ chainName, account }: Props, { sendTransacti
     };
     transactions.push(tx);
 
-    await notify(`Sending transaction to withdraw ${claimableWithdraws.length} requests...`);
+    await notify(`Sending transaction to withdraw ${claimableWithdrawals.length} requests...`);
 
     const result = await sendTransactions({ chainId, account, transactions });
     const message = result.data[result.data.length - 1].message;
-    return toResult(result.isMultisig ? message : `Successfully withdrew ${totalAmount} S from ${claimableWithdraws.length} requests. ${message}`);
+    return toResult(result.isMultisig ? message : `Successfully withdrew ${totalAmount} S from ${claimableWithdrawals.length} requests. ${message}`);
 }

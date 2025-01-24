@@ -30,10 +30,10 @@ export interface WithdrawRequest {
 }
 
 /**
- * Get all open withdrawal requests for a user, that is, all withdrawal
+ * Get all open withdraw requests for a user, that is, all withdrawal
  * requests that are either pending or ready to be claimed
  */
-export async function getOpenWithdrawalRequests(account: Address, publicClient: PublicClient, onlyClaimable: boolean = false): Promise<WithdrawRequestInfo[]> {
+export async function getOpenWithdrawRequests(account: Address, publicClient: PublicClient, onlyClaimable: boolean = false): Promise<WithdrawRequestInfo[]> {
     // Get the withdraw delay period
     const withdrawDelay = await publicClient.readContract({
         address: STS_ADDRESS,
@@ -77,10 +77,10 @@ export async function getOpenWithdrawalRequests(account: Address, publicClient: 
 }
 
 /**
- * Get a withdrawal request from the smart contract, by its ID; return null if
- * the withdrawal request does not exist
+ * Get a withdraw request from the smart contract, by its ID; return null if
+ * the withdraw request does not exist
  */
-export async function getWithdrawalRequest(withdrawId: number, publicClient: PublicClient): Promise<WithdrawRequest | null> {
+export async function getWithdrawRequest(withdrawId: number, publicClient: PublicClient): Promise<WithdrawRequest | null> {
     const withdrawRequest = await publicClient.readContract({
         address: STS_HELPER_ADDRESS,
         abi: stsHelperAbi,
@@ -94,12 +94,12 @@ export async function getWithdrawalRequest(withdrawId: number, publicClient: Pub
 }
 
 /**
- * Get a withdrawal request by its ID and conver it to a WithdrawReqeustInfo
+ * Get a withdraw request by its ID and conver it to a WithdrawReqeustInfo
  * object; to do so, we need to get the withdraw delay period from the
  * smart contract: use this function sparingly
  */
-export async function getWithdrawalRequestInfo(withdrawId: number, publicClient: PublicClient): Promise<WithdrawRequestInfo | null> {
-    const withdrawRequest = await getWithdrawalRequest(withdrawId, publicClient);
+export async function getWithdrawRequestInfo(withdrawId: number, publicClient: PublicClient): Promise<WithdrawRequestInfo | null> {
+    const withdrawRequest = await getWithdrawRequest(withdrawId, publicClient);
     if (!withdrawRequest) return null;
 
     const withdrawDelay = await publicClient.readContract({

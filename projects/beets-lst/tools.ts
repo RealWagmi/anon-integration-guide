@@ -50,7 +50,7 @@ export const tools: AiTool[] = [
     },
     {
         name: 'withdraw',
-        description: 'Claim Sonic tokens (S) for the withdrawal request identified by the provided ID',
+        description: 'Withdraw Sonic tokens (S) for the withdraw request identified by the provided ID',
         required: ['chainName', 'account', 'withdrawId'],
         props: [
             {
@@ -67,13 +67,13 @@ export const tools: AiTool[] = [
             {
                 name: 'withdrawId',
                 type: 'string',
-                description: 'ID of the withdrawal request to process',
+                description: 'ID of the withdraw request to process',
             },
         ],
     },
     {
         name: 'withdrawAll',
-        description: 'Claim Sonic tokens (S) from all withdrawal requests that have completed the 14-day waiting period',
+        description: 'Withdraw Sonic tokens (S) from all withdraw requests that have completed the 14-day waiting period',
         required: ['chainName', 'account'],
         props: [
             {
@@ -179,9 +179,9 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'getOpenWithdrawalRequests',
+        name: 'getOpenWithdrawRequests',
         description:
-            'Get the list of open withdrawals for the user.  A withdrawal is open if it is either ready to be claimed or waiting for the 14-day period to elapse.  The withdrawal ID will be shown for each withdrawal.',
+            'Get the list of open withdrawals for the user.  A withdrawal is open if it is either ready to be withdrawn or waiting for the 14-day period to elapse.  The withdrawal ID will be shown for each withdrawal.',
         required: ['chainName', 'account'],
         props: [
             {

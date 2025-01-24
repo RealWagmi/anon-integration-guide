@@ -2,7 +2,7 @@ import { Address, encodeFunctionData } from 'viem';
 import { FunctionReturn, toResult, getChainFromName, FunctionOptions, TransactionParams } from '@heyanon/sdk';
 import { supportedChains, STS_ADDRESS } from '../constants';
 import { stsAbi } from '../abis';
-import { getWithdrawalRequestInfo } from '../helpers/withdrawals';
+import { getWithdrawRequestInfo } from '../helpers/withdrawals';
 
 interface Props {
     chainName: string;
@@ -17,16 +17,16 @@ export async function withdraw({ chainName, account, withdrawId }: Props, { send
 
     const publicClient = getProvider(chainId);
 
-    await notify(`Preparing to claim withdraw with ID ${withdrawId}...`);
+    await notify(`Preparing to claim the withdraw request with ID ${withdrawId}...`);
 
-    const withdrawRequest = await getWithdrawalRequestInfo(Number(withdrawId), publicClient);
+    const withdrawRequest = await getWithdrawRequestInfo(Number(withdrawId), publicClient);
 
     if (!withdrawRequest) {
-        return toResult(`Withdraw request with ID ${withdrawId} does not exist; try asking for your withdrawal requests`, true);
+        return toResult(`Withdraw request with ID ${withdrawId} does not exist; try asking for your withdraw requests`, true);
     }
 
     if (withdrawRequest.user !== account) {
-        return toResult(`Withdraw request with ID ${withdrawId} does not belong to you; try asking for your withdrawal requests`, true);
+        return toResult(`Withdraw request with ID ${withdrawId} does not belong to you; try asking for your withdraw requests`, true);
     }
 
     if (withdrawRequest.isWithdrawn) {
