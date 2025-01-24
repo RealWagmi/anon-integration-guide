@@ -7,23 +7,24 @@ import {
 	getChainFromName,
     checkToApprove
 } from '@heyanon/sdk';
-import { SCUSD_SONIC_TELLER_ADDRESS, supportedChains, USDC_ADDRESS } from '../constants';
-import { scUsdTellerAbi } from '../abis';
+import { supportedChains, TOKEN } from '../constants';
+import { stkscTellerAbi } from '../abis';
 
 interface Props {
 	chainName: string;
 	account: Address;
 	amount: string;
+	asset: string;
 }
 
 /**
- * Deposits USDC into the Rings protocol in exchange for scUSD.
- * @param props - The deposit parameters.
+ * Stakes LP asset in the Rings protocol.
+ * @param props - The stake parameters.
  * @param tools - System tools for blockchain interactions.
- * @returns Amount of scUSD tokens.
+ * @returns Amount of staked tokens.
  */
-export async function depositUsdc(
-	{ chainName, account, amount }: Props,
+export async function stakeAsset(
+	{ chainName, account, amount, asset }: Props,
 	{ sendTransactions, notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
 	// Check wallet connection
@@ -36,48 +37,75 @@ export async function depositUsdc(
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Rings is not supported on ${chainName}`, true);
 
+	// Normalize asset name to uppercase to match TOKEN keys
+    const assetUpper = asset.toUpperCase();
+
+	// Validate asset
+	let tokenConfig;
+	let baseAsset;
+	if (['ETH', 'USD'].includes(assetUpper)) {
+		baseAsset = assetUpper;
+		tokenConfig = TOKEN[baseAsset][`SC${assetUpper}`];
+	} else if (['SCETH', 'SCUSD'].includes(assetUpper)) {
+		baseAsset = assetUpper.slice(2);
+		tokenConfig = TOKEN[baseAsset][assetUpper];
+	} else {
+		return toResult(`Unsupported asset: ${asset}`, true);
+	}
+
+	const lpAsset = tokenConfig.address;
+
     // Validate amount
     const provider = getProvider(chainId);
-    const amountWithDecimals = parseUnits(amount, 6);
+	const decimals = await provider.readContract({
+        address: lpAsset,
+        abi: erc20Abi,
+        functionName: 'decimals',
+        args: [],
+    });
+    const amountWithDecimals = parseUnits(amount, decimals);
     if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);
     const balance = await provider.readContract({
-        address: USDC_ADDRESS,
+        address: lpAsset,
         abi: erc20Abi,
         functionName: 'balanceOf',
         args: [account],
     })
     if (balance < amountWithDecimals) return toResult('Amount exceeds your balance', true);
 
-    await notify('Depositing USDC...');
+    await notify(`Staking sc${baseAsset}...`);
 
     const transactions: TransactionParams[] = [];
+
+	const withdrawAddress = tokenConfig.withdraw;
+	const stakedTeller = (baseAsset === 'ETH' ? TOKEN.ETH.STKSCETH.teller : TOKEN.USD.STKSCUSD.teller) as Address;
 
     // Approve the asset beforehand
     await checkToApprove({
         args: {
             account,
-            target: USDC_ADDRESS,
-            spender: SCUSD_SONIC_TELLER_ADDRESS,
+            target: lpAsset,
+            spender: withdrawAddress,
             amount: amountWithDecimals
         },
         transactions,
         provider,
     });
     
-	// Prepare deposit transaction
+	// Prepare stake transaction
 	const tx: TransactionParams = {
-			target: SCUSD_SONIC_TELLER_ADDRESS,
+			target: stakedTeller,
 			data: encodeFunctionData({
-					abi: scUsdTellerAbi,
+					abi: stkscTellerAbi,
 					functionName: 'deposit',
-					args: [USDC_ADDRESS, amountWithDecimals, 0],
+					args: [lpAsset, amountWithDecimals, 0],
 			}),
 	};
 	transactions.push(tx);
 
 	// Sign and send transaction
 	const result = await sendTransactions({ chainId, account, transactions });
-	const depositMessage = result.data[result.data.length - 1];
+	const stakeMessage = result.data[result.data.length - 1];
 
-	return toResult(result.isMultisig ? depositMessage.message : `Successfully deposited USDC for ${depositMessage.message} scUSD`);
+	return toResult(result.isMultisig ? stakeMessage.message : `Successfully staked sc${baseAsset} for ${stakeMessage.message} stksc${baseAsset}.`);
 }

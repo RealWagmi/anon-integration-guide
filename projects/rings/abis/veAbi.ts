@@ -1,4 +1,4 @@
-export const veEthAbi = [
+export const veAbi = [
     {
         inputs: [
             { internalType: 'address', name: 'token_addr', type: 'address' },

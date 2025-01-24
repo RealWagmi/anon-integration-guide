@@ -7,23 +7,24 @@ import {
 	getChainFromName,
     checkToApprove
 } from '@heyanon/sdk';
-import { SCETH_SONIC_ADDRESS, STKSCETH_SONIC_TELLER_ADDRESS, supportedChains } from '../constants';
-import { stkscEthTellerAbi } from '../abis';
+import { supportedChains, TOKEN } from '../constants';
+import { scWithdrawQueueAbi } from '../abis';
 
 interface Props {
 	chainName: string;
 	account: Address;
 	amount: string;
+	asset: string;
 }
 
 /**
- * Stakes scETH in the Rings protocol in exchange for stkscETH.
- * @param props - The stake parameters.
+ * Redeems asset from the Rings protocol.
+ * @param props - The redeem parameters.
  * @param tools - System tools for blockchain interactions.
- * @returns Amount of stkscETH tokens.
+ * @returns Request ID.
  */
-export async function stakeEth(
-	{ chainName, account, amount }: Props,
+export async function redeemAsset(
+	{ chainName, account, amount, asset }: Props,
 	{ sendTransactions, notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
 	// Check wallet connection
@@ -36,48 +37,68 @@ export async function stakeEth(
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Rings is not supported on ${chainName}`, true);
 
+	// Normalize asset name to uppercase to match TOKEN keys
+    const assetUpper = asset.toUpperCase();
+
+	// Validate asset
+	let baseAsset;
+	if (['ETH', 'USD'].includes(assetUpper)) {
+		baseAsset = assetUpper;
+	} else if (['WETH', 'USDC'].includes(assetUpper)) {
+		baseAsset = assetUpper === 'WETH' ? 'ETH' : 'USD';
+	} else {
+		return toResult(`Unsupported asset: ${asset}`, true);
+	}
+
+	const lpAsset = (baseAsset === 'ETH' ? TOKEN.ETH.SCETH.address : TOKEN.USD.SCUSD.address) as Address;
+
     // Validate amount
     const provider = getProvider(chainId);
     const amountWithDecimals = parseUnits(amount, 18);
     if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);
     const balance = await provider.readContract({
-        address: SCETH_SONIC_ADDRESS,
+        address: lpAsset,
         abi: erc20Abi,
         functionName: 'balanceOf',
         args: [account],
     })
     if (balance < amountWithDecimals) return toResult('Amount exceeds your balance', true);
 
-    await notify('Staking scETH...');
+    await notify('Sending request to redeem WETH...');
 
     const transactions: TransactionParams[] = [];
+
+	const withdrawAddress = (baseAsset === 'ETH' ? TOKEN.ETH.SCETH.withdraw : TOKEN.USD.SCUSD.withdraw) as Address;
+	const redeemAsset = (baseAsset === 'ETH' ? TOKEN.ETH.WETH.address : TOKEN.USD.USDC.address) as Address;
 
     // Approve the asset beforehand
     await checkToApprove({
         args: {
             account,
-            target: SCETH_SONIC_ADDRESS,
-            spender: STKSCETH_SONIC_TELLER_ADDRESS,
+            target: lpAsset,
+            spender: withdrawAddress,
             amount: amountWithDecimals
         },
         transactions,
         provider,
     });
     
-	// Prepare stake transaction
+	// Prepare redeem transaction
+	const discount = 1;
+	const secondsToDeadline = 432000;
 	const tx: TransactionParams = {
-			target: STKSCETH_SONIC_TELLER_ADDRESS,
+			target: withdrawAddress,
 			data: encodeFunctionData({
-					abi: stkscEthTellerAbi,
-					functionName: 'deposit',
-					args: [SCETH_SONIC_ADDRESS, amountWithDecimals, 0],
+					abi: scWithdrawQueueAbi,
+					functionName: 'requestOnChainWithdraw',
+					args: [redeemAsset, amountWithDecimals, discount, secondsToDeadline],
 			}),
 	};
 	transactions.push(tx);
 
 	// Sign and send transaction
 	const result = await sendTransactions({ chainId, account, transactions });
-	const stakeMessage = result.data[result.data.length - 1];
+	const redeemMessage = result.data[result.data.length - 1];
 
-	return toResult(result.isMultisig ? stakeMessage.message : `Successfully staked scETH for ${stakeMessage.message} stkscETH`);
+	return toResult(result.isMultisig ? redeemMessage.message : `Successfully requested redeem for ${asset}. ${asset} will be deposited in 5 days.`);
 }

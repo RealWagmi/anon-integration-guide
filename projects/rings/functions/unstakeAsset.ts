@@ -7,23 +7,24 @@ import {
 	getChainFromName,
     checkToApprove
 } from '@heyanon/sdk';
-import { SCUSD_SONIC_ADDRESS, STKSCUSD_SONIC_TELLER_ADDRESS, supportedChains } from '../constants';
-import { stkscUsdTellerAbi } from '../abis';
+import { supportedChains, TOKEN } from '../constants';
+import { stkscWithdrawQueueAbi } from '../abis';
 
 interface Props {
 	chainName: string;
 	account: Address;
 	amount: string;
+	asset: string;
 }
 
 /**
- * Stakes scUSD in the Rings protocol in exchange for stkscUSD.
- * @param props - The stake parameters.
+ * Unstakes LP asset from the Rings protocol.
+ * @param props - The unstake parameters.
  * @param tools - System tools for blockchain interactions.
- * @returns Amount of stkscUSD tokens.
+ * @returns Request ID.
  */
-export async function stakeUsd(
-	{ chainName, account, amount }: Props,
+export async function unstakeAsset(
+	{ chainName, account, amount, asset }: Props,
 	{ sendTransactions, notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
 	// Check wallet connection
@@ -36,48 +37,71 @@ export async function stakeUsd(
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Rings is not supported on ${chainName}`, true);
 
+	// Normalize asset name to uppercase to match TOKEN keys
+    const assetUpper = asset.toUpperCase();
+
+	// Validate asset
+	let tokenConfig;
+	let baseAsset;
+	if (['STKSCETH', 'STKSCUSD'].includes(assetUpper)) {
+		baseAsset = assetUpper.slice(5);
+		tokenConfig = TOKEN[baseAsset][assetUpper];
+	} else if (['SCETH', 'SCUSD'].includes(assetUpper)) {
+		baseAsset = assetUpper.slice(2);
+		tokenConfig = TOKEN[baseAsset][`STK${assetUpper}`];
+	} else {
+		return toResult(`Unsupported asset: ${asset}`, true);
+	}
+
+	const stakedAsset = tokenConfig.address;
+
     // Validate amount
     const provider = getProvider(chainId);
-    const amountWithDecimals = parseUnits(amount, 6);
+    const amountWithDecimals = parseUnits(amount, 18);
     if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);
     const balance = await provider.readContract({
-        address: SCUSD_SONIC_ADDRESS,
+        address: stakedAsset,
         abi: erc20Abi,
         functionName: 'balanceOf',
         args: [account],
     })
     if (balance < amountWithDecimals) return toResult('Amount exceeds your balance', true);
 
-    await notify('Staking scUSD...');
+    await notify('Sending unstake request...');
 
     const transactions: TransactionParams[] = [];
+
+	const withdrawAddress = tokenConfig.withdraw;
+	const lpAsset = (baseAsset === 'ETH' ? TOKEN.ETH.SCETH.address : TOKEN.USD.SCUSD.address) as Address;
 
     // Approve the asset beforehand
     await checkToApprove({
         args: {
             account,
-            target: SCUSD_SONIC_ADDRESS,
-            spender: STKSCUSD_SONIC_TELLER_ADDRESS,
+            target: stakedAsset,
+            spender: withdrawAddress,
             amount: amountWithDecimals
         },
         transactions,
         provider,
     });
     
-	// Prepare stake transaction
+	// Prepare unstake transaction
+	const discount = 1;
+	const secondsToDeadline = 432000;
 	const tx: TransactionParams = {
-			target: STKSCUSD_SONIC_TELLER_ADDRESS,
+			target: withdrawAddress,
 			data: encodeFunctionData({
-					abi: stkscUsdTellerAbi,
-					functionName: 'deposit',
-					args: [SCUSD_SONIC_ADDRESS, amountWithDecimals, 0],
+					abi: stkscWithdrawQueueAbi,
+					functionName: 'requestOnChainWithdraw',
+					args: [lpAsset, amountWithDecimals, discount, secondsToDeadline],
 			}),
 	};
 	transactions.push(tx);
 
 	// Sign and send transaction
 	const result = await sendTransactions({ chainId, account, transactions });
-	const stakeMessage = result.data[result.data.length - 1];
+	const unstakeMessage = result.data[result.data.length - 1];
 
-	return toResult(result.isMultisig ? stakeMessage.message : `Successfully staked scUSD for ${stakeMessage.message} stkscUSD`);
+	return toResult(result.isMultisig ? unstakeMessage.message : `Successfully requested unstake for scETH. scETH will be deposited in 5 days.`);
 }

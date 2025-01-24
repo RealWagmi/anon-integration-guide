@@ -7,23 +7,24 @@ import {
 	getChainFromName,
     checkToApprove
 } from '@heyanon/sdk';
-import { STKSCETH_SONIC_ADDRESS, supportedChains, VEETH_SONIC_ADDRESS } from '../constants';
-import { veEthAbi } from '../abis';
+import { supportedChains, TOKEN } from '../constants';
+import { veAbi } from '../abis';
 
 interface Props {
 	chainName: string;
 	account: Address;
 	amount: string;
+	asset: string;
 }
 
 /**
- * Increases locked stkscETH in the Rings protocol.
+ * Increases locked staked asset in the Rings protocol.
  * @param props - The lock parameters.
  * @param tools - System tools for blockchain interactions.
  * @returns Success message.
  */
-export async function increaseLockedEth(
-	{ chainName, account, amount }: Props,
+export async function increaseLockedAsset(
+	{ chainName, account, amount, asset }: Props,
 	{ sendTransactions, notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
 	// Check wallet connection
@@ -36,28 +37,45 @@ export async function increaseLockedEth(
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Rings is not supported on ${chainName}`, true);
 
+	// Normalize asset name to uppercase to match TOKEN keys
+    const assetUpper = asset.toUpperCase();
+
+	// Validate asset
+	let baseAsset;
+	if (['STKSCETH', 'STKSCUSD'].includes(assetUpper)) {
+		baseAsset = assetUpper.slice(5);
+	} else if (['VEETH', 'VEUSD'].includes(assetUpper)) {
+		baseAsset = assetUpper.slice(2);
+	} else {
+		return toResult(`Unsupported asset: ${asset}`, true);
+	}
+	
+	const stakedAsset = (baseAsset === 'ETH' ? TOKEN.ETH.STKSCETH.address : TOKEN.USD.STKSCUSD.address) as Address;
+
 	// Validate amount
     const provider = getProvider(chainId);
     const amountWithDecimals = parseUnits(amount, 18);
     if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);
     const balance = await provider.readContract({
-        address: STKSCETH_SONIC_ADDRESS,
+        address: stakedAsset,
         abi: erc20Abi,
         functionName: 'balanceOf',
         args: [account],
     })
     if (balance < amountWithDecimals) return toResult('Amount exceeds your balance', true);
 
-    await notify('Locking more stkscETH...');
+    await notify(`Locking ${amount} stksc${baseAsset}...`);
 
 	const transactions: TransactionParams[] = [];
+
+	const voteAsset = (baseAsset === 'ETH' ? TOKEN.ETH.VEETH.address : TOKEN.USD.VEUSD.address) as Address;
 
     // Approve the asset beforehand
     await checkToApprove({
         args: {
             account,
-            target: STKSCETH_SONIC_ADDRESS,
-            spender: VEETH_SONIC_ADDRESS,
+            target: stakedAsset,
+            spender: voteAsset,
             amount: amountWithDecimals
         },
         transactions,
@@ -66,17 +84,17 @@ export async function increaseLockedEth(
     
 	// Prepare lock transaction
     const tokenId = await provider.readContract({
-        address: VEETH_SONIC_ADDRESS,
-        abi: veEthAbi,
+        address: voteAsset,
+        abi: veAbi,
         functionName: 'tokenOfOwnerByIndex',
         args: [account, 0],
     })
-    if (tokenId === 0) return toResult('No locked stkscETH', true);
+    if (tokenId === 0) return toResult(`No locked stksc${baseAsset}`, true);
 
 	const tx: TransactionParams = {
-			target: VEETH_SONIC_ADDRESS,
+			target: voteAsset,
 			data: encodeFunctionData({
-					abi: veEthAbi,
+					abi: veAbi,
 					functionName: 'increase_amount',
 					args: [tokenId, amountWithDecimals],
 			}),
@@ -87,5 +105,5 @@ export async function increaseLockedEth(
 	const result = await sendTransactions({ chainId, account, transactions });
 	const lockMessage = result.data[result.data.length - 1];
 
-	return toResult(result.isMultisig ? lockMessage.message : `Successfully locked ${amount} stkscETH.`);
+	return toResult(result.isMultisig ? lockMessage.message : `Successfully locked ${amount} stksc${baseAsset}.`);
 }

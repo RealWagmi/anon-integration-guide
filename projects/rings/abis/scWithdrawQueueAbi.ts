@@ -1,4 +1,4 @@
-export const scEthWithdrawQueueAbi = [
+export const scWithdrawQueueAbi = [
     {
         inputs: [
             { internalType: 'address', name: '_owner', type: 'address' },

@@ -6,22 +6,23 @@ import {
 	toResult,
 	getChainFromName,
 } from '@heyanon/sdk';
-import { SCUSD_SONIC_WITHDRAW_ADDRESS, supportedChains, USDC_ADDRESS } from '../constants';
-import { scUsdWithdrawQueueAbi } from '../abis';
+import { supportedChains, TOKEN } from '../constants';
+import { stkscWithdrawQueueAbi } from '../abis';
 
 interface Props {
 	chainName: string;
 	account: Address;
+	asset: string;
 }
 
 /**
- * Cancels USDC redeem from the Rings protocol.
+ * Cancels asset unstake from the Rings protocol.
  * @param props - The cancellation parameters.
  * @param tools - System tools for blockchain interactions.
- * @returns Request ID.
+ * @returns Success message.
  */
-export async function cancelRedeemUsdc(
-	{ chainName, account }: Props,
+export async function cancelUnstakeAsset(
+	{ chainName, account, asset }: Props,
 	{ sendTransactions, notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
 	// Check wallet connection
@@ -34,10 +35,31 @@ export async function cancelRedeemUsdc(
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Rings is not supported on ${chainName}`, true);
 
+	// Normalize asset name to uppercase to match TOKEN keys
+    const assetUpper = asset.toUpperCase();
+
+	// Validate asset
+	let tokenConfig;
+	let baseAsset;
+	if (['STKSCETH', 'STKSCUSD'].includes(assetUpper)) {
+		baseAsset = assetUpper.slice(5);
+		tokenConfig = TOKEN[baseAsset][assetUpper];
+	} else if (['SCETH', 'SCUSD'].includes(assetUpper)) {
+		baseAsset = assetUpper.slice(2);
+		tokenConfig = TOKEN[baseAsset][`STK${assetUpper}`];
+	} else {
+		return toResult(`Unsupported asset: ${asset}`, true);
+	}
+
+	const withdrawAddress = tokenConfig.withdraw;
+
+    // Determine assetOut address based on base asset
+    const assetOut = baseAsset === 'ETH' ? TOKEN.ETH.SCETH.address : TOKEN.USD.SCUSD.address;
+
 	// Getting transaction parameters from event
 	const provider = getProvider(chainId);
 	const logs = await provider.getLogs({  
-		address: SCUSD_SONIC_WITHDRAW_ADDRESS,
+		address: withdrawAddress,
 		event: parseAbiItem(`event OnChainWithdrawRequested(
 			bytes32 indexed requestId,
 			address indexed user, 
@@ -50,18 +72,34 @@ export async function cancelRedeemUsdc(
 			uint24 secondsToDeadline)`),
 		args: {
 		  user: account,
-		  assetOut: USDC_ADDRESS
+		  assetOut
 		},
 	});
-	const { user, assetOut, nonce, amountOfShares, amountOfAssets, creationTime, secondsToMaturity, secondsToDeadline } = logs[0].args
 
-    await notify('Sending request to cancel USDC redeem...');
+	if (logs.length === 0) {
+        return toResult('No active unstake request found', true);
+    }
+
+	// Take last request
+    const latestLog = logs[logs.length - 1];
+    const { 
+        nonce, 
+        user: loggedUser, 
+        assetOut: loggedAssetOut, 
+        amountOfShares, 
+        amountOfAssets, 
+        creationTime, 
+        secondsToMaturity, 
+        secondsToDeadline 
+    } = latestLog.args;
+
+    await notify(`Canceling ${asset} unstake...`);
 
 	// Prepare cancel transaction
 	const onChainWithdraw = [
 		nonce,
-		user,
-		assetOut,
+		loggedUser,
+		loggedAssetOut,
 		amountOfShares,
 		amountOfAssets,
 		creationTime,
@@ -69,9 +107,9 @@ export async function cancelRedeemUsdc(
 		secondsToDeadline,
 	];
 	const tx: TransactionParams = {
-			target: SCUSD_SONIC_WITHDRAW_ADDRESS,
+			target: withdrawAddress,
 			data: encodeFunctionData({
-					abi: scUsdWithdrawQueueAbi,
+					abi: stkscWithdrawQueueAbi,
 					functionName: 'cancelOnChainWithdraw',
 					args: [onChainWithdraw],
 			}),
@@ -81,5 +119,5 @@ export async function cancelRedeemUsdc(
 	const result = await sendTransactions({ chainId, account, transactions: [tx] });
 	const cancelMessage = result.data[result.data.length - 1];
 
-	return toResult(result.isMultisig ? cancelMessage.message : `Successfully cancelled redeem for USDC.`);
+	return toResult(result.isMultisig ? cancelMessage.message : `Successfully cancelled ${asset} unstake.`);
 }

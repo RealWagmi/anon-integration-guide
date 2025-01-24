@@ -3,9 +3,9 @@ import { supportedChains } from './constants';
 
 export const tools: AiTool[] = [
     {
-        name: 'cancelRedeemEth',
-        description: 'Cancel redeem of WETH from the Rings protocol',
-        required: ['chainName', 'account'],
+        name: 'cancelRedeemAsset',
+        description: 'Cancel redeem of LP asset (scETH, scUSD) from the Rings protocol',
+        required: ['chainName', 'account', 'asset'],
         props: [
             {
                 name: 'chainName',
@@ -18,30 +18,17 @@ export const tools: AiTool[] = [
                 type: 'string',
                 description: 'Account address that will cancel the redeem',
             },
-        ],
-    },
-    {
-        name: 'cancelRedeemUsdc',
-        description: 'Cancel redeem of USDC from the Rings protocol',
-        required: ['chainName', 'account'],
-        props: [
             {
-                name: 'chainName',
+                name: 'asset',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Chain name where to cancel the redeem',
-            },
-            {
-                name: 'account',
-                type: 'string',
-                description: 'Account address that will cancel the redeem',
+                description: 'Asset for which the redeem will be cancelled',
             },
         ],
     },
     {
-        name: 'cancelUnstakeEth',
-        description: 'Cancel the unstaking of scETH from the Rings protocol',
-        required: ['chainName', 'account'],
+        name: 'cancelUnstakeAsset',
+        description: 'Cancel the unstaking of LP asset (scETH, scUSD) from the Rings protocol',
+        required: ['chainName', 'account', 'asset'],
         props: [
             {
                 name: 'chainName',
@@ -54,30 +41,17 @@ export const tools: AiTool[] = [
                 type: 'string',
                 description: 'Account address that will cancel the unstaking',
             },
-        ],
-    },
-    {
-        name: 'cancelUnstakeUsd',
-        description: 'Cancel the unstaking of scUSD from the Rings protocol',
-        required: ['chainName', 'account'],
-        props: [
             {
-                name: 'chainName',
+                name: 'asset',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Chain name where to cancel the unstaking',
-            },
-            {
-                name: 'account',
-                type: 'string',
-                description: 'Account address that will cancel the unstaking',
+                description: 'Asset for which the unstake will be cancelled',
             },
         ],
     },
     {
-        name: 'delegateVotesEth',
-        description: 'Delegate all voting power from veETH to delegatee',
-        required: ['chainName', 'account', 'delegatee'],
+        name: 'delegateVotes',
+        description: 'Delegate all voting power from vote asset (veETH, veUSD) to delegatee',
+        required: ['chainName', 'account', 'asset', 'delegatee'],
         props: [
             {
                 name: 'chainName',
@@ -91,27 +65,9 @@ export const tools: AiTool[] = [
                 description: 'Account address that will delegate votes',
             },
             {
-                name: 'delegatee',
+                name: 'asset',
                 type: 'string',
-                description: 'Account address that will receive delegated votes',
-            },
-        ],
-    },
-    {
-        name: 'delegateVotesUsd',
-        description: 'Delegate all voting power from veUSD to delegatee',
-        required: ['chainName', 'account', 'delegatee'],
-        props: [
-            {
-                name: 'chainName',
-                type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Chain name where to delegate votes',
-            },
-            {
-                name: 'account',
-                type: 'string',
-                description: 'Account address that will delegate votes',
+                description: 'Asset whose voting power will be delegated',
             },
             {
                 name: 'delegatee',
@@ -121,55 +77,37 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'depositEth',
-        description: 'Deposit WETH into the Rings protocol and receive scETH',
-        required: ['chainName', 'account', 'amount'],
+        name: 'depositAsset',
+        description: 'Deposit asset (WETH, USDC) into the Rings protocol and receive LP asset (scETH, scUSD)',
+        required: ['chainName', 'account', 'amount', 'asset'],
         props: [
             {
                 name: 'chainName',
                 type: 'string',
                 enum: supportedChains.map(getChainName),
-                description: 'Chain name where to deposit WETH',
+                description: 'Chain name where to deposit asset',
             },
             {
                 name: 'account',
                 type: 'string',
-                description: 'Account address that will deposit WETH',
+                description: 'Account address that will deposit asset',
             },
             {
                 name: 'amount',
                 type: 'string',
-                description: 'WETH amount that will be deposited',
+                description: 'Asset amount that will be deposited',
+            },
+            {
+                name: 'asset',
+                type: 'string',
+                description: 'Asset that will be deposited',
             },
         ],
     },
     {
-        name: 'depositUsdc',
-        description: 'Deposit USDC into the Rings protocol and receive scUSD',
-        required: ['chainName', 'account', 'amount'],
-        props: [
-            {
-                name: 'chainName',
-                type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Chain name where to deposit USDC',
-            },
-            {
-                name: 'account',
-                type: 'string',
-                description: 'Account address that will deposit USDC',
-            },
-            {
-                name: 'amount',
-                type: 'string',
-                description: 'USDC amount that will be deposited',
-            },
-        ],
-    },
-    {
-        name: 'extendLockEth',
-        description: 'Extend duration of locking stkscETH in the protocol for extra voting power',
-        required: ['chainName', 'account', 'weeks'],
+        name: 'extendLock',
+        description: 'Extend locking duration of staked asset (stkscETH, stkscUSD) in the protocol for extra voting power',
+        required: ['chainName', 'account', 'asset', 'weeks'],
         props: [
             {
                 name: 'chainName',
@@ -183,27 +121,9 @@ export const tools: AiTool[] = [
                 description: 'Account address that will extend locking period',
             },
             {
-                name: 'weeks',
-                type: 'number',
-                description: 'Extension period in weeks',
-            },
-        ],
-    },
-    {
-        name: 'extendLockUsd',
-        description: 'Extend duration of locking stkscUSD in the protocol for extra voting power',
-        required: ['chainName', 'account', 'weeks'],
-        props: [
-            {
-                name: 'chainName',
+                name: 'asset',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Chain name where to extend locking period',
-            },
-            {
-                name: 'account',
-                type: 'string',
-                description: 'Account address that will extend locking period',
+                description: 'Asset that will be extended lock for',
             },
             {
                 name: 'weeks',
@@ -225,71 +145,64 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'increaseLockedEth',
-        description: 'Increase amount of locked stkscETH in the protocol for extra voting power',
-        required: ['chainName', 'account', 'amount'],
+        name: 'getTvl',
+        description: 'Fetch current TVL (total value locked) on Sonic',
+        required: [],
+        props: [],
+    },
+    {
+        name: 'increaseLockedAsset',
+        description: 'Increase amount of locked staked asset (veETH, veUSD) in the protocol for extra voting power',
+        required: ['chainName', 'account', 'amount', 'asset'],
         props: [
             {
                 name: 'chainName',
                 type: 'string',
                 enum: supportedChains.map(getChainName),
-                description: 'Chain name where to increase locked stkscETH amount',
+                description: 'Chain name where to increase locked staked asset amount',
             },
             {
                 name: 'account',
                 type: 'string',
-                description: 'Account address that will increase locked stkscETH amount',
+                description: 'Account address that will increase locked staked asset amount',
             },
             {
                 name: 'amount',
                 type: 'string',
-                description: 'stkscETH amount to be locked in the protocol',
+                description: 'Staked asset amount to be locked in the protocol',
+            },
+            {
+                name: 'asset',
+                type: 'string',
+                description: 'Asset that will be locked',
             },
         ],
     },
     {
-        name: 'increaseLockedUsd',
-        description: 'Increase amount of locked stkscUSD in the protocol for extra voting power',
-        required: ['chainName', 'account', 'amount'],
+        name: 'lockAsset',
+        description: 'Lock staked asset (stkscETH, stkscUSD) for the opportunity to vote',
+        required: ['chainName', 'account', 'amount', 'asset', 'weeks'],
         props: [
             {
                 name: 'chainName',
                 type: 'string',
                 enum: supportedChains.map(getChainName),
-                description: 'Chain name where to increase locked stkscUSD amount',
+                description: 'Chain name where to lock staked asset',
             },
             {
                 name: 'account',
                 type: 'string',
-                description: 'Account address that will increase locked stkscUSD amount',
+                description: 'Account address that will lock staked asset',
             },
             {
                 name: 'amount',
                 type: 'string',
-                description: 'stkscUSD amount to be locked in the protocol',
-            },
-        ],
-    },
-    {
-        name: 'lockEth',
-        description: 'Lock stkscETH for the opportunity to vote',
-        required: ['chainName', 'account', 'amount', 'weeks'],
-        props: [
-            {
-                name: 'chainName',
-                type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Chain name where to lock stkscETH',
+                description: 'Staked asset amount to be locked in the protocol',
             },
             {
-                name: 'account',
+                name: 'asset',
                 type: 'string',
-                description: 'Account address that will lock stkscETH',
-            },
-            {
-                name: 'amount',
-                type: 'string',
-                description: 'stkscETH amount to be locked in the protocol',
+                description: 'Asset that will be locked',
             },
             {
                 name: 'weeks',
@@ -299,204 +212,109 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'lockUsd',
-        description: 'Lock stkscUSD for the opportunity to vote',
-        required: ['chainName', 'account', 'amount', 'weeks'],
+        name: 'redeemAsset',
+        description: 'Redeem asset (WETH, USDC) from the Rings protocol',
+        required: ['chainName', 'account', 'amount', 'asset'],
         props: [
             {
                 name: 'chainName',
                 type: 'string',
                 enum: supportedChains.map(getChainName),
-                description: 'Chain name where to lock stkscUSD',
+                description: 'Chain name where to redeem asset',
             },
             {
                 name: 'account',
                 type: 'string',
-                description: 'Account address that will lock stkscUSD',
+                description: 'Account address that will redeem asset',
             },
             {
                 name: 'amount',
                 type: 'string',
-                description: 'stkscUSD amount to be locked in the protocol',
+                description: 'Amount of LP asset (scETH, scUSD) to be returned',
             },
             {
-                name: 'weeks',
-                type: 'number',
-                description: 'Locking period in weeks',
+                name: 'asset',
+                type: 'string',
+                description: 'Asset that will be redeemed',
             },
         ],
     },
     {
-        name: 'redeemEth',
-        description: 'Redeem WETH from the Rings protocol in exchange for scETH',
-        required: ['chainName', 'account', 'amount'],
+        name: 'stakeAsset',
+        description: 'Stake LP asset (scETH, scUSD) in the Rings protocol',
+        required: ['chainName', 'account', 'amount', 'asset'],
         props: [
             {
                 name: 'chainName',
                 type: 'string',
                 enum: supportedChains.map(getChainName),
-                description: 'Chain name where to redeem WETH',
+                description: 'Chain name where to stake LP asset',
             },
             {
                 name: 'account',
                 type: 'string',
-                description: 'Account address that will redeem WETH',
+                description: 'Account address that will stake asset',
             },
             {
                 name: 'amount',
                 type: 'string',
-                description: 'scETH amount to be exchanged for WETH',
+                description: 'Amount of asset to be staked',
+            },
+            {
+                name: 'asset',
+                type: 'string',
+                description: 'Asset that will be staked',
             },
         ],
     },
     {
-        name: 'redeemUsdc',
-        description: 'Redeem USDC from the Rings protocol in exchange for scUSD',
-        required: ['chainName', 'account', 'amount'],
+        name: 'unstakeAsset',
+        description: 'Unstake LP asset (scETH, scUSD) from the Rings protocol',
+        required: ['chainName', 'account', 'amount', 'asset'],
         props: [
             {
                 name: 'chainName',
                 type: 'string',
                 enum: supportedChains.map(getChainName),
-                description: 'Chain name where to redeem USDC',
+                description: 'Chain name where to unstake asset',
             },
             {
                 name: 'account',
                 type: 'string',
-                description: 'Account address that will redeem USDC',
+                description: 'Account address that will unstake asset',
             },
             {
                 name: 'amount',
                 type: 'string',
-                description: 'scUSD amount to be exchanged for USDC',
+                description: 'Amount of staked asset (stkscETH, stkscUSD) to be returned',
+            },
+            {
+                name: 'asset',
+                type: 'string',
+                description: 'Asset that will be unstaked',
             },
         ],
     },
     {
-        name: 'stakeEth',
-        description: 'Stake scETH in the Rings protocol for earning yield',
-        required: ['chainName', 'account', 'amount'],
-        props: [
-            {
-                name: 'chainName',
-                type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Chain name where to stake scETH',
-            },
-            {
-                name: 'account',
-                type: 'string',
-                description: 'Account address that will stake scETH',
-            },
-            {
-                name: 'amount',
-                type: 'string',
-                description: 'Amount of scETH to be staked',
-            },
-        ],
-    },
-    {
-        name: 'stakeUsd',
-        description: 'Stake scUSD in the Rings protocol for earning yield',
-        required: ['chainName', 'account', 'amount'],
-        props: [
-            {
-                name: 'chainName',
-                type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Chain name where to stake scUSD',
-            },
-            {
-                name: 'account',
-                type: 'string',
-                description: 'Account address that will stake scUSD',
-            },
-            {
-                name: 'amount',
-                type: 'string',
-                description: 'Amount of scUSD to be staked',
-            },
-        ],
-    },
-    {
-        name: 'unstakeEth',
-        description: 'Unstake scETH from the Rings protocol',
-        required: ['chainName', 'account', 'amount'],
-        props: [
-            {
-                name: 'chainName',
-                type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Chain name where to unstake scETH',
-            },
-            {
-                name: 'account',
-                type: 'string',
-                description: 'Account address that will unstake scETH',
-            },
-            {
-                name: 'amount',
-                type: 'string',
-                description: 'Amount of stkscETH to be exchanged for scETH',
-            },
-        ],
-    },
-    {
-        name: 'unstakeUsd',
-        description: 'Unstake scUSD from the Rings protocol',
-        required: ['chainName', 'account', 'amount'],
-        props: [
-            {
-                name: 'chainName',
-                type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Chain name where to unstake scUSD',
-            },
-            {
-                name: 'account',
-                type: 'string',
-                description: 'Account address that will unstake scUSD',
-            },
-            {
-                name: 'amount',
-                type: 'string',
-                description: 'Amount of stkscUSD to be exchanged for scUSD',
-            },
-        ],
-    },
-    {
-        name: 'unlockEth',
-        description: 'Unlock stkscETH from the Rings protocol in exchange for veETH',
+        name: 'unlockAsset',
+        description: 'Unlock staked asset (stkscETH, stkscUSD) from the Rings protocol',
         required: ['chainName', 'account'],
         props: [
             {
                 name: 'chainName',
                 type: 'string',
                 enum: supportedChains.map(getChainName),
-                description: 'Chain name where to unlock stkscETH',
+                description: 'Chain name where to unlock asset',
             },
             {
                 name: 'account',
                 type: 'string',
-                description: 'Account address that will unlock stkscETH',
-            },
-        ],
-    },
-    {
-        name: 'unlockUsd',
-        description: 'Unlock stkscUSD from the Rings protocol in exchange for veUSD',
-        required: ['chainName', 'account'],
-        props: [
-            {
-                name: 'chainName',
-                type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Chain name where to unlock stkscUSD',
+                description: 'Account address that will unlock asset',
             },
             {
-                name: 'account',
+                name: 'asset',
                 type: 'string',
-                description: 'Account address that will unlock stkscUSD',
+                description: 'Asset that will be unstaked',
             },
         ],
     },

@@ -1,4 +1,4 @@
-export const stkscEthWithdrawQueueAbi = [
+export const stkscWithdrawQueueAbi = [
     {
         inputs: [
             { internalType: 'address', name: '_owner', type: 'address' },

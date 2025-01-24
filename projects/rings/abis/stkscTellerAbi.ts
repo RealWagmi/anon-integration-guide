@@ -1,4 +1,4 @@
-export const stkscUsdTellerAbi = [
+export const stkscTellerAbi = [
     {
         inputs: [
             { internalType: 'address', name: '_owner', type: 'address' },

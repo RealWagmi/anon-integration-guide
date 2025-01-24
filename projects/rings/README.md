@@ -37,6 +37,7 @@ Key functions of Rings:
 2. Information Queries
    - "Check my points in Rings"
    - "Check 0xffdd45f075e5f757e86bb83fca7114bed9914166 points in Rings"
+   - "Show current TVL"
 
 
 ## Addressing Pain Points

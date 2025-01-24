@@ -6,22 +6,23 @@ import {
 	toResult,
 	getChainFromName,
 } from '@heyanon/sdk';
-import { SCETH_SONIC_WITHDRAW_ADDRESS, supportedChains, WETH_ADDRESS } from '../constants';
-import { scEthWithdrawQueueAbi } from '../abis';
+import { supportedChains, TOKEN } from '../constants';
+import { scWithdrawQueueAbi } from '../abis';
 
 interface Props {
 	chainName: string;
 	account: Address;
+	asset: string;
 }
 
 /**
- * Cancels WETH redeem from the Rings protocol.
+ * Cancels asset redeem from the Rings protocol.
  * @param props - The cancellation parameters.
  * @param tools - System tools for blockchain interactions.
  * @returns Request ID.
  */
-export async function cancelRedeemEth(
-	{ chainName, account }: Props,
+export async function cancelRedeemAsset(
+	{ chainName, account, asset }: Props,
 	{ sendTransactions, notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
 	// Check wallet connection
@@ -34,10 +35,31 @@ export async function cancelRedeemEth(
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Rings is not supported on ${chainName}`, true);
 
+	// Normalize asset name to uppercase to match TOKEN keys
+    const assetUpper = asset.toUpperCase();
+
+	// Validate asset
+	let tokenConfig;
+	let baseAsset;
+	if (['ETH', 'USD'].includes(assetUpper)) {
+		baseAsset = assetUpper;
+		tokenConfig = TOKEN[baseAsset][`SC${assetUpper}`];
+	} else if (['SCETH', 'SCUSD'].includes(assetUpper)) {
+		baseAsset = assetUpper.slice(2);
+		tokenConfig = TOKEN[baseAsset][assetUpper];
+	} else {
+		return toResult(`Unsupported asset: ${asset}`, true);
+	}
+
+    const withdrawAddress = tokenConfig.withdraw;
+
+    // Determine assetOut address based on base asset
+    const assetOut = baseAsset === 'ETH' ? TOKEN.ETH.WETH.address : TOKEN.USD.USDC.address;
+
 	// Getting transaction parameters from event
 	const provider = getProvider(chainId);
 	const logs = await provider.getLogs({  
-		address: SCETH_SONIC_WITHDRAW_ADDRESS,
+		address: withdrawAddress,
 		event: parseAbiItem(`event OnChainWithdrawRequested(
 			bytes32 indexed requestId,
 			address indexed user, 
@@ -50,18 +72,34 @@ export async function cancelRedeemEth(
 			uint24 secondsToDeadline)`),
 		args: {
 		  user: account,
-		  assetOut: WETH_ADDRESS
+		  assetOut
 		},
 	});
-	const { user, assetOut, nonce, amountOfShares, amountOfAssets, creationTime, secondsToMaturity, secondsToDeadline } = logs[0].args
 
-    await notify('Sending request to cancel ETH redeem...');
+	if (logs.length === 0) {
+        return toResult('No active redeem request found', true);
+    }
+
+	// Take last request
+    const latestLog = logs[logs.length - 1];
+    const { 
+        nonce, 
+        user: loggedUser, 
+        assetOut: loggedAssetOut, 
+        amountOfShares, 
+        amountOfAssets, 
+        creationTime, 
+        secondsToMaturity, 
+        secondsToDeadline 
+    } = latestLog.args;
+
+    await notify(`Canceling ${asset} redeem...`);
 
 	// Prepare cancel transaction
 	const onChainWithdraw = [
 		nonce,
-		user,
-		assetOut,
+		loggedUser,
+		loggedAssetOut,
 		amountOfShares,
 		amountOfAssets,
 		creationTime,
@@ -69,9 +107,9 @@ export async function cancelRedeemEth(
 		secondsToDeadline,
 	];
 	const tx: TransactionParams = {
-			target: SCETH_SONIC_WITHDRAW_ADDRESS,
+			target: withdrawAddress,
 			data: encodeFunctionData({
-					abi: scEthWithdrawQueueAbi,
+					abi: scWithdrawQueueAbi,
 					functionName: 'cancelOnChainWithdraw',
 					args: [onChainWithdraw],
 			}),
@@ -81,5 +119,5 @@ export async function cancelRedeemEth(
 	const result = await sendTransactions({ chainId, account, transactions: [tx] });
 	const cancelMessage = result.data[result.data.length - 1];
 
-	return toResult(result.isMultisig ? cancelMessage.message : `Successfully cancelled redeem for ETH.`);
+	return toResult(result.isMultisig ? cancelMessage.message : `Successfully cancelled ${asset} redeem.`);
 }
