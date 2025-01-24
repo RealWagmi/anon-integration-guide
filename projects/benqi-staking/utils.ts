@@ -1,5 +1,5 @@
 import { getChainFromName } from '@heyanon/sdk';
-import { Address, isAddress, parseUnits } from 'viem';
+import { Address, formatUnits, isAddress, parseUnits } from 'viem';
 import { NodesProps, NodesWithWeightsProps, supportedChains } from './constants';
 
 type Result<Data> =
@@ -55,6 +55,9 @@ export const parseNodes = <Props extends NodesProps>({ nodeIds }: Props): Result
     };
 };
 
+export const parseWeight = (weight: string) => parseUnits(weight, 2);
+export const formatWeight = (weight: bigint) => formatUnits(weight, 2);
+
 export const parseNodesWithWeights = <Props extends NodesWithWeightsProps>(
     props: Props,
 ): Result<{
@@ -76,17 +79,33 @@ export const parseNodesWithWeights = <Props extends NodesWithWeightsProps>(
 
     if (nodeIds.length !== weights.length) return { success: false, errorMessage: 'Expected nodeIds and weights to be the same length' };
 
-    const parsedWeights = weights.map((weight) => parseUnits(weight, 2));
+    const parsedWeights = weights.map((weight) => parseWeight(weight));
 
     const sum = parsedWeights.reduce((acc, weight) => acc + weight, 0n);
 
-    if (sum > parseUnits('100', 2)) return { success: false, errorMessage: 'Sum of weights must be less than or equal to 100' };
+    if (sum > parseWeight('100')) return { success: false, errorMessage: 'Sum of weights must be less than or equal to 100' };
 
     return {
         success: true,
         data: {
             nodeIds,
             weights: parsedWeights,
+        },
+    };
+};
+
+export const parseRange = <Props extends { from: number; to: number }>(props: Props): Result<{ from: bigint; to: bigint }> => {
+    const { from, to } = props;
+
+    if (typeof from !== 'number' || typeof to !== 'number') return { success: false, errorMessage: 'Expected from and to to be numbers' };
+
+    if (from >= to) return { success: false, errorMessage: 'Expected from to be less than to' };
+
+    return {
+        success: true,
+        data: {
+            from: BigInt(from),
+            to: BigInt(to),
         },
     };
 };

@@ -1,5 +1,6 @@
 export { cancelPendingUnlockRequests } from './cancelPendingUnlockRequests';
 export { getUserVotesLength } from './getUserVotesLength';
+export { getUserVotesRange } from './getUserVotesRange';
 export { redeemUnstakedAvax } from './redeemUnstakedAvax';
 export { stakeAvax } from './stakeAvax';
 export { stakeQi } from './stakeQi';

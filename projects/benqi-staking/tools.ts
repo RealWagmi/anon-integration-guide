@@ -108,4 +108,10 @@ export const tools: AiTool[] = [
         required: [...walletRequiredProps, ...nodesRequiredProps, ...weightsRequiredProps],
         props: [...walletProps, ...nodesProps, ...weightsProps],
     },
+    {
+        name: 'getUserVotesRange',
+        description: 'Get list of nodes with weights the user has voted for',
+        required: [...walletRequiredProps, 'from', 'to'],
+        props: [...walletProps, { name: 'from', type: 'number' }, { name: 'to', type: 'number' }],
+    },
 ];
