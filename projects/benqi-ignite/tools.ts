@@ -91,4 +91,10 @@ export const tools: AiTool[] = [
             },
         ],
     },
+    {
+        name: 'getRegistrationsByAccount',
+        description: 'Lists registrations made by the given account.',
+        required: [...walletRequiredProps, 'from', 'to'],
+        props: [...walletProps, { name: 'from', type: 'number' }, { name: 'to', type: 'number' }],
+    },
 ];

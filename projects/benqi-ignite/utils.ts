@@ -58,3 +58,19 @@ export const parseRegister = <Props extends RegisterProps>({ blsProofOfPossessio
         },
     };
 };
+
+export const parseRange = <Props extends { from: number; to: number }>(props: Props): Result<{ from: bigint; to: bigint }> => {
+    const { from, to } = props;
+
+    if (typeof from !== 'number' || typeof to !== 'number') return { success: false, errorMessage: 'Expected from and to to be numbers' };
+
+    if (from >= to) return { success: false, errorMessage: 'Expected from to be less than to' };
+
+    return {
+        success: true,
+        data: {
+            from: BigInt(from),
+            to: BigInt(to),
+        },
+    };
+};
