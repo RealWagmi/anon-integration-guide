@@ -1,11 +1,10 @@
-import { getChainFromName, getViemClient } from 'libs/blockchain';
-import { FunctionReturn, SystemTools } from '../../../types';
-import { Address, parseEther, encodeFunctionData, formatUnits, parseEventLogs, formatEther, zeroAddress } from 'viem';
+
+import { Address, parseEther, encodeFunctionData, parseEventLogs, formatEther, zeroAddress, } from 'viem';
+import { FunctionReturn, getChainFromName, FunctionOptions, TransactionReturn, toResult, TransactionParams, checkToApprove } from '@heyanon/sdk';
 import { sWagmiAddresses, sWagmiSupportedChains } from '../constants';
 import { WAGMI } from '@real-wagmi/sdk';
-import { sWagmiAbi } from '../abis';
-import { checkToApprove, balanceOf, extractTransactionHash } from '../../../helpers';
-import { toResult } from '../../../transformers';
+import { sWagmiAbi, wagmiTokenAbi } from '../abis';
+
 
 interface StakeProps {
     chainName: string;
@@ -13,10 +12,11 @@ interface StakeProps {
     amount: string;
 }
 
-export async function stake({ chainName, account, amount }: StakeProps, tools: SystemTools): Promise<FunctionReturn> {
-    const { sign } = tools;
+export async function stake({ chainName, account, amount }: StakeProps, tools: FunctionOptions): Promise<FunctionReturn> {
+    const { getProvider, notify, sendTransactions } = tools;
 
     const chainId = getChainFromName(chainName);
+
     if (!chainId) return toResult(`Unsupported chain: ${chainName}`, true);
     if (!sWagmiSupportedChains.includes(chainId)) return toResult(`Stake unsupported chain: ${chainName}`, true);
     if (!account) return toResult('Wallet address not found', true);
@@ -26,8 +26,15 @@ export async function stake({ chainName, account, amount }: StakeProps, tools: S
 
     const sWagmiAddress = sWagmiAddresses[chainId] as Address;
     if (!sWagmiAddress) return toResult(`sWAGMI address not found on chain: ${chainName}`, true);
+    const provider = getProvider(chainId);
 
-    const balance = await balanceOf(chainName, account, wagmi.address);
+
+    const balance = await provider.readContract({
+        address: wagmi.address,
+        abi: wagmiTokenAbi,
+        functionName: 'balanceOf',
+        args: [account],
+    });
 
     // be carefull if you work with native. You must calculate amount of native which you leave for gas.
     const amountInWei = amount === '-1' ? balance : parseEther(amount);
@@ -41,26 +48,41 @@ export async function stake({ chainName, account, amount }: StakeProps, tools: S
         args: [amountInWei],
     });
 
-    await checkToApprove(chainName, account, wagmi.address, sWagmiAddress, amountInWei);
+    const transactions: TransactionParams[] = [];
 
-    const result = await sign(chainId, account, [
-        {
-            target: sWagmiAddress,
-            value: 0n,
-            data: calldata,
+    // Check and prepare approve transaction if needed
+    await checkToApprove({
+        args: {
+            account,
+            target: wagmi.address,
+            spender: sWagmiAddress,
+            amount: amountInWei,
         },
-    ]);
-    const stakeMessage = result.messages[result.messages.length - 1];
+        provider,
+        transactions
+    });
+
+    if (transactions.length > 0) {
+        await notify(`Approving ${formatEther(amountInWei)} Wagmi for stake contract by account ${account} ...`);
+    }
+    // Prepare stake transaction
+    const tx: TransactionParams = {
+        target: sWagmiAddress,
+        data: calldata,
+    };
+    transactions.push(tx);
+
+    const result: TransactionReturn = await sendTransactions({ chainId, account, transactions });
+    const stakeData = result.data[result.data.length - 1];
+
     if (result.isMultisig) {
-        return toResult(stakeMessage);
+        return toResult(stakeData.message);
     }
 
     // Get transaction receipt and parse Transfer event
-    const txHash = extractTransactionHash(stakeMessage);
-    if (!txHash) return toResult(`Staked ${formatEther(amountInWei)} WAGMI to sWAGMI on ${chainName}, but failed to receive tx hash. ${stakeMessage}`);
+    if (!stakeData.hash) return toResult(`Staked ${formatEther(amountInWei)} WAGMI to sWAGMI on ${chainName}, but failed to receive tx hash. ${stakeData.message}`);
 
-    const publicClient = getViemClient({ chainId });
-    const receipt = await publicClient.getTransactionReceipt({ hash: txHash });
+    const receipt = await provider.getTransactionReceipt({ hash: stakeData.hash });
 
     const transferEvents = parseEventLogs({
         logs: receipt.logs,
@@ -70,8 +92,8 @@ export async function stake({ chainName, account, amount }: StakeProps, tools: S
 
     const stakeEvent = transferEvents.find((log) => log.args.from === zeroAddress);
     if (!stakeEvent?.args?.value) {
-        return toResult(`Staked ${formatEther(amountInWei)} WAGMI to sWAGMI on ${chainName}, but couldn't verify received sWAGMI amount. ${stakeMessage}`);
+        return toResult(`Staked ${formatEther(amountInWei)} WAGMI to sWAGMI on ${chainName}, but couldn't verify received sWAGMI amount. ${stakeData.message}`);
     }
-    const stakedAmount = formatUnits(stakeEvent.args.value, 18);
-    return toResult(`Staked ${formatEther(amountInWei)} WAGMI and received ${stakedAmount} sWAGMI on ${chainName}. ${stakeMessage}`);
+    const stakedAmount = formatEther(stakeEvent.args.value);
+    return toResult(`Staked ${formatEther(amountInWei)} WAGMI and received ${stakedAmount} sWAGMI on ${chainName}. ${stakeData.message}`);
 }

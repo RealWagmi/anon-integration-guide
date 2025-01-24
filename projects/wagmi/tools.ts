@@ -1,6 +1,5 @@
-import { getChainName } from 'libs/blockchain';
 import { sWagmiSupportedChains } from './constants';
-import { AiTool } from 'libs/ai';
+import { AiTool, getChainName } from '@heyanon/sdk';
 
 export const tools = [
     {
