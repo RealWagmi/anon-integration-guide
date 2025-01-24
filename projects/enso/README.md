@@ -19,17 +19,17 @@ Enso
 
 1. Basic Operations
 
-    - "Swap 15000 USDT to WETH on @enso on Optimism network"
-    - "Redeem 0.01 WETH-USDT UNI-V2 LP token for WBTC on @enso on Ethereum network"
-    - "Deposit 10 ETH into a Curve pool on @enso"
-    - "Withdraw aEthWBTC from Aave V3 for USDC on @enso"
+    - "Swap 15000 USDT to WETH on Optimism network"
+    - "Redeem 0.01 WETH-USDT UNI-V2 LP token for WBTC on Ethereum network"
+    - "Deposit 10 ETH into steth Curve pool on Ethereum network"
+    - "Withdraw aEthWBTC from Aave V3 on Ethereum for USDC on Base"
 
 2. Information Queries
 
-    - "Show me supported tokens on @enso"
-    - "Is USDC supported on @enso on Base network"
-    - "Show me supported protocols on @enso on Etheruem network"
-    - "Is Uniswap supported on @enso on Ethereum network"
+    - "Show me supported tokens by @enso"
+    - "Is USDC supported by @enso on Base network"
+    - "Show me supported protocols by @enso on Etheruem network"
+    - "Is Uniswap supported by @enso on Ethereum network"
 
 ## Available Functions
 
