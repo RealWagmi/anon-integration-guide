@@ -214,4 +214,10 @@ export const tools: AiTool[] = [
             },
         ],
     },
+    {
+        name: 'getTotalTvl',
+        description: 'Fetchs whole protocol TLV (total value locked)',
+        required: [],
+        props: [],
+    },
 ];

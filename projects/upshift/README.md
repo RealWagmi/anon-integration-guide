@@ -36,8 +36,9 @@ Key functions of Upshift:
 
 2. Information Queries
    - "Show current APY for LBTC on Base in Upshift"
-   - "Check wstETH TVL in upshift"
-   - "Show rewards in AVAX vault in @upshift"
+   - "Check wstETH TVL in Upshift"
+   - "Show rewards in AVAX vault in Upshift"
+   - "Check current total TVL in Upshift"
 
 
 ## Addressing Pain Points

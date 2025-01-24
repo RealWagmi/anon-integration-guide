@@ -7,3 +7,4 @@ export * from './redeemRewardOnAvalanche';
 export * from './getVaultApy';
 export * from './getVaultRewards';
 export * from './getVaultTvl';
+export * from './getTotalTvl';
