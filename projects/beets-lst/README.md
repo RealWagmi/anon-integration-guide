@@ -8,25 +8,23 @@ Integration with beets.fi Sonic liquid staking module (stS).
 
 ## Common Tasks
 
-1. Basic Operations
-
-    - **Staking**
-        - "Stake 100 S in @beets-lst"
-        - "Stake half of my Sonic in @beets-lst"
-        - "How many stS do I have in @beets-lst?"
-    - **Unstaking**
-        - "Unstake 100 stS from @beets-lst"
-        - "Unstake all of my stS from @beets-lst"
-        - "Unstake 100 S worth of stS from @beets-lst"
-    - **Withdrawing**
-        - "How long before I can withdraw from @beets-lst?"
-        - "Show my withdrawal requests from @beets-lst"
-        - "Withdraw <withdraw_id> from @beets-lst"
-        - "Withdraw all from @beets-lst"
-    - **Info**
-        - "How much is worth 1 stS in @beets-lst?"
-        - "How much is worth 1 S in @beets-lst?"
-        - "How much Sonic is in the protocol @beets-lst?"
+- **Staking**
+    - "Stake 100 S in @beets-lst"
+    - "Stake half of my Sonic in @beets-lst"
+    - "How many stS do I have in @beets-lst?"
+- **Unstaking**
+    - "Unstake 100 stS from @beets-lst"
+    - "Unstake all of my stS from @beets-lst"
+    - "Unstake 100 S worth of stS from @beets-lst"
+- **Withdrawing**
+    - "How long before I can withdraw from @beets-lst?"
+    - "Show my withdrawal requests from @beets-lst"
+    - "Withdraw <withdraw_id> from @beets-lst"
+    - "Withdraw all from @beets-lst"
+- **Info**
+    - "How much is worth 1 stS in @beets-lst?"
+    - "How much is worth 1 S in @beets-lst?"
+    - "How much Sonic is in the protocol @beets-lst?"
 
 ## Available Functions
 
@@ -89,4 +87,3 @@ To see the actual OpenAI responses for debug purposes, run with `--verbose` flag
 ```bash
 yarn run ask "What is my stS balance?" --verbose
 ```
-

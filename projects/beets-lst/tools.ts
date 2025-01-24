@@ -197,4 +197,22 @@ export const tools: AiTool[] = [
             },
         ],
     },
+    {
+        name: 'getNextWithdrawal',
+        description: 'Get details of the withdrawal request that is closest to being ready to be withdrawn.  This is useful for checking how long before a user can withdraw.',
+        required: ['chainName', 'account'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Account address to check withdrawals for',
+            },
+        ],
+    },
 ];

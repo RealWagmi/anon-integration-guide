@@ -9,3 +9,4 @@ export { getTotalStakedSonicInProtocol } from './getTotalStakedSonicInProtocol';
 export { getProtocolStakedSonicToSonicExchangeRate } from './getProtocolStakedSonicToSonicExchangeRate';
 export { getProtocolSonicToStakedSonicExchangeRate } from './getProtocolSonicToStakedSonicExchangeRate';
 export { getOpenWithdrawRequests } from './getOpenWithdrawRequests';
+export { getNextWithdrawal } from './getNextWithdrawal';

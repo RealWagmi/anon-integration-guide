@@ -207,7 +207,7 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
             if (!assistantMessage.tool_calls?.[1]) {
                 messages.push({
                     role: 'user',
-                    content: 'Based on this data, can you now answer my original question? If you need to call more tools, please do so.',
+                    content: 'Provide an answer to my original question using the data you collected. If you need more tools, call them.',
                 });
             }
         } catch (error) {
