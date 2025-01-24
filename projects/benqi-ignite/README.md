@@ -1,6 +1,6 @@
 # benqi-ignite
 
-Integration with Benqi Ignite
+Integration with [Benqi Ignite](https://ignite.benqi.fi/)
 
 ## Supported Networks
 
@@ -8,21 +8,21 @@ Integration with Benqi Ignite
 
 ## Common Tasks
 
-1. Basic Operations
-   - "Execute example operation with 100 USDT in @benqi-ignite on Ethereum network"
-   - "Run example transaction with 50 USDC in @benqi-ignite"
-   - "Perform example action with 1000 tokens in @benqi-ignite"
-
-2. Information Queries
-   - "Show my current status in @benqi-ignite"
-   - "Check my balance in @benqi-ignite"
-   - "Get example statistics from @benqi-ignite"
-   - "Calculate expected results for my position in @benqi-ignite"
-
+- "Register node by id NodeID-E1e2AGL5iuJM74qAKYV4wuuQJKd4AjTf9 with AVAX fee in @benqi-ignite validation period of TWO_WEEKS and blsProofOfPossession 0x....."
+- "Execute registerWithErc20Fee operation with 100 USDC in @benqi-ignite"
+- "Register with stake in @benqi-ignite with 1000 AVAX tokens"
+- "Redeem deposited tokens and potential rewards after validation period has expired"
+- "Get registrations made by a specific account"
+- "Get the number of registrations made by a specific account"
 
 ## Available Functions
 
-List of available functions will be added here.
+- `registerWithAvaxFee`: Register with AVAX fee in @benqi-ignite
+- `registerWithErc20Fee`: Register with a specified amount of an ERC20 asset fee in @benqi-ignite
+- `registerWithStake`: Register with a specified amount of an asset stake in @benqi-ignite
+- `redeemAfterExpiry`: Redeem deposited tokens and potential rewards after validation period has expired
+- `getRegistrationsByAccount`: Get registrations made by a specific account
+- `getAccountRegistrationCount`: Get the number of registrations made by a specific account
 
 ## Installation
 
