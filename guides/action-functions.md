@@ -14,7 +14,10 @@ Action functions perform transactions and interact with the blockchain. They use
    - Validate all input arguments at the beginning of the function.
    - Return informative error messages using `toResult`.
    - We treat native currency as token with address 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE.
-     You can create comparison and implement proper logic. No need create separate functions for work with native curency.
+    ```typescript 
+    import { NATIVE_ADDRESS } from '@heyanon/sdk';
+    ```
+    You can create comparison and implement proper logic. No need create separate functions for work with native curency.
    - Use "-1" as input for work with all user balance of certain token. Add proper logic inside you function.  
 
 3. **Using `notify`**
