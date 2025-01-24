@@ -1,7 +1,7 @@
 import { FunctionReturn, toResult, getChainFromName, FunctionOptions, TransactionParams, checkToApprove } from '@heyanon/sdk';
 import { ENSO_API_TOKEN, ENSO_ETH, supportedChains } from '../constants';
 import axios from 'axios';
-import { Address, Hex, isAddress } from 'viem';
+import { Address, Hex, isAddress, parseUnits } from 'viem';
 import { EnsoClient, RouteParams } from '@ensofinance/sdk';
 
 interface Props {
@@ -30,47 +30,60 @@ export async function route(
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Enso is not supported on ${chainName}`, true);
 
-    const params: RouteParams = {
-        chainId,
-        tokenIn,
-        tokenOut,
-        amountIn,
-        fromAddress: account,
-        receiver: receiver || account,
-        spender: spender || account,
-    };
-
-    if (!isAddress(params.receiver)) {
-        return toResult('Receiver is not an address', true);
-    }
-    if (!isAddress(params.spender)) {
-        return toResult('Spender is not an address', true);
-    }
-
-    if (amountOut) {
-        params.minAmountOut = amountOut;
-    }
-    if (slippage) {
-        if (slippage > 10_000 || slippage < 0) {
-            return toResult('Slippage is outside of 0-10000 range', true);
-        }
-        params.slippage = slippage;
-    }
-    if (fee) {
-        if (fee > 100 || fee < 0) {
-            return toResult('Fee is outside of 0-100 range', true);
-        }
-        params.fee = fee;
-    }
-    if (feeReceiver) {
-        if (!isAddress(feeReceiver)) {
-            return toResult('Fee receiver is not an address', true);
-        }
-        params.feeReceiver = feeReceiver;
-    }
-
     try {
         const ensoClient = new EnsoClient({ apiKey: ENSO_API_TOKEN });
+        const tokenInData = await ensoClient.getTokenData({ chainId, address: tokenIn });
+
+        if (tokenInData.data.length === 0 || typeof tokenInData.data[0].decimals !== 'number') {
+            return toResult(`Token ${tokenIn} is not supported`, true);
+        }
+
+        const amountInWei = parseUnits(amountIn, tokenInData.data[0].decimals);
+
+        const params: RouteParams = {
+            chainId,
+            tokenIn,
+            tokenOut,
+            amountIn: amountInWei.toString(),
+            fromAddress: account,
+            receiver: receiver || account,
+            spender: spender || account,
+        };
+
+        if (!isAddress(params.receiver)) {
+            return toResult('Receiver is not an address', true);
+        }
+        if (!isAddress(params.spender)) {
+            return toResult('Spender is not an address', true);
+        }
+
+        if (amountOut) {
+            const tokenOutData = await ensoClient.getTokenData({ chainId, address: tokenOut });
+            if (tokenOutData.data.length === 0 || typeof tokenOutData.data[0].decimals !== 'number') {
+                return toResult(`Token ${tokenOut} is not supported`, true);
+            }
+            const amountOutWei = parseUnits(amountOut, tokenOutData.data[0].decimals);
+            params.minAmountOut = amountOutWei.toString();
+        }
+        if (slippage) {
+            if (slippage > 10_000 || slippage < 0) {
+                return toResult('Slippage is outside of 0-10000 range', true);
+            }
+            params.slippage = slippage;
+        }
+        if (fee) {
+            if (fee > 100 || fee < 0) {
+                return toResult('Fee is outside of 0-100 range', true);
+            }
+            params.fee = fee;
+        }
+        if (feeReceiver) {
+            if (!isAddress(feeReceiver)) {
+                return toResult('Fee receiver is not an address', true);
+            }
+            params.feeReceiver = feeReceiver;
+        }
+
         await notify('Fetching the best route from Enso API');
         const routeData = await ensoClient.getRouterData(params);
 
@@ -83,7 +96,7 @@ export async function route(
                     account,
                     target: tokenIn,
                     spender: routeData.tx.to,
-                    amount: BigInt(amountIn),
+                    amount: amountInWei,
                 },
                 provider,
                 transactions,
