@@ -29,7 +29,3 @@ Integration with [Benqi Ignite](https://ignite.benqi.fi/)
 ```bash
 yarn add @heyanon/benqi-ignite
 ```
-
-## Usage
-
-Example usage will be added here.

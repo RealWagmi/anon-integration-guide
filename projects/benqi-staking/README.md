@@ -40,7 +40,3 @@ Integration with [Benqi Staking](https://staking.benqi.fi/)
 ```bash
 yarn add @heyanon/benqi-staking
 ```
-
-## Usage
-
-Example usage will be added here.

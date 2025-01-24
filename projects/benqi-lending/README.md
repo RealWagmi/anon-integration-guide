@@ -37,7 +37,3 @@ Integration with [Benqi Lending Protocol](https://app.benqi.fi/markets)
 ```bash
 yarn add @heyanon/benqi-lending
 ```
-
-## Usage
-
-Example usage will be added here.
