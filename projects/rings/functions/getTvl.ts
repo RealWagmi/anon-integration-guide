@@ -19,7 +19,7 @@ export async function getTvl(): Promise<FunctionReturn> {
         return toResult('No response from API', true);
     }
 
-    const tvl = response.data.currentChainTvls.Sonic;
+    const tvl = response.data.currentChainTvls.Sonic / 1e6;
 
-    return toResult(`Total value locked on Sonic - $${tvl}.`);
+    return toResult(`Total value locked on Sonic - $${tvl.toFixed(1)}M.`);
 }
