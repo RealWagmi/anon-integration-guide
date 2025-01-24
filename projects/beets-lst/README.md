@@ -58,7 +58,7 @@ Example usage will be added here.
 - Initiate unstake (`undelegateMany`): https://sonicscan.org/tx/0xb64c4fd6ae4667a3b7ce9d6ba9679fbd2c591173a0895a5616adc3b039b10c27
 - Withdraw Sonic (`withdraw`): https://sonicscan.org/tx/0xb93b07384ccbace4236d07fac46874039821c84707f69fbee101e9ae5506f470
 
-## askBeest agent
+## Test with the askBeets agent
 
 I've built a simple agent called `askBeets` to test the integration. To run it, you need to configure .env:
 
