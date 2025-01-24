@@ -19,9 +19,9 @@ Enso
 
 1. Basic Operations
 
-    - "Swap 15000 USDT to WETH on Optimism network"
-    - "Redeem 0.01 WETH-USDT UNI-V2 LP token for WBTC on Ethereum network"
-    - "Deposit 10 ETH into steth Curve pool on Ethereum network"
+    - "Swap 15000 USDT to WETH on BNB chain"
+    - "Stake 1 ETH into cbpt contango pool on Contango on Ethereum Network"
+    - "Deposit 10 ETH into wstETH pool on Symbiotic on Ethereum network"
     - "Withdraw aEthWBTC from Aave V3 on Ethereum for USDC on Base"
 
 2. Information Queries
