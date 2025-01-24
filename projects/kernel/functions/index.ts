@@ -6,3 +6,4 @@ export * from './unstakeAssetBySymbol';
 export * from './unstakeBNB';
 export * from './getPointsForAsset';
 export * from './getUserPoints';
+export * from './getTvl';

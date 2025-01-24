@@ -168,4 +168,10 @@ export const tools: AiTool[] = [
             },
         ],
     },
+    {
+        name: 'getTvl',
+        description: 'Get current TVL (total value locked)',
+        required: [],
+        props: [],
+    },
 ];

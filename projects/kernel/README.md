@@ -33,6 +33,7 @@ Key functions of KernelDAO:
    - "Show current points for BNBX in Kernel"
    - "Check my points in Kernel"
    - "Check 0xffdd45f075e5f757e86bb83fca7114bed9914166 points in Kernel"
+   - "Show current TVL"
 
 
 ## Addressing Pain Points
