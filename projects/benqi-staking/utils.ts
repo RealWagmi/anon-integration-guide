@@ -73,7 +73,7 @@ export const parseNodesWithWeights = <Props extends NodesWithWeightsProps>(
     const { nodeIds } = nodes.data;
     const { weights } = props;
 
-    if (!Array.isArray(weights)) return { success: false, errorMessage: 'Expected nodeIds to be an array' };
+    if (!Array.isArray(weights)) return { success: false, errorMessage: 'Expected weights to be an array' };
 
     if (weights.length === 0) return { success: false, errorMessage: 'Expected at least one weight' };
 
