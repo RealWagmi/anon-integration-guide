@@ -82,7 +82,7 @@ export async function route(
         const provider = getProvider(chainId);
         const transactions: TransactionParams[] = [];
 
-        if (tokenIn !== ENSO_ETH) {
+        if (tokenIn.toLowerCase() !== ENSO_ETH.toLowerCase()) {
             await checkToApprove({
                 args: {
                     account,
