@@ -45,9 +45,19 @@ export async function depositAsset(
 
     const transactions: TransactionParams[] = [];
 
-    // Wrapping in case native token
+    // Validate amount and wrapping in case native token
     let tokenAddress = tokenConfig.address;
+    let amountWithDecimals;
     if (!tokenAddress) {
+        const balance = await provider.getBalance({
+            address: account
+        });
+        const amountWithDecimals = parseUnits(amount, 18);
+        
+        if (balance < amountWithDecimals) {
+            return toResult('Amount exceeds your AVAX balance', true);
+        }
+
         tokenAddress = tokenConfig.wrapped;
         const wrapTx: TransactionParams = {
 			target: tokenAddress,
@@ -56,28 +66,27 @@ export async function depositAsset(
 					functionName: 'deposit',
 					args: [],
 			}),
-            value: parseUnits(amount, 18),
+            value: amountWithDecimals,
 	    };
         transactions.push(wrapTx);
+    } else {
+        const decimals = await provider.readContract({
+            address: tokenAddress,
+            abi: erc20Abi,
+            functionName: 'decimals',
+            args: [],
+        });
+        amountWithDecimals = parseUnits(amount, decimals);
+        if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);
+        const balance = await provider.readContract({
+            address: tokenAddress,
+            abi: erc20Abi,
+            functionName: 'balanceOf',
+            args: [account],
+        });
+        if (balance < amountWithDecimals) return toResult('Amount exceeds your balance', true);
     }
     
-    // Validate amount
-    const decimals = await provider.readContract({
-        address: tokenAddress,
-        abi: erc20Abi,
-        functionName: 'decimals',
-        args: [],
-    });
-    const amountWithDecimals = parseUnits(amount, decimals);
-    if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);
-    const balance = await provider.readContract({
-        address: tokenAddress,
-        abi: erc20Abi,
-        functionName: 'balanceOf',
-        args: [account],
-    });
-    if (balance < amountWithDecimals) return toResult('Amount exceeds your balance', true);
-
     await notify('Depositing asset...');
 
     // Approve the asset beforehand
