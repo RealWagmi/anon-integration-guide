@@ -26,11 +26,6 @@ export async function route(
     { chainName, tokenIn, tokenOut, amountIn, spender, receiver, slippage, amountOut, account, fee, feeReceiver }: Props,
     { sendTransactions, notify, getProvider }: FunctionOptions,
 ): Promise<FunctionReturn> {
-    if (!account) return toResult('No account provided', true);
-    if (!tokenIn) return toResult('No tokenIn provided', true);
-    if (!tokenOut) return toResult('No tokenOut provided', true);
-    if (!amountIn) return toResult('No amountIn provided', true);
-
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Enso is not supported on ${chainName}`, true);
