@@ -1,55 +1,57 @@
-import { formatUnits, Address } from 'viem';
+import { formatUnits } from 'viem';
 import { 
     FunctionReturn, 
     FunctionOptions, 
     toResult,
-    readContract
+    ChainId
 } from '@heyanon/sdk';
-import { NETWORK_CONFIGS } from './types';
+import { CONTRACT_ADDRESSES, NETWORKS } from '../../constants';
 import GLPManagerABI from '../../abis/GLPManager.json';
 
 /**
  * Interface for getting user's liquidity information
  * @property {string} chainName - The name of the chain
- * @property {Address} account - The account address to check
+ * @property {string} account - The account address to check
  */
-export interface GetUserLiquidityProps {
-    chainName: string;
-    account: Address;
+export interface UserLiquidityProps {
+    chainName: 'sonic';
+    account: string;
 }
 
 /**
- * Gets the amount of GLP tokens held by an account
- * @param {GetUserLiquidityProps} props - The properties for getting liquidity info
+ * Gets the GLP balance for a specified account and chain
+ * @param {string} chainName - The name of the chain
+ * @param {string} account - The account address
  * @param {FunctionOptions} options - The function options
- * @returns {Promise<FunctionReturn<{ glpBalance: string }>>} The user's GLP balance
+ * @returns {Promise<FunctionReturn<{ balance: string }>>} The user's GLP balance
  */
-export async function getUserLiquidity({ 
-    chainName, 
-    account 
-}: GetUserLiquidityProps, 
-{ notify }: FunctionOptions): Promise<FunctionReturn> {
+export async function getUserLiquidity(
+    { chainName, account }: UserLiquidityProps,
+    { notify, getProvider }: FunctionOptions
+): Promise<FunctionReturn> {
     // Input validation
-    if (!chainName || !account) {
-        return toResult('Missing required parameters', false);
+    if (!chainName) {
+        return toResult('Missing chain name');
     }
-    const network = NETWORK_CONFIGS[chainName];
-    if (!network) {
-        return toResult(`Network ${chainName} not supported`, false);
+    if (!Object.values(NETWORKS).includes(chainName)) {
+        return toResult(`Network ${chainName} not supported`);
     }
-    
+    if (!account) {
+        return toResult('Missing account address');
+    }
+
     await notify('Fetching user liquidity information...');
     try {
-        const glpBalance = await readContract({
-            address: network.glpToken,
-            abi: GLPManagerABI,
+        const publicClient = getProvider(chainName as ChainId);
+        const balance = await publicClient.readContract({
+            address: CONTRACT_ADDRESSES[chainName].GLP_TOKEN,
+            abi: GLPManagerABI.abi,
             functionName: 'balanceOf',
             args: [account]
         });
-        return toResult({
-            glpBalance: formatUnits(glpBalance, 18)
-        });
+
+        return toResult(`GLP Balance: ${formatUnits(balance as bigint, 18)} GLP`);
     } catch (error) {
-        return toResult(`Failed to fetch user liquidity: ${error.message}`, false);
+        return toResult(`Failed to fetch user liquidity: ${error.message}`);
     }
 } 

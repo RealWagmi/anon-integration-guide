@@ -1,15 +1,51 @@
-import { ChainId } from '@heyanon/sdk';
-
-/**
- * Global list of supported blockchain networks across all modules
- */
-export const supportedChains = [
-    ChainId.SONIC, // 146
-    // Add other supported chains as needed
-];
+import { Address } from 'viem';
 
 // Constants for APR calculations
 export const PRECISION = 1e30;
 export const SECONDS_PER_YEAR = 31536000; // 365 * 24 * 60 * 60
 
 // Other global constants can go here
+
+export const NETWORKS = {
+    SONIC: 'sonic'
+} as const;
+
+export const CHAIN_IDS = {
+    [NETWORKS.SONIC]: 146
+} as const;
+
+export const RPC_URLS = {
+    [NETWORKS.SONIC]: 'https://rpc.soniclabs.com'
+} as const;
+
+export const CONTRACT_ADDRESSES = {
+    [NETWORKS.SONIC]: {
+        GLP_MANAGER: '0xA16FaBE630E75981b03b31AAD20F5BDDE581acDF' as Address,
+        GLP_TOKEN: '0x5d51a52D952A61D5d1fc19F90a8244b995877bd9' as Address,
+        REWARD_ROUTER: '0xA0411BBefDC6d896615d1ece1C3212353842C2dF' as Address,
+        VAULT: '0x11944027D4eDC1C17db2D5E9020530dcEcEfb85b' as Address,
+        NATIVE_TOKEN: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38' as Address,
+        WETH: '0x50c42deacd8fc9773493ed674b675be577f2634b' as Address,
+        USDC: '0x29219dd400f2bf60e5a23d13be72b486d4038894' as Address,
+        EURC: '0xe715cbA7B5cCb33790ceBFF1436809d36cb17E57' as Address,
+        ANON: '0x79bbf4508b1391af3a0f4b30bb5fc4aa9ab0e07c' as Address
+    }
+} as const;
+
+export const CHAIN_CONFIG = {
+    [NETWORKS.SONIC]: {
+        id: CHAIN_IDS[NETWORKS.SONIC],
+        name: NETWORKS.SONIC,
+        network: NETWORKS.SONIC,
+        nativeCurrency: { 
+            name: 'Sonic', 
+            symbol: 'S', 
+            decimals: 18 
+        },
+        rpcUrls: {
+            default: { 
+                http: [RPC_URLS[NETWORKS.SONIC]] 
+            }
+        }
+    }
+} as const;

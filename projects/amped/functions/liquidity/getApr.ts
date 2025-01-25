@@ -60,7 +60,7 @@ export async function getApr(
             .mul(NATIVE_TOKEN_PRICE)
             .mul(BASIS_POINTS_DIVISOR)
             .div(totalSupply)
-            .div(ethers.utils.parseUnits('1', NATIVE_TOKEN_DECIMALS)),
+            .div(ethers.utils.parseUnits('1', NATIVE_TOKEN_DECIMALS - 4)), // Adjust decimals to get correct percentage scale
           18
         )
       )

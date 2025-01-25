@@ -1,64 +1,80 @@
-import { parseUnits, encodeFunctionData } from 'viem';
+import { parseUnits, encodeFunctionData, Abi, Address } from 'viem';
 import { 
     FunctionReturn, 
     FunctionOptions, 
-    TransactionParams, 
-    toResult, 
-    checkToApprove 
+    toResult,
+    ChainId,
+    checkToApprove,
+    TransactionParams
 } from '@heyanon/sdk';
-import { NETWORK_CONFIGS, RemoveLiquidityProps } from './types';
+import { CONTRACT_ADDRESSES, NETWORKS, CHAIN_IDS } from '../../constants';
 import GLPManagerABI from '../../abis/GLPManager.json';
+
+export interface RemoveLiquidityProps {
+    chainName: 'sonic';
+    account: string;
+    tokenOut: string;
+    amount: string;
+    minOut: string;
+}
 
 /**
  * Removes liquidity from the GLP pool
  * @param {RemoveLiquidityProps} props - The properties for removing liquidity
- * @param {string} props.chainName - The name of the chain
- * @param {string} props.account - The account address
- * @param {string} props.tokenOut - The token address to receive
- * @param {string} props.amount - The amount of GLP to remove
- * @param {string} props.minOut - The minimum amount of tokens to receive
  * @param {FunctionOptions} options - The function options
  * @returns {Promise<FunctionReturn>} The transaction result
  */
-export async function removeLiquidity({ 
-    chainName, 
-    account, 
-    tokenOut,
-    amount,
-    minOut
-}: RemoveLiquidityProps, 
-{ sendTransactions, notify }: FunctionOptions): Promise<FunctionReturn> {
+export async function removeLiquidity(
+    { chainName, account, tokenOut, amount, minOut }: RemoveLiquidityProps,
+    { notify, getProvider, sendTransactions }: FunctionOptions
+): Promise<FunctionReturn> {
+    // Input validation
     if (!chainName || !account || !tokenOut || !amount || !minOut) {
-        return toResult('Missing required parameters', false);
+        return toResult('Missing required parameters');
     }
-    const network = NETWORK_CONFIGS[chainName];
-    if (!network) {
-        return toResult(`Network ${chainName} not supported`, false);
+    if (!Object.values(NETWORKS).includes(chainName)) {
+        return toResult(`Network ${chainName} not supported`);
     }
-    const amountInWei = parseUnits(amount, 18);
-    const minOutWei = parseUnits(minOut, 18);
-    const transactions: TransactionParams[] = [];
-    await notify('Checking GLP token approval...');
-    const approvalTx = await checkToApprove(network.glpToken, account, amountInWei, network.glpManager);
-    if (approvalTx) {
-        await notify('Approval needed. Please confirm the approval transaction...');
-        transactions.push(approvalTx);
+
+    await notify('Preparing to remove liquidity...');
+    try {
+        const publicClient = getProvider(chainName as unknown as ChainId);
+        const amountInWei = parseUnits(amount, 18);
+        const minOutInWei = parseUnits(minOut, 18);
+
+        const transactions: TransactionParams[] = [];
+
+        // Check if GLP token needs to be approved
+        await checkToApprove({
+            args: {
+                account: account as Address,
+                target: CONTRACT_ADDRESSES[chainName].GLP_TOKEN as Address,
+                spender: CONTRACT_ADDRESSES[chainName].GLP_MANAGER as Address,
+                amount: amountInWei
+            },
+            provider: publicClient,
+            transactions
+        });
+
+        // Prepare transaction to remove liquidity
+        const tx: TransactionParams = {
+            target: CONTRACT_ADDRESSES[chainName].GLP_MANAGER as Address,
+            data: encodeFunctionData({
+                abi: GLPManagerABI.abi as Abi,
+                functionName: 'removeLiquidity',
+                args: [tokenOut as Address, amountInWei, minOutInWei, account as Address]
+            })
+        };
+        transactions.push(tx);
+
+        // Send transaction
+        const result = await sendTransactions({ 
+            chainId: CHAIN_IDS[chainName],
+            account: account as Address,
+            transactions
+        });
+        return toResult('Successfully removed liquidity');
+    } catch (error) {
+        return toResult(`Failed to remove liquidity: ${error.message}`);
     }
-    const removeLiquidityTx: TransactionParams = {
-        target: network.glpManager,
-        data: encodeFunctionData({
-            abi: GLPManagerABI,
-            functionName: 'removeLiquidity',
-            args: [tokenOut, amountInWei, minOutWei, account]
-        })
-    };
-    transactions.push(removeLiquidityTx);
-    await notify('Please confirm the liquidity removal transaction...');
-    const result = await sendTransactions({ chainId: network.chainId, account, transactions });
-    const message = result.data[result.data.length - 1];
-    return toResult(
-        result.isMultisig 
-            ? message.message 
-            : `Successfully removed liquidity of ${amount} GLP. ${message.message}`
-    );
 } 

@@ -27,15 +27,13 @@ describe('APR Test', () => {
     console.log('Fetching APR information...');
     
     // Get base APR from FeeGLP tracker
-    const baseResult = await getApr({
-      provider,
+    const baseResult = await getApr(provider, {
       rewardTrackerAddress: ADDRESSES.rewardTracker,
       rewardDistributorAddress: ADDRESSES.rewardDistributor
     });
 
     // Get staked APR from FeeStakedGLP tracker
-    const stakedResult = await getApr({
-      provider,
+    const stakedResult = await getApr(provider, {
       rewardTrackerAddress: ADDRESSES.feeStakedTracker,
       rewardDistributorAddress: ADDRESSES.feeStakedDistributor
     });
