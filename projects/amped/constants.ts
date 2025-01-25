@@ -29,7 +29,9 @@ export const CONTRACT_ADDRESSES: Record<string, Record<string, Address>> = {
         USDC: '0x29219dd400f2bf60e5a23d13be72b486d4038894' as Address,
         EURC: '0xe715cbA7B5cCb33790ceBFF1436809d36cb17E57' as Address,
         ANON: '0x79bbf4508b1391af3a0f4b30bb5fc4aa9ab0e07c' as Address,
-        ROUTER: '0x96EFEcB86b3408de4F92454E30a0c99E58299F35' as Address
+        ROUTER: '0x96EFEcB86b3408de4F92454E30a0c99E58299F35' as Address,
+        POSITION_ROUTER: '0x82546eCf796C28882d98FfF8aB9FC109DC86221a' as Address,
+        VAULT_PRICE_FEED: '0x9c2C2177EcE50f44EfbD234fd6c816849D47F3c2' as Address
     }
 } as const;
 

@@ -54,6 +54,15 @@ const ROUTER_ABI = [{
   outputs: [],
   stateMutability: 'nonpayable',
   type: 'function'
+}, {
+  inputs: [
+    { name: '_account', type: 'address' },
+    { name: '_plugin', type: 'address' }
+  ],
+  name: 'isPluginApproved',
+  outputs: [{ type: 'bool' }],
+  stateMutability: 'view',
+  type: 'function'
 }] as const;
 
 const ERC20_ABI = [{
@@ -67,13 +76,18 @@ const ERC20_ABI = [{
   type: 'function'
 }] as const;
 
+const DECIMALS = {
+  USDC: 6n,
+  S: 18n
+} as const;
+
 export async function limitSwap({
   tokenIn,
   tokenOut,
   amountIn,
   priceRatioBps,
-  slippageBps = 100, // Default 1% slippage
-  executionFee = 1000000000000000n, // Default 0.001 native token
+  slippageBps = 100,
+  executionFee = 1000000000000000n,
   shouldWrap = false,
   shouldUnwrap = false,
   privateKey
@@ -90,7 +104,7 @@ export async function limitSwap({
     transport: http('https://rpc.soniclabs.com')
   });
 
-  // First approve the order plugin
+  // Approve the order plugin (safe to call multiple times)
   const ORDER_PLUGIN = '0x5ec625389c3c1e76fe0c7d864b62a7c2a52c4b05' as const;
   console.log('Approving order plugin...');
   const approvePluginHash = await client.writeContract({
@@ -100,8 +114,6 @@ export async function limitSwap({
     args: [ORDER_PLUGIN],
     gas: 500000n
   });
-
-  // Wait for plugin approval to be mined
   await publicClient.waitForTransactionReceipt({ hash: approvePluginHash });
   console.log('Plugin approved:', approvePluginHash);
 
@@ -133,21 +145,39 @@ export async function limitSwap({
     })
   ]);
 
-  // Calculate current price ratio and trigger ratio
-  const currentRatio = (tokenInPrice * 10000n) / tokenOutPrice;
-  const triggerRatio = (currentRatio * BigInt(priceRatioBps)) / 10000n;
+  // For USDC -> S swap:
+  // Prices are normalized to 30 decimals
+  // Need to adjust for decimal differences: USDC (6) to S (18)
+  // When calculating ratio, we need to scale by the decimal difference (12)
+  const decimalDiff = DECIMALS.S - DECIMALS.USDC;
   
-  // Calculate expected output and minimum output with slippage
+  // Calculate price ratio accounting for decimal difference
+  // Scale by 10000 for basis points
+  const currentRatio = (tokenInPrice * 10000n * (10n ** decimalDiff)) / tokenOutPrice;
+  const triggerRatio = (currentRatio * BigInt(priceRatioBps)) / 10000n;
+
+  // Calculate expected output based on current prices
+  // amountIn is in USDC decimals (6)
+  // expectedOut should be in S decimals (18)
   const expectedOut = (amountIn * tokenInPrice) / tokenOutPrice;
   const minOut = (expectedOut * BigInt(10000 - slippageBps)) / 10000n;
 
   console.log('Debug values:');
-  console.log('Token path:', [tokenIn, tokenOut]);
-  console.log('Amount in:', amountIn.toString());
-  console.log('Min out:', minOut.toString());
-  console.log('Trigger ratio:', triggerRatio.toString());
-  console.log('Trigger above threshold:', priceRatioBps < 10000);
-  console.log('Execution fee:', executionFee.toString());
+  console.log('Token prices (30 decimals):');
+  console.log('- Token In (USDC):', tokenInPrice.toString());
+  console.log('- Token Out (S):', tokenOutPrice.toString());
+  console.log('Decimal adjustment:', decimalDiff.toString());
+  console.log('Ratios:');
+  console.log('- Current:', currentRatio.toString());
+  console.log('- Target:', triggerRatio.toString());
+  console.log('Amounts:');
+  console.log('- In:', amountIn.toString(), '(6 decimals)');
+  console.log('- Expected Out:', expectedOut.toString(), '(18 decimals)');
+  console.log('- Min Out:', minOut.toString(), '(18 decimals)');
+  console.log('Order params:');
+  console.log('- Path:', [tokenIn, tokenOut]);
+  console.log('- Trigger above threshold:', priceRatioBps < 10000);
+  console.log('- Execution fee:', executionFee.toString());
 
   // First approve Router to spend tokenIn
   const approveHash = await client.writeContract({
@@ -171,7 +201,7 @@ export async function limitSwap({
       amountIn,
       minOut,
       triggerRatio,
-      priceRatioBps < 10000,
+      priceRatioBps < 10000, // true when waiting for price to drop
       executionFee,
       shouldWrap,
       shouldUnwrap

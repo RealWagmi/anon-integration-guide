@@ -286,5 +286,18 @@ export const Vault = [
     ],
     "stateMutability": "view",
     "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_plugin",
+        "type": "address"
+      }
+    ],
+    "name": "approvePlugin",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   }
 ]; 
