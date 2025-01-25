@@ -4,18 +4,15 @@ import { supportedChains, ROUTER_ADDRESS } from '../constants';
 import { routerAbi } from '../abis';
 import { checkToApprove } from '@heyanon/sdk';
 import { getTokenMetadata } from '../lib/erc20Metadata';
+import { isStable } from '../lib/isStable';
 
 interface Props {
     chainName: string;
     account: Address;
     token0Address: Address;
     token1Address: Address;
-    isStable: boolean;
     amount0Desired: string;
     amount1Desired: string;
-    amount0Min: string;
-    amount1Min: string;
-    deadline?: number;
 }
 
 /**
@@ -25,18 +22,7 @@ interface Props {
  * @returns Transaction result.
  */
 export async function addLiquidity(
-    {
-        chainName,
-        account,
-        token0Address,
-        token1Address,
-        isStable,
-        amount0Desired,
-        amount1Desired,
-        amount0Min,
-        amount1Min,
-        deadline = Math.floor(Date.now() / 1000) + 1200, // 20 minutes from now
-    }: Props,
+    { chainName, account, token0Address, token1Address, amount0Desired, amount1Desired }: Props,
     { sendTransactions, notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
     // Check wallet connection
@@ -63,18 +49,30 @@ export async function addLiquidity(
         publicClient: provider,
     });
 
-    const [token0MetadataResult, token1MetadataResult] = await Promise.allSettled([token0MetadataPromise, token1MetadataPromise]);
+    const isStablePromise = isStable({
+        chainName,
+        token0Address,
+        token1Address,
+        publicClient: provider,
+    });
 
-    if (token0MetadataResult.status === 'rejected' || token1MetadataResult.status === 'rejected') return toResult('Failed to retrieve metadata for one of the tokens', true);
+    const [token0MetadataResult, token1MetadataResult, isStableResult] = await Promise.allSettled([token0MetadataPromise, token1MetadataPromise, isStablePromise]);
+
+    if (token0MetadataResult.status === 'rejected' || token1MetadataResult.status === 'rejected') return toResult('Failed to retrieve token information', true);
+
+    if (isStableResult.status === 'rejected') return toResult('Failed to check pair stability. The tokens may not be compatible with Equalizer', true);
 
     const token0Metadata = token0MetadataResult.value;
     const token1Metadata = token1MetadataResult.value;
+    const isStablePair = isStableResult.value;
 
+    if (isStablePair === null) return toResult('No valid pair found for these tokens', true);
     // Convert amounts to BigInt
     const amount0DesiredBn = parseUnits(amount0Desired, token0Metadata.decimals);
     const amount1DesiredBn = parseUnits(amount1Desired, token1Metadata.decimals);
-    const amount0MinBn = parseUnits(amount0Min, token0Metadata.decimals);
-    const amount1MinBn = parseUnits(amount1Min, token1Metadata.decimals);
+    // Calculate minimum amounts with 5% slippage tolerance
+    const amount0MinBn = (amount0DesiredBn * 95n) / 100n;
+    const amount1MinBn = (amount1DesiredBn * 95n) / 100n;
 
     // Validate amounts
     if (amount0DesiredBn <= 0n || amount1DesiredBn <= 0n) return toResult('Desired amounts must be greater than 0', true);
@@ -108,13 +106,15 @@ export async function addLiquidity(
         transactions,
     });
 
+    const deadline = Math.floor(Date.now() / 1000) + 300; // 5 minutes from now
+
     // Prepare add liquidity transaction
     const addLiquidityTx: TransactionParams = {
         target: ROUTER_ADDRESS,
         data: encodeFunctionData({
             abi: routerAbi,
             functionName: 'addLiquidity',
-            args: [token0Address, token1Address, isStable, amount0DesiredBn, amount1DesiredBn, amount0MinBn, amount1MinBn, account, BigInt(deadline)],
+            args: [token0Address, token1Address, isStablePair, amount0DesiredBn, amount1DesiredBn, amount0MinBn, amount1MinBn, account, BigInt(deadline)],
         }),
     };
     transactions.push(addLiquidityTx);
