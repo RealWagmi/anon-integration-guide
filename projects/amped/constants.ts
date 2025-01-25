@@ -18,7 +18,7 @@ export const RPC_URLS = {
     [NETWORKS.SONIC]: 'https://rpc.soniclabs.com'
 } as const;
 
-export const CONTRACT_ADDRESSES = {
+export const CONTRACT_ADDRESSES: Record<string, Record<string, Address>> = {
     [NETWORKS.SONIC]: {
         GLP_MANAGER: '0xA16FaBE630E75981b03b31AAD20F5BDDE581acDF' as Address,
         GLP_TOKEN: '0x5d51a52D952A61D5d1fc19F90a8244b995877bd9' as Address,
@@ -28,7 +28,8 @@ export const CONTRACT_ADDRESSES = {
         WETH: '0x50c42deacd8fc9773493ed674b675be577f2634b' as Address,
         USDC: '0x29219dd400f2bf60e5a23d13be72b486d4038894' as Address,
         EURC: '0xe715cbA7B5cCb33790ceBFF1436809d36cb17E57' as Address,
-        ANON: '0x79bbf4508b1391af3a0f4b30bb5fc4aa9ab0e07c' as Address
+        ANON: '0x79bbf4508b1391af3a0f4b30bb5fc4aa9ab0e07c' as Address,
+        ROUTER: '0x96EFEcB86b3408de4F92454E30a0c99E58299F35' as Address
     }
 } as const;
 

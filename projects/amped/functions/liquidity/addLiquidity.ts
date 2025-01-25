@@ -1,103 +1,138 @@
-import { parseUnits, encodeFunctionData, Abi, formatUnits } from 'viem';
-import { AddLiquidityProps } from './types';
+import { Address, createPublicClient, createWalletClient, encodeFunctionData, http, parseEther } from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
+import { sonic } from 'viem/chains';
 import { CONTRACT_ADDRESSES, NETWORKS } from '../../constants';
-import GLPManagerABI from '../../abis/GLPManager.json';
-import { TransactionReturnData } from '@heyanon/sdk';
 
-/**
- * Calculate the current GLP price and minimum GLP to receive
- * @param publicClient - The public client to interact with the chain
- * @param chainName - The name of the chain
- * @param inputAmount - The USD value of tokens being provided
- * @param slippageBps - Slippage tolerance in basis points (e.g. 100 = 1%)
- * @returns The minimum GLP amount to receive
- */
-async function calculateMinGlp(
-  publicClient: any,
-  chainName: string,
-  inputAmount: bigint,
-  slippageBps: number = 100 // Default 1% slippage
-): Promise<bigint> {
-  // Get total supply and AUM
-  const [totalSupply, aum] = await Promise.all([
-    publicClient.readContract({
-      address: CONTRACT_ADDRESSES[chainName].GLP_TOKEN,
-      abi: GLPManagerABI.abi,
-      functionName: 'totalSupply',
-      args: []
-    }),
-    publicClient.readContract({
-      address: CONTRACT_ADDRESSES[chainName].GLP_MANAGER,
-      abi: GLPManagerABI.abi,
-      functionName: 'getAum',
-      args: [true] // Include pending changes
-    })
-  ]);
-
-  // Calculate GLP price: AUM / total supply
-  const glpPrice = (aum as bigint) * BigInt(1e18) / (totalSupply as bigint);
-  
-  // Calculate expected GLP: input amount * 1e18 / GLP price
-  const expectedGlp = (inputAmount * BigInt(1e18)) / glpPrice;
-  
-  // Apply slippage tolerance
-  const minGlp = (expectedGlp * BigInt(10000 - slippageBps)) / BigInt(10000);
-  
-  return minGlp;
+export interface AddLiquidityParams {
+  token: Address;
+  amount: bigint;
+  slippageBps?: number; // Basis points (e.g. 100 = 1%)
+  isNative?: boolean;
+  privateKey: string;
 }
 
-/**
- * Adds liquidity to the GLP pool
- * @param {AddLiquidityProps} props - The properties for adding liquidity
- * @param {string} props.chainName - The name of the chain
- * @param {string} props.account - The account address
- * @param {string} props.tokenIn - The token address to provide
- * @param {string} props.amount - The amount of tokens to provide
- * @param {string} props.minOut - The minimum amount of GLP to receive (optional, will be calculated if not provided)
- * @param {FunctionOptions} options - The function options
- * @returns {Promise<FunctionReturn>} The transaction result
- */
-export async function addLiquidity(
-  params: AddLiquidityProps,
-  callbacks: {
-    sendTransactions: (params: { transactions: { target: string; data: string }[] }) => Promise<{ success: boolean; message: string; data: TransactionReturnData[]; isMultisig: boolean }>;
-    notify: (message: string) => Promise<void>;
-    getProvider: () => any;
-  }
-): Promise<{ success: boolean; message: string; data: TransactionReturnData[]; isMultisig: boolean }> {
-  const { chainName, account, tokenIn, amount } = params;
-  
-  // Validate required parameters
-  if (!chainName || !account || !tokenIn || !amount) {
-    throw new Error('Missing required parameters');
-  }
+export interface AddLiquidityResult {
+  success: boolean;
+  message: string;
+  data: {
+    hash: `0x${string}`;
+    message: string;
+    tokenPrice?: bigint;
+    usdValue?: bigint;
+    minUsdg?: bigint;
+    minGlp?: bigint;
+  };
+  isMultisig: boolean;
+}
 
-  // Validate network
-  if (!Object.values(NETWORKS).includes(chainName)) {
-    throw new Error(`Network ${chainName} not supported`);
-  }
-
-  const publicClient = callbacks.getProvider();
-  const amountInWei = parseUnits(amount, 18);
-
-  // Calculate minOut if not provided
-  const minOutWei = params.minOut ? 
-    parseUnits(params.minOut, 18) : 
-    await calculateMinGlp(publicClient, chainName, amountInWei);
-
-  // Encode function data for addLiquidity
-  const data = encodeFunctionData({
-    abi: GLPManagerABI.abi as Abi,
-    functionName: 'addLiquidity',
-    args: [tokenIn, amountInWei, amountInWei, minOutWei] // minUsdg = amountInWei for 1:1 conversion
+export async function addLiquidity({
+  token,
+  amount,
+  slippageBps = 100, // Default 1% slippage
+  isNative = false,
+  privateKey
+}: AddLiquidityParams): Promise<AddLiquidityResult> {
+  const account = privateKeyToAccount(privateKey as `0x${string}`);
+  const client = createWalletClient({
+    account,
+    chain: sonic,
+    transport: http('https://rpc.soniclabs.com')
   });
 
-  // Prepare transaction
-  const transactions = [{
-    target: CONTRACT_ADDRESSES[chainName as keyof typeof NETWORKS].GLP_MANAGER,
-    data
-  }];
+  const publicClient = createPublicClient({
+    chain: sonic,
+    transport: http('https://rpc.soniclabs.com')
+  });
 
-  // Send transaction
-  return await callbacks.sendTransactions({ transactions });
+  // Get token price from Vault
+  const tokenPrice = await publicClient.readContract({
+    address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT,
+    abi: [{
+      inputs: [{ name: '_token', type: 'address' }],
+      name: 'getMinPrice',
+      outputs: [{ type: 'uint256' }],
+      stateMutability: 'view',
+      type: 'function'
+    }],
+    functionName: 'getMinPrice',
+    args: [token]
+  });
+
+  // Calculate USD value and minimum outputs
+  // Price is scaled by 1e30, amount by 1e18, so divide by 1e30
+  const usdValue = (amount * tokenPrice) / 1000000000000000000000000000000n;
+  const minUsdg = (usdValue * BigInt(10000 - slippageBps)) / 10000n;
+  const minGlp = (minUsdg * BigInt(10000 - slippageBps)) / 10000n;
+
+  let approveHash: `0x${string}` | undefined;
+
+  // Only need approval for non-native tokens
+  if (!isNative) {
+    // Approve GLP Manager to spend token
+    const approveData = encodeFunctionData({
+      functionName: 'approve',
+      args: [CONTRACT_ADDRESSES[NETWORKS.SONIC].GLP_MANAGER, amount],
+      abi: [{
+        inputs: [
+          { name: 'spender', type: 'address' },
+          { name: 'amount', type: 'uint256' }
+        ],
+        name: 'approve',
+        outputs: [{ type: 'bool' }],
+        stateMutability: 'nonpayable',
+        type: 'function'
+      }]
+    });
+
+    approveHash = await client.sendTransaction({
+      to: token,
+      data: approveData,
+      gas: 500000n
+    });
+
+    // Wait for approval to be mined
+    await publicClient.waitForTransactionReceipt({ hash: approveHash });
+  }
+
+  // Add liquidity using RewardRouter
+  const mintData = encodeFunctionData({
+    functionName: isNative ? 'mintAndStakeGlpETH' : 'mintAndStakeGlp',
+    args: isNative ? [minUsdg, minGlp] : [token, amount, minUsdg, minGlp],
+    abi: [{
+      inputs: isNative ? [
+        { name: '_minUsdg', type: 'uint256' },
+        { name: '_minGlp', type: 'uint256' }
+      ] : [
+        { name: '_token', type: 'address' },
+        { name: '_amount', type: 'uint256' },
+        { name: '_minUsdg', type: 'uint256' },
+        { name: '_minGlp', type: 'uint256' }
+      ],
+      name: isNative ? 'mintAndStakeGlpETH' : 'mintAndStakeGlp',
+      outputs: [{ type: 'uint256' }],
+      stateMutability: isNative ? 'payable' : 'nonpayable',
+      type: 'function'
+    }]
+  });
+
+  const mintHash = await client.sendTransaction({
+    to: CONTRACT_ADDRESSES[NETWORKS.SONIC].REWARD_ROUTER,
+    data: mintData,
+    value: isNative ? amount : 0n,
+    gas: 1500000n
+  });
+
+  return {
+    success: true,
+    message: 'Add liquidity transaction sent',
+    data: {
+      hash: mintHash,
+      message: 'Add liquidity transaction sent',
+      tokenPrice,
+      usdValue,
+      minUsdg,
+      minGlp
+    },
+    isMultisig: false
+  };
 }
