@@ -1,8 +1,7 @@
 import { Address, encodeFunctionData } from 'viem';
 import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName } from '@heyanon/sdk';
 import { supportedChains } from '../constants';
-import { thickNfpPositionCollectAbi } from '../abis';
-
+import { thickNftAbi } from '../abis/thickNft';
 interface Props {
     chainName: string;
     account: Address;
@@ -16,7 +15,7 @@ interface Props {
  * @param tools - System tools for blockchain interactions.
  * @returns Transaction result.
  */
-export async function collectFeesFromThickNfpPosition(
+export async function collectFeesFromThickNftPosition(
     { chainName, account, tokenId, nfpManagerAddress }: Props,
     { sendTransactions, notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
@@ -40,7 +39,7 @@ export async function collectFeesFromThickNfpPosition(
     const collectTx: TransactionParams = {
         target: nfpManagerAddress,
         data: encodeFunctionData({
-            abi: thickNfpPositionCollectAbi,
+            abi: thickNftAbi,
             functionName: 'collect',
             args: [params],
         }),
