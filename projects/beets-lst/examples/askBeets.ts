@@ -7,6 +7,7 @@ import { tools } from '../tools';
 import * as functions from '../functions';
 import util from 'util';
 import { fromHeyAnonToolsToOpenAiTools } from '../helpers/openai';
+import chalk from 'chalk';
 
 interface AskBeetsOptions {
     verbose?: boolean;
@@ -167,8 +168,8 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
         const functionName = functionCall.function.name as keyof typeof functions;
         const functionArgs = JSON.parse(functionCall.function.arguments);
 
-        console.log(`Executing function: ${functionName}`);
-        console.log(`Args: ${JSON.stringify(functionArgs)}`);
+        console.log(chalk.gray(`[Debug] Executing function: ${functionName}`));
+        console.log(chalk.gray(`[Debug] Args: ${JSON.stringify(functionArgs)}`));
 
         const func = functions[functionName];
         if (!func) {

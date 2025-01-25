@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import { askBeets } from './askBeets';
 import dotenv from 'dotenv';
 
@@ -17,8 +18,7 @@ async function main() {
         console.error(`${result.data}`);
         process.exit(0);
     }
-    console.log(`Response:`);
-    console.log(result.data);
+    console.log(`[Response] ${chalk.bold(result.data)}`);
 }
 
 main().catch(console.error);
