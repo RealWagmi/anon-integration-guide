@@ -1,11 +1,6 @@
-export const vTokenAbi = [
+export const vBNBAbi = [
     {
         "inputs": [
-            {
-                "internalType": "address",
-                "name": "underlying_",
-                "type": "address"
-            },
             {
                 "internalType": "contract ComptrollerInterface",
                 "name": "comptroller_",
@@ -40,16 +35,6 @@ export const vTokenAbi = [
                 "internalType": "address payable",
                 "name": "admin_",
                 "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "implementation_",
-                "type": "address"
-            },
-            {
-                "internalType": "bytes",
-                "name": "becomeImplementationData",
-                "type": "bytes"
             }
         ],
         "payable": false,
@@ -273,25 +258,6 @@ export const vTokenAbi = [
         "inputs": [
             {
                 "indexed": false,
-                "internalType": "address",
-                "name": "oldImplementation",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "internalType": "address",
-                "name": "newImplementation",
-                "type": "address"
-            }
-        ],
-        "name": "NewImplementation",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
                 "internalType": "contract InterestRateModel",
                 "name": "oldInterestRateModel",
                 "type": "address"
@@ -508,27 +474,6 @@ export const vTokenAbi = [
         "inputs": [
             {
                 "internalType": "uint256",
-                "name": "addAmount",
-                "type": "uint256"
-            }
-        ],
-        "name": "_addReserves",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "payable": false,
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "constant": false,
-        "inputs": [
-            {
-                "internalType": "uint256",
                 "name": "reduceAmount",
                 "type": "uint256"
             }
@@ -561,33 +506,6 @@ export const vTokenAbi = [
                 "name": "",
                 "type": "uint256"
             }
-        ],
-        "payable": false,
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "constant": false,
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "implementation_",
-                "type": "address"
-            },
-            {
-                "internalType": "bool",
-                "name": "allowResign",
-                "type": "bool"
-            },
-            {
-                "internalType": "bytes",
-                "name": "becomeImplementationData",
-                "type": "bytes"
-            }
-        ],
-        "name": "_setImplementation",
-        "outputs": [
-
         ],
         "payable": false,
         "stateMutability": "nonpayable",
@@ -935,48 +853,6 @@ export const vTokenAbi = [
     {
         "constant": false,
         "inputs": [
-            {
-                "internalType": "bytes",
-                "name": "data",
-                "type": "bytes"
-            }
-        ],
-        "name": "delegateToImplementation",
-        "outputs": [
-            {
-                "internalType": "bytes",
-                "name": "",
-                "type": "bytes"
-            }
-        ],
-        "payable": false,
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "constant": true,
-        "inputs": [
-            {
-                "internalType": "bytes",
-                "name": "data",
-                "type": "bytes"
-            }
-        ],
-        "name": "delegateToViewImplementation",
-        "outputs": [
-            {
-                "internalType": "bytes",
-                "name": "",
-                "type": "bytes"
-            }
-        ],
-        "payable": false,
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "constant": false,
-        "inputs": [
 
         ],
         "name": "exchangeRateCurrent",
@@ -1062,20 +938,45 @@ export const vTokenAbi = [
         "type": "function"
     },
     {
-        "constant": true,
+        "constant": false,
         "inputs": [
-
-        ],
-        "name": "implementation",
-        "outputs": [
             {
-                "internalType": "address",
-                "name": "",
+                "internalType": "contract ComptrollerInterface",
+                "name": "comptroller_",
                 "type": "address"
+            },
+            {
+                "internalType": "contract InterestRateModel",
+                "name": "interestRateModel_",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "initialExchangeRateMantissa_",
+                "type": "uint256"
+            },
+            {
+                "internalType": "string",
+                "name": "name_",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "symbol_",
+                "type": "string"
+            },
+            {
+                "internalType": "uint8",
+                "name": "decimals_",
+                "type": "uint8"
             }
         ],
+        "name": "initialize",
+        "outputs": [
+
+        ],
         "payable": false,
-        "stateMutability": "view",
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
@@ -1121,47 +1022,30 @@ export const vTokenAbi = [
                 "type": "address"
             },
             {
-                "internalType": "uint256",
-                "name": "repayAmount",
-                "type": "uint256"
-            },
-            {
-                "internalType": "contract VTokenInterface",
+                "internalType": "contract VToken",
                 "name": "vTokenCollateral",
                 "type": "address"
             }
         ],
         "name": "liquidateBorrow",
         "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
+
         ],
-        "payable": false,
-        "stateMutability": "nonpayable",
+        "payable": true,
+        "stateMutability": "payable",
         "type": "function"
     },
     {
         "constant": false,
         "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "mintAmount",
-                "type": "uint256"
-            }
+
         ],
         "name": "mint",
         "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
+
         ],
-        "payable": false,
-        "stateMutability": "nonpayable",
+        "payable": true,
+        "stateMutability": "payable",
         "type": "function"
     },
     {
@@ -1243,22 +1127,14 @@ export const vTokenAbi = [
     {
         "constant": false,
         "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "repayAmount",
-                "type": "uint256"
-            }
+
         ],
         "name": "repayBorrow",
         "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
+
         ],
-        "payable": false,
-        "stateMutability": "nonpayable",
+        "payable": true,
+        "stateMutability": "payable",
         "type": "function"
     },
     {
@@ -1268,23 +1144,14 @@ export const vTokenAbi = [
                 "internalType": "address",
                 "name": "borrower",
                 "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "repayAmount",
-                "type": "uint256"
             }
         ],
         "name": "repayBorrowBehalf",
         "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
+
         ],
-        "payable": false,
-        "stateMutability": "nonpayable",
+        "payable": true,
+        "stateMutability": "payable",
         "type": "function"
     },
     {
@@ -1492,23 +1359,6 @@ export const vTokenAbi = [
         ],
         "payable": false,
         "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "constant": true,
-        "inputs": [
-
-        ],
-        "name": "underlying",
-        "outputs": [
-            {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "payable": false,
-        "stateMutability": "view",
         "type": "function"
     }
 ]

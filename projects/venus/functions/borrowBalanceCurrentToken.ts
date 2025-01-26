@@ -1,8 +1,8 @@
 import {
   Address,
-  encodeFunctionData,
-  parseUnits,
+  encodeFunctionData, parseUnits,
 } from "viem";
+
 import {
   FunctionReturn,
   FunctionOptions,
@@ -10,16 +10,23 @@ import {
   toResult,
   getChainFromName,
 } from "@heyanon/sdk";
+
 import {
   supportedChains,
+  VBNB_ADDRESS,
+
 } from "../constants";
-import { vTokenAbi } from "../abis/vTokenAbi";
+
+import { vBNBAbi } from "../abis/vBNBAbi";
+import {validateAndGetTokenDetails, validateWallet} from "../utils";
+
 
 
 interface Props {
   chainName: string;
   account: Address;
-  tokenAddress: Address
+  token: string;
+  pool: string;
 }
 
 
@@ -28,36 +35,34 @@ interface Props {
  * 
  * @returns {Promise<FunctionReturn>} - The borrow balance of Token.
  */
-export async function borrowBalanceCurrentToken( { chainName, account, tokenAddress }: Props,
-  { sendTransactions, notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
-
-  // Validate chain
-  const chainId = getChainFromName(chainName);
-  if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
-  if (!supportedChains.includes(chainId))
-    return toResult(`Protocol is not supported on ${chainName}`, true);
-
-  const provider = getProvider(chainId);
-  const transactions: TransactionParams[] = [];
-
-  const tx: TransactionParams = {
-    target: tokenAddress,
-    data: encodeFunctionData({
-      abi: vTokenAbi,
-      functionName: "borrowBalanceCurrent",
-      args: [account],
-    }),
-  };
-  transactions.push(tx);
-  await notify("Waiting for transaction response...");
-
-  // Sign and send transaction
-  const result = await sendTransactions({ chainId, account, transactions });
-  const borrowBalanceCurrentToken = result.data[result.data.length - 1];
-
-  return toResult(
-    result.isMultisig
-      ? borrowBalanceCurrentToken.message
-      : `Borrow Balance: ${borrowBalanceCurrentToken.message}`
-  );
+export async function borrowBalanceCurrentToken( { chainName, account, token, pool }: Props,
+  { sendTransactions, notify,  }: FunctionOptions): Promise<FunctionReturn> {
+  const wallet = validateWallet({ account })
+  if (!wallet.success) {return toResult(wallet.errorMessage, true);}
+  const tokenDetails = validateAndGetTokenDetails({chainName, pool, token})
+  if (!tokenDetails.success) {return toResult(tokenDetails.errorMessage, true);}
+  try {
+    await notify("Preparing transaction...");
+    const borrowBalanceCurrent: TransactionParams = {
+      target: tokenDetails.data.tokenAddress,
+      data: encodeFunctionData({
+        abi: vBNBAbi,
+        functionName: "borrowBalanceCurrent",
+        args: [wallet.data.account],
+      }),
+    };
+    // Send transactions (to redeem)
+    const result = await sendTransactions({
+      chainId: tokenDetails.data.chainId,
+      account,
+      transactions: [borrowBalanceCurrent],
+    });
+    const borrowMessage = result.data[result.data.length - 1];
+    return toResult(result.isMultisig ? borrowMessage.message : `Successfully fetched borrow balance of ${token}.`);
+  } catch (error) {
+    return toResult(
+        `Failed to redeem token: ${error instanceof Error ? error.message : "Unknown error"}`,
+        true
+    );
+  }
 }

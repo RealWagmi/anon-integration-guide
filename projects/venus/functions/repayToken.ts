@@ -1,25 +1,27 @@
 import {
   Address,
-  encodeFunctionData,
-  parseUnits,
+  encodeFunctionData, parseUnits,createPublicClient, http
 } from "viem";
+import { bsc } from "viem/chains"
+
 import {
   FunctionReturn,
   FunctionOptions,
   TransactionParams,
-  toResult,
-  getChainFromName,
+  toResult, checkToApprove,
 } from "@heyanon/sdk";
-import {
-  supportedChains,
-} from "../constants";
-import { vTokenAbi } from "../abis/vTokenAbi";
+
+
+import { vBNBAbi } from "../abis/vBNBAbi";
+import {validateAndGetTokenDetails, validateWallet} from "../utils";
+import {vTokenAbi} from "../abis/vTokenAbi";
 
 interface Props {
   chainName: string;
   account: Address;
   amount: string;
-  tokenAddress: string;
+  token: string;
+  pool: string;
 }
 
 /**
@@ -30,54 +32,71 @@ interface Props {
  * @returns Repay result containing the transaction hash.
  */
 export async function repayToken(
-  { chainName, account, amount, tokenAddress}: Props,
-  { sendTransactions, notify }: FunctionOptions
+  { chainName, account, amount, token, pool}: Props,
+  { sendTransactions, notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
-  // Check wallet connection
-  if (!account) {
-    return toResult("Wallet not connected", true);
-  }
-
+  const wallet = validateWallet({ account })
+  if (!wallet.success) {return toResult(wallet.errorMessage, true);}
   // Validate chain
-  const chainId = getChainFromName(chainName);
-  if (!chainId) {
-    return toResult(`Unsupported chain name: ${chainName}`, true);
-  }
-  if (!supportedChains.includes(chainId)) {
-    return toResult(`Protocol is not supported on ${chainName}`, true);
-  }
-
+  const tokenDetails = validateAndGetTokenDetails({chainName, pool, token})
+  if (!tokenDetails.success) {return toResult(tokenDetails.errorMessage, true);}
+  const provider = createPublicClient({
+    chain: bsc,
+    transport: http(),
+  });
   try {
-    await notify("Preparing to repay Token...");
-
-    // Prepare repay borrowed transaction
-    const repayTx: TransactionParams = {
-      target: tokenAddress,
-      data: encodeFunctionData({
-        abi: vTokenAbi,
-        functionName: "repayBorrow",
-        args: [BigInt(Number(amount) * 1e18)], // Convert to Wei
-      }),
-    };
-
-    // Send transactions (to repay)
-    const result = await sendTransactions({
-      chainId,
-      account,
-      transactions: [repayTx],
+    const underlyingAssetAddress = await provider.readContract({
+      abi: vTokenAbi,
+      address: tokenDetails.data.tokenAddress,
+      functionName: 'underlying',
+      args: [],
+    });
+    console.log(underlyingAssetAddress)
+    const transactions: TransactionParams[] = [];
+    await checkToApprove({
+      args: {
+        account,
+        target: underlyingAssetAddress,
+        spender: tokenDetails.data.tokenAddress,
+        amount: parseUnits(amount, tokenDetails.data.tokenDecimals),
+      },
+      provider,
+      transactions
     });
 
-    // Check if transaction succeeded
-    const repayTxHash = result.data[1]?.transactionHash;
-    if (!repayTxHash) {
-      return toResult("Failed to repay token", true);
+    await notify("Preparing to repay Token...");
+    // Prepare repay borrowed transaction
+    if (tokenDetails.data.isChainBased) {
+      const repayTx: TransactionParams = {
+        target: tokenDetails.data.tokenAddress,
+        data: encodeFunctionData({
+          abi: vBNBAbi,
+          functionName: "repayBorrow",
+          args: [],
+        }),
+        value: parseUnits(amount, tokenDetails.data.tokenDecimals),
+      };
+      transactions.push(repayTx);
+    } else {
+      const repayTx: TransactionParams = {
+        target: tokenDetails.data.tokenAddress,
+        data: encodeFunctionData({
+          abi: vTokenAbi,
+          functionName: "repayBorrow",
+          args: [parseUnits(amount, tokenDetails.data.tokenDecimals)],
+        }),
+      };
+      transactions.push(repayTx);
     }
-
-    return toResult(
-    result.isMultisig
-      ? repayTxHash.message
-      : `Successfully repayed ${amount} tokens. ${repayTxHash.message}`
-    );
+    // Send transactions (to repay)
+    const result = await sendTransactions({
+      chainId: tokenDetails.data.chainId,
+      account,
+      transactions: transactions,
+    });
+    const borrowMessage = result.data[result.data.length - 1];
+    // return toResult("Repaying Token...");
+    return toResult(result.isMultisig ? borrowMessage.message : `Successfully repayed ${amount} ${token}.`);
   } catch (error) {
     return toResult(
       `Failed to repay token: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -85,3 +104,4 @@ export async function repayToken(
     );
   }
 }
+

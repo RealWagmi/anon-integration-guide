@@ -10,6 +10,7 @@ import {
   toResult,
 } from "@heyanon/sdk";
 
+
 import { vBNBAbi } from "../abis/vBNBAbi";
 import {validateAndGetTokenDetails, validateWallet} from "../utils";
 
@@ -21,45 +22,43 @@ interface Props {
   pool: string;
 }
 
-
 /**
- * Borrows Token using Venus protocol.
+ * Redeem Token using Venus protocol.
  * 
- * @param props - Borrow parameters.
+ * @param props - redeem parameters.
  * @param tools - System tools for blockchain interactions.
- * @returns Borrow result containing the transaction hash.
+ * @returns Redeem result containing the transaction hash.
  */
-export async function borrowToken(
-  { chainName, account, amount, token, pool }: Props,
+export async function redeemUnderlying(
+  { chainName, account, amount, token, pool}: Props,
   { sendTransactions, notify }: FunctionOptions
 ): Promise<FunctionReturn> {
   const wallet = validateWallet({ account })
   if (!wallet.success) {return toResult(wallet.errorMessage, true);}
-  // Validate chain
   const tokenDetails = validateAndGetTokenDetails({chainName, pool, token})
   if (!tokenDetails.success) {return toResult(tokenDetails.errorMessage, true);}
   try {
-    await notify("Preparing to borrow Token...");
-    // Prepare borrow transaction
-    const borrowTx: TransactionParams = {
+    await notify("Preparing to redeem Token...");
+    // Prepare redeem deposited transaction
+    const redeemTx: TransactionParams = {
       target: tokenDetails.data.tokenAddress,
       data: encodeFunctionData({
         abi: vBNBAbi,
-        functionName: "borrow",
-        args: [parseUnits(amount, 18)],
+        functionName: "redeemUnderlying",
+        args: [parseUnits(amount, tokenDetails.data.tokenDecimals)], // Convert to Wei
       }),
     };
-    // Send transactions (enter borrow)
+    // Send transactions (to redeem)
     const result = await sendTransactions({
       chainId: tokenDetails.data.chainId,
       account,
-      transactions: [borrowTx],
+      transactions: [redeemTx],
     });
-    const borrowMessage = result.data[result.data.length - 1];
-    return toResult(result.isMultisig ? borrowMessage.message : `Successfully borrowed ${amount} ${token}.`);
+    const redeemMessage = result.data[result.data.length - 1];
+    return toResult(result.isMultisig ? redeemMessage.message : `Successfully redeemed ${amount} BNB.`);
   } catch (error) {
     return toResult(
-      `Failed to borrow token: ${error instanceof Error ? error.message : "Unknown error"}`,
+      `Failed to redeem token: ${error instanceof Error ? error.message : "Unknown error"}`,
       true
     );
   }
