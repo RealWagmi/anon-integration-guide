@@ -88,16 +88,16 @@ cp .env.example .env
 and then you can ask questions directly:
 
 ```bash
-yarn run ask "What is my stS balance?"
-yarn run ask "Stake 0.1 S"
+yarn run ask "Stake 0.1 S and show my staked balance"
 yarn run ask "Unstake all of my stS"
+yarn run ask "How long before I can withdraw?"
 ```
 
 The agent will perform one or more tasks to execute your request; see for example this GIF where I asked to bot to unstake all of my stS:
 
 https://github.com/user-attachments/assets/2ce0d109-85b5-4548-8bad-2c4bfadaeacf
 
-To see the actual OpenAI responses for debug purposes, run with `--verbose` flag:
+To debug the actual OpenAI responses, run `askBeets` with `--verbose` flag:
 
 ```bash
 yarn run ask "What is my stS balance?" --verbose
