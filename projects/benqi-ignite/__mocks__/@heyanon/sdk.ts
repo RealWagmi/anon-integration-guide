@@ -1,6 +1,6 @@
 import { vi } from 'vitest';
 
-export const toResult = vi.fn();
+export const toResult = vi.fn().mockImplementation((data: string, isError: boolean) => ({ data, success: !isError }));
 
 export const getChainFromName = vi.fn().mockImplementation((chainName: string) => {
     switch (chainName) {

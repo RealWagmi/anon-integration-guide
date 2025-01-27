@@ -41,6 +41,8 @@ export async function getUserVotesRange(props: Props, { getProvider }: FunctionO
         args: [range.data.from, range.data.to],
     });
 
+    if (nodes.length === 0) return toResult('User has not voted for any nodes');
+
     const nodeListMessage = nodes.map((node, index) => `${node} with weight of ${formatWeight(votes[index] ?? 0n)}%`).join('\n');
     const message = 'User has voted for following node list:\n' + nodeListMessage;
 
