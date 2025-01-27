@@ -18,8 +18,8 @@ interface Props {
 }
 
 /**
- * Bid with snatch to an SilverSwap pool.
- * @param props - The snatch parameters.
+ * Bid with Snatch to an SilverSwap pool.
+ * @param props - The Snatch parameters.
  * @param tools - System tools for blockchain interactions.
  * @returns Transaction result.
  */
@@ -105,6 +105,6 @@ export async function bidSnatch(
 	const bidMessage = result.data[result.data.length - 1];
   
 	return toResult(
-	  result.isMultisig ? bidMessage.message : `Successfully bided ${amountToBurn} with snatch on ${poolToSteal} pool. ${bidMessage.message}`
+	  result.isMultisig ? bidMessage.message : `Successfully bided ${amountToBurn} with Snatch on ${poolToSteal} pool. ${bidMessage.message}`
 	);
   }

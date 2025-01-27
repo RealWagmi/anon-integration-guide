@@ -18,8 +18,8 @@ interface Props {
 }
 
 /**
- * Bid with flare to an whitelisted token.
- * @param props - The flare parameters.
+ * Bid with Flare to an whitelisted token.
+ * @param props - The Flare parameters.
  * @param tools - System tools for blockchain interactions.
  * @returns Transaction result.
  */
@@ -105,6 +105,6 @@ export async function bidFlare(
 	const bidMessage = result.data[result.data.length - 1];
   
 	return toResult(
-	  result.isMultisig ? bidMessage.message : `Successfully bided ${amountToBurn} with flare on ${buybackToken} token. ${bidMessage.message}`
+	  result.isMultisig ? bidMessage.message : `Successfully bided ${amountToBurn} with Flare on ${buybackToken} token. ${bidMessage.message}`
 	);
   }
