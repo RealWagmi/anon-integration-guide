@@ -1,5 +1,5 @@
 import { getChainFromName } from '@heyanon/sdk';
-import { Address, isAddress, parseUnits } from 'viem';
+import { Address, isAddress, parseUnits, size } from 'viem';
 import { ALL_DURATIONS, RegisterProps, supportedChains } from './constants';
 
 type Result<Data> =
@@ -43,9 +43,9 @@ export const parseAmount = <Props extends { amount: string; decimals: number }>(
 };
 
 export const parseRegister = <Props extends RegisterProps>({ blsProofOfPossession, nodeId, validationDuration }: Props): Result<RegisterProps> => {
-    if (typeof blsProofOfPossession !== 'string' || blsProofOfPossession.length !== 144) return { success: false, errorMessage: 'Invalid BLS Proof of Possession' };
+    if (typeof blsProofOfPossession !== 'string' || size(blsProofOfPossession) !== 144) return { success: false, errorMessage: 'Invalid BLS Proof of Possession' };
 
-    if (typeof nodeId !== 'string') return { success: false, errorMessage: 'Invalid node id' };
+    if (typeof nodeId !== 'string' || nodeId.length === 0) return { success: false, errorMessage: 'Invalid node id' };
 
     if (typeof validationDuration !== 'string' || !ALL_DURATIONS.includes(validationDuration)) return { success: false, errorMessage: 'Invalid validation duration' };
 
