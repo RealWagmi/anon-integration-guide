@@ -5,7 +5,7 @@ vi.mock('@heyanon/sdk');
 
 type UtilsParams<T extends (...args: any) => any> = Parameters<T>[0] & { expected: ReturnType<T> };
 
-describe('parseWallet', () => {
+describe('utils', () => {
     it.each`
         account                                         | chainName             | expected
         ${''}                                           | ${'Avalanche'}        | ${{ success: false, errorMessage: 'Wallet not connected' }}
