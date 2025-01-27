@@ -1,1 +1,1 @@
-export { example } from './example';
+export { interactCryptoAgent } from './interactCryptoAgent';

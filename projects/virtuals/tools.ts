@@ -1,27 +1,17 @@
 import { AiTool, getChainName } from '@heyanon/sdk';
-import { supportedChains } from './constants';
+// import { supportedChains } from './constants';
 
 export const tools: AiTool[] = [
     {
-        name: 'example',
-        description: 'Example function that demonstrates how to interact with the protocol. It shows basic transaction flow, including checking balances, preparing transaction data, and handling approvals if needed.',
-        required: ['chainName', 'account', 'amount'],
+        name: 'interactCryptoAgent',
+        description:
+            'There is multi-purpose crypto agent implemented by Virtuals GAME engine that let users interact with and send a prompt to it. It analyzes the user prompt and takes appropriate action. For example a user can send the prompt "Let me know the current ETH price" to it',
+        required: ['prompt'],
         props: [
             {
-                name: 'chainName',
+                name: 'prompt',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Chain name where to execute the example',
-            },
-            {
-                name: 'account',
-                type: 'string',
-                description: 'Account address that will execute the example',
-            },
-            {
-                name: 'amount',
-                type: 'string',
-                description: 'Amount of tokens for the example in decimal format',
+                description: 'The user prompt that should be sent to the agent',
             },
         ],
     },
