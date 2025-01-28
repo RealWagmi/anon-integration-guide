@@ -5,17 +5,11 @@ import {
     toResult,
     TransactionParams,
 } from '@heyanon/sdk';
-import { Address, Hex, parseUnits, PublicClient } from 'viem';
-import { parsePrice, parseWallet } from '../utils.js';
+import { Address, Hex, parseUnits } from 'viem';
+import { parseWallet } from '../utils.js';
 import { ShadowSDK } from '../sdk.js';
-import {
-    nearestUsableTick,
-    NonfungiblePositionManager,
-    Position,
-    priceToClosestTick,
-} from '@kingdomdotone/v3-sdk';
-import { Percent, Price } from '@uniswap/sdk-core';
-import JSBI from 'jsbi';
+import { NonfungiblePositionManager, Position } from '@kingdomdotone/v3-sdk';
+import { Percent } from '@uniswap/sdk-core';
 import {
     DEFAULT_LIQUIDITY_SLIPPAGE,
     NFP_MANAGER_ADDRESS,
@@ -29,12 +23,8 @@ export interface Props {
     tokenB: Address;
     amountA: string;
     amountB: string;
+    tokenId?: number;
     slippageTolerance?: number;
-    lowerPrice?: string; // Assuming price is calculated as tokenB / tokenA (on DEX price is denominated as token1 / token0)
-    upperPrice?: string; // Assuming price is calculated as tokenB / tokenA (on DEX price is denominated as token1 / token0)
-    lowerPricePercentage?: number;
-    upperPricePercentage?: number;
-    recipient?: Address;
 }
 
 export async function increaseLiquidityFunction(
@@ -53,10 +43,9 @@ export async function increaseLiquidityFunction(
         const transactions = new Array<TransactionParams>();
 
         try {
-            const { position, calldata, msgValue } = await mint(
+            const { position, calldata, msgValue } = await increaseLiquidity(
                 props,
                 sdk,
-                provider,
                 notify,
             );
 
@@ -90,7 +79,7 @@ export async function increaseLiquidityFunction(
                 transactions,
             });
 
-            await notify('Preparing mint transaction...');
+            await notify('Preparing increase liquidity transaction...');
 
             transactions.push({
                 target: NFP_MANAGER_ADDRESS,
@@ -121,9 +110,27 @@ export async function increaseLiquidityFunction(
 export async function increaseLiquidity(
     props: Props,
     sdk: ShadowSDK,
-    provider: PublicClient,
     notify: (message: string) => Promise<void>,
 ) {
+    const allPositions = await ShadowSDK.getLpPositions(props.account, [
+        props.tokenA,
+        props.tokenB,
+    ]);
+    if (allPositions.length == 0) {
+        throw new Error('No positions found');
+    }
+    const position = props.tokenId
+        ? allPositions.find((position) => position.tokenId == props.tokenId)
+        : allPositions[0];
+
+    if (!position) {
+        throw new Error('No position found with the specified ID');
+    }
+
+    await notify(
+        `Found position with token ID ${position.tokenId} for pool ${position.poolSymbol}`,
+    );
+
     const baseToken = await sdk.getToken(props.tokenA);
     const quoteToken = await sdk.getToken(props.tokenB);
 
@@ -139,93 +146,15 @@ export async function increaseLiquidity(
         ? [baseToken, quoteToken]
         : [quoteToken, baseToken];
 
-    const pool = await sdk.getPool(token0, token1);
-
-    if (!pool) {
-        throw new Error(`Pool not found`);
-    }
-
-    // Default range of +-15% from current price
-    const currentPrice = pool.priceOf(baseToken.wrapped);
-    let lowerPrice = new Price(
-        baseToken.wrapped,
-        quoteToken.wrapped,
-        JSBI.multiply(currentPrice.denominator, JSBI.BigInt(100)),
-        JSBI.multiply(currentPrice.numerator, JSBI.BigInt(85)),
+    const amount0 = parseUnits(
+        isBaseToken0 ? props.amountA : props.amountB,
+        token0.decimals,
     );
-    let upperPrice = new Price(
-        baseToken.wrapped,
-        quoteToken.wrapped,
-        JSBI.multiply(currentPrice.denominator, JSBI.BigInt(100)),
-        JSBI.multiply(currentPrice.numerator, JSBI.BigInt(115)),
+    const amount1 = parseUnits(
+        isBaseToken0 ? props.amountB : props.amountA,
+        token1.decimals,
     );
 
-    if (
-        (props.lowerPrice && !props.upperPrice) ||
-        (!props.lowerPrice && props.upperPrice)
-    ) {
-        throw new Error('Both lower and upper prices must be provided');
-    }
-
-    if (
-        (props.lowerPricePercentage && !props.upperPricePercentage) ||
-        (!props.lowerPricePercentage && props.upperPricePercentage)
-    ) {
-        throw new Error('Both lower and upper prices must be provided');
-    }
-
-    if (props.lowerPrice && props.upperPrice) {
-        const _lowerPrice = parsePrice(
-            baseToken.wrapped,
-            quoteToken.wrapped,
-            props.lowerPrice,
-        );
-        const _upperPrice = parsePrice(
-            baseToken.wrapped,
-            quoteToken.wrapped,
-            props.upperPrice,
-        );
-        if (!_lowerPrice || !_upperPrice) {
-            throw new Error('Prices must be in the format of "1.23456"');
-        }
-        lowerPrice = _lowerPrice;
-        upperPrice = _upperPrice;
-    }
-
-    if (props.lowerPricePercentage && props.upperPricePercentage) {
-        const _lowerPrice = new Price(
-            baseToken.wrapped,
-            quoteToken.wrapped,
-            JSBI.multiply(currentPrice.denominator, JSBI.BigInt(100)),
-            JSBI.multiply(
-                currentPrice.numerator,
-                JSBI.subtract(JSBI.BigInt(100), JSBI.BigInt(props.lowerPricePercentage)),
-            ),
-        );
-        const _upperPrice = new Price(
-            baseToken.wrapped,
-            quoteToken.wrapped,
-            JSBI.multiply(currentPrice.denominator, JSBI.BigInt(100)),
-            JSBI.multiply(
-                currentPrice.numerator,
-                JSBI.add(JSBI.BigInt(100), JSBI.BigInt(props.upperPricePercentage)),
-            ),
-        );
-        if (!_lowerPrice || !_upperPrice) {
-            throw new Error('Price percentages must be between 0 and 100');
-        }
-        lowerPrice = _lowerPrice;
-        upperPrice = _upperPrice;
-    }
-
-    const amountBase = parseUnits(props.amountA, baseToken.decimals);
-    const amountQuote = parseUnits(props.amountB, quoteToken.decimals);
-
-    const amount0 = isBaseToken0 ? amountBase : amountQuote;
-    const amount1 = isBaseToken0 ? amountQuote : amountBase;
-
-    const tickLower = nearestUsableTick(priceToClosestTick(lowerPrice), pool.tickSpacing);
-    const tickUpper = nearestUsableTick(priceToClosestTick(upperPrice), pool.tickSpacing);
     const slippageTolerance = props.slippageTolerance
         ? new Percent(
               Math.round(props.slippageTolerance * SLIPPAGE_PRECISION),
@@ -233,27 +162,42 @@ export async function increaseLiquidity(
           )
         : DEFAULT_LIQUIDITY_SLIPPAGE;
 
-    const position = Position.fromAmounts({
+    // Fetch pool again the get the latest slot0 data
+    const pool = await sdk.getPool(
+        position.position.pool.token0,
+        position.position.pool.token1,
+        position.position.pool.tickSpacing,
+    );
+    if (!pool) {
+        throw new Error(`Pool not found`);
+    }
+
+    const newPosition = Position.fromAmounts({
         pool,
-        tickLower,
-        tickUpper,
+        tickLower: position.position.tickLower,
+        tickUpper: position.position.tickUpper,
         amount0: amount0.toString(),
         amount1: amount1.toString(),
         useFullPrecision: true,
     });
 
+    await notify(
+        `Building position with ${newPosition.amount0.toSignificant(6)} ${pool.token0.symbol} and ${newPosition.amount1.toSignificant(6)} ${pool.token1.symbol}...`,
+    );
+
     const mintNativeToken = [token0, token1].find((tk) => tk.isNative);
     const deadline = Math.floor(Date.now() / 1000) + 60 * 10; // 10 minutes from now
 
     const { calldata, value: msgValue } = NonfungiblePositionManager.addCallParameters(
-        position,
+        newPosition,
         {
+            tokenId: position.tokenId,
             slippageTolerance,
-            recipient: props.recipient ?? props.account,
+            recipient: props.account,
             deadline,
             useNative: mintNativeToken,
         },
     );
 
-    return { position, calldata, msgValue };
+    return { position: newPosition, calldata, msgValue };
 }

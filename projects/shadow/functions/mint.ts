@@ -5,7 +5,7 @@ import {
     toResult,
     TransactionParams,
 } from '@heyanon/sdk';
-import { Address, Hex, parseUnits, PublicClient } from 'viem';
+import { Address, Hex, parseUnits } from 'viem';
 import { parsePrice, parseWallet } from '../utils.js';
 import { ShadowSDK } from '../sdk.js';
 import {
@@ -60,12 +60,7 @@ export async function mintFunction(
         const transactions = new Array<TransactionParams>();
 
         try {
-            const { position, calldata, msgValue } = await mint(
-                props,
-                sdk,
-                provider,
-                notify,
-            );
+            const { position, calldata, msgValue } = await mint(props, sdk, notify);
 
             const token0 = position.pool.token0.wrapped;
             const token1 = position.pool.token1.wrapped;
@@ -128,7 +123,6 @@ export async function mintFunction(
 export async function mint(
     props: Props,
     sdk: ShadowSDK,
-    provider: PublicClient,
     notify: (message: string) => Promise<void>,
 ) {
     const baseToken = await sdk.getToken(props.tokenA);
@@ -248,6 +242,10 @@ export async function mint(
         amount1: amount1.toString(),
         useFullPrecision: true,
     });
+
+    notify(
+        `Building new position with ${position.amount0.toSignificant(6)} ${token0.symbol} and ${position.amount1.toSignificant(6)} ${token1.symbol}...`,
+    );
 
     const mintNativeToken = [token0, token1].find((tk) => tk.isNative);
     const deadline = Math.floor(Date.now() / 1000) + 60 * 10; // 10 minutes from now

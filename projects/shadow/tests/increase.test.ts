@@ -1,18 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createPublicClient, http, zeroAddress, type Address } from 'viem';
-import { sonic } from 'viem/chains';
-import { mint, Props as MintProps } from '../functions/mint.js';
+import { zeroAddress, type Address } from 'viem';
+import { Props as IncreaseProps } from '../functions/increaseLiquidity.js';
 import { ChainId, SendTransactionProps, TransactionReturn } from '@heyanon/sdk';
 import { WRAPPED_NATIVE_ADDRESS } from '../constants.js';
 import { Token } from '@uniswap/sdk-core';
 import { ShadowSDK } from '../sdk.js';
-import { FeeAmount, Pool } from '@kingdomdotone/v3-sdk';
+import { FeeAmount, Pool, Position } from '@kingdomdotone/v3-sdk';
+import { increaseLiquidity } from '../functions/increaseLiquidity.js';
 
 const MockShadowSDK = vi.fn();
 MockShadowSDK.prototype.getToken = vi.fn();
 MockShadowSDK.prototype.getPool = vi.fn();
-
-const publicClient = createPublicClient({ transport: http(), chain: sonic });
 
 const USDC_ADDRESS: Address = '0x29219dd400f2Bf60E5a23d13Be72B486D4038894';
 
@@ -36,6 +34,24 @@ const WS_USDC_POOL = new Pool(
     50,
 );
 
+const WS_USDC_POSITION_1 = Position.fromAmounts({
+    pool: WS_USDC_POOL,
+    tickLower: -282850,
+    tickUpper: -279800,
+    amount0: '1000',
+    amount1: '614',
+    useFullPrecision: true,
+});
+
+const WS_USDC_POSITION_2 = Position.fromAmounts({
+    pool: WS_USDC_POOL,
+    tickLower: -282800,
+    tickUpper: -279850,
+    amount0: '1000',
+    amount1: '614',
+    useFullPrecision: true,
+});
+
 const mockNotify = vi.fn((message: string) => {
     console.log(message);
     return Promise.resolve();
@@ -55,17 +71,16 @@ describe('Minting', () => {
         vi.clearAllMocks();
     });
 
-    const props: MintProps = {
+    const props: IncreaseProps = {
         chainName: 'sonic',
         account: zeroAddress,
         tokenA: WRAPPED_NATIVE_ADDRESS,
         tokenB: USDC_ADDRESS,
         amountA: '10.5',
         amountB: '7.5',
-        recipient: zeroAddress,
     };
 
-    it('it should create a mint position using a default range of +-15%', async () => {
+    it('it should add liquidity to an existing position with a range of +-15%', async () => {
         const sdk: ShadowSDK = new MockShadowSDK();
 
         vi.mocked(sdk.getToken).mockReturnValueOnce(
@@ -73,16 +88,25 @@ describe('Minting', () => {
         );
         vi.mocked(sdk.getToken).mockReturnValueOnce(Promise.resolve(USDC_TOKEN));
         vi.mocked(sdk.getPool).mockReturnValueOnce(Promise.resolve(WS_USDC_POOL));
+        vi.spyOn(ShadowSDK, 'getLpPositions').mockReturnValueOnce(
+            Promise.resolve([
+                {
+                    position: WS_USDC_POSITION_1,
+                    poolSymbol: 'wS/USDC',
+                    tokenId: 42,
+                },
+            ]),
+        );
 
-        const { position } = await mint(props, sdk, mockNotify);
+        const { position } = await increaseLiquidity(props, sdk, mockNotify);
 
-        expect(position.tickLower).toEqual(-282850);
-        expect(position.tickUpper).toEqual(-279800);
+        expect(position.tickLower).toEqual(WS_USDC_POSITION_1.tickLower);
+        expect(position.tickUpper).toEqual(WS_USDC_POSITION_1.tickUpper);
         expect(position.amount0.toExact()).toEqual('10.427978627154949737');
         expect(position.amount1.toExact()).toEqual('7.499999');
     });
 
-    it('it should create a mint position with a range defined by lowerPrice and upperPrice', async () => {
+    it('it should add liquidity to the position from the specified token ID', async () => {
         const sdk: ShadowSDK = new MockShadowSDK();
 
         vi.mocked(sdk.getToken).mockReturnValueOnce(
@@ -90,24 +114,32 @@ describe('Minting', () => {
         );
         vi.mocked(sdk.getToken).mockReturnValueOnce(Promise.resolve(USDC_TOKEN));
         vi.mocked(sdk.getPool).mockReturnValueOnce(Promise.resolve(WS_USDC_POOL));
+        vi.spyOn(ShadowSDK, 'getLpPositions').mockReturnValueOnce(
+            Promise.resolve([
+                {
+                    position: WS_USDC_POSITION_1,
+                    poolSymbol: 'wS/USDC',
+                    tokenId: 42,
+                },
+                {
+                    position: WS_USDC_POSITION_2,
+                    poolSymbol: 'wS/USDC',
+                    tokenId: 100,
+                },
+            ]),
+        );
 
-        const { position } = await mint(
-            {
-                ...props,
-                lowerPrice: '0.5219921177818871', // -15%
-                upperPrice: '0.7062246299402003', // +15%
-            },
+        const { position } = await increaseLiquidity(
+            { ...props, tokenId: 100 },
             sdk,
             mockNotify,
         );
 
-        expect(position.tickLower).toEqual(-282850);
-        expect(position.tickUpper).toEqual(-279800);
-        expect(position.amount0.toExact()).toEqual('10.427978627154949737');
-        expect(position.amount1.toExact()).toEqual('7.499999');
+        expect(position.tickLower).toEqual(WS_USDC_POSITION_2.tickLower);
+        expect(position.tickUpper).toEqual(WS_USDC_POSITION_2.tickUpper);
     });
 
-    it('it should create a mint position with a range defined by lowerPricePercentage and upperPricePercentage', async () => {
+    it('it should throw an error if no positions are found', async () => {
         const sdk: ShadowSDK = new MockShadowSDK();
 
         vi.mocked(sdk.getToken).mockReturnValueOnce(
@@ -115,20 +147,18 @@ describe('Minting', () => {
         );
         vi.mocked(sdk.getToken).mockReturnValueOnce(Promise.resolve(USDC_TOKEN));
         vi.mocked(sdk.getPool).mockReturnValueOnce(Promise.resolve(WS_USDC_POOL));
-
-        const { position } = await mint(
-            {
-                ...props,
-                lowerPricePercentage: 15,
-                upperPricePercentage: 15,
-            },
-            sdk,
-            mockNotify,
+        vi.spyOn(ShadowSDK, 'getLpPositions').mockReturnValueOnce(
+            Promise.resolve([
+                {
+                    position: WS_USDC_POSITION_1,
+                    poolSymbol: 'wS/USDC',
+                    tokenId: 42,
+                },
+            ]),
         );
 
-        expect(position.tickLower).toEqual(-282850);
-        expect(position.tickUpper).toEqual(-279800);
-        expect(position.amount0.toExact()).toEqual('10.427978627154949737');
-        expect(position.amount1.toExact()).toEqual('7.499999');
+        await expect(
+            increaseLiquidity({ ...props, tokenId: 66 }, sdk, mockNotify),
+        ).rejects.toThrow('No position found with the specified ID');
     });
 });

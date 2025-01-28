@@ -1,9 +1,7 @@
-import { ChainId, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
+import { FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { Address } from 'viem';
 import { parseWallet } from '../utils.js';
-import { getClPositions } from '../subgraph.js';
-import { FeeAmount, Pool, Position } from '@kingdomdotone/v3-sdk';
-import { Token } from '@uniswap/sdk-core';
+import { ShadowSDK } from '../sdk.js';
 
 export interface Props {
     chainName: string;
@@ -27,7 +25,7 @@ export async function getLPPositionsFunction(
             return toResult(wallet.errorMessage, true);
         }
 
-        const positions = await getLpPositions(props);
+        const positions = await ShadowSDK.getLpPositions(props.account, props.tokens);
         let message = 'LP Positions:\n';
         for (const { position, poolSymbol, tokenId } of positions) {
             const token0 = position.pool.token0;
@@ -49,51 +47,4 @@ export async function getLPPositionsFunction(
         const errorMessage = error instanceof Error ? error.message : String(error);
         return toResult(errorMessage, true);
     }
-}
-
-export async function getLpPositions(props: Props) {
-    let positions = await getClPositions(props.account);
-
-    if (props.tokens && props.tokens.length > 0) {
-        const tokensFilter = props.tokens.map((token) => token.toLowerCase());
-        positions = positions.filter(
-            (position) =>
-                tokensFilter.includes(position.token0.id.toLowerCase()) ||
-                tokensFilter.includes(position.token1.id.toLowerCase()),
-        );
-    }
-
-    return positions.map((position) => {
-        const pool = new Pool(
-            new Token(
-                ChainId.SONIC,
-                position.token0.id,
-                +position.token0.decimals,
-                position.token0.symbol,
-            ),
-            new Token(
-                ChainId.SONIC,
-                position.token1.id,
-                +position.token1.decimals,
-                position.token1.symbol,
-            ),
-            +position.pool.feeTier as FeeAmount,
-            position.pool.sqrtPrice,
-            position.pool.liquidity,
-            +position.pool.tick,
-            [],
-            +position.pool.tickSpacing,
-        );
-
-        return {
-            position: new Position({
-                pool,
-                liquidity: position.liquidity,
-                tickLower: +position.tickLower.tickIdx,
-                tickUpper: +position.tickUpper.tickIdx,
-            }),
-            poolSymbol: position.pool.symbol,
-            tokenId: +position.id,
-        };
-    });
 }
