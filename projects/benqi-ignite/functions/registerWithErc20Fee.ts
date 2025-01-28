@@ -163,5 +163,5 @@ export async function registerWithErc20Fee(props: Props, { sendTransactions, not
     const result = await sendTransactions({ chainId, account, transactions });
     const message = result.data[result.data.length - 1];
 
-    return toResult(result.isMultisig ? message.message : `Successfully registered node ${register.data.nodeId} with AVAX token. ${message.message}`);
+    return toResult(result.isMultisig ? message.message : `Successfully registered node ${register.data.nodeId} with ${props.paymentMethod} token. ${message.message}`);
 }
