@@ -4,6 +4,7 @@ import { addLiquidity } from './functions/liquidity/addLiquidity.js';
 import { removeLiquidity } from './functions/liquidity/removeLiquidity.js';
 import { getPerpsLiquidity } from './functions/trading/leverage/getPerpsLiquidity.js';
 import { getALPAPR } from './functions/liquidity/getALPAPR.js';
+import { getAcceptedTokenBalances } from './functions/liquidity/getAcceptedTokenBalances.js';
 
 interface Tool extends AiTool {
   function: Function;
@@ -151,5 +152,19 @@ export const tools: Tool[] = [
             }
         ],
         function: getALPAPR
+    },
+    {
+        name: 'getAcceptedTokenBalances',
+        description: 'Get balances and USD values of all accepted liquidity tokens',
+        required: ['chainName'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Name of the blockchain network (only "sonic" is supported)',
+            }
+        ],
+        function: getAcceptedTokenBalances
     }
 ];
