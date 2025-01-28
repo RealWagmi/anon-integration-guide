@@ -1,8 +1,9 @@
 import { FunctionReturn, toResult, getChainFromName, FunctionOptions, TransactionParams, checkToApprove } from '@heyanon/sdk';
-import { ENSO_API_TOKEN, ENSO_ETH, supportedChains } from '../constants';
+import { ENSO_API_TOKEN, ENSO_ETH, supportedChains, TRANSFER_EVENT_SIG } from '../constants';
 import axios from 'axios';
-import { Address, Hex, isAddress, parseUnits } from 'viem';
+import { Address, formatUnits, Hex, isAddress, parseUnits } from 'viem';
 import { EnsoClient, RouteParams } from '@ensofinance/sdk';
+import { buildRoutePath } from '../utils';
 
 interface Props {
     chainName: string;
@@ -32,13 +33,19 @@ export async function route(
 
     try {
         const ensoClient = new EnsoClient({ apiKey: ENSO_API_TOKEN });
-        const tokenInData = await ensoClient.getTokenData({ chainId, address: tokenIn });
-
-        if (tokenInData.data.length === 0 || typeof tokenInData.data[0].decimals !== 'number') {
+        const tokenInRes = await ensoClient.getTokenData({ chainId, address: tokenIn });
+        if (tokenInRes.data.length === 0 || typeof tokenInRes.data[0].decimals !== 'number') {
             return toResult(`Token ${tokenIn} is not supported`, true);
         }
+        const tokenInData = tokenInRes.data[0];
+        const amountInWei = parseUnits(amountIn, tokenInData.decimals);
 
-        const amountInWei = parseUnits(amountIn, tokenInData.data[0].decimals);
+        const tokenOutRes = await ensoClient.getTokenData({ chainId, address: tokenOut, includeMetadata: true });
+        if (tokenOutRes.data.length === 0 || typeof tokenOutRes.data[0].decimals !== 'number') {
+            return toResult(`Token ${tokenOut} is not supported`, true);
+        }
+
+        const tokenOutData = tokenOutRes.data[0];
 
         const params: RouteParams = {
             chainId,
@@ -58,11 +65,7 @@ export async function route(
         }
 
         if (amountOut) {
-            const tokenOutData = await ensoClient.getTokenData({ chainId, address: tokenOut });
-            if (tokenOutData.data.length === 0 || typeof tokenOutData.data[0].decimals !== 'number') {
-                return toResult(`Token ${tokenOut} is not supported`, true);
-            }
-            const amountOutWei = parseUnits(amountOut, tokenOutData.data[0].decimals);
+            const amountOutWei = parseUnits(amountOut, tokenOutData.decimals);
             params.minAmountOut = amountOutWei.toString();
         }
         if (slippage) {
@@ -87,6 +90,9 @@ export async function route(
         await notify('Fetching the best route from Enso API');
         const routeData = await ensoClient.getRouterData(params);
 
+        const routePathString = buildRoutePath(routeData.route);
+        await notify(`Found route:\n  ${routePathString}\nExpected amount out: ${formatUnits(BigInt(routeData.amountOut), tokenOutData.decimals)} ${tokenOutData.symbol}`);
+
         const provider = getProvider(chainId);
         const transactions: TransactionParams[] = [];
 
@@ -107,9 +113,28 @@ export async function route(
         transactions.push(tx);
 
         const result = await sendTransactions({ chainId, account, transactions });
-        const depositMessage = result.data[result.data.length - 1];
+        const routeRes = result.data[result.data.length - 1];
 
-        return toResult(result.isMultisig ? depositMessage.message : `Successfully executed route. ${depositMessage.message}`);
+        if (result.isMultisig) return toResult(routeRes.message);
+
+        const routeReceipt = await provider.getTransactionReceipt({ hash: routeRes.hash });
+
+        // Find the last transfer that was sent to receiver
+        for (let i = routeReceipt.logs.length - 1; i >= 0; i--) {
+            const log = routeReceipt.logs[i];
+            if (log.address.toLowerCase() !== tokenOut.toLowerCase() || log.topics[0]?.toLowerCase() !== TRANSFER_EVENT_SIG || log.topics[2] === undefined) continue;
+
+            const toAddress = '0x' + log.topics[2].slice(-40).toLowerCase();
+            if (toAddress === params.receiver.toLowerCase()) {
+                const amountOutEvent = formatUnits(BigInt(log.data), tokenOutData.decimals);
+                return toResult(
+                    `Route successfully executed: spent ${amountIn} ${tokenInData.symbol}, received ${amountOutEvent} ${tokenOutData.symbol}. Message: ${routeRes.message}`,
+                );
+            }
+        }
+
+        // NOTE: fallback if Transfer event to receiver was not found
+        return toResult(`Route successfully executed: spent ${amountIn} ${tokenInData.symbol}. Message: ${routeRes.message}`);
     } catch (e) {
         if (axios.isAxiosError(e)) {
             return toResult(`API error: ${e.message}`, true);
