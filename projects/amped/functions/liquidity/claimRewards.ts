@@ -1,37 +1,77 @@
-import { ethers } from 'ethers';
-import { RewardTracker } from '../../abis/RewardTracker';
+import { Address, getContract, encodeFunctionData } from 'viem';
+import { FunctionReturn, FunctionOptions, TransactionParams, toResult } from '@heyanon/sdk';
+import { CONTRACT_ADDRESSES, NETWORKS } from '../../constants.js';
+import { RewardTracker } from '../../abis/RewardTracker.js';
 
-export interface ClaimRewardsParams {
-  signer: ethers.Signer;
-  rewardTrackerAddress: string;
-  receiver?: string;
+interface ClaimRewardsParams {
+  chainName: string;
+  account: Address;
+  tokenAddress: Address;
 }
 
-export interface ClaimRewardsResult {
-  claimedAmount: ethers.BigNumber;
-  transactionHash: string;
-}
+/**
+ * Claims rewards for a token
+ * @param props - The claim rewards parameters
+ * @param options - SDK function options
+ * @returns Transaction hash if successful
+ */
+export async function claimRewards(
+  { chainName, account, tokenAddress }: ClaimRewardsParams,
+  { getProvider, notify, sendTransactions }: FunctionOptions
+): Promise<FunctionReturn> {
+  // Validate chain
+  if (chainName.toLowerCase() !== "sonic") {
+    return toResult("This function is only supported on Sonic chain", true);
+  }
 
-export async function claimRewards({
-  signer,
-  rewardTrackerAddress,
-  receiver,
-}: ClaimRewardsParams): Promise<ClaimRewardsResult> {
-  const rewardTracker = new ethers.Contract(rewardTrackerAddress, RewardTracker, signer);
-  const account = await signer.getAddress();
+  await notify("Preparing to claim rewards...");
 
-  // If no receiver specified, use the signer's address
-  const rewardReceiver = receiver || account;
+  const provider = getProvider(146); // Sonic chain ID
+  const rewardTrackerAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].REWARD_ROUTER;
 
-  // First get claimable amount for logging
-  const claimableAmount = await rewardTracker.claimable(account);
+  try {
+    const rewardTracker = getContract({
+      address: rewardTrackerAddress,
+      abi: RewardTracker,
+      client: provider
+    });
 
-  // Execute claim transaction
-  const tx = await rewardTracker.claim(rewardReceiver);
-  const receipt = await tx.wait();
+    // Check if there are rewards to claim
+    const claimableAmount = await rewardTracker.read.claimable([account]) as bigint;
+    
+    if (claimableAmount <= 0n) {
+      return toResult("No rewards available to claim", true);
+    }
 
-  return {
-    claimedAmount: claimableAmount,
-    transactionHash: receipt.transactionHash
-  };
+    await notify("Claiming rewards...");
+
+    const tx: TransactionParams = {
+      target: rewardTrackerAddress,
+      data: encodeFunctionData({
+        abi: RewardTracker,
+        functionName: 'claim',
+        args: [account]
+      }),
+      value: BigInt(0)
+    };
+
+    const result = await sendTransactions({
+      chainId: 146, // Sonic chain ID
+      account,
+      transactions: [tx]
+    });
+
+    const claimMessage = result.data[result.data.length - 1];
+
+    return toResult(
+      result.isMultisig 
+        ? claimMessage.message 
+        : `Successfully claimed ${claimableAmount.toString()} rewards. ${claimMessage.message}`
+    );
+  } catch (error) {
+    if (error instanceof Error) {
+      return toResult(`Failed to claim rewards: ${error.message}`, true);
+    }
+    return toResult("Failed to claim rewards: Unknown error", true);
+  }
 } 

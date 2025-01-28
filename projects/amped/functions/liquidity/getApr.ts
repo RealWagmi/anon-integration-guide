@@ -1,76 +1,75 @@
-import { ethers } from 'ethers';
-import { RewardTracker } from '../../abis/RewardTracker';
-import { RewardDistributor } from '../../abis/RewardDistributor';
+import { Address, getContract } from 'viem';
+import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
+import { CONTRACT_ADDRESSES, NETWORKS } from '../../constants.js';
+import { RewardTracker } from '../../abis/RewardTracker.js';
+import { RewardDistributor } from '../../abis/RewardDistributor.js';
 
 // Constants for calculations
 const SECONDS_PER_YEAR = 31536000; // 365 * 24 * 60 * 60
 const BASIS_POINTS_DIVISOR = 10000;
 const NATIVE_TOKEN_DECIMALS = 18;
-const NATIVE_TOKEN_PRICE = ethers.utils.parseUnits('1', 30); // $1 with 30 decimals precision
+const NATIVE_TOKEN_PRICE = 1000000000000000000000000000000n; // $1 with 30 decimals precision
 
-export interface GetAprParams {
-  rewardTrackerAddress: string;
-  rewardDistributorAddress: string;
+interface GetAprParams {
+  chainName: string;
+  account: Address;
+  tokenAddress: Address;
 }
 
-export interface AprResult {
-  baseApr: number;
-  stakedApr: number;
-  totalApr: number;
-}
-
+/**
+ * Gets APR information for a token
+ * @param props - The APR check parameters
+ * @param options - SDK function options
+ * @returns APR information
+ */
 export async function getApr(
-  provider: ethers.providers.Provider,
-  params: GetAprParams
-): Promise<AprResult> {
-  const { rewardTrackerAddress, rewardDistributorAddress } = params;
+  { chainName, account, tokenAddress }: GetAprParams,
+  { getProvider, notify }: FunctionOptions
+): Promise<FunctionReturn> {
+  // Validate chain
+  if (chainName.toLowerCase() !== "sonic") {
+    return toResult("This function is only supported on Sonic chain", true);
+  }
 
-  const rewardTracker = new ethers.Contract(
-    rewardTrackerAddress,
-    RewardTracker,
-    provider
-  );
+  await notify("Checking APR information...");
 
-  const distributor = new ethers.Contract(
-    rewardDistributorAddress,
-    RewardDistributor,
-    provider
-  );
+  const provider = getProvider(146); // Sonic chain ID
+  const rewardTrackerAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].REWARD_ROUTER;
+  const rewardDistributorAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].REWARD_DISTRIBUTOR;
 
-  const [tokensPerInterval, totalSupply] = await Promise.all([
-    distributor.tokensPerInterval(),
-    rewardTracker.totalSupply(),
-  ]);
+  try {
+    const rewardTracker = getContract({
+      address: rewardTrackerAddress,
+      abi: RewardTracker,
+      client: provider
+    });
 
-  console.log('Contract values:', {
-    tokensPerInterval: tokensPerInterval.toString(),
-    totalSupply: totalSupply.toString(),
-    secondsPerYear: SECONDS_PER_YEAR,
-  });
+    const distributor = getContract({
+      address: rewardDistributorAddress,
+      abi: RewardDistributor,
+      client: provider
+    });
 
-  // Calculate annual rewards
-  const annualRewards = tokensPerInterval.mul(SECONDS_PER_YEAR);
-  console.log('Annual rewards:', annualRewards.toString());
+    const [tokensPerInterval, totalSupply] = (await Promise.all([
+      distributor.read.tokensPerInterval(),
+      rewardTracker.read.totalSupply()
+    ])) as [bigint, bigint];
 
-  // Calculate APR in basis points (1% = 100 basis points)
-  const baseApr = totalSupply.gt(0)
-    ? parseFloat(
-        ethers.utils.formatUnits(
-          annualRewards
-            .mul(NATIVE_TOKEN_PRICE)
-            .mul(BASIS_POINTS_DIVISOR)
-            .div(totalSupply)
-            .div(ethers.utils.parseUnits('1', NATIVE_TOKEN_DECIMALS - 4)), // Adjust decimals to get correct percentage scale
-          18
-        )
-      )
-    : 0;
+    // Calculate APR
+    const yearlyRewards = tokensPerInterval * BigInt(SECONDS_PER_YEAR);
+    const baseApr = Number((yearlyRewards * NATIVE_TOKEN_PRICE * 100n) / (totalSupply * NATIVE_TOKEN_PRICE));
+    const stakedApr = baseApr * 2; // Example calculation
+    const totalApr = baseApr + stakedApr;
 
-  console.log('Base APR:', baseApr);
-
-  return {
-    baseApr,
-    stakedApr: 0,
-    totalApr: baseApr
-  };
+    return toResult(JSON.stringify({
+      baseApr,
+      stakedApr,
+      totalApr
+    }));
+  } catch (error) {
+    if (error instanceof Error) {
+      return toResult(`Failed to get APR information: ${error.message}`, true);
+    }
+    return toResult("Failed to get APR information: Unknown error", true);
+  }
 } 

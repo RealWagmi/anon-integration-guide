@@ -1,9 +1,9 @@
 import { Address, parseUnits } from 'viem';
 import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName, checkToApprove } from '@heyanon/sdk';
-import { supportedChains } from '../constants';
+import { NETWORKS } from '../constants.js';
 
 interface Props {
-    chainName: string;
+    chainName: typeof NETWORKS[keyof typeof NETWORKS];
     account: Address;
     amount: string;
 }
@@ -14,35 +14,24 @@ interface Props {
  * @param tools - System tools for blockchain interactions
  * @returns Transaction result
  */
-export async function example({ chainName, account, amount }: Props, { sendTransactions, notify }: FunctionOptions): Promise<FunctionReturn> {
-    // Check wallet connection
-    if (!account) return toResult('Wallet not connected', true);
-
+export async function example(
+    { chainName, account, amount }: Props,
+    { notify, getProvider }: FunctionOptions
+): Promise<FunctionReturn> {
     // Validate chain
-    const chainId = getChainFromName(chainName);
-    if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
-    if (!supportedChains.includes(chainId)) return toResult(`Protocol is not supported on ${chainName}`, true);
+    if (!Object.values(NETWORKS).includes(chainName)) {
+        return toResult(`Network ${chainName} not supported`);
+    }
 
-    // Validate amount
-    const amountInWei = parseUnits(amount, 18);
-    if (amountInWei === 0n) return toResult('Amount must be greater than 0', true);
+    await notify('Starting example function...');
 
-    await notify('Preparing example transaction...');
-
-    const transactions: TransactionParams[] = [];
-
-    // Example transaction
-    const tx: TransactionParams = {
-        target: '0x...',  // Protocol contract address
-        data: '0x...',    // Encoded function call
-    };
-    transactions.push(tx);
-
-    await notify('Waiting for transaction confirmation...');
-
-    // Sign and send transaction
-    const result = await sendTransactions({ chainId, account, transactions });
-    const message = result.data[result.data.length - 1];
-
-    return toResult(result.isMultisig ? message.message : `Successfully executed example with ${amount} tokens. ${message.message}`);
+    try {
+        // Example implementation
+        return toResult('Example function executed successfully');
+    } catch (error) {
+        if (error instanceof Error) {
+            return toResult(`Failed to execute example: ${error.message}`, true);
+        }
+        return toResult('Failed to execute example: Unknown error', true);
+    }
 }

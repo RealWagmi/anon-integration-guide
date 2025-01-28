@@ -1,9 +1,10 @@
-import { AdapterExport } from '@heyanon/sdk'';
-import { tools } from './tools';
-import * as functions from './functions';
+import { AdapterExport } from '@heyanon/sdk';
+import { getLiquidity } from './functions/trading/leverage/getLiquidity.js';
 
-export default {
-    tools,
-    functions,
-    description: 'Integration with Amped Finance',
-} satisfies AdapterExport;
+export const adapter: AdapterExport = {
+  functions: {
+    getLiquidity
+  },
+  tools: {},
+  description: 'Integration with Amped Finance'
+};

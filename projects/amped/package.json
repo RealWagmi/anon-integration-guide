@@ -21,7 +21,7 @@
     },
     "dependencies": {
         "@heyanon/sdk": "^1.0.4",
-        "dotenv": "^16.3.1",
+        "dotenv": "^16.4.7",
         "ethers": "^5.7.2",
         "viem": "^2.22.14"
     },

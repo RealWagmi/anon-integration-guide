@@ -1,195 +1,193 @@
-import { ethers } from 'ethers';
-import { Vault } from '../../../abis/Vault';
-import { CONTRACT_ADDRESSES, NETWORKS } from '../../../constants';
+const { CONTRACT_ADDRESSES, NETWORKS } = require('../../../constants');
+const { Vault } = require('../../../abis/Vault');
+const { VaultPriceFeed } = require('../../../abis/VaultPriceFeed');
+const { PositionRouter } = require('../../../abis/PositionRouter');
+const { Address } = require('viem');
+import {
+  FunctionReturn,
+  FunctionOptions,
+  toResult,
+  getChainFromName
+} from '@heyanon/sdk';
 
-export interface GetLeverageLiquidityParams {
-  provider: ethers.providers.Provider;
-  vaultAddress: string;
-  indexToken: string;
-  collateralToken: string;
+interface GetLiquidityProps {
+  chainName: string;
+  account: `0x${string}`;
+  indexToken: `0x${string}`;
+  collateralToken: `0x${string}`;
   isLong: boolean;
 }
 
-export interface LeverageLiquidityResult {
+interface LiquidityInfo {
   maxLeverage: number;
-  maxPositionSize: ethers.BigNumber;
-  maxCollateral: ethers.BigNumber;
-  poolAmount: ethers.BigNumber;
-  reservedAmount: ethers.BigNumber;
-  availableLiquidity: ethers.BigNumber;
-  fundingRate: ethers.BigNumber;
+  maxPositionSize: bigint;
+  maxCollateral: bigint;
+  poolAmount: bigint;
+  reservedAmount: bigint;
+  availableLiquidity: bigint;
+  fundingRate: bigint;
+  priceUsd: number;
 }
 
-export interface TokenLeverageInfo {
-  maxLeverage: number;
-  maxPositionSize: string;
-  maxCollateral: string;
-  poolAmount: string;
-  reservedAmount: string;
-  fundingRate: string;
-  availableLiquidity: string;
-}
+/**
+ * Gets leverage liquidity information for a token
+ * @param props - The liquidity check parameters
+ * @param options - SDK function options
+ * @returns Liquidity information
+ */
+const getLiquidity = async (
+  { chainName, account, indexToken, collateralToken, isLong }: GetLiquidityProps,
+  { getProvider, notify }: FunctionOptions
+): Promise<FunctionReturn> => {
+  // Validate chain
+  if (chainName.toLowerCase() !== "sonic") {
+    return toResult("This function is only supported on Sonic chain", true);
+  }
 
-export interface TokenLeverageResults {
-  withUSDC?: {
-    long?: TokenLeverageInfo;
-    short?: TokenLeverageInfo;
-  };
-  withNativeToken?: {
-    long?: TokenLeverageInfo;
-    short?: TokenLeverageInfo;
-  };
-}
+  await notify("Checking liquidity information...");
 
-export async function getLeverageLiquidity({
-  provider,
-  vaultAddress,
-  indexToken,
-  collateralToken,
-  isLong,
-}: GetLeverageLiquidityParams): Promise<LeverageLiquidityResult> {
-  const vault = new ethers.Contract(vaultAddress, Vault, provider);
-  let poolAmount = ethers.BigNumber.from(0);
-  let reservedAmount = ethers.BigNumber.from(0);
-  let maxGlobalSize = ethers.BigNumber.from(0);
-  let fundingRate = ethers.BigNumber.from(0);
+  const provider = getProvider(146); // Sonic chain ID
+  const vaultAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT;
+  const priceFeedAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT_PRICE_FEED;
 
   try {
-    console.log('Getting pool amount...');
-    poolAmount = await vault.poolAmounts(indexToken);
-    
-    console.log('Getting reserved amount...');
-    reservedAmount = await vault.reservedAmounts(indexToken);
-    
-    console.log('Getting max global sizes...');
+    // Get pool amount
+    const poolAmount = await provider.readContract({
+      address: vaultAddress,
+      abi: Vault,
+      functionName: "poolAmounts",
+      args: [indexToken]
+    }) as bigint;
+
+    // Get reserved amount
+    const reservedAmount = await provider.readContract({
+      address: vaultAddress,
+      abi: Vault,
+      functionName: "reservedAmounts",
+      args: [indexToken]
+    }) as bigint;
+
+    // Get max global size
+    let maxGlobalSize = 0n;
     try {
-      maxGlobalSize = isLong 
-        ? await vault.maxGlobalLongSizes(indexToken)
-        : await vault.maxGlobalShortSizes(indexToken);
+      maxGlobalSize = await provider.readContract({
+        address: vaultAddress,
+        abi: Vault,
+        functionName: isLong ? "maxGlobalLongSizes" : "maxGlobalShortSizes",
+        args: [indexToken]
+      }) as bigint;
     } catch (error) {
       console.log(`Failed to get max global ${isLong ? 'long' : 'short'} size:`, error);
-      // Keep maxGlobalSize as 0
-    }
-    
-    console.log('Getting funding rate...');
-    try {
-      fundingRate = await vault.cumulativeFundingRates(collateralToken);
-    } catch (error) {
-      console.log('Failed to get funding rate:', error);
-      // Keep fundingRate as 0
     }
 
-    // Calculate available liquidity (core contract logic)
-    const availableLiquidity = poolAmount.sub(reservedAmount);
+    // Get funding rate
+    let fundingRate = 0n;
+    try {
+      fundingRate = await provider.readContract({
+        address: vaultAddress,
+        abi: Vault,
+        functionName: "cumulativeFundingRates",
+        args: [collateralToken]
+      }) as bigint;
+    } catch (error) {
+      console.log('Failed to get funding rate:', error);
+    }
+
+    // Get token price
+    const priceResponse = await provider.readContract({
+      address: priceFeedAddress,
+      abi: VaultPriceFeed,
+      functionName: "getPrice",
+      args: [indexToken, false, true, true]
+    }) as bigint;
+
+    const currentPrice = priceResponse;
+    const priceInUsd = Number(currentPrice) / 1e30;
+
+    // Calculate available liquidity
+    const availableLiquidity = poolAmount - reservedAmount;
     
-    // Calculate max leverage (typically 11x for longs, 10x for shorts)
+    // Calculate max leverage
     const maxLeverage = isLong ? 11 : 10;
 
     // Calculate max collateral based on position size and leverage
-    const maxCollateral = maxGlobalSize.div(maxLeverage);
+    const maxCollateral = maxGlobalSize / BigInt(maxLeverage);
 
-    console.log('Results:', {
-      maxLeverage,
-      maxPositionSize: maxGlobalSize.toString(),
-      maxCollateral: maxCollateral.toString(),
-      poolAmount: poolAmount.toString(),
-      reservedAmount: reservedAmount.toString(),
-      availableLiquidity: availableLiquidity.toString(),
-      fundingRate: fundingRate.toString()
-    });
-
-    return {
+    const liquidityInfo: LiquidityInfo = {
       maxLeverage,
       maxPositionSize: maxGlobalSize,
       maxCollateral,
       poolAmount,
       reservedAmount,
       availableLiquidity,
-      fundingRate
+      fundingRate,
+      priceUsd: priceInUsd
     };
+
+    // Format the response for better readability
+    const formattedInfo = {
+      maxLeverage: liquidityInfo.maxLeverage,
+      maxPositionSize: formatUnits(liquidityInfo.maxPositionSize, 30),
+      maxCollateral: formatUnits(liquidityInfo.maxCollateral, 18),
+      poolAmount: formatUnits(liquidityInfo.poolAmount, 18),
+      reservedAmount: formatUnits(liquidityInfo.reservedAmount, 18),
+      availableLiquidity: formatUnits(liquidityInfo.availableLiquidity, 18),
+      fundingRate: liquidityInfo.fundingRate.toString(),
+      priceUsd: liquidityInfo.priceUsd.toFixed(4)
+    };
+
+    return toResult(JSON.stringify(formattedInfo), false);
   } catch (error) {
-    console.error('Error in getLeverageLiquidity:', error);
-    throw error;
+    console.error("Error in getLiquidity:", error);
+    return toResult(error instanceof Error ? error.message : "Unknown error occurred", true);
   }
+};
+
+// Helper function to format units (similar to ethers.utils.formatUnits)
+function formatUnits(value: bigint, decimals: number): string {
+  return (Number(value) / Math.pow(10, decimals)).toString();
 }
 
-async function checkTokenLeverageLiquidity(
-  provider: ethers.providers.Provider,
-  vaultAddress: string,
-  indexToken: string,
-  collateralToken: string,
-  isLong: boolean
-): Promise<TokenLeverageInfo | undefined> {
-  try {
-    console.log(`Attempting to get liquidity for:
-      Vault: ${vaultAddress}
-      Index Token: ${indexToken}
-      Collateral: ${collateralToken}
-      Is Long: ${isLong}`);
+export const getLeverageLiquidity = getLiquidity;
 
-    const liquidity = await getLeverageLiquidity({
-      provider,
-      vaultAddress,
-      indexToken,
-      collateralToken,
-      isLong
-    });
-
-    console.log('Got liquidity result:', JSON.stringify(liquidity, (_, v) => 
-      typeof v === 'bigint' ? v.toString() : v, 2));
-
-    return {
-      maxLeverage: liquidity.maxLeverage,
-      maxPositionSize: ethers.utils.formatUnits(liquidity.maxPositionSize, 30),
-      maxCollateral: ethers.utils.formatUnits(liquidity.maxCollateral, 18),
-      poolAmount: ethers.utils.formatUnits(liquidity.poolAmount, 18),
-      reservedAmount: ethers.utils.formatUnits(liquidity.reservedAmount, 18),
-      fundingRate: liquidity.fundingRate.toString(),
-      availableLiquidity: ethers.utils.formatUnits(liquidity.availableLiquidity, 18)
-    };
-  } catch (error) {
-    console.error('Error in checkTokenLeverageLiquidity:', error);
-    if (error instanceof Error) {
-      console.error('Error stack:', error.stack);
-    }
-    return undefined;
-  }
-}
-
-export async function getAllTokenLeverageLiquidity(
-  provider: ethers.providers.Provider,
-  vaultAddress: string,
-  indexToken: string,
-  usdcAddress: string,
-  nativeTokenAddress: string
-): Promise<TokenLeverageResults> {
-  console.log(`Checking liquidity for index token: ${indexToken}`);
-  console.log(`USDC Address: ${usdcAddress}, Native Address: ${nativeTokenAddress}`);
-
-  const results: TokenLeverageResults = {};
-
-  // Only check USDC collateral for shorts
-  if (indexToken !== usdcAddress) {
-    console.log(`Checking USDC collateral for ${indexToken}`);
-    results.withUSDC = {
-      short: await checkTokenLeverageLiquidity(provider, vaultAddress, indexToken, usdcAddress, false)
-    };
-  }
-
-  // Only check native token collateral for longs on supported tokens
-  const longSupportedTokens = [
-    nativeTokenAddress.toLowerCase(), // S token
-    CONTRACT_ADDRESSES[NETWORKS.SONIC].ANON.toLowerCase(),
-    CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH.toLowerCase()
+export const getAllTokenLeverageLiquidity = async (
+  chainName: string,
+  account: `0x${string}`,
+  options: FunctionOptions
+): Promise<FunctionReturn> => {
+  const tokens = [
+    CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH,
+    CONTRACT_ADDRESSES[NETWORKS.SONIC].USDC,
+    CONTRACT_ADDRESSES[NETWORKS.SONIC].EURC,
+    CONTRACT_ADDRESSES[NETWORKS.SONIC].ANON,
   ];
-  
-  if (indexToken !== nativeTokenAddress && longSupportedTokens.includes(indexToken.toLowerCase())) {
-    console.log(`Checking native collateral for ${indexToken}`);
-    results.withNativeToken = {
-      long: await checkTokenLeverageLiquidity(provider, vaultAddress, indexToken, nativeTokenAddress, true)
-    };
-  }
 
-  console.log('Interim results:', JSON.stringify(results, null, 2));
-  return results;
-} 
+  const results = await Promise.all(
+    tokens.flatMap(token => [
+      getLiquidity(
+        {
+          chainName,
+          account,
+          indexToken: token,
+          collateralToken: token,
+          isLong: true
+        },
+        options
+      ),
+      getLiquidity(
+        {
+          chainName,
+          account,
+          indexToken: token,
+          collateralToken: token,
+          isLong: false
+        },
+        options
+      )
+    ])
+  );
+
+  return toResult(results.map(r => r.data).join('\n'));
+};
+
+export { getLiquidity }; 

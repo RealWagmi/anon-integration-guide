@@ -4,6 +4,9 @@ import { Address } from 'viem';
 export const PRECISION = 1e30;
 export const SECONDS_PER_YEAR = 31536000; // 365 * 24 * 60 * 60
 
+// Supported chains
+export const supportedChains = [146] as const; // Sonic chain ID
+
 // Other global constants can go here
 
 export const NETWORKS = {

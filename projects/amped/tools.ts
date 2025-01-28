@@ -1,8 +1,14 @@
 import { AiTool, getChainName } from '@heyanon/sdk';
-import { supportedChains } from './constants';
-import { addLiquidity, removeLiquidity } from './functions/liquidity';
+import { supportedChains } from './constants.js';
+import { addLiquidity } from './functions/liquidity/addLiquidity.js';
+import { removeLiquidity } from './functions/liquidity/removeLiquidity.js';
+import { getPerpsLiquidity } from './functions/trading/leverage/getPerpsLiquidity.js';
 
-export const tools: AiTool[] = [
+interface Tool extends AiTool {
+  function: Function;
+}
+
+export const tools: Tool[] = [
     {
         name: 'example',
         description: 'Example function that demonstrates how to interact with the protocol. It shows basic transaction flow, including checking balances, preparing transaction data, and handling approvals if needed.',
@@ -25,6 +31,7 @@ export const tools: AiTool[] = [
                 description: 'Amount of tokens for the example in decimal format',
             },
         ],
+        function: () => {}
     },
     {
         name: 'addLiquidity',
@@ -54,11 +61,11 @@ export const tools: AiTool[] = [
                 optional: true,
             },
         ],
-        function: addLiquidity,
+        function: addLiquidity
     },
     {
         name: 'removeLiquidity',
-        description: 'Remove liquidity from the protocol by burning GLP tokens',
+        description: 'Remove liquidity from the protocol by redeeming GLP for tokens',
         required: ['chainName', 'tokenOut', 'amount'],
         props: [
             {
@@ -75,7 +82,7 @@ export const tools: AiTool[] = [
             {
                 name: 'amount',
                 type: 'string',
-                description: 'Amount of ALP tokens to burn',
+                description: 'Amount of GLP to redeem',
             },
             {
                 name: 'minOut',
@@ -84,6 +91,40 @@ export const tools: AiTool[] = [
                 optional: true,
             },
         ],
-        function: removeLiquidity,
+        function: removeLiquidity
     },
+    {
+        name: 'getPerpsLiquidity',
+        description: 'Get perpetual trading liquidity information for a token, including max leverage, position sizes, and funding rates',
+        required: ['chainName', 'account', 'indexToken', 'collateralToken', 'isLong'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Name of the blockchain network',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Account address to check liquidity for',
+            },
+            {
+                name: 'indexToken',
+                type: 'string',
+                description: 'Address of the token to trade',
+            },
+            {
+                name: 'collateralToken',
+                type: 'string',
+                description: 'Address of the token to use as collateral',
+            },
+            {
+                name: 'isLong',
+                type: 'boolean',
+                description: 'Whether to check long or short position liquidity',
+            }
+        ],
+        function: getPerpsLiquidity
+    }
 ];

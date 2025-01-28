@@ -39,20 +39,20 @@ export async function getSwapLiquidity(
     });
 
     // Get pool and reserved amounts for the output token
-    const [poolAmount, reservedAmount] = (await Promise.all([
+    const [poolAmount, reservedAmount] = await Promise.all([
       vault.read.poolAmounts([tokenOut]),
       vault.read.reservedAmounts([tokenOut])
-    ])) as [bigint, bigint];
+    ]);
 
     // Calculate available amount for swaps
     const availableAmount = poolAmount - reservedAmount;
 
     // Get max in/out amounts based on available liquidity
     const maxOutAmount = availableAmount;
-    const maxInAmount = await vault.read.getMaxPrice([tokenIn]) as bigint;
+    const maxInAmount = await vault.read.getMaxPrice([tokenIn]);
 
     // Get expected output amount
-    const amountOut = await vault.read.getAmountOut([tokenIn, tokenOut, amountIn]) as bigint;
+    const amountOut = await vault.read.getAmountOut([tokenIn, tokenOut, amountIn]);
 
     return toResult(JSON.stringify({
       maxInAmount: maxInAmount.toString(),

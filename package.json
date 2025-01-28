@@ -3,8 +3,10 @@
   "version": "1.0.0",
   "description": "Welcome to the technical documentation for developing additional project modules for the HeyAnon AI Chatbot.",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:liquidity": "NODE_OPTIONS='--loader ts-node/esm' ts-node --esm projects/amped/scripts/tests/test-s-liquidity.ts"
   },
   "keywords": [],
   "author": "",
@@ -12,5 +14,14 @@
   "devDependencies": {
     "@vitest/coverage-v8": "^3.0.2",
     "vitest": "^3.0.2"
+  },
+  "dependencies": {
+    "@heyanon/sdk": "^1.0.5",
+    "@types/node": "^22.10.10",
+    "dotenv": "^16.4.7",
+    "ethers": "^5.7.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3",
+    "viem": "^2.22.16"
   }
 }

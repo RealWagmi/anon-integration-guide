@@ -1,228 +1,65 @@
-import { Address, createPublicClient, createWalletClient, encodeFunctionData, http } from 'viem';
-import { privateKeyToAccount } from 'viem/accounts';
-import { sonic } from 'viem/chains';
-import { CONTRACT_ADDRESSES, NETWORKS } from '../../../constants';
+import { Address, getContract } from 'viem';
+import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
+import { CONTRACT_ADDRESSES, NETWORKS } from '../../../constants.js';
+import { Router } from '../../../abis/Router.js';
 
-export interface LimitSwapParams {
+interface LimitSwapParams {
+  chainName: string;
+  account: Address;
   tokenIn: Address;
   tokenOut: Address;
   amountIn: bigint;
-  priceRatioBps: number; // Target price ratio in basis points relative to current price (e.g. 9500 = 95% of current price)
-  slippageBps?: number; // Basis points (e.g. 100 = 1%)
-  executionFee?: bigint;
-  shouldWrap?: boolean;
-  shouldUnwrap?: boolean;
-  privateKey: string;
+  minAmountOut: bigint;
+  triggerPrice: bigint;
+  triggerAboveThreshold: boolean;
+  executionFee: bigint;
 }
 
-export interface LimitSwapResult {
-  success: boolean;
-  message: string;
-  data: {
-    hash: `0x${string}`;
-    message: string;
-    tokenInPrice?: bigint;
-    tokenOutPrice?: bigint;
-    currentRatio?: bigint;
-    triggerRatio?: bigint;
-    expectedOut?: bigint;
-    minOut?: bigint;
-  };
-  isMultisig: boolean;
-}
+/**
+ * Creates a limit swap order between two tokens
+ * @param props - The limit swap parameters
+ * @param options - SDK function options
+ * @returns Transaction result
+ */
+export async function limitSwap(
+  { chainName, account, tokenIn, tokenOut, amountIn, minAmountOut, triggerPrice, triggerAboveThreshold, executionFee }: LimitSwapParams,
+  { getProvider, notify }: FunctionOptions
+): Promise<FunctionReturn> {
+  // Validate chain
+  if (chainName.toLowerCase() !== "sonic") {
+    return toResult("This function is only supported on Sonic chain", true);
+  }
 
-const ROUTER_ABI = [{
-  inputs: [
-    { name: '_path', type: 'address[]' },
-    { name: '_amountIn', type: 'uint256' },
-    { name: '_minOut', type: 'uint256' },
-    { name: '_triggerRatio', type: 'uint256' },
-    { name: '_triggerAboveThreshold', type: 'bool' },
-    { name: '_executionFee', type: 'uint256' },
-    { name: '_shouldWrap', type: 'bool' },
-    { name: '_shouldUnwrap', type: 'bool' }
-  ],
-  name: 'createSwapOrder',
-  outputs: [{ type: 'bytes32' }],
-  stateMutability: 'payable',
-  type: 'function'
-}, {
-  inputs: [
-    { name: '_plugin', type: 'address' }
-  ],
-  name: 'approvePlugin',
-  outputs: [],
-  stateMutability: 'nonpayable',
-  type: 'function'
-}, {
-  inputs: [
-    { name: '_account', type: 'address' },
-    { name: '_plugin', type: 'address' }
-  ],
-  name: 'isPluginApproved',
-  outputs: [{ type: 'bool' }],
-  stateMutability: 'view',
-  type: 'function'
-}] as const;
+  await notify("Creating limit swap order...");
 
-const ERC20_ABI = [{
-  inputs: [
-    { name: 'spender', type: 'address' },
-    { name: 'amount', type: 'uint256' }
-  ],
-  name: 'approve',
-  outputs: [{ type: 'bool' }],
-  stateMutability: 'nonpayable',
-  type: 'function'
-}] as const;
+  const provider = getProvider(146); // Sonic chain ID
+  const routerAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].ROUTER;
 
-const DECIMALS = {
-  USDC: 6n,
-  S: 18n
-} as const;
+  try {
+    const router = getContract({
+      address: routerAddress,
+      abi: Router,
+      client: provider
+    });
 
-export async function limitSwap({
-  tokenIn,
-  tokenOut,
-  amountIn,
-  priceRatioBps,
-  slippageBps = 100,
-  executionFee = 1000000000000000n,
-  shouldWrap = false,
-  shouldUnwrap = false,
-  privateKey
-}: LimitSwapParams): Promise<LimitSwapResult> {
-  const account = privateKeyToAccount(privateKey as `0x${string}`);
-  const client = createWalletClient({
-    account,
-    chain: sonic,
-    transport: http('https://rpc.soniclabs.com')
-  });
+    // Create limit swap order
+    const tx = await router.write.createSwapOrder(
+      [tokenIn, tokenOut, amountIn, minAmountOut, triggerPrice, triggerAboveThreshold],
+      { value: executionFee + (tokenIn === CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN ? amountIn : 0n) }
+    );
 
-  const publicClient = createPublicClient({
-    chain: sonic,
-    transport: http('https://rpc.soniclabs.com')
-  });
-
-  // Approve the order plugin (safe to call multiple times)
-  const ORDER_PLUGIN = '0x5ec625389c3c1e76fe0c7d864b62a7c2a52c4b05' as const;
-  console.log('Approving order plugin...');
-  const approvePluginHash = await client.writeContract({
-    address: CONTRACT_ADDRESSES[NETWORKS.SONIC].ROUTER,
-    abi: ROUTER_ABI,
-    functionName: 'approvePlugin',
-    args: [ORDER_PLUGIN],
-    gas: 500000n
-  });
-  await publicClient.waitForTransactionReceipt({ hash: approvePluginHash });
-  console.log('Plugin approved:', approvePluginHash);
-
-  // Get token prices from Vault
-  const [tokenInPrice, tokenOutPrice] = await Promise.all([
-    publicClient.readContract({
-      address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT,
-      abi: [{
-        inputs: [{ name: '_token', type: 'address' }],
-        name: 'getMinPrice',
-        outputs: [{ type: 'uint256' }],
-        stateMutability: 'view',
-        type: 'function'
-      }],
-      functionName: 'getMinPrice',
-      args: [tokenIn]
-    }),
-    publicClient.readContract({
-      address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT,
-      abi: [{
-        inputs: [{ name: '_token', type: 'address' }],
-        name: 'getMaxPrice',
-        outputs: [{ type: 'uint256' }],
-        stateMutability: 'view',
-        type: 'function'
-      }],
-      functionName: 'getMaxPrice',
-      args: [tokenOut]
-    })
-  ]);
-
-  // For USDC -> S swap:
-  // Prices are normalized to 30 decimals
-  // Need to adjust for decimal differences: USDC (6) to S (18)
-  // When calculating ratio, we need to scale by the decimal difference (12)
-  const decimalDiff = DECIMALS.S - DECIMALS.USDC;
-  
-  // Calculate price ratio accounting for decimal difference
-  // Scale by 10000 for basis points
-  const currentRatio = (tokenInPrice * 10000n * (10n ** decimalDiff)) / tokenOutPrice;
-  const triggerRatio = (currentRatio * BigInt(priceRatioBps)) / 10000n;
-
-  // Calculate expected output based on current prices
-  // amountIn is in USDC decimals (6)
-  // expectedOut should be in S decimals (18)
-  const expectedOut = (amountIn * tokenInPrice) / tokenOutPrice;
-  const minOut = (expectedOut * BigInt(10000 - slippageBps)) / 10000n;
-
-  console.log('Debug values:');
-  console.log('Token prices (30 decimals):');
-  console.log('- Token In (USDC):', tokenInPrice.toString());
-  console.log('- Token Out (S):', tokenOutPrice.toString());
-  console.log('Decimal adjustment:', decimalDiff.toString());
-  console.log('Ratios:');
-  console.log('- Current:', currentRatio.toString());
-  console.log('- Target:', triggerRatio.toString());
-  console.log('Amounts:');
-  console.log('- In:', amountIn.toString(), '(6 decimals)');
-  console.log('- Expected Out:', expectedOut.toString(), '(18 decimals)');
-  console.log('- Min Out:', minOut.toString(), '(18 decimals)');
-  console.log('Order params:');
-  console.log('- Path:', [tokenIn, tokenOut]);
-  console.log('- Trigger above threshold:', priceRatioBps < 10000);
-  console.log('- Execution fee:', executionFee.toString());
-
-  // First approve Router to spend tokenIn
-  const approveHash = await client.writeContract({
-    address: tokenIn,
-    abi: ERC20_ABI,
-    functionName: 'approve',
-    args: [CONTRACT_ADDRESSES[NETWORKS.SONIC].ROUTER, amountIn],
-    gas: 500000n
-  });
-
-  // Wait for approval to be mined
-  await publicClient.waitForTransactionReceipt({ hash: approveHash });
-
-  // Create limit order
-  const orderHash = await client.writeContract({
-    address: CONTRACT_ADDRESSES[NETWORKS.SONIC].ROUTER,
-    abi: ROUTER_ABI,
-    functionName: 'createSwapOrder',
-    args: [
-      [tokenIn, tokenOut],
-      amountIn,
-      minOut,
-      triggerRatio,
-      priceRatioBps < 10000, // true when waiting for price to drop
-      executionFee,
-      shouldWrap,
-      shouldUnwrap
-    ],
-    value: executionFee,
-    gas: 1500000n
-  });
-
-  return {
-    success: true,
-    message: 'Limit order created',
-    data: {
-      hash: orderHash,
-      message: 'Limit order created',
-      tokenInPrice,
-      tokenOutPrice,
-      currentRatio,
-      triggerRatio,
-      expectedOut,
-      minOut
-    },
-    isMultisig: false
-  };
+    return toResult(JSON.stringify({
+      transactionHash: tx,
+      amountIn: amountIn.toString(),
+      minAmountOut: minAmountOut.toString(),
+      triggerPrice: triggerPrice.toString(),
+      triggerAboveThreshold,
+      executionFee: executionFee.toString()
+    }));
+  } catch (error) {
+    if (error instanceof Error) {
+      return toResult(`Failed to create limit swap order: ${error.message}`, true);
+    }
+    return toResult("Failed to create limit swap order: Unknown error", true);
+  }
 } 
