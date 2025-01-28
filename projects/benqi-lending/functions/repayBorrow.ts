@@ -100,5 +100,5 @@ export async function repayBorrow(props: Props, { sendTransactions, notify, getP
     const result = await sendTransactions({ chainId, account, transactions });
     const message = result.data[result.data.length - 1];
 
-    return toResult(result.isMultisig ? message.message : `Successfully repaid borrow of ${amount.data} tokens. ${message.message}`);
+    return toResult(result.isMultisig ? message.message : `Successfully repaid borrow of ${props.amount} tokens. ${message.message}`);
 }
