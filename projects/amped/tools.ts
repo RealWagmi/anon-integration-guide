@@ -5,6 +5,7 @@ import { removeLiquidity } from './functions/liquidity/removeLiquidity.js';
 import { getPerpsLiquidity } from './functions/trading/leverage/getPerpsLiquidity.js';
 import { getALPAPR } from './functions/liquidity/getALPAPR.js';
 import { getAcceptedTokenBalances } from './functions/liquidity/getAcceptedTokenBalances.js';
+import { getUserLiquidity } from './functions/liquidity/getUserLiquidity.js';
 
 interface Tool extends AiTool {
   function: Function;
@@ -166,5 +167,24 @@ export const tools: Tool[] = [
             }
         ],
         function: getAcceptedTokenBalances
+    },
+    {
+        name: 'getUserLiquidity',
+        description: 'Get user\'s ALP (Amped Liquidity Provider) information including balance, USD value, and unclaimed rewards',
+        required: ['chainName', 'account'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Name of the blockchain network (only "sonic" is supported)',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Account address to check liquidity for',
+            }
+        ],
+        function: getUserLiquidity
     }
 ];
