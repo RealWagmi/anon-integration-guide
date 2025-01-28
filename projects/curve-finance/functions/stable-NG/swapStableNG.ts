@@ -8,8 +8,8 @@ import {
     getChainFromName,
     checkToApprove
 } from "@heyanon/sdk";
-import { supportedChains } from "../constants";
-import { curveStableSwapNGAbi } from "../abis/stable-swap-ng";
+import { supportedChains } from "../../constants";
+import { curveStableSwapNGAbi } from "../../abis/stable-swap-ng";
 
 interface SwapProps {
     chainName: string;
