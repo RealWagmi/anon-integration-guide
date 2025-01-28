@@ -83,12 +83,12 @@ export const tools: AiTool[] = [
             {
                 name: 'tokenIn',
                 type: 'string',
-                description: 'Ethereum address of the token to swap from. For ETH, use 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+                description: 'Ethereum address of the token to swap from',
             },
             {
                 name: 'tokenOut',
                 type: 'string',
-                description: 'Ethereum address of the token to swap to. For ETH, use 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+                description: 'Ethereum address of the token to swap to',
             },
             {
                 name: 'amountIn',
@@ -113,7 +113,7 @@ export const tools: AiTool[] = [
             {
                 name: 'slippage',
                 type: 'number',
-                description: 'Slippage in basis points (1/10000)',
+                description: '10000 is 100%. Example user input - 0.3%, must be converted to 30',
             },
             {
                 name: 'fee',
