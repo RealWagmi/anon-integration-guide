@@ -1,0 +1,26 @@
+{
+    "compilerOptions": {
+        "importHelpers": true,
+        "alwaysStrict": true,
+        "sourceMap": true,
+        "target": "ES2022",
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "noImplicitReturns": true,
+        "noImplicitAny": true,
+        "module": "ESNext",
+        "moduleResolution": "node",
+        "strictNullChecks": true,
+        "stripInternal": true,
+        "noFallthroughCasesInSwitch": true,
+        "noEmitOnError": false,
+        "rootDir": "./",
+        "outDir": "./dist",
+        "skipLibCheck": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true
+    },
+    "exclude": [
+        "dist"
+    ]
+}
