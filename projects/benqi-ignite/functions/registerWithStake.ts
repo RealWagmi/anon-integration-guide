@@ -153,6 +153,7 @@ export async function registerWithStake(props: Props, { sendTransactions, notify
             functionName: 'registerWithStake',
             args: [register.data.nodeId, register.data.blsProofOfPossession, time],
         }),
+        value: amount.data,
     };
 
     transactions.push(tx);
