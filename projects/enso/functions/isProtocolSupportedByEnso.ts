@@ -1,8 +1,8 @@
 import { FunctionReturn, toResult, getChainFromName } from '@heyanon/sdk';
 import { ENSO_API_TOKEN, supportedChains } from '../constants';
 import axios from 'axios';
-import { EnsoApiProtocol } from './getProtocols';
 import { EnsoClient } from '@ensofinance/sdk';
+import { EnsoApiProtocol } from './getEnsoSupportedProtocols';
 
 interface Props {
     chainName: string;
@@ -10,11 +10,11 @@ interface Props {
 }
 
 /**
- * Search for a protocol by its slug on specified chain
+ * Check if a protocol is supported by Enso by protocol's slug
  * @param props - The function parameters
  * @returns Protocol
  */
-export async function getProtocol({ chainName, protocol }: Props): Promise<FunctionReturn> {
+export async function isProtocolSupportedByEnso({ chainName, protocol }: Props): Promise<FunctionReturn> {
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!protocol) return toResult(`No protocol provided`, true);

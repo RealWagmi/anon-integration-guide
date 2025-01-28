@@ -21,7 +21,7 @@ export interface EnsoApiProtocol {
  * @param props - The function parameters
  * @returns List of protocol slugs
  */
-export async function getProtocols({ chainName }: Props): Promise<FunctionReturn> {
+export async function getEnsoSupportedProtocols({ chainName }: Props): Promise<FunctionReturn> {
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Enso is not supported on ${chainName}`, true);

@@ -13,14 +13,12 @@ export interface EnsoApiToken {
     type: string;
 }
 
-// NOTE: Not sure if this should be kept or getToken is enough
-// This method in Enso SDK is not supported
 /**
  * Get tokens that are supported by Enso on specified chain
  * @param props - The function parameters
  * @returns List of protocols
  */
-export async function getTokens({ chainName }: Props): Promise<FunctionReturn> {
+export async function getEnsoSupportedTokens({ chainName }: Props): Promise<FunctionReturn> {
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Enso is not supported on ${chainName}`, true);

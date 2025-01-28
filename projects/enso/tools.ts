@@ -3,7 +3,7 @@ import { supportedChains } from './constants';
 
 export const tools: AiTool[] = [
     {
-        name: 'getProtocols',
+        name: 'getEnsoSupportedProtocols',
         description: 'Get protocols that are supported by Enso on specified chain',
         required: ['chainName'],
         props: [
@@ -16,8 +16,8 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'getProtocol',
-        description: 'Search for a protocol by its slug on specified chain',
+        name: 'isProtocolSupportedByEnso',
+        description: `Check if a protocol is supported by Enso by protocol's slug`,
         required: ['chainName', 'protocol'],
         props: [
             {
@@ -34,7 +34,7 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'getTokens',
+        name: 'getEnsoSupportedTokens',
         description: 'Get tokens that are supported by Enso on specified chain',
         required: ['chainName'],
         props: [
@@ -47,8 +47,8 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'getToken',
-        description: 'Search for a token by its address on specified chain',
+        name: 'isTokenSupportedByEnso',
+        description: 'Check if token is supported by Enso',
         required: ['chainName', 'address'],
         props: [
             {

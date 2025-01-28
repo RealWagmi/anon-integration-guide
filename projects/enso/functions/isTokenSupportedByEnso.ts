@@ -10,11 +10,11 @@ interface Props {
 }
 
 /**
- * Search for a token by its address
+ * Check if token is supported by Enso
  * @param props - The function parameters
  * @returns Token
  */
-export async function getToken({ chainName, address }: Props): Promise<FunctionReturn> {
+export async function isTokenSupportedByEnso({ chainName, address }: Props): Promise<FunctionReturn> {
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!address) return toResult('Token address not provided', true);
