@@ -13,7 +13,13 @@ export const RewardDistributor = [
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
     "name": "pendingRewards",
     "outputs": [
       {
@@ -38,4 +44,4 @@ export const RewardDistributor = [
     "stateMutability": "view",
     "type": "function"
   }
-]; 
+] as const; 

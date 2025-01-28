@@ -3,6 +3,7 @@ import { supportedChains } from './constants.js';
 import { addLiquidity } from './functions/liquidity/addLiquidity.js';
 import { removeLiquidity } from './functions/liquidity/removeLiquidity.js';
 import { getPerpsLiquidity } from './functions/trading/leverage/getPerpsLiquidity.js';
+import { getALPAPR } from './functions/liquidity/getALPAPR.js';
 
 interface Tool extends AiTool {
   function: Function;
@@ -126,5 +127,29 @@ export const tools: Tool[] = [
             }
         ],
         function: getPerpsLiquidity
+    },
+    {
+        name: 'getALPAPR',
+        description: 'Get APR information for ALP (Amped Liquidity Provider) tokens, including base APR and reward rates',
+        required: ['chainName', 'account', 'tokenAddress'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Name of the blockchain network (only "sonic" is supported)',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Account address to check APR for',
+            },
+            {
+                name: 'tokenAddress',
+                type: 'string',
+                description: 'The ALP token address to check APR for',
+            }
+        ],
+        function: getALPAPR
     }
 ];

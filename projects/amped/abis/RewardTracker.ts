@@ -45,7 +45,7 @@ export const RewardTracker = [
     "inputs": [
       {
         "internalType": "address",
-        "name": "_account",
+        "name": "account",
         "type": "address"
       }
     ],
@@ -64,7 +64,7 @@ export const RewardTracker = [
     "inputs": [
       {
         "internalType": "address",
-        "name": "_account",
+        "name": "account",
         "type": "address"
       }
     ],
@@ -79,4 +79,4 @@ export const RewardTracker = [
     "stateMutability": "view",
     "type": "function"
   }
-]; 
+] as const; 

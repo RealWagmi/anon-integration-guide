@@ -3,7 +3,7 @@ import { createPublicClient, createWalletClient, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { FunctionOptions } from '@heyanon/sdk';
 import {
-  getApr,
+  getALPAPR,
   getEarnings,
   claimRewards
 } from './liquidity/index.js';
@@ -13,7 +13,6 @@ import {
   limitSwap
 } from './trading/swaps/index.js';
 import {
-  getLeverageLiquidity,
   marketPosition,
   limitPosition
 } from './trading/leverage/index.js';
@@ -91,7 +90,7 @@ describe('Amped Finance Integration Tests', () => {
 
   describe('Liquidity Functions', () => {
     it('should get APR information', async () => {
-      const result = await getApr({
+      const result = await getALPAPR({
         chainName: 'sonic',
         account: account.address,
         tokenAddress: ADDRESSES.tokens.ANON

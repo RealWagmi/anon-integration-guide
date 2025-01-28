@@ -1,88 +1,96 @@
 import { describe, it, expect, vi } from 'vitest';
-import { ethers } from 'ethers';
-import { getApr, getEarnings, claimRewards } from './';
+import { getContract } from 'viem';
+import { getALPAPR, getEarnings, claimRewards } from './index.js';
 
-// Mock ethers contract
-const mockContract = {
+// Mock contract reads
+const mockContractReads = {
   tokensPerInterval: vi.fn(),
   totalSupply: vi.fn(),
   claimable: vi.fn(),
-  stakedAmounts: vi.fn(),
-  claim: vi.fn(),
-  getAddress: vi.fn(),
+  stakedAmounts: vi.fn()
 };
 
-// Mock provider and signer
+// Mock provider
 const mockProvider = {
-  getNetwork: vi.fn(),
-} as unknown as ethers.providers.Provider;
-
-const mockSigner = {
-  getAddress: vi.fn(),
-} as unknown as ethers.Signer;
-
-// Mock transaction response
-const mockTxResponse = {
-  wait: vi.fn().mockResolvedValue({ transactionHash: '0x123' }),
+  readContract: vi.fn()
 };
 
 describe('Reward Functions', () => {
-  describe('getApr', () => {
+  describe('getALPAPR', () => {
     it('should calculate APR correctly', async () => {
-      const tokensPerInterval = ethers.BigNumber.from('1000000');
-      const totalSupply = ethers.BigNumber.from('10000000');
+      const tokensPerInterval = 1000000n;
+      const totalSupply = 10000000n;
 
-      vi.spyOn(ethers, 'Contract').mockImplementation(() => mockContract);
-      mockContract.tokensPerInterval.mockResolvedValue(tokensPerInterval);
-      mockContract.totalSupply.mockResolvedValue(totalSupply);
+      // Mock the contract reads
+      mockProvider.readContract
+        .mockResolvedValueOnce(tokensPerInterval)  // tokensPerInterval
+        .mockResolvedValueOnce(totalSupply);       // totalSupply
 
-      const result = await getApr({
-        provider: mockProvider,
-        rewardTrackerAddress: '0x123',
-        rewardDistributorAddress: '0x456',
+      const result = await getALPAPR({
+        chainName: 'sonic',
+        account: '0x123' as `0x${string}`,
+        tokenAddress: '0x456' as `0x${string}`
+      }, {
+        getProvider: () => mockProvider,
+        notify: async (msg: string) => console.log(msg)
       });
 
-      expect(result.baseApr).toBeGreaterThan(0);
-      expect(result.totalApr).toBe(result.baseApr * 2); // Base + ES rewards
+      const data = JSON.parse(result.data);
+      expect(Number(data.baseApr)).toBeGreaterThan(0);
+      expect(Number(data.totalApr)).toBe(Number(data.baseApr) * 3); // Base + staked
     });
   });
 
   describe('getEarnings', () => {
     it('should return claimable rewards and staked amount', async () => {
-      const claimableAmount = ethers.BigNumber.from('1000000');
-      const stakedAmount = ethers.BigNumber.from('5000000');
+      const claimableAmount = 1000000n;
+      const stakedAmount = 5000000n;
 
-      vi.spyOn(ethers, 'Contract').mockImplementation(() => mockContract);
-      mockContract.claimable.mockResolvedValue(claimableAmount);
-      mockContract.stakedAmounts.mockResolvedValue(stakedAmount);
+      // Mock the contract reads
+      mockProvider.readContract
+        .mockResolvedValueOnce(claimableAmount)  // claimable
+        .mockResolvedValueOnce(stakedAmount);    // stakedAmounts
 
       const result = await getEarnings({
-        provider: mockProvider,
-        rewardTrackerAddress: '0x123',
-        account: '0x789',
+        chainName: 'sonic',
+        account: '0x123' as `0x${string}`,
+        tokenAddress: '0x456' as `0x${string}`
+      }, {
+        getProvider: () => mockProvider,
+        notify: async (msg: string) => console.log(msg)
       });
 
-      expect(result.claimableRewards).toEqual(claimableAmount);
-      expect(result.stakedAmount).toEqual(stakedAmount);
+      const data = JSON.parse(result.data);
+      expect(data.claimableRewards).toBe(claimableAmount.toString());
+      expect(data.stakedAmount).toBe(stakedAmount.toString());
     });
   });
 
   describe('claimRewards', () => {
     it('should claim rewards successfully', async () => {
-      const claimableAmount = ethers.BigNumber.from('1000000');
+      const claimableAmount = 1000000n;
+      const hash = '0x123' as `0x${string}`;
 
-      vi.spyOn(ethers, 'Contract').mockImplementation(() => mockContract);
-      mockContract.claimable.mockResolvedValue(claimableAmount);
-      mockContract.claim.mockResolvedValue(mockTxResponse);
-      mockSigner.getAddress.mockResolvedValue('0x789');
+      // Mock the contract reads and transaction
+      mockProvider.readContract.mockResolvedValueOnce(claimableAmount);  // claimable
 
       const result = await claimRewards({
-        signer: mockSigner,
-        rewardTrackerAddress: '0x123',
+        chainName: 'sonic',
+        account: '0x123' as `0x${string}`,
+        tokenAddress: '0x456' as `0x${string}`
+      }, {
+        getProvider: () => mockProvider,
+        sendTransactions: async () => ({ 
+          data: [{ hash, message: 'Transaction successful' }],
+          isMultisig: false,
+          isSuccess: true
+        }),
+        notify: async (msg: string) => console.log(msg)
       });
 
-      expect(result.claimedAmount).toEqual(claimableAmount);
-      expect(result.transactionHash).toBe('0x123');
+      const data = JSON.parse(result.data);
+      expect(data.transactionHash).toBe(hash);
+      expect(data.claimedAmount).toBe(claimableAmount.toString());
     });
   });
 }); 

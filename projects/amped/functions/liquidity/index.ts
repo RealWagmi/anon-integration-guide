@@ -1,4 +1,4 @@
-export * from './getApr.js';
+export * from './getALPAPR.js';
 export * from './getEarnings.js';
 export * from './claimRewards.js';
 export * from './addLiquidity.js';
