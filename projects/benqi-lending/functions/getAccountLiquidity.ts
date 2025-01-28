@@ -25,8 +25,7 @@ export async function getAccountLiquidity(props: Props, { getProvider }: Functio
 
     const { marketType } = props;
 
-    // @ts-expect-error users shouldn't pass marketType outside of specified type
-    if (marketType !== 'core' || marketType !== 'ecosystem') {
+    if (marketType !== 'core' && marketType !== 'ecosystem') {
         return toResult('Incorrect market type specified', true);
     }
 
