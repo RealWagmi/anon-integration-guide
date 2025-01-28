@@ -8,7 +8,7 @@ import { unvoteNodes } from './unvoteNodes';
 vi.mock('@heyanon/sdk');
 
 describe('unvoteNodes', () => {
-    it('should call requestUnlock of veQi contract', async () => {
+    it('should call unvoteNodes of gaugeController contract', async () => {
         const props: Parameters<typeof unvoteNodes>[0] = {
             account: '0x0000000000000000000000000000000000000000',
             chainName: 'Avalanche',

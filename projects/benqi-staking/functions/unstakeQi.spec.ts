@@ -7,7 +7,7 @@ import { unstakeQi } from './unstakeQi';
 vi.mock('@heyanon/sdk');
 
 describe('unstakeQi', () => {
-    it('should call requestUnlock of veQi contract', async () => {
+    it('should call withdraw of veQi contract', async () => {
         const props: Parameters<typeof unstakeQi>[0] = {
             account: '0x0000000000000000000000000000000000000000',
             chainName: 'Avalanche',
