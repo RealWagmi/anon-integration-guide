@@ -1,4 +1,4 @@
-import { Address, getContract } from 'viem';
+import { Address, isAddress, formatUnits } from 'viem';
 import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
 import { CONTRACT_ADDRESSES, NETWORKS } from '../../../constants.js';
 import { Vault } from '../../../abis/Vault.js';
@@ -14,117 +14,139 @@ interface GetPerpsLiquidityParams {
 
 interface LiquidityInfo {
   maxLeverage: number;
-  maxPositionSize: bigint;
-  maxCollateral: bigint;
-  poolAmount: bigint;
-  reservedAmount: bigint;
-  availableLiquidity: bigint;
-  fundingRate: bigint;
-  priceUsd: number;
+  maxPositionSize: string;
+  poolAmount: string;
+  poolAmountUsd: string;
+  reservedAmount: string;
+  reservedAmountUsd: string;
+  availableLiquidity: string;
+  availableLiquidityUsd: string;
+  fundingRate: string;
+  priceUsd: string;
 }
 
 /**
  * Gets perpetual trading liquidity information for a token
  * @param props - The liquidity check parameters
  * @param options - SDK function options
- * @returns Liquidity information including max leverage, position sizes, and funding rates
+ * @returns FunctionReturn with liquidity information or error
  */
 export async function getPerpsLiquidity(
-  { chainName, account, indexToken, collateralToken, isLong }: GetPerpsLiquidityParams,
-  { getProvider, notify }: FunctionOptions
+  props: GetPerpsLiquidityParams,
+  options: FunctionOptions
 ): Promise<FunctionReturn> {
-  // Validate chain
-  if (chainName.toLowerCase() !== "sonic") {
-    return toResult("This function is only supported on Sonic chain", true);
-  }
-
-  await notify("Checking perpetual trading liquidity information...");
-
-  const provider = getProvider(146); // Sonic chain ID
-  const vaultAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT;
-  const priceFeedAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT_PRICE_FEED;
+  const { chainName, account, indexToken, collateralToken, isLong } = props;
+  const { getProvider, notify } = options;
 
   try {
-    const vault = getContract({
-      address: vaultAddress,
-      abi: Vault,
-      client: provider
-    });
+    // Validate chain
+    if (chainName.toLowerCase() !== "sonic") {
+      return toResult("This function is only supported on Sonic chain", true);
+    }
 
-    const priceFeed = getContract({
+    // Validate addresses
+    if (!isAddress(indexToken) || !isAddress(collateralToken)) {
+      return toResult("Invalid token addresses provided", true);
+    }
+
+    // Validate token addresses are not zero address
+    if (indexToken === '0x0000000000000000000000000000000000000000' || 
+        collateralToken === '0x0000000000000000000000000000000000000000') {
+      return toResult("Zero addresses are not valid tokens", true);
+    }
+
+    // Validate account address
+    if (!isAddress(account)) {
+      return toResult("Invalid account address provided", true);
+    }
+    if (account === '0x0000000000000000000000000000000000000000') {
+      return toResult("Zero address is not a valid account", true);
+    }
+
+    await notify("Checking perpetual trading liquidity information...");
+
+    const provider = getProvider(146); // Sonic chain ID
+    if (!provider) {
+      return toResult("Failed to get provider", true);
+    }
+
+    const vaultAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT as Address;
+    const priceFeedAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT_PRICE_FEED as Address;
+
+    // Get token price first to validate token is supported
+    const priceResponse = await provider.readContract({
       address: priceFeedAddress,
       abi: VaultPriceFeed,
-      client: provider
-    });
+      functionName: 'getPrice',
+      args: [indexToken, isLong, !isLong, true]
+    }) as bigint;
+
+    if (priceResponse === 0n) {
+      return toResult(`No price feed available for ${indexToken}`, true);
+    }
+
+    const priceUsd = Number(priceResponse) / 1e30;
 
     // Get pool amount
-    const poolAmount = await vault.read.poolAmounts([indexToken]) as bigint;
+    const poolAmount = await provider.readContract({
+      address: vaultAddress,
+      abi: Vault,
+      functionName: 'poolAmounts',
+      args: [indexToken]
+    }) as bigint;
 
     // Get reserved amount
-    const reservedAmount = await vault.read.reservedAmounts([indexToken]) as bigint;
-
-    // Get max global size
-    let maxGlobalSize = 0n;
-    try {
-      maxGlobalSize = await vault.read[isLong ? "maxGlobalLongSizes" : "maxGlobalShortSizes"]([indexToken]) as bigint;
-    } catch (error) {
-      console.log(`Failed to get max global ${isLong ? 'long' : 'short'} size:`, error);
-    }
+    const reservedAmount = await provider.readContract({
+      address: vaultAddress,
+      abi: Vault,
+      functionName: 'reservedAmounts',
+      args: [indexToken]
+    }) as bigint;
 
     // Get funding rate
-    let fundingRate = 0n;
-    try {
-      fundingRate = await vault.read.cumulativeFundingRates([collateralToken]) as bigint;
-    } catch (error) {
-      console.log('Failed to get funding rate:', error);
-    }
-
-    // Get token price
-    const priceResponse = await priceFeed.read.getPrice([indexToken, false, true, true]) as bigint;
-    const priceInUsd = Number(priceResponse) / 1e30;
+    const fundingRate = await provider.readContract({
+      address: vaultAddress,
+      abi: Vault,
+      functionName: 'cumulativeFundingRates',
+      args: [collateralToken]
+    }) as bigint;
 
     // Calculate available liquidity
     const availableLiquidity = poolAmount - reservedAmount;
+    if (availableLiquidity < 0n) {
+      return toResult("Invalid liquidity calculation: negative available liquidity", true);
+    }
     
-    // Calculate max leverage
+    // Calculate max leverage based on position type
     const maxLeverage = isLong ? 11 : 10;
 
-    // Calculate max collateral based on position size and leverage
-    const maxCollateral = maxGlobalSize / BigInt(maxLeverage);
+    // Calculate max position size based on available liquidity and leverage
+    const maxPositionSize = availableLiquidity * BigInt(maxLeverage);
+
+    // Calculate USD values
+    const poolAmountUsd = Number(formatUnits(poolAmount, 18)) * priceUsd;
+    const reservedAmountUsd = Number(formatUnits(reservedAmount, 18)) * priceUsd;
+    const availableLiquidityUsd = Number(formatUnits(availableLiquidity, 18)) * priceUsd;
 
     const liquidityInfo: LiquidityInfo = {
       maxLeverage,
-      maxPositionSize: maxGlobalSize,
-      maxCollateral,
-      poolAmount,
-      reservedAmount,
-      availableLiquidity,
-      fundingRate,
-      priceUsd: priceInUsd
+      maxPositionSize: formatUnits(maxPositionSize, 30),
+      poolAmount: formatUnits(poolAmount, 18),
+      poolAmountUsd: poolAmountUsd.toFixed(2),
+      reservedAmount: formatUnits(reservedAmount, 18),
+      reservedAmountUsd: reservedAmountUsd.toFixed(2),
+      availableLiquidity: formatUnits(availableLiquidity, 18),
+      availableLiquidityUsd: availableLiquidityUsd.toFixed(2),
+      fundingRate: fundingRate.toString(),
+      priceUsd: priceUsd.toFixed(4)
     };
 
-    // Format the response for better readability
-    const formattedInfo = {
-      maxLeverage: liquidityInfo.maxLeverage,
-      maxPositionSize: formatUnits(liquidityInfo.maxPositionSize, 30),
-      maxCollateral: formatUnits(liquidityInfo.maxCollateral, 18),
-      poolAmount: formatUnits(liquidityInfo.poolAmount, 18),
-      reservedAmount: formatUnits(liquidityInfo.reservedAmount, 18),
-      availableLiquidity: formatUnits(liquidityInfo.availableLiquidity, 18),
-      fundingRate: liquidityInfo.fundingRate.toString(),
-      priceUsd: liquidityInfo.priceUsd.toFixed(4)
-    };
-
-    return toResult(JSON.stringify(formattedInfo));
+    return toResult(JSON.stringify(liquidityInfo));
   } catch (error) {
+    console.error('Error in getPerpsLiquidity:', error);
     if (error instanceof Error) {
       return toResult(`Failed to get perpetual trading liquidity: ${error.message}`, true);
     }
     return toResult("Failed to get perpetual trading liquidity: Unknown error", true);
   }
-}
-
-// Helper function to format units
-function formatUnits(value: bigint, decimals: number): string {
-  return (Number(value) / Math.pow(10, decimals)).toString();
 } 

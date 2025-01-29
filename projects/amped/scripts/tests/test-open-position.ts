@@ -1,27 +1,54 @@
-import { CONTRACT_ADDRESSES, NETWORKS, RPC_URLS } from '../../constants.js';
-import { openLongPositionWithValue } from '../../functions/trading/leverage/openMarketPosition.js';
-import { ethers } from 'ethers';
-import 'dotenv/config';
+import { createPublicClient, createWalletClient, http } from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
+import { CONTRACT_ADDRESSES, NETWORKS, CHAIN_CONFIG } from '../../constants.js';
+import { openPosition } from '../../functions/trading/leverage/openPosition.js';
+import dotenv from 'dotenv';
 
-// Opening an $11 long position on ANON using $10 of S as collateral (1.1x leverage)
-const indexToken = CONTRACT_ADDRESSES[NETWORKS.SONIC].ANON;
-const collateralToken = CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN;
+// Load environment variables
+dotenv.config();
 
 async function main() {
-  const provider = new ethers.providers.JsonRpcProvider(RPC_URLS[NETWORKS.SONIC]);
-  const signer = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
+  console.log('Preparing to open long position on S token...');
+  
+  // Create public client
+  const publicClient = createPublicClient({
+    chain: CHAIN_CONFIG[NETWORKS.SONIC],
+    transport: http()
+  });
 
-  try {
-    const result = await openLongPositionWithValue({
-      signer,
-      indexToken,
-      collateralToken,
-      collateralValueUsd: 10, // $10 USD of collateral (minimum allowed)
-      positionValueUsd: 11, // $11 USD total position size (1.1x leverage, minimum allowed)
-    });
-    console.log('Position opened successfully:', result);
-  } catch (error) {
-    console.error('Error opening position:', error);
+  // Get wallet address from private key
+  if (!process.env.PRIVATE_KEY) {
+    throw new Error('PRIVATE_KEY not found in environment variables');
+  }
+  
+  const privateKey = process.env.PRIVATE_KEY.startsWith('0x') ? 
+    process.env.PRIVATE_KEY as `0x${string}` : 
+    `0x${process.env.PRIVATE_KEY}` as `0x${string}`;
+  const account = privateKeyToAccount(privateKey);
+  
+  // Create wallet client
+  const walletClient = createWalletClient({
+    account,
+    chain: CHAIN_CONFIG[NETWORKS.SONIC],
+    transport: http()
+  });
+  
+  console.log('Using wallet address:', account.address);
+  
+  // Open a long position
+  const result = await openPosition(publicClient, walletClient, {
+    indexToken: CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN as `0x${string}`, // S token (native token) as the index token
+    collateralToken: CONTRACT_ADDRESSES[NETWORKS.SONIC].ANON as `0x${string}`, // ANON as collateral
+    isLong: true,
+    sizeUsd: 50, // $50 position
+    collateralUsd: 10, // $10 collateral (5x leverage)
+  }, account);
+
+  if (result.success) {
+    console.log('\nPosition opened successfully!');
+    console.log('Transaction hash:', result.hash);
+  } else {
+    console.error('\nFailed to open position:', result.error);
   }
 }
 
