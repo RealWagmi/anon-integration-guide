@@ -215,4 +215,17 @@ export const tools: AiTool[] = [
             },
         ],
     },
+    {
+        name: 'getStakingApr',
+        description: 'Get the annualized yield from stS tokens in the form of an APR (annual percentage rate)',
+        required: ['chainName'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name',
+            },
+        ],
+    },
 ];

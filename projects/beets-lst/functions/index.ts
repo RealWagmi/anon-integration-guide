@@ -10,3 +10,4 @@ export { getProtocolStakedSonicToSonicExchangeRate } from './getProtocolStakedSo
 export { getProtocolSonicToStakedSonicExchangeRate } from './getProtocolSonicToStakedSonicExchangeRate';
 export { getOpenWithdrawRequests } from './getOpenWithdrawRequests';
 export { getNextWithdrawal } from './getNextWithdrawal';
+export { getStakingApr } from './getStakingApr';

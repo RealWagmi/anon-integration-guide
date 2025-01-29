@@ -63,3 +63,25 @@ export function findHighestDelegatedValidator(validators: ValidatorData[]): Vali
         return currentValue > maxValue ? current : max;
     });
 }
+
+/**
+ * Fetch the staking yield rate.
+ *
+ * To get the APR percentage, multiply the result by 100.
+ */
+export async function fetchStakingAPR(): Promise<number> {
+    const query = `
+        query {
+            stsGetGqlStakedSonicData {
+                stakingApr
+            }
+        }
+    `;
+
+    const response = await executeGraphQLQuery<{
+        stsGetGqlStakedSonicData: {
+            stakingApr: number;
+        };
+    }>(query);
+    return response.stsGetGqlStakedSonicData.stakingApr;
+}
