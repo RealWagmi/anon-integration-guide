@@ -1,10 +1,11 @@
-import { Address, encodeFunctionData, erc20Abi, parseUnits } from 'viem';
+import { Address, encodeFunctionData, erc20Abi, maxUint256, parseUnits } from 'viem';
 import {
 	FunctionReturn,
 	FunctionOptions,
 	TransactionParams,
 	toResult,
 	getChainFromName,
+    checkToApprove
 } from '@heyanon/sdk';
 import { supportedChains, ADDRESS } from '../constants';
 import { dtokenAbi } from '../abis';
@@ -68,6 +69,20 @@ export async function withdrawAsset(
     await notify(`Your lent balance is ${balance} ${asset}`)
     await notify(`Withdrawing ${amount} ${asset}...`);
 
+    const transactions: TransactionParams[] = [];
+
+	// Approve the asset beforehand
+	await checkToApprove({
+		args: {
+			account,
+			target: marketAddress,
+			spender: marketAddress,
+			amount: maxUint256
+		},
+		transactions,
+		provider,
+	});
+
 	// Prepare withdraw transaction
 	const tx: TransactionParams = {
 			target: marketAddress,
@@ -77,9 +92,10 @@ export async function withdrawAsset(
 					args: [amountWithDecimals],
 			}),
 	};
+    transactions.push(tx);
 
 	// Sign and send transaction
-	const result = await sendTransactions({ chainId, account, transactions: [tx] });
+	const result = await sendTransactions({ chainId, account, transactions });
 	const withdrawMessage = result.data[result.data.length - 1];
 
 	return toResult(
