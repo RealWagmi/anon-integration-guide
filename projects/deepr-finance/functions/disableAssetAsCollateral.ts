@@ -21,7 +21,7 @@ interface Props {
  * @param tools - System tools for blockchain interactions.
  * @returns Success message.
  */
-export async function disableCollateral(
+export async function disableAssetAsCollateral(
 	{ chainName, account, asset }: Props,
 	{ sendTransactions, notify }: FunctionOptions
 ): Promise<FunctionReturn> {

@@ -44,13 +44,6 @@ export async function getUsersMarketPosition(
     const provider = getProvider(chainId);
     
     // Calculate borrowed and supplied
-    const price = await provider.readContract({
-        address: ADDRESS.CONTRACT.ORACLE as Address,
-        abi: oracleAbi,
-        functionName: 'getPrice',
-        args: [assetAddress],
-    }) as bigint;
-
     const borrowed = await provider.readContract({
         address: marketAddress,
         abi: dtokenAbi,
@@ -80,17 +73,13 @@ export async function getUsersMarketPosition(
     const dTokenDecimals = 8;
     const mantissa = 18 + decimals - dTokenDecimals;
 
-    const scaledDecimals = 10**18 * 10**(18 - decimals);
-    const scaledPrice = price / BigInt(scaledDecimals);
-    const scaledBorrowed = BigInt(formatUnits(borrowed, decimals));
-
-    const borrowedValue = scaledPrice * scaledBorrowed;
-    const collateralValue = BigInt(formatUnits(dCollateral, dTokenDecimals)) * exchangeRate / 10n ** BigInt(mantissa) * scaledPrice;
+    const borrowedValue = BigInt(formatUnits(borrowed, decimals));
+    const collateralValue = BigInt(formatUnits(dCollateral, dTokenDecimals)) * exchangeRate / 10n ** BigInt(mantissa);
 
 
 	return toResult(
         `${asset} Market:
-        Supply balance $${Number(collateralValue).toFixed(2)};
-        Borrow balance: $${Number(borrowedValue).toFixed(2)}.`
+        Supply balance ${collateralValue} ${asset};
+        Borrow balance: ${borrowedValue} ${asset}.`
     );
 }

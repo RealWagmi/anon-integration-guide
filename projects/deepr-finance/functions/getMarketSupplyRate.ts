@@ -10,7 +10,6 @@ import { dtokenAbi } from '../abis';
 
 interface Props {
 	chainName: string;
-	account: Address;
 	asset: string;
 }
 
@@ -20,13 +19,10 @@ interface Props {
  * @param tools - System tools for blockchain interactions.
  * @returns Success message.
  */
-export async function gettMarketSupplyRate(
-	{ chainName, account, asset }: Props,
+export async function getMarketSupplyRate(
+	{ chainName, asset }: Props,
 	{ notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
-	// Check wallet connection
-	if (!account) return toResult('Wallet not connected', true);
-
     await notify('Checking everything...');
 
 	// Validate chain

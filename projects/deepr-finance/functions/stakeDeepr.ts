@@ -5,6 +5,7 @@ import {
 	TransactionParams,
 	toResult,
 	getChainFromName,
+	checkToApprove
 } from '@heyanon/sdk';
 import { supportedChains, ADDRESS } from '../constants';
 import { rewardpoolAbi } from '../abis';
@@ -50,6 +51,20 @@ export async function stakeDeepr(
 
 	await notify('Staking DEEPR...');
 
+	const transactions: TransactionParams[] = [];
+
+	// Approve the asset beforehand
+	await checkToApprove({
+		args: {
+			account,
+			target: ADDRESS.CONTRACT.DEEPR as Address,
+			spender: ADDRESS.CONTRACT.REWARDPOOL as Address,
+			amount: amountWithDecimals
+		},
+		transactions,
+		provider,
+	});
+
 	// Prepare stake transaction
 	const tx: TransactionParams = {
 			target: ADDRESS.CONTRACT.REWARDPOOL as Address,
@@ -59,9 +74,10 @@ export async function stakeDeepr(
 					args: [amountWithDecimals],
 			}),
 	};
+	transactions.push(tx);
 
 	// Sign and send transaction
-	const result = await sendTransactions({ chainId, account, transactions: [tx] });
+	const result = await sendTransactions({ chainId, account, transactions });
 	const stakeMessage = result.data[result.data.length - 1];
 
 	return toResult(

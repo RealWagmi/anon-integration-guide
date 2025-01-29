@@ -10,7 +10,6 @@ import { rewardpoolAbi } from '../abis';
 
 interface Props {
 	chainName: string;
-	account: Address;
 }
 
 /**
@@ -20,12 +19,9 @@ interface Props {
  * @returns Success message.
  */
 export async function getStakeDeeprApr(
-	{ chainName, account }: Props,
+	{ chainName }: Props,
 	{ notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
-	// Check wallet connection
-	if (!account) return toResult('Wallet not connected', true);
-
     await notify('Checking everything...');
 
 	// Validate chain
