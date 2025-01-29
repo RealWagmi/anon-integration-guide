@@ -29,24 +29,24 @@ export const tools: AiTool[] = [
     // views
     {
         name: 'getUserVaultSvtBalance',
-        description: "Gets user's assets balances in a vault",
+        description: "Gets user's SVT balance in a vault",
         required: ['chainName', 'account', 'vaultAddress'],
         props: [
             {
                 name: 'chainName',
                 type: 'string',
                 enum: supportedChains.map(getChainName),
-                description: 'Chain name where the vault and account exist',
+                description: 'Chain name where the vault and user address exist',
             },
             {
                 name: 'account',
                 type: 'string',
-                description: 'Account address that will check the vault balances',
+                description: "The user's address",
             },
             {
                 name: 'vaultAddress',
                 type: 'string',
-                description: 'Vault address that will check the user balances',
+                description: 'Vault address',
             },
         ],
     },
