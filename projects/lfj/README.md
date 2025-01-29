@@ -12,25 +12,17 @@ integration with lfg
 ## Common Tasks
 
 1. Basic Operations
-   - "Execute example operation with 100 USDT in @lfg on Ethereum network"
-   - "Run example transaction with 50 USDC in @lfg"
-   - "Perform example action with 1000 tokens in @lfg"
-
-2. Information Queries
-   - "Show my current status in @lfg"
-   - "Check my balance in @lfg"
-   - "Get example statistics from @lfg"
-   - "Calculate expected results for my position in @lfg"
-
+   - "Swap 2 USDC to USDT on AVALANCHE"
+   - "Swap all my USDC for USDT on AVALANCHE"
 
 ## Available Functions
 
-List of available functions will be added here.
+- swapExact
 
 ## Installation
 
 ```bash
-yarn add @heyanon/lfg
+yarn add @heyanon/lfj
 ```
 
 ## Usage
