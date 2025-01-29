@@ -37,7 +37,8 @@ export const tools: AiTool[] = [
             {
                 name: 'maxSlippageInPercentage',
                 type: 'string',
-                description: 'The maximum allowed slippage in swapping the tokens. This value should be in percentage (e.g. 0.5 for 0.5%)',
+                description:
+                    'An optional field to specify the maximum allowed slippage in swapping the tokens. If not provided this defaults to 0.5. This value should be in percentage (e.g. 0.5 for 0.5%)',
             },
             {
                 name: 'inputTokenAddress',

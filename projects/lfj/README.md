@@ -13,7 +13,8 @@ integration with lfg
 
 1. Basic Operations
    - "Swap 2 USDC to USDT on AVALANCHE"
-   - "Swap all my USDC for USDT on AVALANCHE"
+   - "Swap all my USDC for 50 USDT on AVALANCHE"
+   - "Swap all my USDC for 50 USDT on AVALANCHE and send it to vitalik.eth"
 
 ## Available Functions
 
