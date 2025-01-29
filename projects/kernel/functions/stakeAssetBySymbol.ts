@@ -44,7 +44,6 @@ export async function stakeAssetBySymbol(
         address: ASSET_REGISTRY_ADDRESS,
         abi: assetRegistryAbi,
         functionName: 'getAssets',
-        args: [],
     }) as Address[];
 
     let assetAddress: Address = zeroAddress;
@@ -53,7 +52,6 @@ export async function stakeAssetBySymbol(
             address: asset,
             abi: erc20Abi,
             functionName: 'symbol',
-            args: [],
         });
         if (assetSymbol.toUpperCase() === token.toUpperCase()) {
             assetAddress = asset;
@@ -67,7 +65,6 @@ export async function stakeAssetBySymbol(
         address: assetAddress,
         abi: erc20Abi,
         functionName: 'decimals',
-        args: [],
     })
 	const amountWithDecimals = parseUnits(amount, decimals);
 	if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);

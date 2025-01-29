@@ -52,7 +52,6 @@ export async function stakeAssetByAddress(
         address: token,
         abi: erc20Abi,
         functionName: 'decimals',
-        args: [],
     })
 	const amountWithDecimals = parseUnits(amount, decimals);
 	if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);

@@ -26,7 +26,6 @@ export async function getPointsForAsset({ chainName, token }: Props, { getProvid
         address: ASSET_REGISTRY_ADDRESS,
         abi: assetRegistryAbi,
         functionName: 'getAssets',
-        args: [],
     }) as Address[];
 
     let assetAddress: Address = zeroAddress;
@@ -35,7 +34,6 @@ export async function getPointsForAsset({ chainName, token }: Props, { getProvid
             address: asset,
             abi: erc20Abi,
             functionName: 'symbol',
-            args: [],
         });
         if (assetSymbol.toUpperCase() === token.toUpperCase()) {
             assetAddress = asset;

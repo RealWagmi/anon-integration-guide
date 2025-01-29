@@ -43,7 +43,6 @@ export async function unstakeAssetBySymbol(
         address: ASSET_REGISTRY_ADDRESS,
         abi: assetRegistryAbi,
         functionName: 'getAssets',
-        args: [],
     }) as Address[];
 
     let assetAddress: Address = zeroAddress;
@@ -52,7 +51,6 @@ export async function unstakeAssetBySymbol(
             address: asset,
             abi: erc20Abi,
             functionName: 'symbol',
-            args: [],
         });
         if (assetSymbol.toUpperCase() === token.toUpperCase()) {
             assetAddress = asset;
