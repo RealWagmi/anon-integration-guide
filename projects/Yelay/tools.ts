@@ -28,7 +28,7 @@ export const tools: AiTool[] = [
     },
     // views
     {
-        name: 'getUserVaultBalance',
+        name: 'getUserVaultSvtBalance',
         description: "Gets user's assets balances in a vault",
         required: ['chainName', 'account', 'vaultAddress'],
         props: [

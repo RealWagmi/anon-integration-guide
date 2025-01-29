@@ -2,22 +2,21 @@ import { Address } from 'viem';
 import { FunctionReturn, FunctionOptions, toResult, getChainFromName } from '@heyanon/sdk';
 import { supportedChains } from '../constants';
 import { getChainConfig, getSdk, wrapWithResult } from '../utils';
-import { UserBalancesInfoQuery } from '@spool.fi/spool-v2-sdk';
 
-export interface GetUserBalanceProps {
+export interface GetUserSvtBalanceProps {
     chainName: string;
     account: Address;
     vaultAddress: string;
 }
 
 /**
- * Gets users balance for a pool.
+ * Gets users svt balance for a pool.
  * @param props - The function parameters
  * @param tools - System tools for blockchain interactions
  * @returns Transaction result
  */
-export async function getUserVaultBalance(
-    { chainName, account, vaultAddress }: GetUserBalanceProps,
+export async function getUserVaultSvtBalance(
+    { chainName, account, vaultAddress }: GetUserSvtBalanceProps,
     { notify }: FunctionOptions,
 ): Promise<FunctionReturn> {
     // Check wallet connection
@@ -30,7 +29,7 @@ export async function getUserVaultBalance(
         return toResult(`Protocol is not supported on ${chainName}`, true);
 
     const config = wrapWithResult(getChainConfig)(chainId);
-    if (!config.success) return toResult(`Failed get config`, true);
+    if (!config.success) return toResult(`Failed to get config`, true);
 
     const sdk = wrapWithResult(getSdk)(chainId);
     if (!sdk.success) return toResult(`Failed to setup SDK`, true);
@@ -38,17 +37,17 @@ export async function getUserVaultBalance(
     // Getting account balance
     await notify(`Getting balance for account ${account} in vault ${vaultAddress}...`);
 
-    const userBalancesInfoQuery: UserBalancesInfoQuery = {
-        vaultAddresses: [vaultAddress],
-        userAddress: account,
-    };
-    const result = await sdk.result.views.userInfo.getUserVaultsBalances(userBalancesInfoQuery);
-    if (!result[vaultAddress]) {
-        return toResult(`No balances for account ${account} found in vault ${vaultAddress}`);
-    }
+    const svtBalance = await sdk.result.views.userInfo.getUserSVTBalance(vaultAddress, account);
 
-    // TODO: better describe what balance means
-    const balances = result[vaultAddress].join(', ');
-
-    return toResult(`Balances for account ${account} in vault ${vaultAddress} are [ ${balances} ]`);
+    // TODO: approve this response
+    return toResult(
+        `Balance for account ${account} in vault ${vaultAddress} is ${svtBalance} SVTs`,
+    );
 }
+
+// deposit -> swapAndDeposit.deposit
+// fast withdrawal -> withdraw.redeemFast
+
+// get Asset -> getUserAsset
+// get 7D Apy -> job api maybe
+// get total earned yield -> not gonna do it
