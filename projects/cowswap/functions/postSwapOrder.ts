@@ -1,7 +1,7 @@
 import { Address, parseUnits } from 'viem';
-import { FunctionReturn, FunctionOptions, toResult, getChainFromName } from '@heyanon/sdk';
+import { FunctionReturn, FunctionOptions, toResult, getChainFromName, checkToApprove } from '@heyanon/sdk';
 import { HeyAnonSigner, supportedChains } from '../constants';
-import { OrderBookApi, OrderQuoteRequest, OrderQuoteSideKindSell, OrderSigningUtils, SigningScheme } from '@cowprotocol/cow-sdk';
+import { OrderBookApi, OrderQuoteRequest, OrderQuoteSideKindSell, OrderSigningUtils, SigningScheme, COW_PROTOCOL_VAULT_RELAYER_ADDRESS } from '@cowprotocol/cow-sdk';
 
 import { getTokenInfo } from '../utils';
 
@@ -44,7 +44,17 @@ export async function postSwapOrder(
     const amountParsed = parseUnits(amount, inputTokenInfo.decimals);
     if (!signMessages) return toResult('Missing parameter `signMessage`', true);
 
-    // TODO: approve input Token
+    // Approve inputToken
+    await checkToApprove({
+        args: {
+            account,
+            target: inputToken,
+            spender: COW_PROTOCOL_VAULT_RELAYER_ADDRESS[chainId],
+            amount: amountParsed,
+        },
+        transactions: [],
+        provider,
+    });
 
     const signer = new HeyAnonSigner(account, provider, signMessages);
     const orderBookApi = new OrderBookApi({ chainId: chainId as number });
