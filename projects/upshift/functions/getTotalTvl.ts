@@ -14,7 +14,7 @@ interface ApiResponse {
  * @param props - The request parameters. 
  * @returns TVL.
  */
-export async function getTvl(): Promise<FunctionReturn> {
+export async function getTotalTvl(): Promise<FunctionReturn> {
     const response = await axios.get<ApiResponse>(`https://api.llama.fi/protocol/upshift`);
 
     if (!response.data || !response.data.currentChainTvls) {

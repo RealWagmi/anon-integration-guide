@@ -64,7 +64,6 @@ export async function depositAsset(
 			data: encodeFunctionData({
 					abi: wrappedNativeAbi,
 					functionName: 'deposit',
-					args: [],
 			}),
             value: amountWithDecimals,
 	    };
@@ -74,7 +73,6 @@ export async function depositAsset(
             address: tokenAddress,
             abi: erc20Abi,
             functionName: 'decimals',
-            args: [],
         });
         amountWithDecimals = parseUnits(amount, decimals);
         if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);

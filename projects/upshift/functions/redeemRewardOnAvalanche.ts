@@ -57,7 +57,6 @@ export async function redeemRewardOnAvalanche(
 			data: encodeFunctionData({
 					abi: stakeAbi,
 					functionName: 'getReward',
-					args: [],
 			}),
 	};
 

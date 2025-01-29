@@ -5,7 +5,6 @@ import {
 	TransactionParams,
 	toResult,
 	getChainFromName,
-    ChainId,
 } from '@heyanon/sdk';
 import { supportedChains, TOKEN, TokenConfig } from '../constants';
 import { vaultAbi } from '../abis';
@@ -59,14 +58,12 @@ export async function requestRedeemAsset(
             address: tokenConfig.address,
             abi: erc20Abi,
             functionName: 'decimals',
-            args: [],
         });
     } else if (!isUnderlyingAsset) {
         decimals = await provider.readContract({
             address: vault,
             abi: erc20Abi,
             functionName: 'decimals',
-            args: [],
         });
     }
 
@@ -92,7 +89,6 @@ export async function requestRedeemAsset(
         address: vault,
         abi: vaultAbi,
         functionName: 'lagDuration',
-        args: [],
     }) as bigint) / 3600n;
 
     await notify('Making request...');

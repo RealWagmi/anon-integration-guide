@@ -43,7 +43,6 @@ export async function claimAsset(
         address: tokenConfig.vaultAddress,
         abi: vaultAbi,
         functionName: 'getWithdrawalEpoch',
-        args: [],
     }) as { year: bigint; month: bigint; day: bigint };
 
 	await notify('Claiming asset...');
