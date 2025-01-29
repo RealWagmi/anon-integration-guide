@@ -7,6 +7,7 @@ import { Percent, TokenAmount } from '@traderjoe-xyz/sdk-core';
 import { getTokenInfo } from '../utils';
 
 interface Props {
+    isExactIn: boolean;
     chainName: string;
     account: Address;
     amount: string;
@@ -17,8 +18,8 @@ interface Props {
     outputTokenAddress: Address;
 }
 
-export async function swapExactIn(
-    { chainName, account, amount, inputTokenAddress, outputTokenAddress, maxSlippageInPercentage = '0.5', recipient = account }: Props,
+export async function swapTokens(
+    { chainName, account, amount, inputTokenAddress, outputTokenAddress, isExactIn, maxSlippageInPercentage = '0.5', recipient = account }: Props,
     { sendTransactions, notify, getProvider }: FunctionOptions,
 ): Promise<FunctionReturn> {
     // Check wallet connection
@@ -36,8 +37,10 @@ export async function swapExactIn(
     const inputToken = await getTokenInfo(chainId as number, provider, inputTokenAddress);
     const outputToken = await getTokenInfo(chainId as number, provider, outputTokenAddress);
 
-    if (!inputToken) return toResult('Invalid ERC20 address for `inputToken`', true);
-    if (!outputToken) return toResult('Invalid ERC20 address for `outputToken`', true);
+    if (!inputToken) return toResult('Invalid ERC20 address for `inputTokenAddress`', true);
+    if (!outputToken) return toResult('Invalid ERC20 address for `outputTokenAddress`', true);
+
+    if (Number(amount) < 0) return toResult('`amount` cannot be less than 0', true);
 
     await notify('Calculating the best route ...');
 
@@ -54,7 +57,7 @@ export async function swapExactIn(
     const amountIn = new TokenAmount(inputToken, amountInParsed);
     const trades = await TradeV2.getTradesExactIn(allRoutes, amountIn, outputToken, isNativeIn, isNativeOut, provider, chainId as number);
 
-    const bestTrade = TradeV2.chooseBestTrade(trades as TradeV2[], true);
+    const bestTrade = TradeV2.chooseBestTrade(trades as TradeV2[], isExactIn);
     if (!bestTrade) {
         return toResult('Cannot find a valid route', true);
     }

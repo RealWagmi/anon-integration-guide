@@ -3,8 +3,8 @@ import { supportedChains } from './constants';
 
 export const tools: AiTool[] = [
     {
-        name: 'swapExact',
-        description: '',
+        name: 'swapTokens',
+        description: 'Swap tokens using lfj.gg',
         required: ['isExactIn', 'chainName', 'account', 'amount', 'recipient', 'maxSlippageInPercentage', 'inputTokenAddress', 'outputTokenAddress'],
         props: [
             {

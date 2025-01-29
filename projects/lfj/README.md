@@ -15,10 +15,11 @@ integration with lfg
    - "Swap 2 USDC to USDT on AVALANCHE"
    - "Swap all my USDC for 50 USDT on AVALANCHE"
    - "Swap all my USDC for 50 USDT on AVALANCHE and send it to vitalik.eth"
+   - "Swap 2 USDC to USDT on AVALANCHE with a maximum slippage of 0.1%"
 
 ## Available Functions
 
-- swapExact
+- swapTokens
 
 ## Installation
 
