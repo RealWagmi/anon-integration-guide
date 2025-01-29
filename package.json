@@ -5,7 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest",
+    "test:watch": "vitest watch",
     "test:liquidity": "NODE_OPTIONS='--loader ts-node/esm' ts-node --esm projects/amped/scripts/tests/test-s-liquidity.ts"
   },
   "keywords": [],
@@ -14,7 +15,7 @@
   "devDependencies": {
     "@vitest/coverage-v8": "^3.0.2",
     "tsx": "^4.19.2",
-    "vitest": "^3.0.2"
+    "vitest": "^3.0.4"
   },
   "dependencies": {
     "@heyanon/sdk": "^1.0.5",

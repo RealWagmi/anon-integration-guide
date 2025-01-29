@@ -1,4 +1,4 @@
-import { getUserLiquidity } from './projects/amped/functions/liquidity/getUserLiquidity.js';
+import { getUserLiquidity } from './projects/amped/functions/liquidity/getUserLiquidity.ts';
 import { createPublicClient, http } from 'viem';
 import { CHAIN_CONFIG, NETWORKS } from './projects/amped/constants.js';
 

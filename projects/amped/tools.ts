@@ -6,6 +6,7 @@ import { getPerpsLiquidity } from './functions/trading/leverage/getPerpsLiquidit
 import { getALPAPR } from './functions/liquidity/getALPAPR.js';
 import { getAcceptedTokenBalances } from './functions/liquidity/getAcceptedTokenBalances.js';
 import { getUserLiquidity } from './functions/liquidity/getUserLiquidity.js';
+import { getPoolLiquidity } from './functions/liquidity/getPoolLiquidity.js';
 
 interface Tool extends AiTool {
   function: Function;
@@ -68,8 +69,8 @@ export const tools: Tool[] = [
     },
     {
         name: 'removeLiquidity',
-        description: 'Remove liquidity from the protocol by redeeming GLP for tokens',
-        required: ['chainName', 'tokenOut', 'amount'],
+        description: 'Remove liquidity from the protocol by redeeming GLP for tokens. For native token (S) redemption, use the NATIVE_TOKEN address from CONTRACT_ADDRESSES. The minimum output amount is calculated automatically based on current prices and slippage tolerance.',
+        required: ['chainName', 'account', 'tokenOut', 'amount'],
         props: [
             {
                 name: 'chainName',
@@ -78,21 +79,32 @@ export const tools: Tool[] = [
                 description: 'Name of the blockchain network',
             },
             {
+                name: 'account',
+                type: 'string',
+                description: 'Account address that will receive the redeemed tokens',
+            },
+            {
                 name: 'tokenOut',
                 type: 'string',
-                description: 'Address of the token to receive when removing liquidity',
+                description: 'Address of the token to receive when removing liquidity. Use NATIVE_TOKEN address for native token (S) redemption.',
             },
             {
                 name: 'amount',
                 type: 'string',
-                description: 'Amount of GLP to redeem',
+                description: 'Amount of GLP to redeem (in decimal format)',
             },
             {
-                name: 'minOut',
-                type: 'string',
-                description: 'Minimum amount of tokens to receive',
+                name: 'slippageTolerance',
+                type: 'number',
+                description: 'Optional: Maximum acceptable slippage as a percentage (e.g., 0.5 for 0.5%). Defaults to 0.5%.',
                 optional: true,
             },
+            {
+                name: 'skipSafetyChecks',
+                type: 'boolean',
+                description: 'Optional: Skip balance and liquidity verification checks',
+                optional: true,
+            }
         ],
         function: removeLiquidity
     },
@@ -186,5 +198,19 @@ export const tools: Tool[] = [
             }
         ],
         function: getUserLiquidity
+    },
+    {
+        name: 'getPoolLiquidity',
+        description: 'Get total pool liquidity information including GLP supply and Assets Under Management (AUM)',
+        required: ['chainName'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Name of the blockchain network (only "sonic" is supported)',
+            }
+        ],
+        function: getPoolLiquidity
     }
 ];

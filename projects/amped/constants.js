@@ -1,19 +1,19 @@
 var _a, _b, _c, _d;
 // Constants for APR calculations
-export var PRECISION = 1e30;
-export var SECONDS_PER_YEAR = 31536000; // 365 * 24 * 60 * 60
+export const PRECISION = 1e30;
+export const SECONDS_PER_YEAR = 31536000; // 365 * 24 * 60 * 60
 // Other global constants can go here
-export var NETWORKS = {
+export const NETWORKS = {
     SONIC: 'sonic'
 };
-export var CHAIN_IDS = (_a = {},
-    _a[NETWORKS.SONIC] = 146,
-    _a);
-export var RPC_URLS = (_b = {},
-    _b[NETWORKS.SONIC] = 'https://rpc.soniclabs.com',
-    _b);
-export var CONTRACT_ADDRESSES = (_c = {},
-    _c[NETWORKS.SONIC] = {
+export const CHAIN_IDS = {
+    [NETWORKS.SONIC]: 146
+};
+export const RPC_URLS = {
+    [NETWORKS.SONIC]: 'https://rpc.soniclabs.com'
+};
+export const CONTRACT_ADDRESSES = {
+    [NETWORKS.SONIC]: {
         GLP_MANAGER: '0xA16FaBE630E75981b03b31AAD20F5BDDE581acDF',
         GLP_TOKEN: '0x5d51a52D952A61D5d1fc19F90a8244b995877bd9',
         REWARD_ROUTER: '0xA0411BBefDC6d896615d1ece1C3212353842C2dF',
@@ -26,11 +26,13 @@ export var CONTRACT_ADDRESSES = (_c = {},
         ANON: '0x79bbf4508b1391af3a0f4b30bb5fc4aa9ab0e07c',
         ROUTER: '0x96EFEcB86b3408de4F92454E30a0c99E58299F35',
         POSITION_ROUTER: '0x82546eCf796C28882d98FfF8aB9FC109DC86221a',
-        VAULT_PRICE_FEED: '0x9c2C2177EcE50f44EfbD234fd6c816849D47F3c2'
-    },
-    _c);
-export var CHAIN_CONFIG = (_d = {},
-    _d[NETWORKS.SONIC] = {
+        VAULT_PRICE_FEED: '0x9c2C2177EcE50f44EfbD234fd6c816849D47F3c2',
+        FS_ALP: '0xfb0e5AAbFac2f946d6F45fcd4303fF721A4e3237',  // RewardTrackerFeeStakedGLP
+        ALP_VESTER: '0xE3C124f417bE01e4fA373892CFdcd1b0c4b8996F'  // VesterGLP
+    }
+};
+export const CHAIN_CONFIG = {
+    [NETWORKS.SONIC]: {
         id: CHAIN_IDS[NETWORKS.SONIC],
         name: NETWORKS.SONIC,
         network: NETWORKS.SONIC,
@@ -44,6 +46,6 @@ export var CHAIN_CONFIG = (_d = {},
                 http: [RPC_URLS[NETWORKS.SONIC]]
             }
         }
-    },
-    _d);
+    }
+};
 export const supportedChains = Object.values(NETWORKS);
