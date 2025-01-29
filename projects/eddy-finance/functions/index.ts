@@ -1,0 +1,1 @@
+export { bridgeToEthereum } from './bridgeToEthereum';
