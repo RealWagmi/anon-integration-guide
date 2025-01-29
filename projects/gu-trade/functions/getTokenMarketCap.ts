@@ -35,7 +35,6 @@ export async function getTokenMarketCap({ chainName, token }: Props, { getProvid
         address: `0x${token}`,
         abi: guCoinAbi,
         functionName: 'reserveBalance',
-        args: [],
     }) as bigint;
 
     return toResult(`Current Market Cap: ${formatUnits(mcap, 18)} ETH`);

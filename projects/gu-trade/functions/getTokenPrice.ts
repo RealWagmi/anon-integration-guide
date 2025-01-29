@@ -34,7 +34,6 @@ export async function getTokenPrice({ chainName, token }: Props, { getProvider }
         address: `0x${token}`,
         abi: guCoinAbi,
         functionName: 'price',
-        args: [],
     }) as bigint;
 
     return toResult(`Current price: ${formatUnits(price, 18)} ETH`);

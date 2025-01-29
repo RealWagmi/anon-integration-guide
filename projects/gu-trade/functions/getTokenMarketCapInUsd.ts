@@ -35,14 +35,12 @@ export async function getTokenMarketCapInUsd({ chainName, token }: Props, { getP
         address: `0x${token}`,
         abi: guCoinAbi,
         functionName: 'reserveBalance',
-        args: [],
     }) as bigint;
 
     const ethPrice = await publicClient.readContract({
         address: ETH_USD_ORACLE_ADDRESS,
         abi: ethOracleAbi,
         functionName: 'latestAnswer',
-        args: [],
     }) as bigint;
 
     const mcapInEth = parseFloat(formatUnits(mcap, 18)); 

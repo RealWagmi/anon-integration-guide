@@ -35,14 +35,12 @@ export async function getTokenPriceInUsd({ chainName, token }: Props, { getProvi
         address: `0x${token}`,
         abi: guCoinAbi,
         functionName: 'price',
-        args: [],
     }) as bigint;
 
     const ethPrice = await publicClient.readContract({
         address: ETH_USD_ORACLE_ADDRESS,
         abi: ethOracleAbi,
         functionName: 'latestAnswer',
-        args: [],
     }) as bigint;
 
     // Convert price to proper format

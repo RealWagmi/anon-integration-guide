@@ -2,26 +2,10 @@ import axios from 'axios';
 import { FunctionReturn, toResult } from '@heyanon/sdk';
 
 interface TokenData {
-    creator: string;
     token: string;
-    factory: string;
-    lp: string;
     name: string;
     symbol: string;
-    description: string;
-    image: string;
-    initialSupply: string;
-    maxSupply: string;
-    initialETHReserves: string;
-    initialPrice: string;
-    initialMarketCap: string;
-    targetETH: string;
     createdTimestamp: number;
-    id: string;
-    totalSupply: string;
-    isLPd: boolean;
-    curveAllocation: string;
-    events: any[];
 }
 
 interface ApiResponse {

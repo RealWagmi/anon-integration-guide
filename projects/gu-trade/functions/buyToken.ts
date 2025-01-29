@@ -57,7 +57,6 @@ export async function buyToken(
         address: `0x${token}`,
         abi: guCoinAbi,
         functionName: 'isLPd',
-        args: [],
     }) as boolean;
 	if (!isGuCoin || isLPd) return toResult('Cannot buy a token: LPd or not a Gu coin', true);
 	
@@ -80,7 +79,6 @@ export async function buyToken(
         address: FACTORY_ADDRESS,
         abi: factoryAbi,
         functionName: 'bondingCurve',
-        args: [],
     }) as Address;
 
 	const getAmountToReceive = await publicClient.readContract({
