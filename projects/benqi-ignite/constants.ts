@@ -4,7 +4,7 @@ import { parseUnits } from 'viem';
 export const supportedChains = [ChainId.AVALANCHE];
 
 export const IGNITE_ADDRESS = '0x2575472517d23Ae4B9D4670F84F0c9c4eFC3876c';
-export const AVAX_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
+export const AVAX_PRICE_FEED_KEY = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
 export const AVAX_DECIMALS = 18;
 
 export type ValidationDuration = 'TWO_WEEKS' | 'FOUR_WEEKS' | 'EIGHT_WEEKS' | 'TWELVE_WEEKS';

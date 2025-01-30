@@ -2,7 +2,7 @@ import { checkToApprove, FunctionOptions, FunctionReturn, toResult, TransactionP
 import { Address, encodeFunctionData, formatUnits } from 'viem';
 import eacAggregatorProxyAbi from '../abis/eacAggregatorProxy';
 import igniteAbi from '../abis/ignite';
-import { AVAX_ADDRESS, AVAX_DECIMALS, ERC20_PAYMENT_METHODS, IGNITE_ADDRESS, RegisterProps, STAKE_LIMIT_IN_AVAX, VALIDATION_DURATION_TIME } from '../constants';
+import { AVAX_PRICE_FEED_KEY, AVAX_DECIMALS, ERC20_PAYMENT_METHODS, IGNITE_ADDRESS, RegisterProps, STAKE_LIMIT_IN_AVAX, VALIDATION_DURATION_TIME } from '../constants';
 import { parseAmount, parseRegister, parseWallet } from '../utils';
 
 type Props = RegisterProps & {
@@ -88,7 +88,7 @@ export async function registerWithStake(props: Props, { sendTransactions, notify
                 address: IGNITE_ADDRESS,
                 abi: igniteAbi,
                 functionName: 'priceFeeds',
-                args: [AVAX_ADDRESS],
+                args: [AVAX_PRICE_FEED_KEY],
             },
         ],
     });

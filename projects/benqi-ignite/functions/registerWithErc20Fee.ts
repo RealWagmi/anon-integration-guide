@@ -3,7 +3,7 @@ import { Address, encodeFunctionData, erc20Abi } from 'viem';
 import eacAggregatorProxyAbi from '../abis/eacAggregatorProxy';
 import igniteAbi from '../abis/ignite';
 import {
-    AVAX_ADDRESS,
+    AVAX_PRICE_FEED_KEY,
     AVAX_DECIMALS,
     AVAX_REGISTRATION_FEE,
     ERC20_PAYMENT_METHODS,
@@ -67,7 +67,7 @@ export async function registerWithErc20Fee(props: Props, { sendTransactions, not
                 address: IGNITE_ADDRESS,
                 abi: igniteAbi,
                 functionName: 'priceFeeds',
-                args: [AVAX_ADDRESS],
+                args: [AVAX_PRICE_FEED_KEY],
             },
         ],
     });

@@ -3,7 +3,7 @@ import { encodeFunctionData, erc20Abi, parseUnits } from 'viem';
 import { beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import eacAggregatorProxyAbi from '../abis/eacAggregatorProxy';
 import igniteAbi from '../abis/ignite';
-import { AVAX_ADDRESS, AVAX_DECIMALS, ERC20_PAYMENT_METHODS, IGNITE_ADDRESS, VALIDATION_DURATION_TIME } from '../constants';
+import { AVAX_PRICE_FEED_KEY, AVAX_DECIMALS, ERC20_PAYMENT_METHODS, IGNITE_ADDRESS, VALIDATION_DURATION_TIME } from '../constants';
 import { registerWithErc20Fee } from './registerWithErc20Fee';
 
 vi.mock('@heyanon/sdk');
@@ -60,7 +60,7 @@ describe('registerWithErc20Fee', () => {
                         address: IGNITE_ADDRESS,
                         abi: igniteAbi,
                         functionName: 'priceFeeds',
-                        args: [AVAX_ADDRESS],
+                        args: [AVAX_PRICE_FEED_KEY],
                     },
                 ],
             }),
@@ -112,7 +112,7 @@ describe('registerWithErc20Fee', () => {
                         address: IGNITE_ADDRESS,
                         abi: igniteAbi,
                         functionName: 'priceFeeds',
-                        args: [AVAX_ADDRESS],
+                        args: [AVAX_PRICE_FEED_KEY],
                     },
                 ],
             }),
@@ -215,7 +215,7 @@ describe('registerWithErc20Fee', () => {
                             address: IGNITE_ADDRESS,
                             abi: igniteAbi,
                             functionName: 'priceFeeds',
-                            args: [AVAX_ADDRESS],
+                            args: [AVAX_PRICE_FEED_KEY],
                         },
                     ],
                 }),

@@ -3,7 +3,7 @@ import { encodeFunctionData, parseUnits } from 'viem';
 import { beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import eacAggregatorProxyAbi from '../abis/eacAggregatorProxy';
 import igniteAbi from '../abis/ignite';
-import { AVAX_ADDRESS, AVAX_DECIMALS, ERC20_PAYMENT_METHODS, IGNITE_ADDRESS, VALIDATION_DURATION_TIME } from '../constants';
+import { AVAX_PRICE_FEED_KEY, AVAX_DECIMALS, ERC20_PAYMENT_METHODS, IGNITE_ADDRESS, VALIDATION_DURATION_TIME } from '../constants';
 import { registerWithStake } from './registerWithStake';
 
 vi.mock('@heyanon/sdk');
@@ -228,7 +228,7 @@ describe('registerWithStake', () => {
                         address: IGNITE_ADDRESS,
                         abi: igniteAbi,
                         functionName: 'priceFeeds',
-                        args: [AVAX_ADDRESS],
+                        args: [AVAX_PRICE_FEED_KEY],
                     },
                 ],
             }),
