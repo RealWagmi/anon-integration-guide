@@ -12,7 +12,7 @@ type Props = {
 
 /**
  * Get account liquidity in USD.
- * @param props - The function `Props`
+ * @param props - The function {@link Props}
  * @param tools - System tools for blockchain interactions
  * @returns liquidity and shortfall in USD
  */

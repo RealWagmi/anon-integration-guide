@@ -12,7 +12,7 @@ type Props = MarketProps & {
 
 /**
  * Get specified market borrow limit
- * @param props - The function `Props`
+ * @param props - The function {@link Props}
  * @param tools - System tools for blockchain interactions
  * @returns borrow limit in specified market currency
  */

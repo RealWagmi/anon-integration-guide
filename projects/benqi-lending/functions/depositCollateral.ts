@@ -13,7 +13,7 @@ type Props = MarketProps & {
 
 /**
  * Deposits a specified amount of tokens into the protocol. Necessary first step for borrowing.
- * @param props - The function `Props`
+ * @param props - The function {@link Props}
  * @param tools - System tools for blockchain interactions
  * @returns Transaction result
  */

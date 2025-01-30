@@ -12,7 +12,7 @@ type Props = {
 
 /**
  * To be called after the validation period has expired and the staker wants to redeem their deposited tokens and potential rewards.
- * @param props - The function `Props`
+ * @param props - The function {@link Props}
  * @param tools - System tools for blockchain interactions
  * @returns Transaction result
  */

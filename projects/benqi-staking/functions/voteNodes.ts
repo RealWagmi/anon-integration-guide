@@ -11,7 +11,7 @@ type Props = NodesWithWeightsProps & {
 
 /**
  * Updates votes for specified nodes
- * @param props - The function `Props`
+ * @param props - The function {@link Props}
  * @param tools - System tools for blockchain interactions
  * @returns Transaction result
  */

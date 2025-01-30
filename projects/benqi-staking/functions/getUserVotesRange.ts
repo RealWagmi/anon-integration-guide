@@ -13,7 +13,7 @@ type Props = {
 
 /**
  * Get list of nodes with weights the user has voted for
- * @param props - The function `Props`
+ * @param props - The function {@link Props}
  * @param tools - System tools for blockchain interactions
  * @returns Amount of user votes
  */

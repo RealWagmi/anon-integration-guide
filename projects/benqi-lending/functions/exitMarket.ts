@@ -11,7 +11,7 @@ type Props = MarketProps & {
 
 /**
  * Exit market on the specified chain for the given account.
- * @param props - The function `Props`
+ * @param props - The function {@link Props}
  * @param tools - System tools for blockchain interactions
  * @returns Transaction result
  */

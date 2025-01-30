@@ -11,7 +11,7 @@ type Props = {
 
 /**
  * Cancel pending unlock requests in the sAVAX contract
- * @param props - The function `Props`
+ * @param props - The function {@link Props}
  * @param tools - System tools for blockchain interactions
  * @returns Transaction result
  */

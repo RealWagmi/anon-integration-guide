@@ -13,7 +13,7 @@ type Props = {
 
 /**
  * Lists registrations made by the given account.
- * @param props - The function `Props`
+ * @param props - The function {@link Props}
  * @param tools - System tools for blockchain interactions
  * @returns Transaction result
  */

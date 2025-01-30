@@ -13,7 +13,7 @@ type Props = MarketProps & {
 
 /**
  * Borrows specified amount of tokens against previously set collateral
- * @param props - The function `Props`
+ * @param props - The function {@link Props}
  * @param tools - System tools for blockchain interactions
  * @returns Transaction result
  */
