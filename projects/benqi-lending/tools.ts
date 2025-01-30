@@ -42,7 +42,7 @@ const marketProps = [
         name: 'marketName',
         type: 'string',
         description:
-            'Market name used for transaction. Depending on selected marketType see https://docs.benqi.fi/benqi-markets/core-markets or https://docs.benqi.fi/resources/contracts/core-markets/isolated-markets-avalanche-ecosystem-market for list of available markets',
+            'Market name used for transaction. For core market type those can be AVAX, sAVAX, BTCb, BTC, ETH, LINK, USDT, USDC, USDTn, USDCn, DAI, BUSD, QI, AUSD and for ecosystem market type USDC, COQ, JOE, QI, AUSD, SolvBTC',
     },
 ];
 
@@ -53,11 +53,9 @@ const marketListProps = [
     {
         name: 'marketNames',
         type: 'array',
-        items: {
-            type: 'string',
-            description:
-                'Market name used for transaction. Depending on selected marketType see https://docs.benqi.fi/benqi-markets/core-markets or https://docs.benqi.fi/resources/contracts/core-markets/isolated-markets-avalanche-ecosystem-market for list of available markets',
-        },
+        items: { type: 'string' },
+        description:
+            'Market names used for transaction. For core market type those can be AVAX, sAVAX, BTCb, BTC, ETH, LINK, USDT, USDC, USDTn, USDCn, DAI, BUSD, QI, AUSD and for ecosystem market type USDC, COQ, JOE, QI, AUSD, SolvBTC',
     },
 ];
 

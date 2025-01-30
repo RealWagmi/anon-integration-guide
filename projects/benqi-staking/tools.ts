@@ -31,10 +31,8 @@ const nodesProps = [
     {
         name: 'nodeIds',
         type: 'array',
-        items: {
-            type: 'string',
-            description: 'Validator node ids',
-        },
+        items: { type: 'string' },
+        description: 'Validator node ids',
     },
 ];
 
@@ -44,10 +42,8 @@ const weightsProps = [
     {
         name: 'weights',
         type: 'array',
-        items: {
-            type: 'string',
-            description: 'Validator node weights. Specified as floating point values with up to 2 decimal places in string format',
-        },
+        items: { type: 'string' },
+        description: 'Validator node weights. Specified as floating point values with up to 2 decimal places in string format',
     },
 ];
 
