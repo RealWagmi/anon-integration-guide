@@ -113,6 +113,7 @@ export async function registerWithErc20Fee(props: Props, { sendTransactions, not
     const avaxPrice = avaxLatestRound.result[1];
     const tokenPrice = paymentMethodLatestRound.result[1];
 
+    // Computation taken from: Ignite.sol(0x2575472517d23Ae4B9D4670F84F0c9c4eFC3876c).registerWithErc20Fee#L293
     let tokenAmount = (avaxPrice * feeInAvax) / tokenPrice / 10n ** BigInt(AVAX_DECIMALS - paymentMethodDecimals.result);
 
     if (paymentMethodAddress === ERC20_PAYMENT_METHODS.Qi) {
