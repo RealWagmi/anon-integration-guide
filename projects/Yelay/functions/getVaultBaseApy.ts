@@ -32,7 +32,7 @@ export async function getVaultBaseApy(
     if (!sdk.success) return toResult(`Failed to setup SDK`, true);
 
     // Getting account balance
-    await notify(`Getting seven day APY for vault ${vaultAddress}...`);
+    await notify(`Getting base day APY for vault ${vaultAddress}...`);
 
     const vaultAPYInfoQuery: VaultAPYInfoQuery = {
         vaultAddressList: [vaultAddress],
