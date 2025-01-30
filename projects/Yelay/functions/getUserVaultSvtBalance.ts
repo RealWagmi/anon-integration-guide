@@ -43,10 +43,3 @@ export async function getUserVaultSvtBalance(
         `Balance for account ${account} in vault ${vaultAddress} is ${svtBalance} SVTs`,
     );
 }
-
-// deposit -> swapAndDeposit.deposit
-// fast withdrawal -> withdraw.redeemFast
-
-// get Asset -> getUserAsset
-// get 7D Apy -> job api maybe
-// get total earned yield -> not gonna do it
