@@ -1,5 +1,6 @@
 import { AiTool, getChainName } from '@heyanon/sdk';
 import { supportedChains } from './constants';
+import { getVaultBaseApy } from './functions/getVaultBaseApy';
 
 export const tools: AiTool[] = [
     {
@@ -65,6 +66,24 @@ export const tools: AiTool[] = [
                 name: 'account',
                 type: 'string',
                 description: "The user's address",
+            },
+            {
+                name: 'vaultAddress',
+                type: 'string',
+                description: 'Vault address',
+            },
+        ],
+    },
+    {
+        name: 'getVaultBaseApy',
+        description: "Gets vault's base APY",
+        required: ['chainName', 'account', 'vaultAddress'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name where the vault exists',
             },
             {
                 name: 'vaultAddress',
