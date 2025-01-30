@@ -1,0 +1,30 @@
+{
+    "name": "@projects/jupiter-funding-rates",
+    "version": "1.0.0",
+    "scripts": {
+        "test": "jest",
+        "test:watch": "jest --watch",
+        "test:coverage": "jest --coverage"
+    },
+    "dependencies": {
+        "@heyanon/sdk": "^1.0.4",
+        "@solana/buffer-layout": "^4.0.1",
+        "@solana/web3.js": "^1.90.0",
+        "bn.js": "^5.2.1",
+        "buffer": "^6.0.3"
+    },
+    "devDependencies": {
+        "@types/bn.js": "^5.1.6",
+        "@types/jest": "^29.5.12",
+        "@types/node": "^20.11.16",
+        "jest": "^29.7.0",
+        "ts-jest": "^29.1.2",
+        "typescript": "^5.3.3"
+    },
+    "license": "MIT",
+    "engines": {
+        "npm": "please-use-yarn",
+        "node": ">=18.x",
+        "yarn": ">=1.22"
+    }
+}
