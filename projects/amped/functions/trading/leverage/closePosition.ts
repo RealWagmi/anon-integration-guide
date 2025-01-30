@@ -125,23 +125,38 @@ export async function closePosition(
     };
 
     // Send transaction using SDK
-    const txResult = await options.sendTransactions({
-      chainId: CHAIN_CONFIG[NETWORKS.SONIC].id,
-      account: params.account,
-      transactions: [txData]
-    });
+    try {
+      const txResult = await options.sendTransactions({
+        chainId: CHAIN_CONFIG[NETWORKS.SONIC].id,
+        account: params.account,
+        transactions: [txData]
+      });
 
-    return toResult(JSON.stringify({
-      success: true,
-      hash: txResult.data[0].hash,
-      details: {
-        positionSize: sizeDelta.toString(),
-        closePrice: closePrice.toString(),
-        isLong: params.isLong
-      }
-    }));
+      return toResult(JSON.stringify({
+        success: true,
+        hash: txResult.data[0].hash,
+        details: {
+          positionSize: sizeDelta.toString(),
+          closePrice: closePrice.toString(),
+          isLong: params.isLong
+        }
+      }));
+    } catch (txError) {
+      console.error('Transaction error:', txError);
+      return toResult(
+        txError instanceof Error 
+          ? `Transaction failed: ${txError.message}` 
+          : 'Transaction failed. Please check your parameters and try again.',
+        true
+      );
+    }
   } catch (error) {
     console.error('Error closing position:', error);
-    return toResult('Transaction failed. Check parameters and try again.', true);
+    return toResult(
+      error instanceof Error 
+        ? `Failed to close position: ${error.message}` 
+        : 'Failed to close position. Please check your parameters and try again.',
+      true
+    );
   }
 } 

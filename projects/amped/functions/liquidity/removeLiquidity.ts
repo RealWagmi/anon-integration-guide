@@ -195,17 +195,38 @@ export async function removeLiquidity(
         transactions.push(tx);
 
         // Send transaction
-        await sendTransactions({ 
-            chainId: CHAIN_IDS[chainName],
-            account: account as Address,
-            transactions
-        });
-        return toResult('Successfully removed liquidity');
+        try {
+            const result = await sendTransactions({ 
+                chainId: CHAIN_IDS[chainName],
+                account: account as Address,
+                transactions
+            });
+            
+            return toResult(JSON.stringify({
+                success: true,
+                hash: result.data[0].hash,
+                details: {
+                    amount: amount,
+                    tokenOut: tokenOut,
+                    minOut: minOutInTokenWei.toString()
+                }
+            }));
+        } catch (txError) {
+            console.error('Transaction error:', txError);
+            return toResult(
+                txError instanceof Error 
+                    ? `Transaction failed: ${txError.message}` 
+                    : 'Transaction failed. Please check your parameters and try again.',
+                true
+            );
+        }
     } catch (error) {
         console.error('Error in removeLiquidity:', error);
-        if (error instanceof Error) {
-            return toResult(`Failed to remove liquidity: ${error.message}`, true);
-        }
-        return toResult('Failed to remove liquidity: Unknown error', true);
+        return toResult(
+            error instanceof Error 
+                ? `Failed to remove liquidity: ${error.message}` 
+                : 'Failed to remove liquidity. Please check your parameters and try again.',
+            true
+        );
     }
 } 

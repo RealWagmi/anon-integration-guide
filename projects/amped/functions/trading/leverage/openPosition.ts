@@ -291,24 +291,39 @@ export async function openPosition(
     };
 
     // Send transaction using SDK
-    const txResult = await sendTransactions({
-      chainId: 146, // Sonic chain ID
-      account: params.account,
-      transactions: [txData]
-    });
+    try {
+      const txResult = await sendTransactions({
+        chainId: 146, // Sonic chain ID
+        account: params.account,
+        transactions: [txData]
+      });
 
-    return toResult(JSON.stringify({
-      success: true,
-      hash: txResult.data[0].hash,
-      details: {
-        positionSizeUsd,
-        leverage,
-        sizeDelta: sizeDelta.toString(),
-        acceptablePrice: acceptablePrice.toString()
-      }
-    }));
+      return toResult(JSON.stringify({
+        success: true,
+        hash: txResult.data[0].hash,
+        details: {
+          positionSizeUsd,
+          leverage,
+          sizeDelta: sizeDelta.toString(),
+          acceptablePrice: acceptablePrice.toString()
+        }
+      }));
+    } catch (txError) {
+      console.error('Transaction error:', txError);
+      return toResult(
+        txError instanceof Error 
+          ? `Transaction failed: ${txError.message}` 
+          : 'Transaction failed. Please check your parameters and try again.',
+        true
+      );
+    }
   } catch (error) {
     console.error('Error opening position:', error);
-    return toResult('Transaction failed. Check parameters and try again.', true);
+    return toResult(
+      error instanceof Error 
+        ? `Failed to open position: ${error.message}` 
+        : 'Failed to open position. Please check your parameters and try again.',
+      true
+    );
   }
 } 
