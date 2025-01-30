@@ -3,25 +3,25 @@ import * as BufferLayout from '@solana/buffer-layout';
 import { BN } from 'bn.js';
 
 export interface DecodedAssets {
-    feesReserves: number;
-    owned: number;
-    locked: number;
-    guaranteedUsd: number;
-    globalShortSizes: number;
-    globalShortAveragePrices: number;
+    feesReserves: bigint;
+    owned: bigint;
+    locked: bigint;
+    guaranteedUsd: bigint;
+    globalShortSizes: bigint;
+    globalShortAveragePrices: bigint;
 }
 
 export interface DecodedFundingRateState {
-    cumulativeInterestRate: number;
-    lastUpdated: number;
-    hourlyFundingDbps: number;
+    cumulativeInterestRate: bigint;
+    lastUpdated: bigint;
+    hourlyFundingDbps: bigint;
 }
 
 export interface DecodedJumpRateState {
-    minRateBps: number;
-    maxRateBps: number;
-    targetRateBps: number;
-    targetUtilizationRate: number;
+    minRateBps: bigint;
+    maxRateBps: bigint;
+    targetRateBps: bigint;
+    targetUtilizationRate: bigint;
 }
 
 export interface DecodedCustody {
@@ -35,18 +35,18 @@ export interface DecodedCustody {
     jumpRateState: DecodedJumpRateState;
 }
 
-class Uint64Layout extends BufferLayout.Layout<number> {
+class Uint64Layout extends BufferLayout.Layout<bigint> {
     constructor(property?: string) {
         super(8, property);
     }
 
-    decode(b: Uint8Array, offset = 0): number {
-        const num = new BN(b.slice(offset, offset + 8), 'le');
-        return num.toNumber();
+    decode(b: Uint8Array, offset = 0): bigint {
+        const bn = new BN(b.slice(offset, offset + 8), 'le');
+        return BigInt(bn.toString());
     }
 
-    encode(src: number, b: Uint8Array, offset = 0): number {
-        const bn = new BN(src);
+    encode(src: bigint, b: Uint8Array, offset = 0): number {
+        const bn = new BN(src.toString());
         const slice = b.slice(offset, offset + 8);
         bn.toArrayLike(Buffer, 'le', 8).copy(Buffer.from(slice));
         return 8;

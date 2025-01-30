@@ -23,6 +23,10 @@
       "forceConsistentCasingInFileNames": true,
       "outDir": "./dist"
     },
-    "include": ["**/*.ts"],
+    "include": [
+      "src/**/*",
+      "tests/**/*",
+      "scripts/**/*"
+    ],
     "exclude": ["node_modules", "dist"]
   }

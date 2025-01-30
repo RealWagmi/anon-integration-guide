@@ -85,11 +85,11 @@ describe('getBorrowRates', () => {
         // Test with 90% utilization (above target)
         const highUtilData = createMockCustodyAccount({
             owned: 1000000,
-            locked: 900000,  // 90% utilization
-            minRate: 1000,   // 10%
-            maxRate: 20000,  // 200%
-            targetRate: 5000, // 50%
-            targetUtilization: 8000 // 80%
+            locked: 900000,      // 90% utilization
+            minRate: 1000,       // 10% in BPS
+            maxRate: 20000,      // 200% in BPS
+            targetRate: 5000,    // 50% in BPS
+            targetUtilization: 8000  // 80% in BPS
         });
 
         (Connection as jest.Mock).mockImplementation(() => ({
@@ -101,14 +101,11 @@ describe('getBorrowRates', () => {
             })
         }));
 
-        const result: FunctionReturn = await getBorrowRates({ asset: 'SOL' });
+        const result = await getBorrowRates({ asset: 'SOL' });
         expect(result.success).toBe(true);
         
         const data = JSON.parse(result.data);
         expect(data.utilization).toBe(90);
-        // For 90% utilization (above target):
-        // Using upper slope: targetRate + (maxRate - targetRate) * (utilization - targetUtilization)/(1 - targetUtilization)
-        // 50% + (200% - 50%) * (90% - 80%)/(100% - 80%) = 87.5%
         expect(data.annualRate).toBeCloseTo(87.5, 1);
         expect(data.hourlyRate).toBeCloseTo(data.annualRate / 8760, 5);
     });
