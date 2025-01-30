@@ -3,10 +3,12 @@ import { supportedChains } from './constants.js';
 import { addLiquidity } from './functions/liquidity/addLiquidity.js';
 import { removeLiquidity } from './functions/liquidity/removeLiquidity.js';
 import { getPerpsLiquidity } from './functions/trading/leverage/getPerpsLiquidity.js';
+import { getPosition } from './functions/trading/leverage/getPositions.js';
 import { getALPAPR } from './functions/liquidity/getALPAPR.js';
 import { getAcceptedTokenBalances } from './functions/liquidity/getAcceptedTokenBalances.js';
 import { getUserLiquidity } from './functions/liquidity/getUserLiquidity.js';
 import { getPoolLiquidity } from './functions/liquidity/getPoolLiquidity.js';
+import { closePosition } from './functions/trading/leverage/closePosition.js';
 
 interface Tool extends AiTool {
   function: Function;
@@ -212,5 +214,97 @@ export const tools: Tool[] = [
             }
         ],
         function: getPoolLiquidity
+    },
+    {
+        name: 'getPosition',
+        description: 'Get details of a user\'s perpetual trading position including size, collateral, PnL, and other metrics',
+        required: ['chainName', 'account', 'indexToken', 'collateralToken', 'isLong'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Name of the blockchain network (only "sonic" is supported)',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Account address to check position for',
+            },
+            {
+                name: 'indexToken',
+                type: 'string',
+                description: 'Address of the token being traded',
+            },
+            {
+                name: 'collateralToken',
+                type: 'string',
+                description: 'Address of the token used as collateral',
+            },
+            {
+                name: 'isLong',
+                type: 'boolean',
+                description: 'Whether this is a long position (true) or short position (false)',
+            }
+        ],
+        function: getPosition
+    },
+    {
+        name: 'closePosition',
+        description: 'Close an existing perpetual trading position, either partially or fully',
+        required: ['chainName', 'account', 'indexToken', 'collateralToken', 'isLong'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Name of the blockchain network (only "sonic" is supported)',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Account address that owns the position',
+            },
+            {
+                name: 'indexToken',
+                type: 'string',
+                description: 'Address of the token being traded',
+            },
+            {
+                name: 'collateralToken',
+                type: 'string',
+                description: 'Address of the token used as collateral',
+            },
+            {
+                name: 'isLong',
+                type: 'boolean',
+                description: 'Whether this is a long position (true) or short position (false)',
+            },
+            {
+                name: 'sizeDelta',
+                type: 'string',
+                description: 'Optional: Amount of position to close in USD. If not provided, closes entire position.',
+                optional: true
+            },
+            {
+                name: 'acceptablePrice',
+                type: 'string',
+                description: 'Optional: Minimum acceptable price for longs, maximum acceptable price for shorts. Defaults to 2% slippage.',
+                optional: true
+            },
+            {
+                name: 'executionFee',
+                type: 'string',
+                description: 'Optional: Fee paid for execution. Defaults to 0.001 S.',
+                optional: true
+            },
+            {
+                name: 'withdrawETH',
+                type: 'boolean',
+                description: 'Optional: Whether to withdraw in native token (S) or keep as wrapped. Defaults to false.',
+                optional: true
+            }
+        ],
+        function: closePosition
     }
 ];

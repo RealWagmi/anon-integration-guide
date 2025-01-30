@@ -186,6 +186,11 @@ export const PositionRouter = [
         "internalType": "bool",
         "name": "_withdrawETH",
         "type": "bool"
+      },
+      {
+        "internalType": "address",
+        "name": "_callbackTarget",
+        "type": "address"
       }
     ],
     "name": "createDecreasePosition",
