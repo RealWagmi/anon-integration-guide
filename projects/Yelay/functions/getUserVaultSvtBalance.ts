@@ -10,7 +10,7 @@ export interface GetUserSvtBalanceProps {
 }
 
 /**
- * Gets users svt balance for a pool.
+ * Gets users assets balance for a pool.
  * @param props - The function parameters
  * @param tools - System tools for blockchain interactions
  * @returns Transaction result
@@ -39,7 +39,6 @@ export async function getUserVaultSvtBalance(
 
     const svtBalance = await sdk.result.views.userInfo.getUserSVTBalance(vaultAddress, account);
 
-    // TODO: approve this response
     return toResult(
         `Balance for account ${account} in vault ${vaultAddress} is ${svtBalance} SVTs`,
     );
