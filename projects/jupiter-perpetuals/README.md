@@ -1,35 +1,47 @@
-# jupiter-funding-rates
+# Jupiter Perpetuals Module
 
-Integration with Jupiter Funding Rates Data Streams
+## Overview
 
-## Supported Networks
+The Jupiter Perpetuals module provides access to Jupiter's perpetual futures market data, specifically focusing on borrow rates and market conditions for different assets.
 
-- SOLANA
+### Main Features
+
+- Real-time borrow rates for long/short positions
+- Market utilization metrics
+- Available liquidity information
+- Position opening fees
+
+### Supported Assets
+
+- SOL (Solana)
+- ETH (Ethereum)
+- WBTC (Wrapped Bitcoin)
 
 ## Common Tasks
 
-1. Basic Operations
-   - "Execute example operation with 100 USDT in @jupiter-funding-rates on Ethereum network"
-   - "Run example transaction with 50 USDC in @jupiter-funding-rates"
-   - "Perform example action with 1000 tokens in @jupiter-funding-rates"
+1. Borrow Rate Queries
 
-2. Information Queries
-   - "Show my current status in @jupiter-funding-rates"
-   - "Check my balance in @jupiter-funding-rates"
-   - "Get example statistics from @jupiter-funding-rates"
-   - "Calculate expected results for my position in @jupiter-funding-rates"
+    - "What are the current borrow rates for SOL perpetuals on Jupiter?"
+    - "Show me Jupiter's ETH perpetual borrow rates for long positions"
+    - "Compare long and short borrow rates for WBTC on Jupiter"
+    - "Get all current borrow rates for SOL positions"
 
+2. Market Utilization
 
-## Available Functions
+    - "What's the current utilization rate for SOL perpetuals?"
+    - "Show me Jupiter's ETH perpetual market utilization"
+    - "Check if BTC perpetuals are highly utilized"
+    - "Compare long vs short utilization for SOL market"
 
-List of available functions will be added here.
+3. Liquidity Information
 
-## Installation
+    - "How much liquidity is available in Jupiter's SOL perpetual market?"
+    - "Show available liquidity for ETH perpetuals"
+    - "Check liquidity levels for WBTC long positions"
+    - "What's the current liquidity for SOL short positions?"
 
-```bash
-yarn add @heyanon/jupiter-funding-rates
-```
-
-## Usage
-
-Example usage will be added here.
+4. Fee Information
+    - "What's the opening fee for SOL perpetuals on Jupiter?"
+    - "Show me current fees for ETH perpetual positions"
+    - "Get position opening costs for BTC perpetuals"
+    - "Display Jupiter's perpetual trading fees for SOL"

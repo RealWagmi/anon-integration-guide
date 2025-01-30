@@ -1,49 +1,17 @@
-import { AiTool, getChainName } from '@heyanon/sdk';
-import { supportedChains } from './constants';
+import { AiTool } from '@heyanon/sdk';
 
 export const tools: AiTool[] = [
     {
         name: 'getBorrowRates',
-        description: 'Get current borrow rates for Jupiter Perpetuals markets',
+        description: 'Get current borrow rates, utilization, liquidity, and fees for Jupiter Perpetuals markets',
         required: ['asset'],
         props: [
             {
                 name: 'asset',
                 type: 'string',
-                enum: ['SOL', 'ETH', 'BTC', 'USDC', 'USDT'],
-                description: 'Asset to get rates for',
-            }
-        ],
-    },
-    {
-        name: 'getHistoricalRates',
-        description: 'Get historical borrow rates for a specific market',
-        required: ['asset', 'hours'],
-        props: [
-            {
-                name: 'asset',
-                type: 'string',
-                enum: ['SOL', 'ETH', 'BTC', 'USDC', 'USDT'],
-                description: 'Asset to get historical rates for',
+                enum: ['SOL', 'ETH', 'WBTC'],
+                description: 'Asset to get market data for',
             },
-            {
-                name: 'hours',
-                type: 'number',
-                description: 'Number of hours of history to retrieve (max 168)',
-            }
         ],
     },
-    {
-        name: 'getMarketUtilization',
-        description: 'Get current utilization rates for Jupiter Perpetuals markets',
-        required: ['asset'],
-        props: [
-            {
-                name: 'asset',
-                type: 'string',
-                enum: ['SOL', 'ETH', 'BTC', 'USDC', 'USDT'],
-                description: 'Asset to get utilization for',
-            }
-        ],
-    }
 ];

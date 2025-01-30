@@ -1,44 +1,53 @@
-import { PublicKey } from '@solana/web3.js';
-
-export interface Assets {
-    feesReserves: number;
-    owned: number;
-    locked: number;
-    guaranteedUsd: number;
-    globalShortSizes: number;
-    globalShortAveragePrices: number;
-}
-
-export interface FundingRateState {
-    cumulativeInterestRate: number;
-    lastUpdated: number;
-    hourlyFundingDbps: number;
-}
-
-export interface JumpRateState {
-    minRateBps: number;
-    maxRateBps: number;
-    targetRateBps: number;
-    targetUtilizationRate: number;
-}
-
-export interface CustodyAccount {
-    pool: PublicKey;
-    mint: PublicKey;
-    tokenAccount: PublicKey;
-    decimals: number;
-    isStable: boolean;
-    assets: Assets;
-    fundingRateState: FundingRateState;
-    jumpRateState: JumpRateState;
-}
-
-export const CUSTODY_ACCOUNTS = {
-    SOL: '7xS2gz2bTp3fwCC7knJvUWTEU9Tycczu6VhJYKgi1wdz',
-    ETH: 'AQCGyheWPLeo6Qp9WpYS9m3Qj479t7R636N9ey1rEjEn',
-    BTC: '5Pv3gM9JrFFH883SWAhvJC9RPYmo8UNxuFtv5bMMALkm',
-    USDC: 'G18jKKXQwBbrHeiK3C9MRXhkHsLHf7XgCSisykV46EZa',
-    USDT: '4vkNeXiYEUizLdrpdPS1eC2mccyM4NUPRtERrk6ZETkk'
+export const TOKEN_MINTS = {
+    SOL: 'So11111111111111111111111111111111111111112',
+    ETH: '7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs',
+    WBTC: '3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh',
 } as const;
 
-export type AssetType = keyof typeof CUSTODY_ACCOUNTS;
+export type AssetType = keyof typeof TOKEN_MINTS;
+
+export interface PerpsPosition {
+    borrowRate: number;
+    utilization: number;
+    availableLiquidity: number;
+}
+
+export interface PerpsMarketData {
+    long: {
+        borrowRate: string;
+        utilization: string;
+        availableLiquidity: string;
+    };
+    short: {
+        borrowRate: string;
+        utilization: string;
+        availableLiquidity: string;
+    };
+    openFee: string;
+    timestamp: number;
+}
+
+export interface RateSnapshot {
+    asset: AssetType;
+    data: PerpsMarketData;
+}
+
+export interface HistoricalRates {
+    asset: AssetType;
+    snapshots: RateSnapshot[];
+    period: {
+        start: number;
+        end: number;
+    };
+}
+
+export interface PoolInfo {
+    longAvailableLiquidity: string;
+    longBorrowRatePercent: string;
+    longUtilizationPercent: string;
+    shortAvailableLiquidity: string;
+    shortBorrowRatePercent: string;
+    shortUtilizationPercent: string;
+    openFeePercent: string;
+    maxRequestExecutionSec: string;
+}
