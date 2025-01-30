@@ -1,0 +1,47 @@
+{
+    "name": "@projects/goddog",
+    "version": "1.0.0",
+    "description": "DeFi integration library for Uniswap V3 and vault operations on Arbitrum",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "tsc",
+        "test": "vitest",
+        "test:coverage": "vitest run --coverage",
+        "lint": "eslint . --ext .ts",
+        "format": "prettier --write \"**/*.{ts,tsx,json,md}\""
+    },
+    "keywords": [
+        "defi",
+        "uniswap",
+        "arbitrum",
+        "vault",
+        "liquidity",
+        "typescript"
+    ],
+    "author": "",
+    "license": "MIT",
+    "dependencies": {
+        "@heyanon/sdk": "^2.0.1",
+        "@thanpolas/univ3prices": "^3.0.2",
+        "axios": "^1.7.9",
+        "dotenv": "^16.4.7",
+        "ethers": "^6.13.5",
+        "viem": "^2.0.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.10.0",
+        "@typescript-eslint/eslint-plugin": "^7.0.0",
+        "@typescript-eslint/parser": "^7.0.0",
+        "eslint": "^8.56.0",
+        "prettier": "^3.1.0",
+        "rimraf": "^5.0.5",
+        "glob": "^10.3.10",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.7.3",
+        "vitest": "^1.0.0"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
+} 

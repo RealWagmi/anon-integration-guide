@@ -1,0 +1,42 @@
+[
+    {
+        "inputs": [],
+        "name": "factory",
+        "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "fee",
+        "outputs": [{"internalType": "uint24", "name": "", "type": "uint24"}],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "token0",
+        "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "token1",
+        "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {"internalType": "address", "name": "recipient", "type": "address"},
+            {"internalType": "uint256", "name": "amount0", "type": "uint256"},
+            {"internalType": "uint256", "name": "amount1", "type": "uint256"},
+            {"internalType": "bytes", "name": "data", "type": "bytes"}
+        ],
+        "name": "mint",
+        "outputs": [{"internalType": "uint256", "name": "liquidity", "type": "uint256"}],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    }
+] 
