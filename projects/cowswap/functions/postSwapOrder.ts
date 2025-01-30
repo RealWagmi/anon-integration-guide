@@ -42,7 +42,7 @@ export async function postSwapOrder(
     await notify('Preparing swap order...');
 
     const amountParsed = parseUnits(amount, inputTokenInfo.decimals);
-    if (!signMessages) return toResult('Missing parameter `signMessage`', true);
+    if (!signMessages) return toResult('Missing parameter `signMessages`', true);
 
     // Approve inputToken
     await checkToApprove({
