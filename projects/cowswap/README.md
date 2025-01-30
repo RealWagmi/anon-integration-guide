@@ -7,6 +7,7 @@ Integration with CoW Swap
 - ARBITRUM
 - BASE
 - GNOSIS
+- ETHEREUM
 
 ## Common Tasks
 

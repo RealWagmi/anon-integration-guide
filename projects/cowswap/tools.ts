@@ -69,7 +69,7 @@ export const tools: AiTool[] = [
     {
         name: 'postSwapOrder',
         description: 'Posts the swap order.',
-        required: ['chainName', 'account', 'amount', 'receiver', 'inputToken', 'outputToken'],
+        required: ['chainName', 'account', 'amount', 'inputToken', 'outputToken'],
         props: [
             {
                 name: 'chainName',
