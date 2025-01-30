@@ -5,7 +5,7 @@ import type { Provider, TransactionRequest } from '@ethersproject/abstract-provi
 import type { Deferrable } from '@ethersproject/properties';
 import type { Hex, Address, PublicClient, SignMessageReturnType } from 'viem';
 
-export const supportedChains = [ChainId.ARBITRUM, ChainId.BASE, ChainId.GNOSIS];
+export const supportedChains = [ChainId.ARBITRUM, ChainId.BASE, ChainId.GNOSIS, ChainId.ETHEREUM];
 
 type SignMessageImpl = (messages: Hex[]) => Promise<SignMessageReturnType[]>;
 
