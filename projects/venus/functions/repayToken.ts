@@ -37,6 +37,7 @@ export async function repayToken(
 ): Promise<FunctionReturn> {
   const wallet = validateWallet({ account })
   if (!wallet.success) {return toResult(wallet.errorMessage, true);}
+  if (!amount || typeof amount !== 'string') {return toResult('Invalid amount', true);}
   // Validate chain
   const tokenDetails = validateAndGetTokenDetails({chainName, pool, token})
   if (!tokenDetails.success) {return toResult(tokenDetails.errorMessage, true);}
@@ -94,9 +95,9 @@ export async function repayToken(
       account,
       transactions: transactions,
     });
-    const borrowMessage = result.data[result.data.length - 1];
+    const message = result.data[result.data.length - 1];
     // return toResult("Repaying Token...");
-    return toResult(result.isMultisig ? borrowMessage.message : `Successfully repayed ${amount} ${token}.`);
+    return toResult(result.isMultisig ? message.message : `Successfully repayed ${amount} ${token}.`);
   } catch (error) {
     return toResult(
       `Failed to repay token: ${error instanceof Error ? error.message : "Unknown error"}`,

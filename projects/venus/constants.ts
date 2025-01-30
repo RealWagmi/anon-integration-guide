@@ -1,16 +1,15 @@
 import { ChainId } from '@heyanon/sdk';
 import {Address} from "viem";
 
-export const supportedChains = [ChainId.BSC];
+export const supportedChains = [ChainId.BSC, ChainId.ETHEREUM, ChainId.BASE];
 
 export const supportedPools = ['CORE', 'DEFI'];
 
-export const VTOKEN_ADDRESS = '0xefdf5ccc12d8cff4a7ed4e421b95f8f69cf2f766'
 export const VBNB_ADDRESS = '0xa07c5b74c9b40447a954e1466938b865b6bbea36'
-export const VDISTRIBUTION_ADDRESS = '0xfD36E2c2a6789Db23113685031d7F16329158384'
+
+export const XVS_STAKE_ADDRESS = '0x051100480289e704d20e9DB4804837068f3f9204'
 
 
-export const VTOKEN_DECIMALS = 18
 
 
 interface Token {
@@ -37,16 +36,42 @@ interface Pool {
     [pool: string]: PoolDetails;
 }
 
-export const DEFI_POOL_MARKET_TOKENS: TokenConfig= {
-    [ChainId.BSC] : {
-        BNB: {
-            address: "0xA07c5b74C9B40447a954e1466938b865b6BBea36",
+export  const DEFI_POOL_MARKET_TOKENS: TokenConfig = {
+    [ChainId.BSC]: {
+        ALPACA: {
+            address: "0x02c5Fb0F26761093D297165e902e96D08576D344",
             decimals: 18,
-            chainBased: true,
+        },
+        ANKR: {
+            address: "0x19CE11C8817a1828D1d357DFBF62dCf5b0B2A362",
+            decimals: 18,
+        },
+        ankrBNB: {
+            address: "0x53728FD51060a85ac41974C6C3Eb1DaE42776723",
+            decimals: 18,
+        },
+        BSW: {
+            address: "0x8f657dFD3a1354DEB4545765fE6840cc54AFd379",
+            decimals: 18,
+        },
+        PLANET: {
+            address: "0xFf1112ba7f88a53D4D23ED4e14A117A2aE17C6be",
+            decimals: 18,
+        },
+        TWT: {
+            address: "0x736bf1D21A28b5DC19A1aC8cA71Fc2856C23c03F",
+            decimals: 18,
+        },
+        USDD: {
+            address: "0xA615467caE6B9E0bb98BC04B4411d9296fd1dFa0",
+            decimals: 18,
+        },
+        USDT: {
+            address: "0x1D8bBDE12B6b34140604E18e9f9c6e14deC16854",
+            decimals: 18,
         },
     }
 }
-
 
 export const CORE_POOL_MARKET_TOKENS: TokenConfig = {
     [ChainId.BSC] : {
@@ -181,7 +206,72 @@ export const CORE_POOL_MARKET_TOKENS: TokenConfig = {
         }
     },
     [ChainId.ETHEREUM]: {
-
+        crvUSD: {
+            address: "0x672208C10aaAA2F9A6719F449C4C8227bc0BC202",
+            decimals: 18,
+        },
+        DAI: {
+            address: "0xd8AdD9B41D4E1cd64Edad8722AB0bA8D35536657",
+            decimals: 18,
+        },
+        eBTC: {
+            address: "0x325cEB02fe1C2fF816A83a5770eA0E88e2faEcF2",
+            decimals: 18,
+        },
+        EIGEN: {
+            address: "0x256AdDBe0a387c98f487e44b85c29eb983413c5e",
+            decimals: 18,
+        },
+        FRAX: {
+            address: "0x4fAfbDc4F2a9876Bd1764827b26fb8dc4FD1dB95",
+            decimals: 18,
+        },
+        LBTC: {
+            address: "0x25C20e6e110A1cE3FEbaCC8b7E48368c7b2F0C91",
+            decimals: 18,
+        },
+        sFRAX: {
+            address: "0x17142a05fe678e9584FA1d88EfAC1bF181bF7ABe",
+            decimals: 18,
+        },
+        TUSD: {
+            address: "0x13eB80FDBe5C5f4a7039728E258A6f05fb3B912b",
+            decimals: 18,
+        },
+        USDC: {
+            address: "0x17C07e0c232f2f80DfDbd7a95b942D893A4C5ACb",
+            decimals: 18,
+        },
+        USDT: {
+            address: "0x8C3e3821259B82fFb32B2450A95d2dcbf161C24E",
+            decimals: 18,
+        },
+        WBTC: {
+            address: "0x8716554364f20BCA783cb2BAA744d39361fd1D8d",
+            decimals: 18,
+        },
+        WETH: {
+            address: "0x7c8ff7d2A1372433726f879BD945fFb250B94c65",
+            decimals: 18,
+        },
+        TUSDOLD: {
+            address: "0x08CEB3F4a7ed3500cA0982bcd0FC7816688084c3",
+            decimals: 18,
+        },
+    },
+    [ChainId.BASE]: {
+        USDC: {
+            address: "0x3cb752d175740043Ec463673094e06ACDa2F9a2e",
+            decimals: 18,
+        },
+        cbBTC: {
+            address: "0x7bBd1005bB24Ec84705b04e1f2DfcCad533b6D72",
+            decimals: 18,
+        },
+        WETH: {
+            address: "0xEB8A79bD44cF4500943bf94a2b4434c95C008599",
+            decimals: 18,
+        },
     }
 }
 

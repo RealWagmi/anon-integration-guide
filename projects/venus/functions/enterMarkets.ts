@@ -53,8 +53,8 @@ export async function enterMarkets(
             account,
             transactions: [enterMarketsTx],
         });
-        const depositMessage = result.data[result.data.length - 1];
-        return toResult(result.isMultisig ? depositMessage.message : `Successfully entered Market.`);
+        const message = result.data[result.data.length - 1];
+        return toResult(result.isMultisig ? message.message : `Successfully entered Market.`);
     } catch (error) {
         return toResult(
             `Failed to enter market: ${error instanceof Error ? error.message : "Unknown error"}`,

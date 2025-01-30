@@ -14,64 +14,74 @@ const baseProps = [
     description: "Account address that will execute the transaction",
   },
   {
+    name: "token",
+    type: "string",
+    description: "The token that is involved in the transaction.",
+  },
+  {
+    name: "pool",
+    type: "string",
+    description: "The Pool in which the transaction will be executed.",
+  },
+  {
     name: "amount",
     type: "string",
     description: "Amount of tokens in decimal format",
   },
-  {
-    name: "tokenAddress",
-    type: "string",
-    description: "Address of the token that needs to executed.",
-  },
 ];
 
-const basePropsNoAmount = baseProps.slice(0, 2);
+const basePropsNoAmount = baseProps.slice(0, 4);
+
+const balanceProps = baseProps.slice(0, 3);
 
 export const tools: AiTool[] = [
   {
-    name: "borrowRatePerBlock",
-    description:
-      "Borrows rate per block",
-    required: ["chainName", "account"],
-    props: baseProps,
-  },
-  {
     name: "borrowToken",
-    description:
-      "Borrow token from venus lending protocol.",
-    required: ["chainName", "account", "amount", "tokenAddress"],
+    description: "Borrow a token from venus lending protocol on a particular chain.",
+    required: ["chainName", "account", "amount", "token", "pool"],
     props: baseProps,
   },
   {
     name: "repayToken",
-    description:
-      "Repay Token with interest",
-    required: ["chainName", "account", "amount", "tokenAddress"],
+    description: "Repay Token the token that was borrowed from venus lending protocol on a particular chain.",
+    required: ["chainName", "account", "amount", "token", "pool"],
     props: baseProps,
   },
   {
     name: "mintToken",
-    description: "mint token using venus lending protocol.",
-    required: ["chainName", "account", "amount", "tokenAddress"],
+    description: "Mint or supply token to venus lending protocol.",
+    required: ["chainName", "account", "amount", "token", "pool"],
     props: baseProps,
   },
   {
     name: "balanceOf",
-    description: "balance Of token using venus lending protocol.",
-    required: ["chainName", "account", "tokenAddress"],
+    description: "balance Of token in venus lending protocol.",
+    required: ["chainName", "account", "token"],
+    props: balanceProps,
+  },
+  {
+    name: "redeemUnderlying",
+    description: "redeem the supplied amount of underlying tokens.",
+    required: ["chainName", "account", "amount", "token", "pool"],
     props: baseProps,
   },
   {
-    name: "redeemToken",
-    description: "redeem token using venus lending protocol.",
-    required: ["chainName", "account", "amount", "tokenAddress"],
-    props: baseProps,
+    name: "enterMarkets",
+    description: "Enable a token as collateral in venus lending protocol for a particular pool.",
+    required: ["chainName", "account", "amount", "token", "pool"],
+    props: basePropsNoAmount,
+  },
+  {
+    name: "exitMarket",
+    description: "Disable a token as collateral in venus lending protocol for a particular pool.",
+    required: ["chainName", "account", "amount", "token", "pool"],
+    props: basePropsNoAmount,
   },
   {
     name: "borrowBalanceCurrentToken",
     description: "Borrow balance Of token using venus lending protocol.",
-    required: ["chainName", "account", "tokenAddress"],
-    props: baseProps,
+    required: ["chainName", "account", "token", "pool"],
+    props: basePropsNoAmount,
   },
 
 

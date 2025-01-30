@@ -33,6 +33,7 @@ export async function mintToken(
 ): Promise<FunctionReturn> {
   const wallet = validateWallet({ account })
   if (!wallet.success) {return toResult(wallet.errorMessage, true);}
+  if (!amount || typeof amount !== 'string') {return toResult('Invalid amount', true);}
   const tokenDetails = validateAndGetTokenDetails({chainName, pool, token})
   if (!tokenDetails.success) {return toResult(tokenDetails.errorMessage, true);}
   const provider = getProvider(tokenDetails.data.chainId);

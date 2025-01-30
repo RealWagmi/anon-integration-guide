@@ -1,6 +1,6 @@
 import {
   Address,
-  encodeFunctionData, parseUnits,
+  encodeFunctionData,
 } from "viem";
 
 import {
@@ -8,14 +8,8 @@ import {
   FunctionOptions,
   TransactionParams,
   toResult,
-  getChainFromName,
 } from "@heyanon/sdk";
 
-import {
-  supportedChains,
-  VBNB_ADDRESS,
-
-} from "../constants";
 
 import { vBNBAbi } from "../abis/vBNBAbi";
 import {validateAndGetTokenDetails, validateWallet} from "../utils";

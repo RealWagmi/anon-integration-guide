@@ -54,8 +54,8 @@ export async function exitMarket(
             account,
             transactions: [exitMarketTx],
         });
-        const depositMessage = result.data[result.data.length - 1];
-        return toResult(result.isMultisig ? depositMessage.message : `Successfully exited Market.`);
+        const message = result.data[result.data.length - 1];
+        return toResult(result.isMultisig ? message.message : `Successfully exited Market.`);
     } catch (error) {
         return toResult(
             `Failed to exit market: ${error instanceof Error ? error.message : "Unknown error"}`,
