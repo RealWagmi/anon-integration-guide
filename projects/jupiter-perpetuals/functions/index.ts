@@ -1,0 +1,1 @@
+export { getBorrowRates } from './getBorrowRates';
