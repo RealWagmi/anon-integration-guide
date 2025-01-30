@@ -19,6 +19,7 @@ Eddy Finance is a decentralized exchange (DEX) on ZetaChain designed to make it 
 
     - "Bridge 0.1 BNB to Ethereum from BSC network"
     - "Bridge 50 POL to Ethereum from Polygon network"
+    - "Bridge 0.05 ETH fto Bitcoin from Ethereum network"
 
 2. Information Queries
 
@@ -26,7 +27,8 @@ Eddy Finance is a decentralized exchange (DEX) on ZetaChain designed to make it 
 
 List of available functions will be added here.
 
--   Bridging To Ethereum (So far)
+-   Bridging To Ethereum
+-   Bridging To Bitcoin
 
 ## Tests
 
