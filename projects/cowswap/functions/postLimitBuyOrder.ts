@@ -15,7 +15,7 @@ interface Props {
     buyToken: Address;
 }
 
-export async function postLimitSellOrder(
+export async function postLimitBuyOrder(
     { chainName, account, sellToken, buyToken, buyTokenPrice, sellTokenPrice, buyTokenAmount }: Props,
     { signMessages, getProvider }: FunctionOptions,
 ): Promise<FunctionReturn> {

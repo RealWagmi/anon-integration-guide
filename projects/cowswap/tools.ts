@@ -104,4 +104,82 @@ export const tools: AiTool[] = [
             },
         ],
     },
+    {
+        name: 'postLimitBuyOrder',
+        description: 'Posts a limit buy order.',
+        required: ['chainName', 'account', 'sellToken', 'sellTokenPrice', 'buyTokenPrice', 'buyToken', 'buyTokenAmount'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name where to execute the this function.',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Account address that will execute the swap',
+            },
+            {
+                name: 'buyTokenAmount',
+                type: 'string',
+                description: 'The amount of `buyToken` that will be used to bought when the current price of `buyToken` exceeds the `buyTokenPrice`',
+            },
+            {
+                name: 'sellToken',
+                type: 'string',
+                description: 'The token that will be sold to obtain the `buyToken`',
+            },
+            {
+                name: 'buyTokenPrice',
+                type: 'string',
+                description:
+                    'The price of the buyToken in US Dollars when this limit order will be triggered. This will happen when the current price of the `buyToken` exceeds this.',
+            },
+            {
+                name: 'sellTokenPrice',
+                type: 'string',
+                description: 'Current price of the sellToken in US dollars. This must be populated by querying apis.',
+            },
+        ],
+    },
+    {
+        name: 'postLimitSellOrder',
+        description: 'Posts a limit sell order.',
+        required: ['chainName', 'account', 'sellToken', 'sellTokenPrice', 'sellTokenAmount', 'buyTokenPrice', 'buyToken'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name where to execute the this function.',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Account address that will execute the swap',
+            },
+            {
+                name: 'sellTokenAmount',
+                type: 'string',
+                description: 'The amount of `sellToken` that will be sold when the current price of `sellToken` exceeds the `sellTokenPrice`',
+            },
+            {
+                name: 'sellToken',
+                type: 'string',
+                description: 'The token that will be sold to obtain the `buyToken`',
+            },
+            {
+                name: 'buyTokenPrice',
+                type: 'string',
+                description: 'Current price of the buyToken in US dollars. This must be populated by querying apis.',
+            },
+            {
+                name: 'sellTokenPrice',
+                type: 'string',
+                description:
+                    'The price of the sellToken in US Dollars when this limit order will be triggered. This will happen when the current price of the `sellToken` exceeds this.',
+            },
+        ],
+    },
 ];
