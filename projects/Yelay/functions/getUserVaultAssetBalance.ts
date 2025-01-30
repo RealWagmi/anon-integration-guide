@@ -29,10 +29,10 @@ export async function getUserVaultAssetBalance(
     if (!supportedChains.includes(chainId))
         return toResult(`Protocol is not supported on ${chainName}`, true);
 
-    const config = wrapWithResult(getChainConfig)(chainId);
+    const config = await wrapWithResult(getChainConfig)(chainId);
     if (!config.success) return toResult(`Failed to get config`, true);
 
-    const sdk = wrapWithResult(getSdk)(chainId);
+    const sdk = await wrapWithResult(getSdk)(chainId);
     if (!sdk.success) return toResult(`Failed to setup SDK`, true);
 
     // Getting account balance
@@ -51,8 +51,12 @@ export async function getUserVaultAssetBalance(
     const vaultDetailsQuery: VaultDetailsQuery = {
         vaultAddress: vaultAddress,
     };
-    const vaultDetails = await sdk.result.views.vaultInfo.getVaultDetails(vaultDetailsQuery);
-    const tokenSymbol = vaultDetails.assetGroup.tokens.map((it) => it.symbol);
+    const vaultDetails = await wrapWithResult(sdk.result.views.vaultInfo.getVaultDetails)(
+        vaultDetailsQuery,
+    );
+    if (!vaultDetails.success) return toResult(`Failed fetch vault asset balance`, true);
+
+    const tokenSymbol = vaultDetails.result.assetGroup.tokens.map((it) => it.symbol);
 
     if (assetBalances[vaultAddress].length !== tokenSymbol.length) {
         return toResult(`Error calculating vault asset balances`);

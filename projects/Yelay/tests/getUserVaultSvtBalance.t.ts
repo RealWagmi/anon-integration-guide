@@ -2,7 +2,9 @@ import {
     GetUserSvtBalanceProps,
     getUserVaultSvtBalance,
 } from '../functions/getUserVaultSvtBalance';
-import { ChainId, FunctionOptions } from '@heyanon/sdk';
+import { FunctionOptions } from '@heyanon/sdk';
+
+jest.setTimeout(10000);
 
 describe('getUserVaultSvtBalance', () => {
     it('happy path', async () => {

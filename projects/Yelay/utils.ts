@@ -21,10 +21,12 @@ export function wrapWithResult<T extends (...args: any[]) => any>(
     fn: T,
 ): (
     ...args: Parameters<T>
-) => { success: true; result: ReturnType<T> } | { success: false; error: unknown } {
-    return (...args: Parameters<T>) => {
+) => Promise<
+    { success: true; result: Awaited<ReturnType<T>> } | { success: false; error: unknown }
+> {
+    return async (...args: Parameters<T>) => {
         try {
-            const result = fn(...args);
+            const result = await fn(...args); // Works for both async and non-async functions
             return { success: true, result };
         } catch (error) {
             return { success: false, error };
