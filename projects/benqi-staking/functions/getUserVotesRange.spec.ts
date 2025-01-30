@@ -8,7 +8,7 @@ vi.mock('@heyanon/sdk');
 describe('getUserVotesRange', () => {
     it('should return no votes message', async () => {
         const props: Parameters<typeof getUserVotesRange>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
             from: 0,
             to: 2,
@@ -38,7 +38,7 @@ describe('getUserVotesRange', () => {
 
     it('should format response with node list', async () => {
         const props: Parameters<typeof getUserVotesRange>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
             from: 0,
             to: 2,

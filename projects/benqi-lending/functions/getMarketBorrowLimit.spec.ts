@@ -15,7 +15,7 @@ describe('getMarketBorrowLimit', () => {
     `('marketType $marketType', ({ marketType, marketName, marketAddress }: MarketProps & { marketAddress: Address }) => {
         it('should fail to fetch token price', async () => {
             const props: Parameters<typeof getMarketBorrowLimit>[0] = {
-                account: '0x0000000000000000000000000000000000000000',
+                account: '0x1234567890123456789012345678901234567890',
                 chainName: 'Avalanche',
                 ...({
                     marketType,
@@ -23,7 +23,7 @@ describe('getMarketBorrowLimit', () => {
                 } as MarketProps),
             };
 
-            const oracleAddress = '0x0000000000000000000000000000000000000000';
+            const oracleAddress = '0x1234567890123456789012345678901234567891';
 
             const tokenPrice = {
                 status: 'failure',
@@ -77,7 +77,7 @@ describe('getMarketBorrowLimit', () => {
 
         it('should fail to get account liquidity', async () => {
             const props: Parameters<typeof getMarketBorrowLimit>[0] = {
-                account: '0x0000000000000000000000000000000000000000',
+                account: '0x1234567890123456789012345678901234567890',
                 chainName: 'Avalanche',
                 ...({
                     marketType,
@@ -85,7 +85,7 @@ describe('getMarketBorrowLimit', () => {
                 } as MarketProps),
             };
 
-            const oracleAddress = '0x0000000000000000000000000000000000000000';
+            const oracleAddress = '0x1234567890123456789012345678901234567891';
 
             const tokenPrice = {
                 status: 'success',
@@ -139,7 +139,7 @@ describe('getMarketBorrowLimit', () => {
 
         it('should return internal liquidity error', async () => {
             const props: Parameters<typeof getMarketBorrowLimit>[0] = {
-                account: '0x0000000000000000000000000000000000000000',
+                account: '0x1234567890123456789012345678901234567890',
                 chainName: 'Avalanche',
                 ...({
                     marketType,
@@ -147,7 +147,7 @@ describe('getMarketBorrowLimit', () => {
                 } as MarketProps),
             };
 
-            const oracleAddress = '0x0000000000000000000000000000000000000000';
+            const oracleAddress = '0x1234567890123456789012345678901234567891';
 
             const tokenPrice = {
                 status: 'success',
@@ -201,7 +201,7 @@ describe('getMarketBorrowLimit', () => {
 
         it('calculate borrow limit', async () => {
             const props: Parameters<typeof getMarketBorrowLimit>[0] = {
-                account: '0x0000000000000000000000000000000000000000',
+                account: '0x1234567890123456789012345678901234567890',
                 chainName: 'Avalanche',
                 ...({
                     marketType,
@@ -209,7 +209,7 @@ describe('getMarketBorrowLimit', () => {
                 } as MarketProps),
             };
 
-            const oracleAddress = '0x0000000000000000000000000000000000000000';
+            const oracleAddress = '0x1234567890123456789012345678901234567891';
 
             const tokenPrice = {
                 status: 'success',

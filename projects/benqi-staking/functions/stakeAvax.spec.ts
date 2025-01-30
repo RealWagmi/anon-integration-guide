@@ -9,7 +9,7 @@ vi.mock('@heyanon/sdk');
 describe('stakeAvax', () => {
     it('should call submit of sAvax contract', async () => {
         const props: Parameters<typeof stakeAvax>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
             amount: '2.12',
         };

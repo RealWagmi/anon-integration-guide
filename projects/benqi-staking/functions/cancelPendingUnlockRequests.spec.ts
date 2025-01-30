@@ -9,7 +9,7 @@ vi.mock('@heyanon/sdk');
 describe('cancelPendingUnlockRequests', () => {
     it('should call cancelPendingUnlockRequests of sAvax contract', async () => {
         const props: Parameters<typeof cancelPendingUnlockRequests>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
         };
 

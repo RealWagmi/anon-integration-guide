@@ -9,7 +9,7 @@ vi.mock('@heyanon/sdk');
 describe('redeemAfterExpiry', () => {
     it('should redeem deposited tokens', async () => {
         const props: Parameters<typeof redeemAfterExpiry>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
             nodeId: 'NodeID-1',
         };

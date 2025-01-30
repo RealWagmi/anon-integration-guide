@@ -8,7 +8,7 @@ vi.mock('@heyanon/sdk');
 describe('getAccountRegistrationCount', () => {
     it('should return account registration count', async () => {
         const props: Parameters<typeof getAccountRegistrationCount>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
         };
 

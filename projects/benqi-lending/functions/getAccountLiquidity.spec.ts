@@ -9,7 +9,7 @@ vi.mock('@heyanon/sdk');
 describe('getAccountLiquidity', () => {
     it('should return user liquidity and shortfall on core market', async () => {
         const props: Parameters<typeof getAccountLiquidity>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
             marketType: 'core',
         };
@@ -42,7 +42,7 @@ describe('getAccountLiquidity', () => {
 
     it('should return error code from contract call', async () => {
         const props: Parameters<typeof getAccountLiquidity>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
             marketType: 'core',
         };
@@ -75,7 +75,7 @@ describe('getAccountLiquidity', () => {
 
     it('should return user liquidity and shortfall on ecosystem market', async () => {
         const props: Parameters<typeof getAccountLiquidity>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
             marketType: 'ecosystem',
         };

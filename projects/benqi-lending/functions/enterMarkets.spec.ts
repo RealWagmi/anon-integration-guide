@@ -9,7 +9,7 @@ vi.mock('@heyanon/sdk');
 describe('enterMarkets', () => {
     it('should call enterMarkets of comptroller contract on core market', async () => {
         const props: Parameters<typeof enterMarkets>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
             marketType: 'core',
             marketNames: ['USDC'],
@@ -42,7 +42,7 @@ describe('enterMarkets', () => {
 
     it('should call enterMarkets of comptroller contract on ecosystem market', async () => {
         const props: Parameters<typeof enterMarkets>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
             marketType: 'ecosystem',
             marketNames: ['USDC'],

@@ -18,7 +18,7 @@ describe('registerWithStake', () => {
 
     it('should error on minimal AVAX amount fetch', async () => {
         const props: Parameters<typeof registerWithStake>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
             nodeId: 'NodeID-1',
             blsProofOfPossession,
@@ -70,7 +70,7 @@ describe('registerWithStake', () => {
 
     it('should error on maximum AVAX amount fetch', async () => {
         const props: Parameters<typeof registerWithStake>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
             nodeId: 'NodeID-1',
             blsProofOfPossession,
@@ -122,7 +122,7 @@ describe('registerWithStake', () => {
 
     it('should validate if amount is between min and max AVAX amount', async () => {
         const props: Parameters<typeof registerWithStake>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
             nodeId: 'NodeID-1',
             blsProofOfPossession,
@@ -174,7 +174,7 @@ describe('registerWithStake', () => {
 
     it('should error on qi price feed address fetch', async () => {
         const props: Parameters<typeof registerWithStake>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
             nodeId: 'NodeID-1',
             blsProofOfPossession,
@@ -195,7 +195,7 @@ describe('registerWithStake', () => {
         };
         const avaxPriceFeed = {
             status: 'success',
-            result: '0x0000000000000000000000000000000000000000',
+            result: '0x1234567890123456789012345678901234567890',
         };
 
         const provider = {
@@ -238,7 +238,7 @@ describe('registerWithStake', () => {
 
     it('should error on qi latest round fetch', async () => {
         const props: Parameters<typeof registerWithStake>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
             nodeId: 'NodeID-1',
             blsProofOfPossession,
@@ -255,11 +255,11 @@ describe('registerWithStake', () => {
         };
         const qiPriceFeed = {
             status: 'success',
-            result: '0x0000000000000000000000000000000000000001',
+            result: '0x1234567890123456789012345678901234567891',
         };
         const avaxPriceFeed = {
             status: 'success',
-            result: '0x0000000000000000000000000000000000000002',
+            result: '0x1234567890123456789012345678901234567892',
         };
         const qiLatestRound = {
             status: 'failure',
@@ -311,7 +311,7 @@ describe('registerWithStake', () => {
 
     it('should error on avax latest round fetch', async () => {
         const props: Parameters<typeof registerWithStake>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
             nodeId: 'NodeID-1',
             blsProofOfPossession,
@@ -328,11 +328,11 @@ describe('registerWithStake', () => {
         };
         const qiPriceFeed = {
             status: 'success',
-            result: '0x0000000000000000000000000000000000000001',
+            result: '0x1234567890123456789012345678901234567891',
         };
         const avaxPriceFeed = {
             status: 'success',
-            result: '0x0000000000000000000000000000000000000002',
+            result: '0x1234567890123456789012345678901234567892',
         };
         const qiLatestRound = {
             status: 'success',
@@ -384,7 +384,7 @@ describe('registerWithStake', () => {
 
     it('should register node with fee paid with stake', async () => {
         const props: Parameters<typeof registerWithStake>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
             nodeId: 'NodeID-1',
             blsProofOfPossession,
@@ -401,11 +401,11 @@ describe('registerWithStake', () => {
         };
         const qiPriceFeed = {
             status: 'success',
-            result: '0x0000000000000000000000000000000000000001',
+            result: '0x1234567890123456789012345678901234567891',
         };
         const avaxPriceFeed = {
             status: 'success',
-            result: '0x0000000000000000000000000000000000000002',
+            result: '0x1234567890123456789012345678901234567892',
         };
         const qiLatestRound = {
             status: 'success',

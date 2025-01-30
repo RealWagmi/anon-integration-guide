@@ -10,7 +10,7 @@ vi.mock('@heyanon/sdk');
 describe('stakeQi', () => {
     it('should setup allowance before transaction and call deposit method', async () => {
         const props: Parameters<typeof stakeQi>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
             amount: '2.12',
         };

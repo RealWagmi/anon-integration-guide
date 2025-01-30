@@ -18,7 +18,7 @@ describe('registerWithErc20Fee', () => {
 
     it('should error on payment method price feed fetch', async () => {
         const props: Parameters<typeof registerWithErc20Fee>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
             nodeId: 'NodeID-1',
             blsProofOfPossession,
@@ -31,7 +31,7 @@ describe('registerWithErc20Fee', () => {
         };
         const avaxPriceFeed = {
             status: 'success',
-            data: '0x0000000000000000000000000000000000000000',
+            data: '0x1234567890123456789012345678901234567891',
         };
 
         const provider = {
@@ -70,7 +70,7 @@ describe('registerWithErc20Fee', () => {
 
     it('should error on fetch avax price feed fetch', async () => {
         const props: Parameters<typeof registerWithErc20Fee>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
             nodeId: 'NodeID-1',
             blsProofOfPossession,
@@ -79,7 +79,7 @@ describe('registerWithErc20Fee', () => {
         };
         const paymentMethodPriceFeed = {
             status: 'success',
-            data: '0x0000000000000000000000000000000000000000',
+            data: '0x1234567890123456789012345678901234567891',
         };
         const avaxPriceFeed = {
             status: 'failure',
@@ -169,7 +169,7 @@ describe('registerWithErc20Fee', () => {
     ].forEach(([paymentMethodLatestRound, avaxLatestRound, paymentMethodDecimals, error]) => {
         it(`should return error ${error.message}`, async () => {
             const props: Parameters<typeof registerWithErc20Fee>[0] = {
-                account: '0x0000000000000000000000000000000000000000',
+                account: '0x1234567890123456789012345678901234567890',
                 chainName: 'Avalanche',
                 nodeId: 'NodeID-1',
                 blsProofOfPossession,
@@ -178,11 +178,11 @@ describe('registerWithErc20Fee', () => {
             };
             const paymentMethodPriceFeed = {
                 status: 'success',
-                result: '0x0000000000000000000000000000000000000001',
+                result: '0x1234567890123456789012345678901234567891',
             };
             const avaxPriceFeed = {
                 status: 'success',
-                result: '0x0000000000000000000000000000000000000002',
+                result: '0x1234567890123456789012345678901234567892',
             };
 
             const provider = {
@@ -251,7 +251,7 @@ describe('registerWithErc20Fee', () => {
 
     it('should register nodeId with fee paid in USDC', async () => {
         const props: Parameters<typeof registerWithErc20Fee>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
             nodeId: 'NodeID-1',
             blsProofOfPossession,
@@ -260,11 +260,11 @@ describe('registerWithErc20Fee', () => {
         };
         const paymentMethodPriceFeed = {
             status: 'success',
-            result: '0x0000000000000000000000000000000000000001',
+            result: '0x1234567890123456789012345678901234567891',
         };
         const avaxPriceFeed = {
             status: 'success',
-            result: '0x0000000000000000000000000000000000000002',
+            result: '0x1234567890123456789012345678901234567892',
         };
         const paymentMethodLatestRound = {
             status: 'success',
@@ -326,7 +326,7 @@ describe('registerWithErc20Fee', () => {
 
     it('should register nodeId with fee paid in Qi', async () => {
         const props: Parameters<typeof registerWithErc20Fee>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
             nodeId: 'NodeID-1',
             blsProofOfPossession,
@@ -335,11 +335,11 @@ describe('registerWithErc20Fee', () => {
         };
         const paymentMethodPriceFeed = {
             status: 'success',
-            result: '0x0000000000000000000000000000000000000001',
+            result: '0x1234567890123456789012345678901234567891',
         };
         const avaxPriceFeed = {
             status: 'success',
-            result: '0x0000000000000000000000000000000000000002',
+            result: '0x1234567890123456789012345678901234567892',
         };
         const paymentMethodLatestRound = {
             status: 'success',

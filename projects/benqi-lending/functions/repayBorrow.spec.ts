@@ -15,7 +15,7 @@ describe('repayBorrow', () => {
 
     it('should deposit collateral in ERC20 tokens on core market', async () => {
         const props: Parameters<typeof repayBorrow>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
             amount: '2.12',
             marketType: 'core',
@@ -73,7 +73,7 @@ describe('repayBorrow', () => {
 
     it('should deposit collateral in AVAX tokens on core market', async () => {
         const props: Parameters<typeof repayBorrow>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
             amount: '2.12',
             marketType: 'core',
@@ -110,7 +110,7 @@ describe('repayBorrow', () => {
 
     it('should deposit collateral in ERC20 tokens on ecosystem market', async () => {
         const props: Parameters<typeof repayBorrow>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
             amount: '2.12',
             marketType: 'ecosystem',

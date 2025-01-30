@@ -8,7 +8,7 @@ vi.mock('@heyanon/sdk');
 describe('getUserVotesLength', () => {
     it('should format response in the singular form', async () => {
         const props: Parameters<typeof getUserVotesLength>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
         };
 
@@ -37,7 +37,7 @@ describe('getUserVotesLength', () => {
 
     it('should format response in the plural form', async () => {
         const props: Parameters<typeof getUserVotesLength>[0] = {
-            account: '0x0000000000000000000000000000000000000000',
+            account: '0x1234567890123456789012345678901234567890',
             chainName: 'Avalanche',
         };
 
