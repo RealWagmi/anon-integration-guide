@@ -26,5 +26,6 @@ describe('getUserVaultSvtBalance', () => {
 
         // assert
         console.log(result);
+        expect(result.success).toBeTruthy();
     });
 });
