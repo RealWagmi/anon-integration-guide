@@ -35,7 +35,7 @@ export async function getUserVaultSvtBalance(
     if (!sdk.success) return toResult(`Failed to setup SDK`, true);
 
     // Getting account balance
-    await notify(`Getting balance for account ${account} in vault ${vaultAddress}...`);
+    await notify(`Getting SVT balance for account ${account} in vault ${vaultAddress}...`);
 
     const svtBalance = await sdk.result.views.userInfo.getUserSVTBalance(vaultAddress, account);
 

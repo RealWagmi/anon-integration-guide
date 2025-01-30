@@ -36,7 +36,7 @@ export async function getUserVaultAssetBalance(
     if (!sdk.success) return toResult(`Failed to setup SDK`, true);
 
     // Getting account balance
-    await notify(`Getting balance for account ${account} in vault ${vaultAddress}...`);
+    await notify(`Getting asset balance for account ${account} in vault ${vaultAddress}...`);
 
     const userBalancesInfoQuery: UserBalancesInfoQuery = {
         vaultAddresses: [vaultAddress],
