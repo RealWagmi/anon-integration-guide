@@ -10,7 +10,7 @@ export interface GetUserSvtBalanceProps {
 }
 
 /**
- * Gets users assets balance for a pool.
+ * Gets user's vault SVT balance.
  * @param props - The function parameters
  * @param tools - System tools for blockchain interactions
  * @returns Transaction result
