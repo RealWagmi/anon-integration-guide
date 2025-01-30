@@ -61,13 +61,15 @@ describe('utils', () => {
     });
 
     it.each`
-        from  | to    | expected
-        ${''} | ${''} | ${{ success: false, errorMessage: 'Expected from and to to be numbers' }}
-        ${''} | ${2}  | ${{ success: false, errorMessage: 'Expected from and to to be numbers' }}
-        ${0}  | ${''} | ${{ success: false, errorMessage: 'Expected from and to to be numbers' }}
-        ${0}  | ${0}  | ${{ success: false, errorMessage: 'Expected from to be less than to' }}
-        ${1}  | ${0}  | ${{ success: false, errorMessage: 'Expected from to be less than to' }}
-        ${1}  | ${10} | ${{ success: true, data: { from: 1n, to: 10n } }}
+        from   | to     | expected
+        ${''}  | ${''}  | ${{ success: false, errorMessage: 'Expected from and to to be numbers' }}
+        ${''}  | ${2}   | ${{ success: false, errorMessage: 'Expected from and to to be numbers' }}
+        ${0}   | ${''}  | ${{ success: false, errorMessage: 'Expected from and to to be numbers' }}
+        ${0.1} | ${1}   | ${{ success: false, errorMessage: 'Expected from and to to be integers' }}
+        ${0}   | ${1.5} | ${{ success: false, errorMessage: 'Expected from and to to be integers' }}
+        ${0}   | ${0}   | ${{ success: false, errorMessage: 'Expected from to be less than to' }}
+        ${1}   | ${0}   | ${{ success: false, errorMessage: 'Expected from to be less than to' }}
+        ${1}   | ${10}  | ${{ success: true, data: { from: 1n, to: 10n } }}
     `('should return $expected when from is $from and to is $to', ({ from, to, expected }) => {
         const result = parseRange({ from, to });
 

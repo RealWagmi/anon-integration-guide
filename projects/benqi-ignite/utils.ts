@@ -64,6 +64,8 @@ export const parseRange = <Props extends { from: number; to: number }>(props: Pr
 
     if (typeof from !== 'number' || typeof to !== 'number') return { success: false, errorMessage: 'Expected from and to to be numbers' };
 
+    if (!Number.isInteger(from) || !Number.isInteger(to)) return { success: false, errorMessage: 'Expected from and to to be integers' };
+
     if (from >= to) return { success: false, errorMessage: 'Expected from to be less than to' };
 
     return {
