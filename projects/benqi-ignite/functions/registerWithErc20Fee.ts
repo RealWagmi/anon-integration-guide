@@ -3,8 +3,8 @@ import { Address, encodeFunctionData, erc20Abi } from 'viem';
 import eacAggregatorProxyAbi from '../abis/eacAggregatorProxy';
 import igniteAbi from '../abis/ignite';
 import {
-    AVAX_PRICE_FEED_KEY,
     AVAX_DECIMALS,
+    AVAX_PRICE_FEED_KEY,
     AVAX_REGISTRATION_FEE,
     ERC20_PAYMENT_METHODS,
     ERC20PaymentMethod,
@@ -12,7 +12,8 @@ import {
     RegisterProps,
     VALIDATION_DURATION_TIME,
 } from '../constants';
-import { parseRegister, parseWallet } from '../utils';
+import { checkERC20Balance } from '../utils/checkERC20Balance';
+import { parseRegister, parseWallet } from '../utils/parse';
 
 type Props = RegisterProps & {
     chainName: string;
@@ -133,6 +134,26 @@ export async function registerWithErc20Fee(props: Props, { sendTransactions, not
     await notify('Increasing allowance by 10% to avoid reverts due to last minute price changes...');
 
     tokenAmount = (tokenAmount * 110n) / 100n;
+
+    try {
+        await notify(`Verifying ${props.paymentMethod} balance...`);
+
+        await checkERC20Balance({
+            args: {
+                token: paymentMethodAddress,
+                account,
+                amount: tokenAmount,
+                decimals: paymentMethodDecimals.result,
+            },
+            provider,
+        });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return toResult(error.message, true);
+        }
+
+        return toResult('Unknown error', true);
+    }
 
     await checkToApprove({
         args: {

@@ -2,8 +2,10 @@ import { checkToApprove, FunctionOptions, FunctionReturn, toResult, TransactionP
 import { Address, encodeFunctionData, formatUnits } from 'viem';
 import eacAggregatorProxyAbi from '../abis/eacAggregatorProxy';
 import igniteAbi from '../abis/ignite';
-import { AVAX_PRICE_FEED_KEY, AVAX_DECIMALS, ERC20_PAYMENT_METHODS, IGNITE_ADDRESS, RegisterProps, STAKE_LIMIT_IN_AVAX, VALIDATION_DURATION_TIME } from '../constants';
-import { parseAmount, parseRegister, parseWallet } from '../utils';
+import { AVAX_DECIMALS, AVAX_PRICE_FEED_KEY, ERC20_PAYMENT_METHODS, IGNITE_ADDRESS, QI_DECIMALS, RegisterProps, STAKE_LIMIT_IN_AVAX, VALIDATION_DURATION_TIME } from '../constants';
+import { checkBalance } from '../utils/checkBalance';
+import { checkERC20Balance } from '../utils/checkERC20Balance';
+import { parseAmount, parseRegister, parseWallet } from '../utils/parse';
 
 type Props = RegisterProps & {
     chainName: string;
@@ -132,6 +134,45 @@ export async function registerWithStake(props: Props, { sendTransactions, notify
     await notify('Increasing allowance by 10% to avoid reverts due to last minute price changes...');
 
     qiAmount = (qiAmount * 110n) / 100n;
+
+    try {
+        await notify(`Verifying Qi balance...`);
+
+        await checkERC20Balance({
+            args: {
+                token: qiAddress,
+                account,
+                amount: qiAmount,
+                decimals: QI_DECIMALS,
+            },
+            provider,
+        });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return toResult(error.message, true);
+        }
+
+        return toResult('Unknown error', true);
+    }
+
+    try {
+        await notify(`Verifying AVAX balance...`);
+
+        await checkBalance({
+            args: {
+                account,
+                amount: amount.data,
+                decimals: AVAX_DECIMALS,
+            },
+            provider,
+        });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return toResult(error.message, true);
+        }
+
+        return toResult('Unknown error', true);
+    }
 
     await checkToApprove({
         args: {

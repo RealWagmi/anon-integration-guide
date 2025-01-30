@@ -1,8 +1,9 @@
 import { FunctionOptions, FunctionReturn, toResult, TransactionParams } from '@heyanon/sdk';
 import { Address, encodeFunctionData } from 'viem';
 import igniteAbi from '../abis/ignite';
-import { AVAX_REGISTRATION_FEE, IGNITE_ADDRESS, RegisterProps, VALIDATION_DURATION_TIME } from '../constants';
-import { parseRegister, parseWallet } from '../utils';
+import { AVAX_DECIMALS, AVAX_REGISTRATION_FEE, IGNITE_ADDRESS, RegisterProps, VALIDATION_DURATION_TIME } from '../constants';
+import { checkBalance } from '../utils/checkBalance';
+import { parseRegister, parseWallet } from '../utils/parse';
 
 type Props = RegisterProps & {
     chainName: string;
@@ -15,7 +16,7 @@ type Props = RegisterProps & {
  * @param tools - System tools for blockchain interactions
  * @returns Transaction result
  */
-export async function registerWithAvaxFee(props: Props, { sendTransactions, notify }: FunctionOptions): Promise<FunctionReturn> {
+export async function registerWithAvaxFee(props: Props, { sendTransactions, notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
     const wallet = parseWallet(props);
 
     if (!wallet.success) {
@@ -30,7 +31,28 @@ export async function registerWithAvaxFee(props: Props, { sendTransactions, noti
         return toResult(register.errorMessage, true);
     }
 
+    const provider = getProvider(chainId);
     const fee = AVAX_REGISTRATION_FEE[register.data.validationDuration];
+
+    try {
+        await notify('Verifying account balance...');
+
+        await checkBalance({
+            args: {
+                account,
+                amount: fee,
+                decimals: AVAX_DECIMALS,
+            },
+            provider,
+        });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return toResult(error.message, true);
+        }
+
+        return toResult('Unknown error', true);
+    }
+
     const time = VALIDATION_DURATION_TIME[register.data.validationDuration];
 
     const transactions: TransactionParams[] = [];

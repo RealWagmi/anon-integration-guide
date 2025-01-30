@@ -19,14 +19,19 @@ describe('registerWithAvaxFee', () => {
             validationDuration: 'TWO_WEEKS',
         };
 
+        const provider = {
+            getBalance: vi.fn().mockReturnValue(Promise.resolve(AVAX_REGISTRATION_FEE.TWO_WEEKS)),
+        };
+
         const tools: Parameters<typeof registerWithAvaxFee>[1] = {
             sendTransactions: vi.fn().mockReturnValue(Promise.resolve({ data: ['Result'], isMultisig: false })),
             notify: vi.fn(),
-            getProvider: vi.fn(),
+            getProvider: vi.fn().mockReturnValue(provider),
         };
 
         const result = await registerWithAvaxFee(props, tools);
 
+        expect(provider.getBalance).toHaveBeenCalled();
         expect(tools.sendTransactions).toHaveBeenCalledWith(
             expect.objectContaining({
                 transactions: [
@@ -43,5 +48,31 @@ describe('registerWithAvaxFee', () => {
             }),
         );
         expect(result.data).toMatch(`Successfully registered node ${props.nodeId} with AVAX token`);
+    });
+
+    it('should prevent user from making registration without AVAX', async () => {
+        const props: Parameters<typeof registerWithAvaxFee>[0] = {
+            account: '0x1234567890123456789012345678901234567890',
+            chainName: 'Avalanche',
+            nodeId: 'NodeID-1',
+            blsProofOfPossession,
+            validationDuration: 'FOUR_WEEKS',
+        };
+
+        const provider = {
+            getBalance: vi.fn().mockReturnValue(Promise.resolve(AVAX_REGISTRATION_FEE.TWO_WEEKS)),
+        };
+
+        const tools: Parameters<typeof registerWithAvaxFee>[1] = {
+            sendTransactions: vi.fn().mockReturnValue(Promise.resolve({ data: ['Result'], isMultisig: false })),
+            notify: vi.fn(),
+            getProvider: vi.fn().mockReturnValue(provider),
+        };
+
+        const result = await registerWithAvaxFee(props, tools);
+
+        expect(provider.getBalance).toHaveBeenCalled();
+        expect(tools.sendTransactions).not.toHaveBeenCalled();
+        expect(result.data).toMatch('Insufficient balance');
     });
 });

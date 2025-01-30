@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { parseAmount, parseRange, parseRegister, parseWallet } from './utils';
+import { parseAmount, parseRange, parseRegister, parseWallet } from './parse';
 
 vi.mock('@heyanon/sdk');
 

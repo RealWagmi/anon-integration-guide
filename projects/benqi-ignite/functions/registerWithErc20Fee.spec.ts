@@ -280,7 +280,7 @@ describe('registerWithErc20Fee', () => {
         };
 
         const provider = {
-            readContract: vi.fn(),
+            readContract: vi.fn().mockReturnValueOnce(Promise.resolve(parseUnits('4.4', 18))),
             multicall: vi
                 .fn()
                 .mockReturnValueOnce(Promise.resolve([paymentMethodPriceFeed, avaxPriceFeed]))
@@ -356,7 +356,10 @@ describe('registerWithErc20Fee', () => {
         const qiPriceMultiplier = 10_000n;
 
         const provider = {
-            readContract: vi.fn().mockReturnValue(Promise.resolve(qiPriceMultiplier)),
+            readContract: vi
+                .fn()
+                .mockReturnValueOnce(Promise.resolve(qiPriceMultiplier))
+                .mockResolvedValueOnce(Promise.resolve(parseUnits('4.4', 18))),
             multicall: vi
                 .fn()
                 .mockReturnValueOnce(Promise.resolve([paymentMethodPriceFeed, avaxPriceFeed]))

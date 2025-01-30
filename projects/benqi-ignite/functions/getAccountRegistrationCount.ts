@@ -2,7 +2,7 @@ import { FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { Address } from 'viem';
 import igniteAbi from '../abis/ignite';
 import { IGNITE_ADDRESS } from '../constants';
-import { parseWallet } from '../utils';
+import { parseWallet } from '../utils/parse';
 
 type Props = {
     chainName: string;
@@ -15,7 +15,7 @@ type Props = {
  * @param tools - System tools for blockchain interactions
  * @returns Transaction result
  */
-export async function getAccountRegistrationCount(props: Props, { sendTransactions, notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
+export async function getAccountRegistrationCount(props: Props, { getProvider }: FunctionOptions): Promise<FunctionReturn> {
     const wallet = parseWallet(props);
 
     if (!wallet.success) {

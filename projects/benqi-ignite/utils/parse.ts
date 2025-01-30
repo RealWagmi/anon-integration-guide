@@ -1,6 +1,6 @@
 import { getChainFromName } from '@heyanon/sdk';
 import { Address, isAddress, parseUnits, size } from 'viem';
-import { ALL_DURATIONS, RegisterProps, supportedChains } from './constants';
+import { ALL_DURATIONS, RegisterProps, supportedChains } from '../constants';
 
 type Result<Data> =
     | {

@@ -3,7 +3,7 @@ import { encodeFunctionData, parseUnits } from 'viem';
 import { beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import eacAggregatorProxyAbi from '../abis/eacAggregatorProxy';
 import igniteAbi from '../abis/ignite';
-import { AVAX_PRICE_FEED_KEY, AVAX_DECIMALS, ERC20_PAYMENT_METHODS, IGNITE_ADDRESS, VALIDATION_DURATION_TIME } from '../constants';
+import { AVAX_DECIMALS, AVAX_PRICE_FEED_KEY, ERC20_PAYMENT_METHODS, IGNITE_ADDRESS, QI_DECIMALS, VALIDATION_DURATION_TIME } from '../constants';
 import { registerWithStake } from './registerWithStake';
 
 vi.mock('@heyanon/sdk');
@@ -409,7 +409,7 @@ describe('registerWithStake', () => {
         };
         const qiLatestRound = {
             status: 'success',
-            result: [0n, parseUnits('10', 18), 0n, 0n, 0n],
+            result: [0n, parseUnits('10', QI_DECIMALS), 0n, 0n, 0n],
         };
         const avaxLatestRound = {
             status: 'success',
@@ -417,7 +417,8 @@ describe('registerWithStake', () => {
         };
 
         const provider = {
-            readContract: vi.fn(),
+            getBalance: vi.fn().mockReturnValueOnce(Promise.resolve(parseUnits('500', AVAX_DECIMALS))),
+            readContract: vi.fn().mockReturnValueOnce(Promise.resolve(parseUnits('330', QI_DECIMALS))),
             multicall: vi
                 .fn()
                 .mockReturnValueOnce(Promise.resolve([minimumAvaxDeposit, maximumAvaxDeposit]))
@@ -439,7 +440,7 @@ describe('registerWithStake', () => {
                     account: props.account,
                     target: ERC20_PAYMENT_METHODS.Qi,
                     spender: IGNITE_ADDRESS,
-                    amount: parseUnits('330', 18),
+                    amount: parseUnits('330', QI_DECIMALS),
                 },
             }),
         );

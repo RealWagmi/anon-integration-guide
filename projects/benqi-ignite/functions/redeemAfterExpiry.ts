@@ -2,7 +2,7 @@ import { FunctionOptions, FunctionReturn, toResult, TransactionParams } from '@h
 import { Address, encodeFunctionData } from 'viem';
 import igniteAbi from '../abis/ignite';
 import { IGNITE_ADDRESS } from '../constants';
-import { parseWallet } from '../utils';
+import { parseWallet } from '../utils/parse';
 
 type Props = {
     chainName: string;
