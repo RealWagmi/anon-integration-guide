@@ -1,12 +1,11 @@
 import { Address, encodeFunctionData } from 'viem';
 import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName } from '@heyanon/sdk';
-import { supportedChains } from '../../constants';
-import { veNftAbi } from '../../abis/veNftAbi';
+import { supportedChains, VE_EQUAL_ADDRESS } from '../constants';
+import { veNftAbi } from '../abis/veNftAbi';
 
 interface Props {
     chainName: string;
     account: Address;
-    vestedAddress: Address;
     tokenId: string;
     secondsToExtend: string;
 }
@@ -17,10 +16,7 @@ interface Props {
  * @param options - System tools for blockchain interactions
  * @returns Transaction result
  */
-export async function increaseLockDuration(
-    { chainName, account, vestedAddress, tokenId, secondsToExtend }: Props,
-    { sendTransactions, notify }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function increaseLockDuration({ chainName, account, tokenId, secondsToExtend }: Props, { sendTransactions, notify }: FunctionOptions): Promise<FunctionReturn> {
     // Check wallet connection
     if (!account) return toResult('Wallet not connected', true);
 
@@ -28,9 +24,6 @@ export async function increaseLockDuration(
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Equalizer is not supported on ${chainName}`, true);
-
-    // Validate addresses and duration
-    if (!vestedAddress) return toResult('Vested token address is required', true);
 
     const tokenIdBn = BigInt(tokenId);
     const secondsToExtendBn = BigInt(secondsToExtend);
@@ -42,7 +35,7 @@ export async function increaseLockDuration(
     const transactions: TransactionParams[] = [];
 
     const increaseTx: TransactionParams = {
-        target: vestedAddress,
+        target: VE_EQUAL_ADDRESS,
         data: encodeFunctionData({
             abi: veNftAbi,
             functionName: 'increase_unlock_time',
@@ -56,9 +49,5 @@ export async function increaseLockDuration(
     const result = await sendTransactions({ chainId, account, transactions });
     const increaseMessage = result.data[result.data.length - 1];
 
-    return toResult(
-        result.isMultisig 
-            ? increaseMessage.message 
-            : `Successfully increased lock duration. ${increaseMessage.message}`
-    );
+    return toResult(result.isMultisig ? increaseMessage.message : `Successfully increased lock duration. ${increaseMessage.message}`);
 }
