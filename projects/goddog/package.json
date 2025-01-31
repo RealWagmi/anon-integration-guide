@@ -1,0 +1,24 @@
+{
+    "name": "@projects/goddog",
+    "version": "1.0.0",
+    "scripts": {
+        "yarn": "yarn install",
+        "test": "npx ts-node scripts/test.ts"
+    },
+    "dependencies": {
+        "@heyanon/sdk": "^1.0.4",
+        "@thanpolas/univ3prices": "^3.0.2",
+        "axios": "^1.7.9",
+        "dotenv": "^16.4.7",
+        "ethers": "^6.13.5",
+        "ts-node": "^10.9.2",
+        "tsc": "^2.0.4",
+        "typescript": "^5.7.3"
+    },
+    "license": "MIT",
+    "engines": {
+        "npm": "please-use-yarn",
+        "node": ">=18.x",
+        "yarn": ">=1.22"
+    }
+}
