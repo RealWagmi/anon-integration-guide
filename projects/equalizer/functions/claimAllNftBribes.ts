@@ -1,14 +1,13 @@
-import { Address, encodeFunctionData } from 'viem';
+import { Address, encodeFunctionData, getAddress } from 'viem';
 import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName } from '@heyanon/sdk';
 import { supportedChains, VOTER_ADDRESS } from '../constants';
 import { voterAbi } from '../abis';
+import { getNftRewards } from '../lib/api/nft-rewards';
 
 interface Props {
     chainName: string;
     account: Address;
     tokenId: number;
-    bribes: Address[];
-    btokens: Address[][];
 }
 
 /**
@@ -17,31 +16,41 @@ interface Props {
  * @param tools - System tools for blockchain interactions.
  * @returns Transaction result.
  */
-export async function claimNftBribes({ chainName, account, tokenId, bribes, btokens }: Props, { sendTransactions, notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
+export async function claimNftBribes({ chainName, account, tokenId }: Props, { sendTransactions, notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
     if (!account) return toResult('Wallet not connected', true);
 
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Equalizer is not supported on ${chainName}`, true);
 
-    if (!bribes?.length || !btokens?.length) {
-        return toResult('No bribes to claim', true);
-    }
-
-    if (btokens.length !== bribes.length) {
-        return toResult(`Received mismatched bribe tokens.`);
-    }
-
     if (tokenId < 0) return toResult('Invalid token ID', true);
 
-    await notify('Preparing to claim NFT bribes...');
+    const nftRewards = await getNftRewards(tokenId);
+
+    if (nftRewards.size === 0) {
+        return toResult('No rewards to claim', true);
+    }
+
+    const rewardSummary = Array.from(nftRewards.values())
+        .flatMap((reward) => reward.tokens.map((token) => `${token.amount.value} ${token.symbol}`))
+        .join(', ');
+
+    await notify(`Found rewards to claim: ${rewardSummary}`);
+
+    const bribes: Address[] = [];
+    const bribeTokens: Address[][] = [];
+
+    for (const reward of nftRewards.values()) {
+        bribes.push(getAddress(reward.bribeAddress));
+        bribeTokens.push(reward.tokens.map((v) => getAddress(v.address)));
+    }
 
     const claimTx: TransactionParams = {
         target: VOTER_ADDRESS,
         data: encodeFunctionData({
             abi: voterAbi,
             functionName: 'claimEverything',
-            args: [[], [], bribes, btokens, BigInt(tokenId)],
+            args: [[], [], bribes, bribeTokens, BigInt(tokenId)],
         }),
     };
 
