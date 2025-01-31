@@ -6,10 +6,10 @@ import { OrderBookApi } from '@cowprotocol/cow-sdk';
 interface Props {
     chainName: string;
     account: Address;
-    orderUid: string;
+    orderUids: string[];
 }
 
-export async function getOrderCompletionStatus({ chainName, account, orderUid }: Props): Promise<FunctionReturn> {
+export async function getOrderCompletionStatus({ chainName, account, orderUids }: Props): Promise<FunctionReturn> {
     // Check wallet connection
     if (!account) return toResult('Wallet not connected', true);
 
@@ -20,7 +20,11 @@ export async function getOrderCompletionStatus({ chainName, account, orderUid }:
 
     const orderBookApi = new OrderBookApi({ chainId: chainId as number });
 
-    const orderStatus = await orderBookApi.getOrderCompetitionStatus(orderUid);
+    const orderStatutes = await Promise.all(
+        orderUids.map(async (orderUid) => {
+            return await orderBookApi.getOrderCompetitionStatus(orderUid);
+        }),
+    );
 
-    return toResult(JSON.stringify({ status: orderStatus }));
+    return toResult(JSON.stringify(orderStatutes));
 }
