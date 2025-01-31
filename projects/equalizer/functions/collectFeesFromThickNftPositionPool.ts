@@ -1,7 +1,7 @@
 import { Address, encodeFunctionData } from 'viem';
 import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName } from '@heyanon/sdk';
-import { supportedChains } from '../../constants';
-import { thickNftAbi } from '../../abis/thickNft';
+import { supportedChains, THICKNFT_MANAGER_ADDRESS } from '../constants';
+import { thickNftAbi } from '../abis/thickNft';
 interface Props {
     chainName: string;
     account: Address;
@@ -33,7 +33,7 @@ export async function collectFeesFromThickNftPosition({ chainName, account, toke
     };
 
     const collectTx: TransactionParams = {
-        target: nftMana,
+        target: THICKNFT_MANAGER_ADDRESS,
         data: encodeFunctionData({
             abi: thickNftAbi,
             functionName: 'collect',
