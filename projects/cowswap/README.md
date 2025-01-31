@@ -12,20 +12,23 @@ Integration with CoW Swap
 ## Common Tasks
 
 1. Basic Operations
-   - "Execute example operation with 100 USDT in @cowswap on Ethereum network"
-   - "Run example transaction with 50 USDC in @cowswap"
-   - "Perform example action with 1000 tokens in @cowswap"
+   - "Buy 10 USDC of ETH when ETH reaches $3000."
+   - "Sell 1 ETH for USDC when ETH reaches $4000."
+   - "Swap 10 USDC for ETH"
+   - "Cancel the order with orderUid of 123."
 
 2. Information Queries
-   - "Show my current status in @cowswap"
-   - "Check my balance in @cowswap"
-   - "Get example statistics from @cowswap"
-   - "Calculate expected results for my position in @cowswap"
-
+   - "Get all my cowswap orders on ETHEREUM"
+   - "What's the status of the orderUid 123?"
 
 ## Available Functions
 
-List of available functions will be added here.
+- cancelOrders
+- getOrderCompletionStatus
+- getOrders
+- postLimitBuyOrder
+- postLimitSellOrder
+- postSwapOrder
 
 ## Installation
 
@@ -33,6 +36,3 @@ List of available functions will be added here.
 yarn add @heyanon/cowswap
 ```
 
-## Usage
-
-Example usage will be added here.
