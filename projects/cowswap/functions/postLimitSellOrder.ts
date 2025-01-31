@@ -7,7 +7,7 @@ import { getTokenInfo } from '../utils';
 interface Props {
     chainName: string;
     account: Address;
-    slippageInPercentage: string;
+    slippageInPercentage?: string;
 
     sellToken: Address;
     sellTokenPrice: string;
@@ -17,7 +17,7 @@ interface Props {
 }
 
 export async function postLimitSellOrder(
-    { chainName, account, sellToken, buyToken, buyTokenPrice, sellTokenPrice, sellTokenAmount, slippageInPercentage }: Props,
+    { chainName, account, sellToken, buyToken, buyTokenPrice, sellTokenPrice, sellTokenAmount, slippageInPercentage = '0.5' }: Props,
     { signMessages, getProvider }: FunctionOptions,
 ): Promise<FunctionReturn> {
     // Check wallet connection

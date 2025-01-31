@@ -10,14 +10,14 @@ interface Props {
     account: Address;
     amount: string;
     receiver?: Address;
-    slippageInPercentage: string;
+    slippageInPercentage?: string;
 
     inputToken: Address;
     outputToken: Address;
 }
 
 export async function postSwapOrder(
-    { chainName, account, amount, receiver = account, inputToken, outputToken, slippageInPercentage }: Props,
+    { chainName, account, amount, receiver = account, inputToken, outputToken, slippageInPercentage = '0.5' }: Props,
     { notify, getProvider, signMessages }: FunctionOptions,
 ): Promise<FunctionReturn> {
     // Check wallet connection

@@ -83,6 +83,11 @@ export const tools: AiTool[] = [
                 description: 'Account address that will execute the swap',
             },
             {
+                name: 'slippageInPercentage',
+                type: 'string',
+                description: 'Maximum user slippage percentage when making the swap.',
+            },
+            {
                 name: 'amount',
                 type: 'string',
                 description: 'The amount of `inputToken` that will be used to buy `ouputToken`s',
@@ -119,6 +124,11 @@ export const tools: AiTool[] = [
                 name: 'account',
                 type: 'string',
                 description: 'Account address that will execute the swap',
+            },
+            {
+                name: 'slippageInPercentage',
+                type: 'string',
+                description: 'Maximum user slippage percentage when making the swap.',
             },
             {
                 name: 'buyTokenAmount',
@@ -163,6 +173,11 @@ export const tools: AiTool[] = [
                 name: 'account',
                 type: 'string',
                 description: 'Account address that will execute the swap',
+            },
+            {
+                name: 'slippageInPercentage',
+                type: 'string',
+                description: 'Maximum user slippage percentage when making the swap.',
             },
             {
                 name: 'sellTokenAmount',
