@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "target": "es2015",        // Ensure the target is at least ES2015
+    "lib": ["es2015", "dom"],  // Add "es2015" for Promises and "dom" for browser APIs
+    "module": "commonjs",      // Adjust based on your module system
+    "strict": true,
+    "esModuleInterop": true
+  }
+}
