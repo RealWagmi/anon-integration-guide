@@ -3,7 +3,7 @@ import { encodeFunctionData, parseUnits } from 'viem';
 import { beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import qiAvaxAbi from '../abis/qiAvax';
 import qiERC20Abi from '../abis/qiERC20';
-import { CORE_MARKETS, ECOSYSTEM_MARKETS, MARKET_DECIMALS } from '../constants';
+import { AVAX_DECIMALS, CORE_MARKETS, ECOSYSTEM_MARKETS } from '../constants';
 import { depositCollateral } from './depositCollateral';
 
 vi.mock('@heyanon/sdk');
@@ -19,13 +19,14 @@ describe('depositCollateral', () => {
             chainName: 'Avalanche',
             amount: '2.12',
             marketType: 'core',
-            marketName: 'USDC',
+            marketName: 'ETH',
         };
 
         const underlyingAssetAddress = '0x1234567890abcdef1234567890abcdef12345678';
+        const underlyingDecimals = 18;
 
         const provider = {
-            readContract: vi.fn().mockReturnValue(Promise.resolve(underlyingAssetAddress)),
+            readContract: vi.fn().mockReturnValueOnce(Promise.resolve(underlyingAssetAddress)).mockReturnValueOnce(Promise.resolve(underlyingDecimals)),
         };
 
         const tools: Parameters<typeof depositCollateral>[1] = {
@@ -38,18 +39,24 @@ describe('depositCollateral', () => {
 
         expect(provider.readContract).toHaveBeenCalledWith({
             abi: qiERC20Abi,
-            address: CORE_MARKETS.USDC,
+            address: CORE_MARKETS.ETH,
             functionName: 'underlying',
             args: [],
         });
+
+        expect(provider.readContract).toHaveBeenCalledWith(
+            expect.objectContaining({
+                functionName: 'balanceOf',
+            }),
+        );
 
         expect(checkToApprove).toHaveBeenCalledWith(
             expect.objectContaining({
                 args: {
                     account: props.account,
                     target: underlyingAssetAddress,
-                    spender: CORE_MARKETS.USDC,
-                    amount: parseUnits(props.amount, MARKET_DECIMALS),
+                    spender: CORE_MARKETS.ETH,
+                    amount: parseUnits(props.amount, underlyingDecimals),
                 },
             }),
         );
@@ -58,11 +65,11 @@ describe('depositCollateral', () => {
             expect.objectContaining({
                 transactions: [
                     {
-                        target: CORE_MARKETS.USDC,
+                        target: CORE_MARKETS.ETH,
                         data: encodeFunctionData({
                             abi: qiERC20Abi,
                             functionName: 'mint',
-                            args: [parseUnits(props.amount, MARKET_DECIMALS)],
+                            args: [parseUnits(props.amount, underlyingDecimals)],
                         }),
                     },
                 ],
@@ -80,15 +87,20 @@ describe('depositCollateral', () => {
             marketName: 'AVAX',
         };
 
+        const provider = {
+            getBalance: vi.fn().mockReturnValueOnce(Promise.resolve(parseUnits(props.amount, AVAX_DECIMALS))),
+        };
+
         const tools: Parameters<typeof depositCollateral>[1] = {
             sendTransactions: vi.fn().mockReturnValue(Promise.resolve({ data: ['Result'], isMultisig: false })),
             notify: vi.fn(),
-            getProvider: vi.fn(),
+            getProvider: vi.fn().mockReturnValue(provider),
         };
 
         const result = await depositCollateral(props, tools);
 
         expect(checkToApprove).not.toHaveBeenCalled();
+        expect(provider.getBalance).toHaveBeenCalled();
 
         expect(tools.sendTransactions).toHaveBeenCalledWith(
             expect.objectContaining({
@@ -100,7 +112,7 @@ describe('depositCollateral', () => {
                             functionName: 'mint',
                             args: [],
                         }),
-                        value: parseUnits(props.amount, MARKET_DECIMALS),
+                        value: parseUnits(props.amount, AVAX_DECIMALS),
                     },
                 ],
             }),
@@ -118,9 +130,10 @@ describe('depositCollateral', () => {
         };
 
         const underlyingAssetAddress = '0x1234567890abcdef1234567890abcdef12345678';
+        const underlyingDecimals = 6;
 
         const provider = {
-            readContract: vi.fn().mockReturnValue(Promise.resolve(underlyingAssetAddress)),
+            readContract: vi.fn().mockReturnValueOnce(Promise.resolve(underlyingAssetAddress)).mockReturnValueOnce(Promise.resolve(underlyingDecimals)),
         };
 
         const tools: Parameters<typeof depositCollateral>[1] = {
@@ -144,7 +157,7 @@ describe('depositCollateral', () => {
                     account: props.account,
                     target: underlyingAssetAddress,
                     spender: ECOSYSTEM_MARKETS.USDC,
-                    amount: parseUnits(props.amount, MARKET_DECIMALS),
+                    amount: parseUnits(props.amount, underlyingDecimals),
                 },
             }),
         );
@@ -157,7 +170,7 @@ describe('depositCollateral', () => {
                         data: encodeFunctionData({
                             abi: qiERC20Abi,
                             functionName: 'mint',
-                            args: [parseUnits(props.amount, MARKET_DECIMALS)],
+                            args: [parseUnits(props.amount, underlyingDecimals)],
                         }),
                     },
                 ],

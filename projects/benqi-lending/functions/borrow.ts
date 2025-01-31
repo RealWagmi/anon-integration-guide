@@ -1,9 +1,9 @@
 import { FunctionOptions, FunctionReturn, toResult, TransactionParams } from '@heyanon/sdk';
-import { Address, encodeFunctionData } from 'viem';
+import { Address, encodeFunctionData, erc20Abi } from 'viem';
 import qiAvaxAbi from '../abis/qiAvax';
 import qiERC20Abi from '../abis/qiERC20';
-import { MarketProps } from '../constants';
-import { isERC20Based, parseAmount, parseMarket, parseWallet } from '../utils';
+import { AVAX_DECIMALS, MarketProps } from '../constants';
+import { isERC20Based, parseAmount, parseMarket, parseWallet } from '../utils/parse';
 
 type Props = MarketProps & {
     chainName: string;
@@ -17,7 +17,7 @@ type Props = MarketProps & {
  * @param tools - System tools for blockchain interactions
  * @returns Transaction result
  */
-export async function borrow(props: Props, { sendTransactions, notify }: FunctionOptions): Promise<FunctionReturn> {
+export async function borrow(props: Props, { sendTransactions, notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
     const wallet = parseWallet(props);
 
     if (!wallet.success) {
@@ -26,32 +26,76 @@ export async function borrow(props: Props, { sendTransactions, notify }: Functio
 
     const { account, chainId } = wallet.data;
 
-    const amount = parseAmount(props);
-
-    if (!amount.success) {
-        return toResult(amount.errorMessage, true);
-    }
-
     const market = parseMarket(props);
 
     if (!market.success) {
         return toResult(market.errorMessage, true);
     }
 
+    const provider = getProvider(chainId);
     const transactions: TransactionParams[] = [];
 
-    await notify('Preparing borrow transaction...');
+    if (isERC20Based(market.data)) {
+        await notify('Checking underlying contract address...');
 
-    const tx: TransactionParams = {
-        target: market.data.marketAddress,
-        data: encodeFunctionData({
-            abi: isERC20Based(market.data) ? qiERC20Abi : qiAvaxAbi,
-            functionName: 'borrow',
-            args: [amount.data],
-        }),
-    };
+        const underlyingAssetAddress = await provider.readContract({
+            abi: qiERC20Abi,
+            address: market.data.marketAddress,
+            functionName: 'underlying',
+            args: [],
+        });
 
-    transactions.push(tx);
+        const underlyingDecimals = await provider.readContract({
+            abi: erc20Abi,
+            address: underlyingAssetAddress,
+            functionName: 'decimals',
+            args: [],
+        });
+
+        const amount = parseAmount({
+            amount: props.amount,
+            decimals: underlyingDecimals,
+        });
+
+        if (!amount.success) {
+            return toResult(amount.errorMessage, true);
+        }
+
+        await notify('Preparing borrow transaction...');
+
+        const tx: TransactionParams = {
+            target: market.data.marketAddress,
+            data: encodeFunctionData({
+                abi: qiERC20Abi,
+                functionName: 'borrow',
+                args: [amount.data],
+            }),
+        };
+
+        transactions.push(tx);
+    } else {
+        const amount = parseAmount({
+            amount: props.amount,
+            decimals: AVAX_DECIMALS,
+        });
+
+        if (!amount.success) {
+            return toResult(amount.errorMessage, true);
+        }
+
+        await notify('Preparing borrow transaction...');
+
+        const tx: TransactionParams = {
+            target: market.data.marketAddress,
+            data: encodeFunctionData({
+                abi: qiAvaxAbi,
+                functionName: 'borrow',
+                args: [amount.data],
+            }),
+        };
+
+        transactions.push(tx);
+    }
 
     await notify('Waiting for transaction confirmation...');
 

@@ -1,6 +1,6 @@
 import { getChainFromName } from '@heyanon/sdk';
 import { Address, isAddress, parseUnits } from 'viem';
-import { AVAX_NAME, CORE_MARKETS, ECOSYSTEM_MARKETS, MARKET_DECIMALS, MarketListProps, MarketProps, supportedChains } from './constants';
+import { AVAX_NAME, CORE_MARKETS, ECOSYSTEM_MARKETS, MarketListProps, MarketProps, supportedChains } from '../constants';
 
 type Result<Data> =
     | {
@@ -30,7 +30,7 @@ export const parseWallet = <Props extends { account: string; chainName: string }
     };
 };
 
-export const parseAmount = <Props extends { amount: string; decimals?: number }>({ amount, decimals = MARKET_DECIMALS }: Props): Result<bigint> => {
+export const parseAmount = <Props extends { amount: string; decimals: number }>({ amount, decimals }: Props): Result<bigint> => {
     if (!amount || typeof amount !== 'string') return { success: false, errorMessage: 'Amount must be a string' };
 
     const parsedAmount = parseUnits(amount, decimals);

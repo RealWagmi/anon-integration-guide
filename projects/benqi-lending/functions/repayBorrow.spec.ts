@@ -3,7 +3,7 @@ import { encodeFunctionData, parseUnits } from 'viem';
 import { beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import qiAvaxAbi from '../abis/qiAvax';
 import qiERC20Abi from '../abis/qiERC20';
-import { CORE_MARKETS, ECOSYSTEM_MARKETS, MARKET_DECIMALS } from '../constants';
+import { AVAX_DECIMALS, CORE_MARKETS, ECOSYSTEM_MARKETS } from '../constants';
 import { repayBorrow } from './repayBorrow';
 
 vi.mock('@heyanon/sdk');
@@ -23,9 +23,10 @@ describe('repayBorrow', () => {
         };
 
         const underlyingAssetAddress = '0x1234567890abcdef1234567890abcdef12345678';
+        const underlyingDecimals = 6;
 
         const provider = {
-            readContract: vi.fn().mockReturnValue(Promise.resolve(underlyingAssetAddress)),
+            readContract: vi.fn().mockResolvedValueOnce(underlyingAssetAddress).mockResolvedValueOnce(underlyingDecimals),
         };
 
         const tools: Parameters<typeof repayBorrow>[1] = {
@@ -49,7 +50,7 @@ describe('repayBorrow', () => {
                     account: props.account,
                     target: underlyingAssetAddress,
                     spender: CORE_MARKETS.USDC,
-                    amount: parseUnits(props.amount, MARKET_DECIMALS),
+                    amount: parseUnits(props.amount, underlyingDecimals),
                 },
             }),
         );
@@ -62,7 +63,7 @@ describe('repayBorrow', () => {
                         data: encodeFunctionData({
                             abi: qiERC20Abi,
                             functionName: 'repayBorrow',
-                            args: [parseUnits(props.amount, MARKET_DECIMALS)],
+                            args: [parseUnits(props.amount, underlyingDecimals)],
                         }),
                     },
                 ],
@@ -80,10 +81,14 @@ describe('repayBorrow', () => {
             marketName: 'AVAX',
         };
 
+        const provider = {
+            getBalance: vi.fn().mockResolvedValue(parseUnits(props.amount, AVAX_DECIMALS)),
+        };
+
         const tools: Parameters<typeof repayBorrow>[1] = {
             sendTransactions: vi.fn().mockReturnValue(Promise.resolve({ data: ['Result'], isMultisig: false })),
             notify: vi.fn(),
-            getProvider: vi.fn(),
+            getProvider: vi.fn().mockReturnValue(provider),
         };
 
         const result = await repayBorrow(props, tools);
@@ -100,7 +105,7 @@ describe('repayBorrow', () => {
                             functionName: 'repayBorrow',
                             args: [],
                         }),
-                        value: parseUnits(props.amount, MARKET_DECIMALS),
+                        value: parseUnits(props.amount, AVAX_DECIMALS),
                     },
                 ],
             }),
@@ -118,9 +123,10 @@ describe('repayBorrow', () => {
         };
 
         const underlyingAssetAddress = '0x1234567890abcdef1234567890abcdef12345678';
+        const underlyingDecimals = 6;
 
         const provider = {
-            readContract: vi.fn().mockReturnValue(Promise.resolve(underlyingAssetAddress)),
+            readContract: vi.fn().mockResolvedValueOnce(underlyingAssetAddress).mockResolvedValueOnce(underlyingDecimals),
         };
 
         const tools: Parameters<typeof repayBorrow>[1] = {
@@ -144,7 +150,7 @@ describe('repayBorrow', () => {
                     account: props.account,
                     target: underlyingAssetAddress,
                     spender: ECOSYSTEM_MARKETS.USDC,
-                    amount: parseUnits(props.amount, MARKET_DECIMALS),
+                    amount: parseUnits(props.amount, underlyingDecimals),
                 },
             }),
         );
@@ -157,7 +163,7 @@ describe('repayBorrow', () => {
                         data: encodeFunctionData({
                             abi: qiERC20Abi,
                             functionName: 'repayBorrow',
-                            args: [parseUnits(props.amount, MARKET_DECIMALS)],
+                            args: [parseUnits(props.amount, underlyingDecimals)],
                         }),
                     },
                 ],

@@ -1,9 +1,11 @@
 import { checkToApprove, FunctionOptions, FunctionReturn, toResult, TransactionParams } from '@heyanon/sdk';
-import { Address, encodeFunctionData } from 'viem';
+import { Address, encodeFunctionData, erc20Abi } from 'viem';
 import qiAvaxAbi from '../abis/qiAvax';
 import qiERC20Abi from '../abis/qiERC20';
-import { MarketProps } from '../constants';
-import { isERC20Based, parseAmount, parseMarket, parseWallet } from '../utils';
+import { AVAX_DECIMALS, MarketProps } from '../constants';
+import { checkBalance } from '../utils/checkBalance';
+import { checkERC20Balance } from '../utils/checkERC20Balance';
+import { isERC20Based, parseAmount, parseMarket, parseWallet } from '../utils/parse';
 
 type Props = MarketProps & {
     chainName: string;
@@ -26,24 +28,16 @@ export async function depositCollateral(props: Props, { sendTransactions, notify
 
     const { account, chainId } = wallet.data;
 
-    const amount = parseAmount(props);
-
-    if (!amount.success) {
-        return toResult(amount.errorMessage, true);
-    }
-
     const market = parseMarket(props);
 
     if (!market.success) {
         return toResult(market.errorMessage, true);
     }
 
+    const provider = getProvider(chainId);
     const transactions: TransactionParams[] = [];
 
     if (isERC20Based(market.data)) {
-        // Underlying asset
-        const provider = getProvider(chainId);
-
         await notify('Checking underlying contract address...');
 
         const underlyingAssetAddress = await provider.readContract({
@@ -52,6 +46,44 @@ export async function depositCollateral(props: Props, { sendTransactions, notify
             functionName: 'underlying',
             args: [],
         });
+
+        const underlyingDecimals = await provider.readContract({
+            abi: erc20Abi,
+            address: underlyingAssetAddress,
+            functionName: 'decimals',
+            args: [],
+        });
+
+        // Parsing amount
+
+        const amount = parseAmount({
+            amount: props.amount,
+            decimals: underlyingDecimals,
+        });
+
+        if (!amount.success) {
+            return toResult(amount.errorMessage, true);
+        }
+
+        try {
+            await notify(`Verifying underlying asset balance...`);
+
+            await checkERC20Balance({
+                args: {
+                    token: underlyingAssetAddress,
+                    account,
+                    amount: amount.data,
+                    decimals: underlyingDecimals,
+                },
+                provider,
+            });
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                return toResult(error.message, true);
+            }
+
+            return toResult('Unknown error', true);
+        }
 
         await notify('Checking underlying contract allowance...');
 
@@ -79,6 +111,34 @@ export async function depositCollateral(props: Props, { sendTransactions, notify
 
         transactions.push(tx);
     } else {
+        const amount = parseAmount({
+            amount: props.amount,
+            decimals: AVAX_DECIMALS,
+        });
+
+        if (!amount.success) {
+            return toResult(amount.errorMessage, true);
+        }
+
+        try {
+            await notify('Verifying account balance...');
+
+            await checkBalance({
+                args: {
+                    account,
+                    amount: amount.data,
+                    decimals: AVAX_DECIMALS,
+                },
+                provider,
+            });
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                return toResult(error.message, true);
+            }
+
+            return toResult('Unknown error', true);
+        }
+
         await notify('Preparing mint transaction...');
 
         const tx: TransactionParams = {

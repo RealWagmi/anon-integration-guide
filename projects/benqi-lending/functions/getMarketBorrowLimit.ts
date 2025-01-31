@@ -2,8 +2,8 @@ import { FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { Address, formatUnits } from 'viem';
 import chainlinkOracleAbi from '../abis/chainlinkOracle';
 import comptrollerAbi from '../abis/comptroller';
-import { CORE_COMPTROLLER_ADDRESS, ECOSYSTEM_UNITROLLER_ADDRESS, MARKET_DECIMALS, MarketProps } from '../constants';
-import { parseMarket, parseWallet } from '../utils';
+import { CORE_COMPTROLLER_ADDRESS, ECOSYSTEM_UNITROLLER_ADDRESS, MarketProps } from '../constants';
+import { parseMarket, parseWallet } from '../utils/parse';
 
 type Props = MarketProps & {
     chainName: string;
@@ -72,7 +72,7 @@ export async function getMarketBorrowLimit(props: Props, { getProvider }: Functi
     }
 
     const additionalPrecision = 10n ** 18n;
-    const borrowLimit = (liquidityAmount * additionalPrecision) / tokenPrice.result / additionalPrecision;
+    const borrowLimit = (liquidityAmount * additionalPrecision) / tokenPrice.result;
 
-    return toResult(`Your market borrow limit for ${market.data.marketName} token: ${formatUnits(borrowLimit, MARKET_DECIMALS)}`);
+    return toResult(`Your market borrow limit for ${market.data.marketName} token: ${formatUnits(borrowLimit, 18)}`);
 }

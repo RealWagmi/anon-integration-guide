@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
-import { CORE_MARKETS, ECOSYSTEM_MARKETS } from './constants';
-import { parseAmount, parseMarket, parseMarketList, parseWallet } from './utils';
+import { CORE_MARKETS, ECOSYSTEM_MARKETS } from '../constants';
+import { parseAmount, parseMarket, parseMarketList, parseWallet } from './parse';
 
 vi.mock('@heyanon/sdk');
 
 type UtilsParams<T extends (...args: any) => any> = Parameters<T>[0] & { expected: ReturnType<T> };
 
-describe('utils', () => {
+describe('parse', () => {
     it.each`
         account                                         | chainName             | expected
         ${''}                                           | ${'Avalanche'}        | ${{ success: false, errorMessage: 'Wallet not connected' }}

@@ -2,7 +2,7 @@ import { FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { Address, formatUnits } from 'viem';
 import comptrollerAbi from '../abis/comptroller';
 import { CORE_COMPTROLLER_ADDRESS, ECOSYSTEM_UNITROLLER_ADDRESS, LIQUIDITY_DECIMALS, MarketProps } from '../constants';
-import { parseWallet } from '../utils';
+import { parseWallet } from '../utils/parse';
 
 type Props = {
     chainName: string;

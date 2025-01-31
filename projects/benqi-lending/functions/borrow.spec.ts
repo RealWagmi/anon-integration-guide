@@ -2,7 +2,7 @@ import { encodeFunctionData, parseUnits } from 'viem';
 import { describe, expect, it, vi } from 'vitest';
 import qiAvaxAbi from '../abis/qiAvax';
 import qiERC20Abi from '../abis/qiERC20';
-import { CORE_MARKETS, ECOSYSTEM_MARKETS, MARKET_DECIMALS } from '../constants';
+import { AVAX_DECIMALS, CORE_MARKETS, ECOSYSTEM_MARKETS } from '../constants';
 import { borrow } from './borrow';
 
 vi.mock('@heyanon/sdk');
@@ -17,10 +17,17 @@ describe('borrow', () => {
             marketName: 'USDC',
         };
 
+        const underlyingAssetAddress = '0x1234567890123456789012345678901234567891';
+        const underlyingDecimals = 6;
+
+        const provider = {
+            readContract: vi.fn().mockResolvedValueOnce(underlyingAssetAddress).mockResolvedValueOnce(underlyingDecimals),
+        };
+
         const tools: Parameters<typeof borrow>[1] = {
             sendTransactions: vi.fn().mockReturnValue(Promise.resolve({ data: ['Result'], isMultisig: false })),
             notify: vi.fn(),
-            getProvider: vi.fn(),
+            getProvider: vi.fn().mockReturnValue(provider),
         };
 
         const result = await borrow(props, tools);
@@ -33,7 +40,7 @@ describe('borrow', () => {
                         data: encodeFunctionData({
                             abi: qiERC20Abi,
                             functionName: 'borrow',
-                            args: [parseUnits(props.amount, MARKET_DECIMALS)],
+                            args: [parseUnits(props.amount, underlyingDecimals)],
                         }),
                     },
                 ],
@@ -67,7 +74,7 @@ describe('borrow', () => {
                         data: encodeFunctionData({
                             abi: qiAvaxAbi,
                             functionName: 'borrow',
-                            args: [parseUnits(props.amount, MARKET_DECIMALS)],
+                            args: [parseUnits(props.amount, AVAX_DECIMALS)],
                         }),
                     },
                 ],
@@ -85,10 +92,17 @@ describe('borrow', () => {
             marketName: 'USDC',
         };
 
+        const underlyingAssetAddress = '0x1234567890123456789012345678901234567891';
+        const underlyingDecimals = 6;
+
+        const provider = {
+            readContract: vi.fn().mockResolvedValueOnce(underlyingAssetAddress).mockResolvedValueOnce(underlyingDecimals),
+        };
+
         const tools: Parameters<typeof borrow>[1] = {
             sendTransactions: vi.fn().mockReturnValue(Promise.resolve({ data: ['Result'], isMultisig: false })),
             notify: vi.fn(),
-            getProvider: vi.fn(),
+            getProvider: vi.fn().mockReturnValue(provider),
         };
 
         const result = await borrow(props, tools);
@@ -101,7 +115,7 @@ describe('borrow', () => {
                         data: encodeFunctionData({
                             abi: qiERC20Abi,
                             functionName: 'borrow',
-                            args: [parseUnits(props.amount, MARKET_DECIMALS)],
+                            args: [parseUnits(props.amount, underlyingDecimals)],
                         }),
                     },
                 ],

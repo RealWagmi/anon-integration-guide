@@ -2,7 +2,7 @@ import { Address, parseUnits } from 'viem';
 import { describe, expect, it, vi } from 'vitest';
 import chainlinkOracleAbi from '../abis/chainlinkOracle';
 import comptrollerAbi from '../abis/comptroller';
-import { CORE_COMPTROLLER_ADDRESS, CORE_MARKETS, ECOSYSTEM_MARKETS, ECOSYSTEM_UNITROLLER_ADDRESS, LIQUIDITY_DECIMALS, MARKET_DECIMALS, MarketProps } from '../constants';
+import { CORE_COMPTROLLER_ADDRESS, CORE_MARKETS, ECOSYSTEM_MARKETS, ECOSYSTEM_UNITROLLER_ADDRESS, LIQUIDITY_DECIMALS, MarketProps, PRICE_ORACLE_DECIMALS } from '../constants';
 import { getMarketBorrowLimit } from './getMarketBorrowLimit';
 
 vi.mock('@heyanon/sdk');
@@ -213,7 +213,7 @@ describe('getMarketBorrowLimit', () => {
 
             const tokenPrice = {
                 status: 'success',
-                result: parseUnits('2', MARKET_DECIMALS),
+                result: parseUnits('2', PRICE_ORACLE_DECIMALS),
             };
 
             const liquidity = {

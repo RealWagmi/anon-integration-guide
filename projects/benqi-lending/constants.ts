@@ -2,7 +2,8 @@ import { ChainId } from '@heyanon/sdk';
 
 export const supportedChains = [ChainId.AVALANCHE];
 
-export const MARKET_DECIMALS = 8;
+export const AVAX_DECIMALS = 18;
+export const PRICE_ORACLE_DECIMALS = 18;
 export const LIQUIDITY_DECIMALS = 18;
 
 export const CORE_COMPTROLLER_ADDRESS = '0x486Af39519B4Dc9a7fCcd318217352830E8AD9b4';

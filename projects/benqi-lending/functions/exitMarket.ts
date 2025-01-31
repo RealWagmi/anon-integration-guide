@@ -2,7 +2,7 @@ import { FunctionOptions, FunctionReturn, TransactionParams, toResult } from '@h
 import { Address, encodeFunctionData } from 'viem';
 import comptrollerAbi from '../abis/comptroller';
 import { CORE_COMPTROLLER_ADDRESS, ECOSYSTEM_UNITROLLER_ADDRESS, MarketProps } from '../constants';
-import { parseMarket, parseWallet } from '../utils';
+import { parseMarket, parseWallet } from '../utils/parse';
 
 type Props = MarketProps & {
     chainName: string;
