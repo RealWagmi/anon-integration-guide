@@ -1,7 +1,7 @@
 import { Address, parseUnits } from 'viem';
 import { FunctionReturn, FunctionOptions, toResult, getChainFromName, checkToApprove } from '@heyanon/sdk';
 import { HeyAnonSigner, supportedChains } from '../constants';
-import { OrderBookApi, OrderQuoteRequest, OrderQuoteSideKindSell, OrderSigningUtils, SigningScheme, COW_PROTOCOL_VAULT_RELAYER_ADDRESS } from '@cowprotocol/cow-sdk';
+import { COW_PROTOCOL_VAULT_RELAYER_ADDRESS, TradingSdk, TradeParameters, OrderKind } from '@cowprotocol/cow-sdk';
 
 import { getTokenInfo } from '../utils';
 
@@ -57,26 +57,22 @@ export async function postSwapOrder(
     });
 
     const signer = new HeyAnonSigner(account, provider, signMessages);
-    const orderBookApi = new OrderBookApi({ chainId: chainId as number });
-
-    const quoteRequest: OrderQuoteRequest = {
-        sellToken: inputToken,
-        buyToken: outputToken,
-        from: account,
-        receiver,
-        sellAmountBeforeFee: amountParsed.toString(),
-        kind: OrderQuoteSideKindSell.SELL,
-    };
-
-    const { quote } = await orderBookApi.getQuote(quoteRequest);
-    const orderSigningResult = await OrderSigningUtils.signOrder({ ...quote, receiver }, chainId as number, signer);
-    const orderUid = await orderBookApi.sendOrder({
-        ...quote,
-        signature: orderSigningResult.signature,
-        signingScheme: orderSigningResult.signingScheme as string as SigningScheme,
+    const sdk = new TradingSdk({
+        chainId: chainId as number,
+        signer,
+        appCode: 'HeyAnon',
     });
 
-    return toResult(
-        `Successfully posted the order to swap ${parseUnits(quote.sellAmount, inputTokenInfo.decimals)} ${inputTokenInfo.symbol} to ${parseUnits(quote.buyAmount, outputTokenInfo.decimals)} ${outputTokenInfo.symbol} with orderUid of ${orderUid}.`,
-    );
+    const parameters: TradeParameters = {
+        kind: OrderKind.BUY,
+        sellToken: inputToken,
+        sellTokenDecimals: inputTokenInfo.decimals,
+        buyToken: outputToken,
+        buyTokenDecimals: outputTokenInfo.decimals,
+        amount: amountParsed.toString(),
+    };
+
+    const orderId = await sdk.postSwapOrder(parameters);
+
+    return toResult(`Successfully created swap order ${orderId}`);
 }
