@@ -1,7 +1,7 @@
 import { Address, encodeFunctionData } from 'viem';
 import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName } from '@heyanon/sdk';
-import { supportedChains, VOTER_ADDRESS } from '../../constants';
-import { voterAbi } from '../../abis';
+import { supportedChains, VOTER_ADDRESS } from '../constants';
+import { voterAbi } from '../abis';
 
 interface Props {
     chainName: string;

@@ -1,9 +1,9 @@
 import { Address, encodeFunctionData, isAddress, parseUnits } from 'viem';
 import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName } from '@heyanon/sdk';
-import { supportedChains, ROUTER_ADDRESS } from '../../constants';
-import { routerAbi } from '../../abis';
+import { supportedChains, ROUTER_ADDRESS } from '../constants';
+import { routerAbi } from '../abis';
 import { checkToApprove } from '@heyanon/sdk';
-import { getTokenMetadata } from '../../lib/erc20Metadata';
+import { getTokenMetadata } from '../lib/erc20Metadata';
 
 interface Props {
     chainName: string;
