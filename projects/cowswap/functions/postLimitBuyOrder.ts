@@ -1,7 +1,7 @@
-import { FunctionReturn, toResult, getChainFromName, FunctionOptions } from '@heyanon/sdk';
+import { FunctionReturn, toResult, getChainFromName, FunctionOptions, checkToApprove } from '@heyanon/sdk';
 import { Address, parseUnits } from 'viem';
 import { HeyAnonSigner, supportedChains } from '../constants';
-import { LimitOrderParameters, OrderKind, TradingSdk } from '@cowprotocol/cow-sdk';
+import { COW_PROTOCOL_VAULT_RELAYER_ADDRESS, LimitOrderParameters, OrderKind, TradingSdk } from '@cowprotocol/cow-sdk';
 import { getTokenInfo } from '../utils';
 
 interface Props {
@@ -47,6 +47,17 @@ export async function postLimitBuyOrder(
 
     const buyTokenAmountBN = parseUnits(buyTokenAmount, buyTokenInfo.decimals);
     const sellTokenAmountBN = (sellTokenPriceBN / buyTokenPriceBN) * buyTokenAmountBN;
+
+    await checkToApprove({
+        args: {
+            account,
+            target: sellToken,
+            spender: COW_PROTOCOL_VAULT_RELAYER_ADDRESS[chainId],
+            amount: sellTokenAmountBN,
+        },
+        transactions: [],
+        provider,
+    });
 
     const parameters: LimitOrderParameters = {
         kind: OrderKind.BUY,
