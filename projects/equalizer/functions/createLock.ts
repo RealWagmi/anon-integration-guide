@@ -1,9 +1,9 @@
 import { Address, encodeFunctionData, parseUnits } from 'viem';
 import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName } from '@heyanon/sdk';
-import { EQUAL_ADDRESS, supportedChains, VE_EQUAL_ADDRESS } from '../../constants';
+import { EQUAL_ADDRESS, supportedChains, VE_EQUAL_ADDRESS } from '../constants';
 
 import { checkToApprove } from '@heyanon/sdk';
-import { veNftAbi } from '../../abis';
+import { veNftAbi } from '../abis';
 
 interface Props {
     chainName: string;
