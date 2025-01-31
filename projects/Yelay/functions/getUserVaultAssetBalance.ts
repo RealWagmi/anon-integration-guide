@@ -72,9 +72,3 @@ export async function getUserVaultAssetBalance(
         `Balance for account ${account} in vault ${vaultAddress} is ${vaultAssetBalanceString}`,
     );
 }
-
-// deposit -> swapAndDeposit.deposit
-// fast withdrawal -> withdraw.redeemFast
-
-// get 7D Apy -> job api maybe
-// get total earned yield -> not gonna do it
