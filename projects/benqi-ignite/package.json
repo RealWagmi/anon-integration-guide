@@ -1,0 +1,22 @@
+{
+    "name": "@projects/benqi-ignite",
+    "version": "1.0.0",
+    "scripts": {
+        "yarn": "yarn install",
+        "test": "vitest run",
+        "test:watch": "vitest"
+    },
+    "dependencies": {
+        "@heyanon/sdk": "^1.0.4"
+    },
+    "license": "MIT",
+    "engines": {
+        "npm": "please-use-yarn",
+        "node": ">=18.x",
+        "yarn": ">=1.22"
+    },
+    "devDependencies": {
+        "prettier": "^3.4.2",
+        "vitest": "^3.0.4"
+    }
+}
