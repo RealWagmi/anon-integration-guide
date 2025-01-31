@@ -1,5 +1,6 @@
 import { ChainId } from '@heyanon/sdk';
-import { stringToHex } from 'viem';
+import { createPublicClient, stringToHex } from 'viem';
+import { mainnet, bsc, polygon, base } from 'viem/chains';
 
 export const supportedChains = [ChainId.ETHEREUM, ChainId.POLYGON, ChainId.BASE, ChainId.BSC];
 
@@ -26,16 +27,6 @@ export const getDataForBitcoin = (btcWalletAddress: string) => {
 };
 
 export const getNativeTokenName = (chainId: number) => {
-    switch (chainId) {
-        case ChainId.ETHEREUM:
-            return 'ETH';
-        case ChainId.BSC:
-            return 'BNB';
-        case ChainId.POLYGON:
-            return 'POL';
-        case ChainId.BASE:
-            return 'ETH';
-        default:
-            return 'Not supported';
-    }
+    const chain = [mainnet, bsc, polygon, base].find((c) => c.id === chainId);
+    return chain?.nativeCurrency.symbol || 'Not supported';
 };
