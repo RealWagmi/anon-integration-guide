@@ -1,7 +1,7 @@
-import { Address, encodeFunctionData } from 'viem';
+import { Address, encodeFunctionData, parseUnits } from 'viem';
 import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName } from '@heyanon/sdk';
-import { supportedChains } from '../../constants';
-import { gaugeAbi } from '../../abis/gaugeAbi';
+import { supportedChains } from '../constants';
+import { gaugeAbi } from '../abis/gaugeAbi';
 
 interface Props {
     chainName: string;
@@ -19,7 +19,8 @@ export async function stakeLiquidity({ chainName, account, gaugeAddress, amount 
 
     if (!gaugeAddress) return toResult('Gauge address is required', true);
 
-    const amountBn = BigInt(amount);
+    // we can assume the liquidity's decimals are 18 since they're static
+    const amountBn = parseUnits(amount, 18);
     if (amountBn <= 0n) return toResult('Amount must be greater than 0', true);
 
     await notify('Preparing to stake liquidity...');
