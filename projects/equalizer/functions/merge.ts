@@ -1,14 +1,13 @@
 import { Address, encodeFunctionData } from 'viem';
 import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName } from '@heyanon/sdk';
-import { supportedChains } from '../../constants';
-import { veNftAbi } from '../../abis/veNftAbi';
+import { supportedChains, VE_EQUAL_ADDRESS } from '../constants';
+import { veNftAbi } from '../abis/veNftAbi';
 
 interface Props {
     chainName: string;
     account: Address;
-    vestedAddress: Address;
-    fromTokenId: string;
-    toTokenId: string;
+    fromNFTId: string;
+    toNFTId: string;
 }
 
 /**
@@ -17,7 +16,7 @@ interface Props {
  * @param options - System tools for blockchain interactions
  * @returns Transaction result
  */
-export async function merge({ chainName, account, vestedAddress, fromTokenId, toTokenId }: Props, { sendTransactions, notify }: FunctionOptions): Promise<FunctionReturn> {
+export async function merge({ chainName, account, fromNFTId: fromTokenId, toNFTId: toTokenId }: Props, { sendTransactions, notify }: FunctionOptions): Promise<FunctionReturn> {
     // Check wallet connection
     if (!account) return toResult('Wallet not connected', true);
 
@@ -26,23 +25,22 @@ export async function merge({ chainName, account, vestedAddress, fromTokenId, to
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Equalizer is not supported on ${chainName}`, true);
 
-    // Validate addresses and token IDs
-    if (!vestedAddress) return toResult('Vested token address is required', true);
+    // Validate NFT IDs
     if (fromTokenId === toTokenId) return toResult('Source and destination token IDs must be different', true);
 
-    const fromTokenIdBn = BigInt(fromTokenId);
-    const toTokenIdBn = BigInt(toTokenId);
+    const fromNFTIdBn = BigInt(fromTokenId);
+    const toNFTIdBn = BigInt(toTokenId);
 
     await notify('Preparing to merge vested positions...');
 
     const transactions: TransactionParams[] = [];
 
     const mergeTx: TransactionParams = {
-        target: vestedAddress,
+        target: VE_EQUAL_ADDRESS,
         data: encodeFunctionData({
             abi: veNftAbi,
             functionName: 'merge',
-            args: [fromTokenIdBn, toTokenIdBn],
+            args: [fromNFTIdBn, toNFTIdBn],
         }),
     };
     transactions.push(mergeTx);
