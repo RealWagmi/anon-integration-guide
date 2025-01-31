@@ -46,7 +46,7 @@ export async function postLimitBuyOrder(
     const buyTokenPriceBN = parseUnits(buyTokenPrice, 18);
 
     const buyTokenAmountBN = parseUnits(buyTokenAmount, buyTokenInfo.decimals);
-    const sellTokenAmountBN = (sellTokenPriceBN * buyTokenAmountBN) / buyTokenPriceBN;
+    const sellTokenAmountBN = (sellTokenPriceBN / buyTokenPriceBN) * buyTokenAmountBN;
 
     const parameters: LimitOrderParameters = {
         kind: OrderKind.BUY,
