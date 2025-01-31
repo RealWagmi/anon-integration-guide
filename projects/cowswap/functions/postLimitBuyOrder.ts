@@ -41,7 +41,12 @@ export async function postLimitBuyOrder(
         signer,
         appCode: 'HeyAnon',
     });
-    const sellTokenAmount = ((parseFloat(sellTokenPrice) / parseFloat(buyTokenPrice)) * parseFloat(buyTokenAmount)).toString();
+
+    const sellTokenPriceBN = parseUnits(sellTokenPrice, 18);
+    const buyTokenPriceBN = parseUnits(buyTokenPrice, 18);
+
+    const buyTokenAmountBN = parseUnits(buyTokenAmount, buyTokenInfo.decimals);
+    const sellTokenAmountBN = (sellTokenPriceBN * buyTokenAmountBN) / buyTokenPriceBN;
 
     const parameters: LimitOrderParameters = {
         kind: OrderKind.BUY,
@@ -49,8 +54,8 @@ export async function postLimitBuyOrder(
         sellTokenDecimals: sellTokenInfo.decimals,
         buyToken,
         buyTokenDecimals: buyTokenInfo.decimals,
-        sellAmount: parseUnits(sellTokenAmount, sellTokenInfo.decimals).toString(),
-        buyAmount: parseUnits(buyTokenAmount, buyTokenInfo.decimals).toString(),
+        sellAmount: sellTokenAmountBN.toString(),
+        buyAmount: buyTokenAmountBN.toString(),
         chainId: chainId as number,
         signer,
         appCode: 'HeyAnon',
