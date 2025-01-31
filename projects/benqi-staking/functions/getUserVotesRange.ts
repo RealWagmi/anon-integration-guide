@@ -2,7 +2,7 @@ import { FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { Address } from 'viem';
 import gaugeController from '../abis/gaugeController';
 import { GAUGE_CONTROLLER_PROXY_ADDRESS } from '../constants';
-import { formatWeight, parseRange, parseWallet } from '../utils';
+import { formatWeight, parseRange, parseWallet } from '../utils/parse';
 
 type Props = {
     chainName: string;

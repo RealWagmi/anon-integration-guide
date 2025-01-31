@@ -2,7 +2,8 @@ import { FunctionOptions, FunctionReturn, toResult, TransactionParams } from '@h
 import { Address, encodeFunctionData } from 'viem';
 import sAvaxAbi from '../abis/sAvax';
 import { AVAX_DECIMALS, SAVAX_ADDRESS } from '../constants';
-import { parseAmount, parseWallet } from '../utils';
+import { checkBalance } from '../utils/checkBalance';
+import { parseAmount, parseWallet } from '../utils/parse';
 
 type Props = {
     chainName: string;
@@ -16,7 +17,7 @@ type Props = {
  * @param tools - System tools for blockchain interactions
  * @returns Transaction result
  */
-export async function stakeAvax(props: Props, { sendTransactions, notify }: FunctionOptions): Promise<FunctionReturn> {
+export async function stakeAvax(props: Props, { sendTransactions, notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
     const wallet = parseWallet(props);
 
     if (!wallet.success) {
@@ -31,7 +32,27 @@ export async function stakeAvax(props: Props, { sendTransactions, notify }: Func
         return toResult(amount.errorMessage, true);
     }
 
+    const provider = getProvider(chainId);
     const transactions: TransactionParams[] = [];
+
+    try {
+        await notify('Verifying account balance...');
+
+        await checkBalance({
+            args: {
+                account,
+                amount: amount.data,
+                decimals: AVAX_DECIMALS,
+            },
+            provider,
+        });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return toResult(error.message, true);
+        }
+
+        return toResult('Unknown error', true);
+    }
 
     await notify('Preparing stake AVAX transaction...');
 

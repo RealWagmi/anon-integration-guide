@@ -2,7 +2,7 @@ import { encodeFunctionData } from 'viem';
 import { describe, expect, it, vi } from 'vitest';
 import gaugeControllerAbi from '../abis/gaugeController';
 import { GAUGE_CONTROLLER_PROXY_ADDRESS } from '../constants';
-import { parseWeight } from '../utils';
+import { parseWeight } from '../utils/parse';
 import { voteNodes } from './voteNodes';
 
 vi.mock('@heyanon/sdk');

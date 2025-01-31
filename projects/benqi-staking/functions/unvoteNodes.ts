@@ -2,7 +2,7 @@ import { FunctionOptions, FunctionReturn, toResult, TransactionParams } from '@h
 import { Address, encodeFunctionData } from 'viem';
 import gaugeControllerAbi from '../abis/gaugeController';
 import { GAUGE_CONTROLLER_PROXY_ADDRESS, NodesWithWeightsProps } from '../constants';
-import { parseNodesWithWeights, parseWallet } from '../utils';
+import { parseNodesWithWeights, parseWallet } from '../utils/parse';
 
 type Props = NodesWithWeightsProps & {
     chainName: string;

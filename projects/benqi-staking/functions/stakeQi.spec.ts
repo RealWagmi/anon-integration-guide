@@ -15,10 +15,14 @@ describe('stakeQi', () => {
             amount: '2.12',
         };
 
+        const provider = {
+            readContract: vi.fn().mockResolvedValue(parseUnits(props.amount, QI_DECIMALS)),
+        };
+
         const tools: Parameters<typeof stakeQi>[1] = {
             sendTransactions: vi.fn().mockReturnValue(Promise.resolve({ data: ['Result'], isMultisig: false })),
             notify: vi.fn(),
-            getProvider: vi.fn(),
+            getProvider: vi.fn().mockReturnValue(provider),
         };
 
         const result = await stakeQi(props, tools);

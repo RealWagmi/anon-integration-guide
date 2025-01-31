@@ -14,10 +14,14 @@ describe('stakeAvax', () => {
             amount: '2.12',
         };
 
+        const provider = {
+            getBalance: vi.fn().mockReturnValueOnce(Promise.resolve(parseUnits(props.amount, AVAX_DECIMALS))),
+        };
+
         const tools: Parameters<typeof stakeAvax>[1] = {
             sendTransactions: vi.fn().mockReturnValue(Promise.resolve({ data: ['Result'], isMultisig: false })),
             notify: vi.fn(),
-            getProvider: vi.fn(),
+            getProvider: vi.fn().mockReturnValue(provider),
         };
 
         const result = await stakeAvax(props, tools);

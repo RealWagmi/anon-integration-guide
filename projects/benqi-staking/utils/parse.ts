@@ -1,6 +1,6 @@
 import { getChainFromName } from '@heyanon/sdk';
 import { Address, formatUnits, isAddress, parseUnits } from 'viem';
-import { NodesProps, NodesWithWeightsProps, supportedChains } from './constants';
+import { NodesProps, NodesWithWeightsProps, supportedChains } from '../constants';
 
 type Result<Data> =
     | {

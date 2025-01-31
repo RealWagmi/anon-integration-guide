@@ -2,7 +2,8 @@ import { checkToApprove, FunctionOptions, FunctionReturn, toResult, TransactionP
 import { Address, encodeFunctionData } from 'viem';
 import veQiAbi from '../abis/veQi';
 import { QI_ADDRESS, QI_DECIMALS, VE_QI_ADDRESS } from '../constants';
-import { parseAmount, parseWallet } from '../utils';
+import { checkERC20Balance } from '../utils/checkERC20Balance';
+import { parseAmount, parseWallet } from '../utils/parse';
 
 type Props = {
     chainName: string;
@@ -33,6 +34,26 @@ export async function stakeQi(props: Props, { sendTransactions, notify, getProvi
 
     const transactions: TransactionParams[] = [];
     const provider = getProvider(chainId);
+
+    try {
+        await notify(`Verifying Qi balance...`);
+
+        await checkERC20Balance({
+            args: {
+                token: QI_ADDRESS,
+                account,
+                amount: amount.data,
+                decimals: QI_DECIMALS,
+            },
+            provider,
+        });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return toResult(error.message, true);
+        }
+
+        return toResult('Unknown error', true);
+    }
 
     await notify('Checking Qi allowance...');
 

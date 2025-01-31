@@ -2,7 +2,7 @@ import { FunctionOptions, FunctionReturn, toResult, TransactionParams } from '@h
 import { Address, encodeFunctionData } from 'viem';
 import sAvaxAbi from '../abis/sAvax';
 import { AVAX_DECIMALS, SAVAX_ADDRESS } from '../constants';
-import { parseAmount, parseWallet } from '../utils';
+import { parseAmount, parseWallet } from '../utils/parse';
 
 type Props = {
     chainName: string;
