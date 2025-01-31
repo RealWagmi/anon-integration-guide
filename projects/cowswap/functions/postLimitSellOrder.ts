@@ -7,6 +7,7 @@ import { getTokenInfo } from '../utils';
 interface Props {
     chainName: string;
     account: Address;
+    slippageInPercentage: string;
 
     sellToken: Address;
     sellTokenPrice: string;
@@ -16,7 +17,7 @@ interface Props {
 }
 
 export async function postLimitSellOrder(
-    { chainName, account, sellToken, buyToken, buyTokenPrice, sellTokenPrice, sellTokenAmount }: Props,
+    { chainName, account, sellToken, buyToken, buyTokenPrice, sellTokenPrice, sellTokenAmount, slippageInPercentage }: Props,
     { signMessages, getProvider }: FunctionOptions,
 ): Promise<FunctionReturn> {
     // Check wallet connection
@@ -61,6 +62,7 @@ export async function postLimitSellOrder(
     const parameters: LimitOrderParameters = {
         kind: OrderKind.SELL,
         sellToken,
+        slippageBps: parseFloat(slippageInPercentage) * 100,
         sellTokenDecimals: sellTokenInfo.decimals,
         buyToken,
         buyTokenDecimals: buyTokenInfo.decimals,
