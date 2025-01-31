@@ -25,56 +25,57 @@ Integration with Amped Finance
 
 ## Available Functions
 
-### Adding and Removing Liquidity
+### Basic Liquidity Operations
 
-1. Add Liquidity
-   ```typescript
-   // Add 100 USDC as liquidity
-   const result = await addLiquidity({
-     chainName: 'sonic',
-     tokenIn: USDC_ADDRESS,
-     amount: '100',
-   }, options);
-   ```
+// Add liquidity
+"Add 100 USDC as liquidity in Amped on Sonic network"
+Parameters:
+- Chain: sonic
+- TokenIn: USDC address (0x...)
+- Amount: 100 USDC
+- MinLpOut: Calculated with default 0.3% slippage
 
-2. Remove Liquidity
-   ```typescript
-   // Remove 50 GLP tokens and get USDC back
-   const result = await removeLiquidity({
-     chainName: 'sonic',
-     account: YOUR_ADDRESS,
-     tokenOut: USDC_ADDRESS,
-     amount: '50'
-   }, options);
-   ```
+// Remove liquidity
+"Remove $50 of liquidity from Amped and get USDC back"
+Parameters:
+- Chain: sonic
+- TokenOut: USDC address
+- Amount: $50 worth of ALP tokens
 
-### Trading with Leverage
+### Trading Operations
 
-1. Open a Position
-   ```typescript
-   // Open a 10x long position on ANON using 100 USDC as collateral
-   const result = await openPosition({
-     chainName: 'sonic',
-     account: YOUR_ADDRESS,
-     indexToken: ANON_ADDRESS,
-     collateralToken: USDC_ADDRESS,
-     isLong: true,
-     sizeUsd: 1000,        // $1000 position size
-     collateralUsd: 100    // $100 collateral = 10x leverage
-   }, options);
-   ```
+// Open leveraged position
+"Open a long position worth 1000 USD on ANON with 100 USDC as collateral"
+Parameters:
+- Chain: sonic
+- Account: User's address
+- IndexToken: ANON address
+- CollateralToken: USDC address
+- IsLong: true
+- SizeUsd: 1000 (position size)
+- CollateralUsd: 100 (10x leverage)
+- MaxSlippage: 0.3%
 
-2. Close a Position
-   ```typescript
-   // Close your long ANON position
-   const result = await closePosition({
-     chainName: 'sonic',
-     account: YOUR_ADDRESS,
-     indexToken: ANON_ADDRESS,
-     collateralToken: USDC_ADDRESS,
-     isLong: true
-   }, options);
-   ```
+// Close position
+"Close my long ANON position in Amped"
+Parameters:
+- Chain: sonic
+- IndexToken: ANON
+- IsLong: true
+
+### Information Queries
+
+// Check available liquidity
+"Check available liquidity for trading"
+Parameters:
+- Chain: sonic
+- Token: specify token (optional)
+
+// Get position details
+"Show my current open positions"
+Parameters:
+- Chain: sonic
+- Account: User's address
 
 ## What You Need to Know
 
@@ -88,8 +89,8 @@ Integration with Amped Finance
    - You can trade with up to 11x leverage
    - Minimum leverage size is 1.1x
    - Minimum collateral is $10
-   - Available tokens for longs: S, ANON, WETH
-   - Available tokens for shorts: USDC, EURC
+   - Available collateral and indextokens for longs: S, ANON, WETH
+   - Available collateral tokens for shorts: USDC, EURC
 
 3. Safety Limits
    - Default slippage protection is 0.3%
