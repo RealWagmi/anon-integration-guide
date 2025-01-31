@@ -4,7 +4,7 @@ import { supportedChains } from './constants';
 export const tools: AiTool[] = [
     {
         name: 'bridgeToHyperliquid',
-        description: 'Bridges native USDC tokens from Arbitrum to Hyperliquid.',
+        description: 'Bridges USDC tokens from Arbitrum to Hyperliquid.',
         required: ['chainName', 'account', 'amount'],
         props: [
             {

@@ -5,5 +5,6 @@ import * as functions from './functions';
 export default {
     tools,
     functions,
-    description: 'Integration with Hyperliquid Protocol',
+    description:
+        'Hyperliquid is Layer 1 blockchain providing CEX-like trading experience through on-chain order books. Enables USDC bridging and supports both spot/perpetual trading with full position management',
 } satisfies AdapterExport;
