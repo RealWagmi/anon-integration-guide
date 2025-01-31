@@ -17,10 +17,13 @@ The Hyperliquid L1 uses a custom consensus algorithm called HyperBFT which is he
 -   "Bridge 100 USDC to Hyperliquid from Arbitrum network"
 -   "Move 50 USDC from Arbitrum network to Hyperliquid"
 -   "Send 25.5 USDC to Hyperliquid bridge on Arbitrum network"
+-   "Withdraw 20 USDC from Hyperliquid to Arbitrum"
+-   "Move 10.5 USDC from Hyperliquid back to Arbitrum"
 
-## Available Functions (so far)
+## Available Functions
 
--   Bridging to Hyperliquid
+-   Bridging to Hyperliquid (minimum 5 USDC)
+-   Withdrawing from Hyperliquid (minimum 2 USDC)
 
 ## Tests
 
@@ -42,6 +45,30 @@ npm run test:coverage
 yarn add @heyanon/hyperliquid
 ```
 
-## Note 🚧
+## Usage
 
-We are waiting on signing support on `heyanon-sdk` and then we will add other functionalities.
+### Bridging USDC to Hyperliquid
+
+```typescript
+// Bridge USDC from Arbitrum to Hyperliquid
+await bridgeToHyperliquid({
+    chainName: 'arbitrum',
+    account: '0x...',
+    amount: '10', // Amount in USDC
+});
+```
+
+### Withdrawing USDC from Hyperliquid
+
+```typescript
+// Withdraw USDC from Hyperliquid to Arbitrum
+await withdrawFromHyperliquid({
+    chainName: 'hyperliquid',
+    account: '0x...',
+    amount: '5', // Amount in USDC
+});
+```
+
+## Note
+
+Trading functionality development is in progress. Next features will include order management, position tracking, and advanced trading operations.
