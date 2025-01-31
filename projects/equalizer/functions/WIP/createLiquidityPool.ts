@@ -1,4 +1,4 @@
-import { Address, encodeFunctionData, parseUnits } from 'viem';
+import { Address, encodeFunctionData, isAddress, parseUnits } from 'viem';
 import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName } from '@heyanon/sdk';
 import { supportedChains, ROUTER_ADDRESS } from '../../constants';
 import { routerAbi } from '../../abis';
@@ -13,28 +13,22 @@ interface Props {
     isStable: boolean;
     amount0Desired: string;
     amount1Desired: string;
-    amount0Min: string;
-    amount1Min: string;
-    deadline?: number;
 }
 
-/**
- * Creates a new liquidity pool in Equalizer and adds initial liquidity.
- * @param props - The pool creation parameters.
- * @param tools - System tools for blockchain interactions.
- * @returns Transaction result.
- */
 export async function createLiquidityPool(
-    { chainName, account, token0Address, token1Address, isStable, amount0Desired, amount1Desired, amount0Min, amount1Min, deadline = Math.floor(Date.now() / 1000) + 1200 }: Props,
+    { chainName, account, token0Address, token1Address, isStable, amount0Desired, amount1Desired }: Props,
     { sendTransactions, notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
+    // Check wallet connection
     if (!account) return toResult('Wallet not connected', true);
 
+    // Validate chain
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Equalizer is not supported on ${chainName}`, true);
 
-    await notify('Preparing to create liquidity pool...');
+    // Validate addresses
+    if (!isAddress(token0Address) || !isAddress(token1Address)) return toResult('Found invalid token addresses', true);
 
     const provider = getProvider(chainId);
 
@@ -51,7 +45,7 @@ export async function createLiquidityPool(
 
     const [token0MetadataResult, token1MetadataResult] = await Promise.allSettled([token0MetadataPromise, token1MetadataPromise]);
 
-    if (token0MetadataResult.status === 'rejected' || token1MetadataResult.status === 'rejected') return toResult('Failed to retrieve metadata for one of the tokens', true);
+    if (token0MetadataResult.status === 'rejected' || token1MetadataResult.status === 'rejected') return toResult('Failed to retrieve token information', true);
 
     const token0Metadata = token0MetadataResult.value;
     const token1Metadata = token1MetadataResult.value;
@@ -59,8 +53,15 @@ export async function createLiquidityPool(
     // Convert amounts to BigInt
     const amount0DesiredBn = parseUnits(amount0Desired, token0Metadata.decimals);
     const amount1DesiredBn = parseUnits(amount1Desired, token1Metadata.decimals);
-    const amount0MinBn = parseUnits(amount0Min, token0Metadata.decimals);
-    const amount1MinBn = parseUnits(amount1Min, token1Metadata.decimals);
+    // Calculate minimum amounts with 5% slippage tolerance
+    const amount0MinBn = (amount0DesiredBn * 95n) / 100n;
+    const amount1MinBn = (amount1DesiredBn * 95n) / 100n;
+
+    // Validate amounts
+    if (amount0DesiredBn <= 0n || amount1DesiredBn <= 0n) return toResult('Desired amounts must be greater than 0', true);
+    if (amount0MinBn <= 0n || amount1MinBn <= 0n) return toResult('Minimum amounts must be greater than 0', true);
+
+    await notify('Preparing to create liquidity pool...');
 
     const transactions: TransactionParams[] = [];
 
@@ -88,6 +89,8 @@ export async function createLiquidityPool(
         transactions,
     });
 
+    const deadline = Math.floor(Date.now() / 1000) + 300; // 5 minutes from now
+
     // Prepare create pool and add liquidity transaction
     const createTx: TransactionParams = {
         target: ROUTER_ADDRESS,
@@ -101,7 +104,7 @@ export async function createLiquidityPool(
 
     await notify('Waiting for transaction confirmation...');
 
-    const result = await sendTransactions({ chainId, account, transactions: [createTx] });
+    const result = await sendTransactions({ chainId, account, transactions });
     const createMessage = result.data[result.data.length - 1];
 
     return toResult(result.isMultisig ? createMessage.message : `Successfully created liquidity pool and added initial liquidity. ${createMessage.message}`);
