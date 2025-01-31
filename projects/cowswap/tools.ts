@@ -11,7 +11,7 @@ export const tools: AiTool[] = [
                 name: 'chainName',
                 type: 'string',
                 enum: supportedChains.map(getChainName),
-                description: 'Chain name where to execute the this function.',
+                description: 'Chain name where to execute this function.',
             },
             {
                 name: 'account',
@@ -45,8 +45,8 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getOrderCompletionStatus',
-        description: 'Get the order status of the orderUid',
-        required: ['chainName', 'account', 'orderUid'],
+        description: 'Get the order status of the corresponding orderUids',
+        required: ['chainName', 'account', 'orderUids'],
         props: [
             {
                 name: 'chainName',
@@ -57,12 +57,12 @@ export const tools: AiTool[] = [
             {
                 name: 'account',
                 type: 'string',
-                description: 'Account address that made the order.',
+                description: 'Account address that made the orders.',
             },
             {
-                name: 'orderUid',
-                type: 'string',
-                description: 'The unique identifier of the order.',
+                name: 'orderUids',
+                type: 'string[]',
+                description: 'The unique identifiers of the orders.',
             },
         ],
     },
@@ -95,12 +95,12 @@ export const tools: AiTool[] = [
             {
                 name: 'inputToken',
                 type: 'string',
-                description: 'The token that will be sold to obtain the `outputToken`',
+                description: 'The ERC20 token address that will be sold to obtain the `outputToken`',
             },
             {
                 name: 'outputToken',
                 type: 'string',
-                description: 'The token that will be bought in exchange for the `inputToken`',
+                description: 'The ERC20 token address that will be bought in exchange for the `inputToken`',
             },
         ],
     },
@@ -128,7 +128,12 @@ export const tools: AiTool[] = [
             {
                 name: 'sellToken',
                 type: 'string',
-                description: 'The token that will be sold to obtain the `buyToken`',
+                description: 'The ERC20 address of the token that will be sold to obtain the `buyToken`',
+            },
+            {
+                name: 'buyToken',
+                type: 'string',
+                description: 'The ERC20 address of the token that will be bought.',
             },
             {
                 name: 'buyTokenPrice',
@@ -167,7 +172,12 @@ export const tools: AiTool[] = [
             {
                 name: 'sellToken',
                 type: 'string',
-                description: 'The token that will be sold to obtain the `buyToken`',
+                description: 'The ERC20 address of a token that will be sold to obtain the `buyToken`',
+            },
+            {
+                name: 'buyToken',
+                type: 'string',
+                description: 'The ERC20 address of a token that will be bought.',
             },
             {
                 name: 'buyTokenPrice',
