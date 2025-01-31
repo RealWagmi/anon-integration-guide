@@ -1,12 +1,11 @@
 import { Address, encodeFunctionData } from 'viem';
 import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName } from '@heyanon/sdk';
-import { supportedChains } from '../../constants';
-import { superVoterAbi } from '../../abis/superVoterAbi';
+import { SUPER_VOTER_ADDRESS, supportedChains } from '../constants';
+import { superVoterAbi } from '../abis/superVoterAbi';
 
 interface Props {
     chainName: string;
     account: Address;
-    superVoterAddress: Address;
     nftIds: string[];
 }
 
@@ -16,7 +15,7 @@ interface Props {
  * @param options - System tools for blockchain interactions
  * @returns Transaction result
  */
-export async function maxLockMultiple({ chainName, account, superVoterAddress, nftIds }: Props, { sendTransactions, notify }: FunctionOptions): Promise<FunctionReturn> {
+export async function maxLockMultiple({ chainName, account, nftIds }: Props, { sendTransactions, notify }: FunctionOptions): Promise<FunctionReturn> {
     // Check wallet connection
     if (!account) return toResult('Wallet not connected', true);
 
@@ -25,8 +24,7 @@ export async function maxLockMultiple({ chainName, account, superVoterAddress, n
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Equalizer is not supported on ${chainName}`, true);
 
-    // Validate addresses and NFT IDs
-    if (!superVoterAddress) return toResult('Super Voter address is required', true);
+    // Validate NFT IDs
     if (!nftIds.length) return toResult('At least one NFT ID is required', true);
 
     const nftIdsBn = nftIds.map((id) => BigInt(id));
@@ -36,7 +34,7 @@ export async function maxLockMultiple({ chainName, account, superVoterAddress, n
     const transactions: TransactionParams[] = [];
 
     const maxLockTx: TransactionParams = {
-        target: superVoterAddress,
+        target: SUPER_VOTER_ADDRESS,
         data: encodeFunctionData({
             abi: superVoterAbi,
             functionName: 'maxLockMultiple',
