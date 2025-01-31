@@ -1,25 +1,34 @@
-import { Address, encodeFunctionData } from 'viem';
+import { Address, encodeFunctionData, getAddress, parseUnits } from 'viem';
 import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName } from '@heyanon/sdk';
-import { supportedChains } from '../../constants';
-import { gaugeAbi } from '../../abis/gaugeAbi';
+import { supportedChains } from '../constants';
+import { gaugeAbi } from '../abis/gaugeAbi';
+import { getMinimalPairs } from '../lib/api/pairs';
 
 interface Props {
     chainName: string;
     account: Address;
-    gaugeAddress: Address;
+    lpAddress: Address;
     amount: string;
 }
 
-export async function unstakeLiquidity({ chainName, account, gaugeAddress, amount }: Props, { sendTransactions, notify }: FunctionOptions): Promise<FunctionReturn> {
+export async function unstakeLiquidity({ chainName, account, amount, lpAddress }: Props, { sendTransactions, notify }: FunctionOptions): Promise<FunctionReturn> {
     if (!account) return toResult('Wallet not connected', true);
 
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Equalizer is not supported on ${chainName}`, true);
 
-    if (!gaugeAddress) return toResult('Gauge address is required', true);
+    if (!lpAddress) return toResult('LP address is required', true);
 
-    const amountBn = BigInt(amount);
+    const minimalPairs = await getMinimalPairs();
+
+    const lp = minimalPairs.get(getAddress(lpAddress));
+
+    if (!lp) return toResult(`Couldn't find LP with address ${lpAddress}`, true);
+
+    if (!lp.gauge?.address) return toResult(`Couldn't find gauge for LP with address ${lpAddress}`, true);
+
+    const amountBn = parseUnits(amount, 18);
     if (amountBn <= 0n) return toResult('Amount must be greater than 0', true);
 
     await notify('Preparing to unstake liquidity...');
@@ -27,7 +36,7 @@ export async function unstakeLiquidity({ chainName, account, gaugeAddress, amoun
     const transactions: TransactionParams[] = [];
 
     const unstakeTx: TransactionParams = {
-        target: gaugeAddress,
+        target: getAddress(lp.gauge.address),
         data: encodeFunctionData({
             abi: gaugeAbi,
             functionName: 'withdraw',
