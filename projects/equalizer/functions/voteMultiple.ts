@@ -1,29 +1,24 @@
 import { Address, encodeFunctionData } from 'viem';
 import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName } from '@heyanon/sdk';
-import { supportedChains } from '../../constants';
-import { superVoterAbi } from '../../abis/superVoterAbi';
+import { SUPER_VOTER_ADDRESS, supportedChains } from '../constants';
+import { superVoterAbi } from '../abis/superVoterAbi';
 
 interface Props {
     chainName: string;
     account: Address;
-    superVoterAddress: Address;
     nftIds: string[];
     votePools: Address[];
     voteCounts: string[];
     maxLock: boolean;
 }
 
-export async function voteMultiple(
-    { chainName, account, superVoterAddress, nftIds, votePools, voteCounts, maxLock }: Props,
-    { sendTransactions, notify }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function voteMultiple({ chainName, account, nftIds, votePools, voteCounts, maxLock }: Props, { sendTransactions, notify }: FunctionOptions): Promise<FunctionReturn> {
     if (!account) return toResult('Wallet not connected', true);
 
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Equalizer is not supported on ${chainName}`, true);
 
-    if (!superVoterAddress) return toResult('Super Voter address is required', true);
     if (!nftIds.length) return toResult('At least one NFT ID is required', true);
     if (!votePools.length) return toResult('At least one vote pool is required', true);
     if (!voteCounts.length) return toResult('At least one vote count is required', true);
@@ -37,7 +32,7 @@ export async function voteMultiple(
     const transactions: TransactionParams[] = [];
 
     const voteTx: TransactionParams = {
-        target: superVoterAddress,
+        target: SUPER_VOTER_ADDRESS,
         data: encodeFunctionData({
             abi: superVoterAbi,
             functionName: 'voteMultiple',
