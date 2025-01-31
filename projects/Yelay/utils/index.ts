@@ -1,7 +1,7 @@
 import { ChainId } from '@heyanon/sdk';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { getMainnetConfig, SpoolSdk } from '@spool.fi/spool-v2-sdk';
-import { config } from './constants';
+import { config } from '../constants';
 
 export function getChainConfig(chainId: ChainId) {
     if (config[chainId] === undefined) {
