@@ -3,8 +3,6 @@ import { baseApiEndpoint } from './constants';
 import { NftV4Response, veNftV4ResponseSchema } from './schemas';
 import { Value } from '@sinclair/typebox/value';
 
-// ... existing code ...
-
 const walletNftsResponseSchema = Type.Object({
     success: Type.Boolean(),
     data: veNftV4ResponseSchema,
