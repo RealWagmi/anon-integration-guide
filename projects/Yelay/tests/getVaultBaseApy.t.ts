@@ -12,12 +12,12 @@ describe('getVaultBaseApy', () => {
             notify: jest.fn(),
         } as jest.Mocked<FunctionOptions>;
 
+        // act
         const props: GetVaultBaseApyProps = {
             chainName: 'ethereum',
             vaultAddress: '0x44d55292f05b345dd9517b435c70a5f3420ebfd8',
         };
 
-        // act
         const result = await getVaultBaseApy(props, mockedFunctionOptions);
 
         // assert
