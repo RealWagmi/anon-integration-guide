@@ -8,7 +8,7 @@ import {
     TransactionParams,
     toResult, checkToApprove, getChainFromName,
 } from "@heyanon/sdk";
-import { validateWallet } from "../utils";
+import {validateWallet} from "../utils";
 import {supportedChains, XVS_STAKE_ADDRESS} from "../constants";
 import {XVSVaultAbi} from "../abis/XVSVaultAbi";
 
@@ -27,12 +27,16 @@ interface Props {
  * @returns Borrow result containing the transaction hash.
  */
 export async function stakeXVS(
-    { chainName, account, amount, pid}: Props,
-    { sendTransactions, notify, getProvider }: FunctionOptions
+    {chainName, account, amount, pid}: Props,
+    {sendTransactions, notify, getProvider}: FunctionOptions
 ): Promise<FunctionReturn> {
-    const wallet = validateWallet({ account })
-    if (!wallet.success) {return toResult(wallet.errorMessage, true);}
-    if (!amount || typeof amount !== 'string') {return toResult('Invalid amount', true);}
+    const wallet = validateWallet({account})
+    if (!wallet.success) {
+        return toResult(wallet.errorMessage, true);
+    }
+    if (!amount || typeof amount !== 'string') {
+        return toResult('Invalid amount', true);
+    }
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (supportedChains.indexOf(chainId) === -1) return toResult(`Venus protocol is not supported on ${chainName}`, true);
@@ -62,7 +66,7 @@ export async function stakeXVS(
             data: encodeFunctionData({
                 abi: XVSVaultAbi,
                 functionName: "deposit",
-                args: [	"0xcF6BB5389c92Bdda8a3747Ddb454cB7a64626C63", pid, parseUnits(amount, 18) ]
+                args: ["0xcF6BB5389c92Bdda8a3747Ddb454cB7a64626C63", pid, parseUnits(amount, 18)]
             }),
         };
         transactions.push(stakeTx);

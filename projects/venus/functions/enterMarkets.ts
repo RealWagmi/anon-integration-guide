@@ -10,13 +10,13 @@ import {
     toResult,
 } from "@heyanon/sdk";
 
-import { vComptrollerAbi } from "../abis/vComptrollerAbi";
+import {vComptrollerAbi} from "../abis/vComptrollerAbi";
 import {validateAndGetTokenDetails, validateWallet} from "../utils";
 
 interface Props {
     chainName: string;
     account: Address;
-    token:string;
+    token: string;
     pool: string;
 }
 
@@ -28,14 +28,18 @@ interface Props {
  * @returns result containing the transaction hash.
  */
 export async function enterMarkets(
-    { chainName, account, token, pool }: Props,
-    { sendTransactions, notify }: FunctionOptions
+    {chainName, account, token, pool}: Props,
+    {sendTransactions, notify}: FunctionOptions
 ): Promise<FunctionReturn> {
-    const wallet = validateWallet({ account })
-    if (!wallet.success) {return toResult(wallet.errorMessage, true);}
+    const wallet = validateWallet({account})
+    if (!wallet.success) {
+        return toResult(wallet.errorMessage, true);
+    }
     // Validate chain
     const tokenDetails = validateAndGetTokenDetails({chainName, pool, token})
-    if (!tokenDetails.success) {return toResult(tokenDetails.errorMessage, true);}
+    if (!tokenDetails.success) {
+        return toResult(tokenDetails.errorMessage, true);
+    }
     try {
         await notify("Preparing to enter Market...");
         // Prepare to enter markets
