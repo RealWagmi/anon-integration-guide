@@ -1,8 +1,13 @@
-import { Address, getContract, PublicClient } from 'viem';
-import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
+import { Address, getContract } from 'viem';
+import { FunctionReturn, FunctionOptions, toResult, getChainFromName } from '@heyanon/sdk';
 import { CONTRACT_ADDRESSES, NETWORKS } from '../../constants.js';
 import { ERC20 } from '../../abis/ERC20.js';
 import { Vault } from '../../abis/Vault.js';
+
+interface Props {
+  chainName: string;
+  account: Address;
+}
 
 interface TokenInfo {
   symbol: string;
@@ -14,29 +19,31 @@ interface TokenInfo {
 }
 
 /**
- * Gets balances and USD values of all accepted liquidity tokens
- * @param props - The chain name
- * @param options - SDK function options
- * @returns Information about accepted tokens and their balances
+ * Gets balances and USD values of all supported tokens
+ * @param props - The function parameters
+ * @param props.chainName - The name of the chain (must be "sonic")
+ * @param props.account - The account address to check balances for
+ * @param options - System tools for blockchain interactions
+ * @returns Information about token balances and their USD values
  */
-export async function getAcceptedTokenBalances(
-  chainName: string,
+export async function getUserTokenBalances(
+  { chainName, account }: Props,
   { getProvider, notify }: FunctionOptions
 ): Promise<FunctionReturn> {
-  try {
-    // Validate chain
-    if (chainName.toLowerCase() !== "sonic") {
-      return toResult("This function is only supported on Sonic chain", true);
-    }
+  // Check wallet connection
+  if (!account) return toResult("Wallet not connected", true);
 
+  // Validate chain
+  const chainId = getChainFromName(chainName);
+  if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
+  if (chainName !== NETWORKS.SONIC) {
+    return toResult(`Protocol is only supported on Sonic chain`, true);
+  }
+
+  try {
     await notify("Fetching token balances...");
 
-    const provider = getProvider(146) as PublicClient;
-    if (!('account' in provider) || !provider.account?.address) {
-      return toResult("No account connected", true);
-    }
-
-    const userAddress = provider.account.address;
+    const provider = getProvider(chainId);
 
     const acceptedTokens = [
       { symbol: 'S', address: CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN, decimals: 18 },
@@ -58,11 +65,12 @@ export async function getAcceptedTokenBalances(
     // Get native token balance
     const nativeBalance = await provider.request({
       method: 'eth_getBalance',
-      params: [userAddress, 'latest']
+      params: [account, 'latest']
     });
     const nativeBalanceBigInt = BigInt(nativeBalance);
     const nativePrice = await vault.read.getMaxPrice([CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN]) as bigint;
-    const nativeBalanceUsd = (nativeBalanceBigInt * nativePrice) / (10n ** 30n); // Price is in 1e30
+    // Price is in 1e30, balance in 1e18, result should be in 1e18 for USD
+    const nativeBalanceUsd = (nativeBalanceBigInt * nativePrice) / (10n ** 30n);
     
     tokenInfos.push({
       symbol: 'S',
@@ -81,9 +89,12 @@ export async function getAcceptedTokenBalances(
         client: provider
       });
 
-      const balance = await tokenContract.read.balanceOf([userAddress]) as bigint;
+      const balance = await tokenContract.read.balanceOf([account]) as bigint;
       const price = await vault.read.getMaxPrice([token.address]) as bigint;
-      const balanceUsd = (balance * price) / (10n ** BigInt(token.decimals) * 10n ** 30n); // Price is in 1e30
+      
+      // For tokens with decimals other than 18, we need to adjust the calculation
+      // balance * price / (10^token_decimals * 10^30) * 10^18
+      const balanceUsd = (balance * price * 10n ** BigInt(18 - token.decimals)) / 10n ** 30n;
 
       tokenInfos.push({
         ...token,
@@ -98,11 +109,9 @@ export async function getAcceptedTokenBalances(
       totalBalanceUsd: tokenInfos.reduce((sum, token) => sum + BigInt(token.balanceUsd), 0n).toString()
     }));
   } catch (error) {
-    console.error('Error in getAcceptedTokenBalances:', error);
-    
     if (error instanceof Error) {
       return toResult(`Failed to get token balances: ${error.message}`, true);
     }
-    return toResult("Failed to get token balances. Please try again.", true);
+    return toResult("Failed to get token balances: Unknown error", true);
   }
 } 

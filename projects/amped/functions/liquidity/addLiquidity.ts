@@ -1,175 +1,169 @@
-import { Address, getContract, encodeFunctionData, parseUnits, PublicClient, WalletClient, Client } from 'viem';
+import { Address, getContract, encodeFunctionData, parseUnits } from 'viem';
 import { FunctionReturn, FunctionOptions, toResult, TransactionParams } from '@heyanon/sdk';
-import { CONTRACT_ADDRESSES, NETWORKS, CHAIN_IDS } from '../../constants.js';
+import { CONTRACT_ADDRESSES, NETWORKS } from '../../constants.js';
 import { ERC20 } from '../../abis/ERC20.js';
 import { RewardRouter } from '../../abis/RewardRouter.js';
-import { Vault } from '../../abis/Vault.js';
 import { GlpManager } from '../../abis/GlpManager.js';
-import { getAcceptedTokenBalances } from './getAcceptedTokenBalances.js';
+import { getUserTokenBalances } from './getUserTokenBalances.js';
 
-interface AddLiquidityParams {
-  chainName: string;
-  tokenIn: Address;
-  amount: string;
-  minOut?: string;
+interface AddLiquidityProps {
+    chainName: typeof NETWORKS[keyof typeof NETWORKS];
+    account: Address;
+    tokenIn: Address;
+    amount: string;
 }
 
 /**
- * Add liquidity to the protocol by providing tokens in exchange for GLP
+ * Add liquidity to the Amped Finance protocol by providing tokens in exchange for GLP
  * @param props - The liquidity addition parameters
- * @param props.chainName - The name of the chain (e.g., "sonic")
+ * @param props.chainName - The name of the chain (must be "sonic")
+ * @param props.account - The account providing liquidity
  * @param props.tokenIn - Address of the token to provide as liquidity
  * @param props.amount - Amount of tokens to provide as liquidity
- * @param props.minOut - Minimum amount of GLP tokens to receive (optional)
- * @param options - SDK function options
- * @param options.getProvider - Function to get the provider for a chain
- * @param options.notify - Function to send notifications
- * @param options.sendTransactions - Function to send transactions
- * @returns Transaction details and status
+ * @param options - System tools for blockchain interactions
+ * @returns Transaction result with liquidity addition details
  */
 export async function addLiquidity(
-  { chainName, tokenIn, amount, minOut }: AddLiquidityParams,
-  { getProvider, notify, sendTransactions }: FunctionOptions
+    { chainName, account, tokenIn, amount }: AddLiquidityProps,
+    { getProvider, notify, sendTransactions }: FunctionOptions
 ): Promise<FunctionReturn> {
-  try {
     // Validate chain
-    if (chainName.toLowerCase() !== "sonic") {
-      return toResult("This function is only supported on Sonic chain", true);
+    if (!Object.values(NETWORKS).includes(chainName)) {
+        return toResult(`Network ${chainName} not supported`, true);
     }
 
-    await notify("Checking available token balances...");
+    try {
+        await notify('Checking token balances...');
 
-    // Create public client for reading
-    const provider = getProvider(CHAIN_IDS[NETWORKS.SONIC]);
-    const publicClient = provider as unknown as PublicClient;
-    const walletClient = provider as unknown as WalletClient;
+        // Check user's token balance first
+        const userBalanceResult = await getUserTokenBalances(
+            { chainName, account },
+            { 
+                getProvider, 
+                notify,
+                sendTransactions: async () => { throw new Error('Should not be called'); }
+            }
+        );
 
-    if (!walletClient.account) {
-      return toResult("No account connected", true);
-    }
+        if (!userBalanceResult.success) {
+            return userBalanceResult;
+        }
 
-    // Get all token balances first
-    const balancesResult = await getAcceptedTokenBalances(chainName, { 
-      getProvider,
-      notify,
-      sendTransactions
-    });
+        const balanceData = JSON.parse(userBalanceResult.data);
+        const tokenInfo = balanceData.tokens.find((t: any) => 
+            t.address.toLowerCase() === tokenIn.toLowerCase()
+        );
 
-    if (!balancesResult.success) {
-      return balancesResult;
-    }
+        if (!tokenInfo) {
+            return toResult(`Token ${tokenIn} not found in supported tokens`, true);
+        }
 
-    const balances = JSON.parse(balancesResult.data);
-    const tokenInfo = balances.tokens.find((t: any) => t.address.toLowerCase() === tokenIn.toLowerCase());
-    
-    if (!tokenInfo) {
-      return toResult(`Token ${tokenIn} is not an accepted liquidity token`, true);
-    }
+        // Parse amounts using the correct decimals
+        const parsedAmount = parseUnits(amount, tokenInfo.decimals);
+        const userBalance = BigInt(tokenInfo.balance);
 
-    // Check if user has enough balance
-    const parsedAmount = parseUnits(amount, tokenInfo.decimals);
-    if (parsedAmount > BigInt(tokenInfo.balance)) {
-      return toResult(`Insufficient ${tokenInfo.symbol} balance. Available: ${tokenInfo.balance}`, true);
-    }
+        // Check if user has enough balance
+        if (userBalance < parsedAmount) {
+            const formattedBalance = Number(userBalance) / Math.pow(10, tokenInfo.decimals);
+            return toResult(
+                `Insufficient ${tokenInfo.symbol} balance. Required: ${amount}, Available: ${formattedBalance.toFixed(tokenInfo.decimals === 6 ? 6 : 18)} ${tokenInfo.symbol}`,
+                true
+            );
+        }
 
-    await notify("Initializing liquidity addition...");
+        await notify('Preparing to add liquidity...');
+        const provider = getProvider(146); // Sonic chain ID
 
-    const isNative = tokenIn.toLowerCase() === CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN.toLowerCase();
-
-    // Initialize contracts
-    const vault = getContract({
-      address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT,
-      abi: Vault,
-      client: publicClient
-    });
-
-    const tokenContract = isNative ? null : getContract({
-      address: tokenIn,
-      abi: ERC20,
-      client: publicClient
-    });
-
-    const rewardRouter = getContract({
-      address: CONTRACT_ADDRESSES[NETWORKS.SONIC].REWARD_ROUTER,
-      abi: RewardRouter,
-      client: publicClient
-    });
-
-    // Calculate USD value and minimum outputs
-    const tokenPrice = BigInt(tokenInfo.price);
-    const usdValue = (parsedAmount * tokenPrice) / (10n ** 30n); // Price is in 1e30
-    
-    // Use provided minOut or default to 1% slippage
-    const slippageBps = 100; // 1%
-    const minUsdg = minOut ? parseUnits(minOut, tokenInfo.decimals) : (usdValue * BigInt(10000 - slippageBps)) / 10000n;
-
-    // Get GLP price and calculate min GLP
-    const glpManager = getContract({
-      address: CONTRACT_ADDRESSES[NETWORKS.SONIC].GLP_MANAGER,
-      abi: GlpManager,
-      client: publicClient
-    });
-
-    const glpPrice = await glpManager.read.getPrice([false]) as bigint; // false for min price
-    const minGlp = minOut ? parseUnits(minOut, tokenInfo.decimals) : (minUsdg * (10n ** 30n)) / glpPrice;
-
-    // Prepare transactions
-    const transactions: TransactionParams[] = [];
-
-    // Add approval transaction if needed
-    if (!isNative) {
-      await notify("Checking token approval...");
-
-      const allowance = await tokenContract!.read.allowance([
-        walletClient.account.address,
-        CONTRACT_ADDRESSES[NETWORKS.SONIC].GLP_MANAGER
-      ]);
-
-      if (allowance < parsedAmount) {
-        await notify("Approval needed. Sending approval transaction...");
-        const approveData = encodeFunctionData({
-          abi: ERC20,
-          functionName: 'approve',
-          args: [CONTRACT_ADDRESSES[NETWORKS.SONIC].GLP_MANAGER, parsedAmount]
+        // Initialize contracts
+        const rewardRouter = getContract({
+            address: CONTRACT_ADDRESSES[NETWORKS.SONIC].REWARD_ROUTER,
+            abi: RewardRouter,
+            client: provider
         });
 
-        transactions.push({
-          target: tokenIn,
-          data: approveData,
-          value: BigInt(0)
+        const glpManager = getContract({
+            address: CONTRACT_ADDRESSES[NETWORKS.SONIC].GLP_MANAGER,
+            abi: GlpManager,
+            client: provider
         });
-      }
+
+        // Check token approval if not native token
+        if (tokenIn !== CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN) {
+            await notify('Checking token approval...');
+            
+            const tokenContract = getContract({
+                address: tokenIn,
+                abi: ERC20,
+                client: provider
+            });
+
+            // Check current allowance
+            const allowance = await tokenContract.read.allowance([
+                account,
+                CONTRACT_ADDRESSES[NETWORKS.SONIC].REWARD_ROUTER
+            ]);
+
+            if (allowance < parsedAmount) {
+                await notify('Approval needed. Please approve the transaction...');
+                const approvalTx = await sendTransactions({
+                    chainId: 146,
+                    account,
+                    transactions: [{
+                        target: tokenIn,
+                        data: encodeFunctionData({
+                            abi: ERC20,
+                            functionName: 'approve',
+                            args: [CONTRACT_ADDRESSES[NETWORKS.SONIC].REWARD_ROUTER, parsedAmount]
+                        })
+                    }]
+                });
+
+                if (!approvalTx.data?.[0]?.hash) {
+                    return toResult('Failed to approve token', true);
+                }
+            }
+        }
+
+        await notify('Preparing transaction...');
+
+        // Prepare transaction data
+        const txData: TransactionParams = {
+            target: CONTRACT_ADDRESSES[NETWORKS.SONIC].REWARD_ROUTER,
+            value: tokenIn === CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN ? parsedAmount : 0n,
+            data: encodeFunctionData({
+                abi: RewardRouter,
+                functionName: tokenIn === CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN ? 'mintAndStakeGlpETH' : 'mintAndStakeGlp',
+                args: tokenIn === CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN 
+                    ? [0n, 0n] // minUsdg and minGlp for ETH
+                    : [tokenIn, parsedAmount, 0n, 0n] // token, amount, minUsdg, minGlp for other tokens
+            })
+        };
+
+        // Send transaction
+        await notify('Executing transaction...');
+        const txResult = await sendTransactions({
+            chainId: 146,
+            account,
+            transactions: [txData]
+        });
+
+        if (!txResult.data?.[0]?.hash) {
+            return toResult('Transaction failed', true);
+        }
+
+        return toResult(JSON.stringify({
+            success: true,
+            transactionHash: txResult.data[0].hash,
+            details: {
+                tokenIn,
+                amount: parsedAmount.toString(),
+                tokenSymbol: tokenInfo.symbol
+            }
+        }));
+    } catch (error) {
+        if (error instanceof Error) {
+            return toResult(`Failed to add liquidity: ${error.message}`, true);
+        }
+        return toResult('Failed to add liquidity: Unknown error', true);
     }
-
-    await notify("Preparing liquidity addition transaction...");
-
-    const mintData = encodeFunctionData({
-      abi: RewardRouter,
-      functionName: isNative ? 'mintAndStakeGlpETH' : 'mintAndStakeGlp',
-      args: isNative ? [minUsdg, minGlp] : [tokenIn, parsedAmount, minUsdg, minGlp]
-    });
-
-    transactions.push({
-      target: CONTRACT_ADDRESSES[NETWORKS.SONIC].REWARD_ROUTER,
-      data: mintData,
-      value: isNative ? parsedAmount : BigInt(0)
-    });
-
-    // Send transactions
-    const result = await sendTransactions({
-      chainId: CHAIN_IDS[NETWORKS.SONIC],
-      account: walletClient.account.address,
-      transactions
-    });
-
-    return toResult(result.data?.[0]?.hash || "Transaction sent", !result.data?.[0]?.hash);
-
-  } catch (error) {
-    console.error('Error in addLiquidity:', error);
-    
-    if (error instanceof Error) {
-      return toResult(`Failed to add liquidity: ${error.message}`, true);
-    }
-    return toResult("Failed to add liquidity. Please try again.", true);
-  }
 }

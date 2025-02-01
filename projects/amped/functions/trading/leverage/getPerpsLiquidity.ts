@@ -4,8 +4,8 @@ import { CONTRACT_ADDRESSES, NETWORKS } from '../../../constants.js';
 import { Vault } from '../../../abis/Vault.js';
 import { VaultPriceFeed } from '../../../abis/VaultPriceFeed.js';
 
-interface GetPerpsLiquidityParams {
-  chainName: string;
+interface Props {
+  chainName: typeof NETWORKS[keyof typeof NETWORKS];
   account: Address;
   indexToken: Address;
   collateralToken: Address;
@@ -32,12 +32,9 @@ interface LiquidityInfo {
  * @returns FunctionReturn with liquidity information or error
  */
 export async function getPerpsLiquidity(
-  props: GetPerpsLiquidityParams,
-  options: FunctionOptions
+  { chainName, account, indexToken, collateralToken, isLong }: Props,
+  { getProvider, notify }: FunctionOptions
 ): Promise<FunctionReturn> {
-  const { chainName, account, indexToken, collateralToken, isLong } = props;
-  const { getProvider, notify } = options;
-
   try {
     // Validate chain
     if (chainName.toLowerCase() !== "sonic") {
@@ -143,7 +140,6 @@ export async function getPerpsLiquidity(
 
     return toResult(JSON.stringify(liquidityInfo));
   } catch (error) {
-    console.error('Error in getPerpsLiquidity:', error);
     if (error instanceof Error) {
       return toResult(`Failed to get perpetual trading liquidity: ${error.message}`, true);
     }

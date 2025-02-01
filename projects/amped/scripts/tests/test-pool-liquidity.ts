@@ -1,14 +1,30 @@
-import { createPublicClient, http, getContract, formatUnits, Address } from 'viem';
-import { CONTRACT_ADDRESSES, NETWORKS, RPC_URLS } from '../../constants.js';
-import { getPoolLiquidity } from './getPoolLiquidity.js';
-import dotenv from 'dotenv';
+import { createPublicClient, http, getContract, formatUnits, Address, Chain } from 'viem';
+import { CONTRACT_ADDRESSES, NETWORKS } from '../../constants.js';
+import { getPoolLiquidity } from '../../functions/liquidity/getPoolLiquidity.js';
+import { FunctionOptions } from '@heyanon/sdk';
+import 'dotenv/config';
 
-// Load environment variables
-dotenv.config();
+// Define Sonic chain
+export const sonic = {
+    id: 146,
+    name: 'Sonic',
+    nativeCurrency: {
+        decimals: 18,
+        name: 'Sonic',
+        symbol: 'SONIC',
+    },
+    rpcUrls: {
+        default: { http: ['https://rpc.soniclabs.com'] },
+        public: { http: ['https://rpc.soniclabs.com'] }
+    },
+    blockExplorers: {
+        default: { name: 'SonicScan', url: 'https://explorer.sonic.oasys.games' }
+    }
+} as const satisfies Chain;
 
 async function getTokenPrice(publicClient: any, tokenAddress: string) {
     const vault = getContract({
-        address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT as Address,
+        address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT,
         abi: [{
             inputs: [{ name: '_token', type: 'address' }],
             name: 'getMinPrice',
@@ -30,7 +46,7 @@ async function getTokenPrice(publicClient: any, tokenAddress: string) {
 
 async function getTokenLiquidity(publicClient: any, tokenAddress: string) {
     const vault = getContract({
-        address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT as Address,
+        address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT,
         abi: [{
             inputs: [{ name: '_token', type: 'address' }],
             name: 'poolAmounts',
@@ -75,27 +91,17 @@ async function getTokenLiquidity(publicClient: any, tokenAddress: string) {
         price,
         poolAmountUsd: poolAmountFormatted * price,
         reservedAmountUsd: reservedAmountFormatted * price,
-        availableAmountUsd: availableAmountFormatted * price
+        availableAmountUsd: availableAmountFormatted * price,
+        decimals
     };
 }
 
-async function main() {
-    // Create public client
-    const publicClient = createPublicClient({
-        chain: {
-            id: 146,
-            name: 'Sonic',
-            network: 'sonic',
-            nativeCurrency: {
-                name: 'Sonic',
-                symbol: 'S',
-                decimals: 18
-            },
-            rpcUrls: {
-                default: { http: [RPC_URLS[NETWORKS.SONIC]] }
-            }
-        },
-        transport: http()
+async function test() {
+    const transport = http('https://rpc.soniclabs.com');
+    
+    const provider = createPublicClient({
+        chain: sonic,
+        transport
     });
 
     console.log('Testing getPoolLiquidity function...');
@@ -104,15 +110,20 @@ async function main() {
     console.log('- GLP Manager:', CONTRACT_ADDRESSES[NETWORKS.SONIC].GLP_MANAGER);
     console.log('- Vault:', CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT);
 
+    const options: FunctionOptions = {
+        notify: async (msg: string) => console.log('Notification:', msg),
+        getProvider: (_chainId: number) => provider,
+        sendTransactions: async () => {
+            throw new Error('sendTransactions should not be called in this test');
+        }
+    };
+
     try {
         // Get overall pool liquidity
-        const result = await getPoolLiquidity('sonic', {
-            getProvider: () => publicClient,
-            notify: async (msg: string) => console.log('Notification:', msg),
-            sendTransactions: async () => {
-                throw new Error('sendTransactions should not be called in this test');
-            }
-        });
+        const result = await getPoolLiquidity(
+            { chainName: 'sonic' },
+            options
+        );
 
         if (!result.success) {
             console.log('Error:', result.data);
@@ -131,12 +142,13 @@ async function main() {
             'USDC': CONTRACT_ADDRESSES[NETWORKS.SONIC].USDC,
             'NATIVE': CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN,
             'WETH': CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH,
-            'ANON': CONTRACT_ADDRESSES[NETWORKS.SONIC].ANON
+            'ANON': CONTRACT_ADDRESSES[NETWORKS.SONIC].ANON,
+            'EURC': CONTRACT_ADDRESSES[NETWORKS.SONIC].EURC
         };
 
         for (const [symbol, address] of Object.entries(tokens)) {
             console.log(`\n${symbol}:`);
-            const liquidity = await getTokenLiquidity(publicClient, address);
+            const liquidity = await getTokenLiquidity(provider, address);
             console.log('- Pool Amount:', liquidity.poolAmount.toFixed(6), `${symbol} ($${liquidity.poolAmountUsd.toFixed(2)} USD)`);
             console.log('- Reserved Amount:', liquidity.reservedAmount.toFixed(6), `${symbol} ($${liquidity.reservedAmountUsd.toFixed(2)} USD)`);
             console.log('- Available Amount:', liquidity.availableAmount.toFixed(6), `${symbol} ($${liquidity.availableAmountUsd.toFixed(2)} USD)`);
@@ -148,4 +160,4 @@ async function main() {
     }
 }
 
-main().catch(console.error); 
+test().catch(console.error); 

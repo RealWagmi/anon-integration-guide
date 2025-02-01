@@ -1,42 +1,34 @@
 import { Address, getContract } from 'viem';
-import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
-import { CONTRACT_ADDRESSES, NETWORKS, PRECISION } from '../../constants.js';
+import { FunctionReturn, FunctionOptions, toResult, getChainFromName } from '@heyanon/sdk';
+import { CONTRACT_ADDRESSES, NETWORKS, PRECISION, SECONDS_PER_YEAR, BASIS_POINTS_DIVISOR } from '../../constants.js';
 import { RewardTracker } from '../../abis/RewardTracker.js';
 import { RewardDistributor } from '../../abis/RewardDistributor.js';
 
-// Constants for calculations
-const SECONDS_PER_YEAR = 31536000; // 365 * 24 * 60 * 60
-const BASIS_POINTS_DIVISOR = 10000;
-
-interface GetALPAPRParams {
-  chainName: string;
+interface Props {
+  chainName: typeof NETWORKS[keyof typeof NETWORKS];
   account: Address;
-  tokenAddress: Address;
 }
 
 /**
  * Gets APR information for ALP (Amped Liquidity Provider) tokens
- * @param props - The APR check parameters
- * @param props.chainName - The name of the chain (e.g., "sonic")
+ * @param props - The function parameters
+ * @param props.chainName - The name of the chain (must be "sonic")
  * @param props.account - The account address to check APR for
- * @param props.tokenAddress - The ALP token address
- * @param options - SDK function options
- * @param options.getProvider - Function to get the provider for a chain
- * @param options.notify - Function to send notifications
- * @returns APR information including base APR
+ * @param options - System tools for blockchain interactions
+ * @returns APR information including base APR and reward rates
  */
 export async function getALPAPR(
-  { chainName, account, tokenAddress }: GetALPAPRParams,
+  { chainName, account }: Props,
   { getProvider, notify }: FunctionOptions
 ): Promise<FunctionReturn> {
+  // Validate chain
+  if (!Object.values(NETWORKS).includes(chainName)) {
+    return toResult(`Network ${chainName} not supported`);
+  }
+
+  await notify("Checking ALP APR information...");
+
   try {
-    // Validate chain
-    if (chainName.toLowerCase() !== "sonic") {
-      return toResult("This function is only supported on Sonic chain", true);
-    }
-
-    await notify("Checking ALP APR information...");
-
     const provider = getProvider(146); // Sonic chain ID
     const glpTokenAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].GLP_TOKEN;
     const rewardDistributorAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].REWARD_DISTRIBUTOR;
@@ -75,15 +67,9 @@ export async function getALPAPR(
       tokensPerInterval: tokensPerInterval.toString()
     }));
   } catch (error) {
-    // Log error for debugging but don't expose internal details to user
-    console.error('Error in getALPAPR:', error);
-    
     if (error instanceof Error) {
-      const errorMessage = error.message.includes('out of gas') 
-        ? 'Failed to fetch reward rate. Please try again.'
-        : `Failed to get ALP APR information: ${error.message}`;
-      return toResult(errorMessage, true);
+      return toResult(`Failed to get ALP APR information: ${error.message}`, true);
     }
-    return toResult("Failed to get ALP APR information. Please try again.", true);
+    return toResult("Failed to get ALP APR information: Unknown error", true);
   }
 } 

@@ -5,7 +5,7 @@ import { removeLiquidity } from './functions/liquidity/removeLiquidity.js';
 import { getPerpsLiquidity } from './functions/trading/leverage/getPerpsLiquidity.js';
 import { getPosition } from './functions/trading/leverage/getPositions.js';
 import { getALPAPR } from './functions/liquidity/getALPAPR.js';
-import { getAcceptedTokenBalances } from './functions/liquidity/getAcceptedTokenBalances.js';
+import { getUserTokenBalances } from './functions/liquidity/getUserTokenBalances.js';
 import { getUserLiquidity } from './functions/liquidity/getUserLiquidity.js';
 import { getPoolLiquidity } from './functions/liquidity/getPoolLiquidity.js';
 import { closePosition } from './functions/trading/leverage/closePosition.js';
@@ -169,18 +169,23 @@ export const tools: Tool[] = [
         function: getALPAPR
     },
     {
-        name: 'getAcceptedTokenBalances',
-        description: 'Get balances and USD values of all accepted liquidity tokens',
-        required: ['chainName'],
+        name: 'getUserTokenBalances',
+        description: 'Get balances and USD values of all supported tokens for a specific user',
+        required: ['chainName', 'account'],
         props: [
             {
                 name: 'chainName',
                 type: 'string',
                 enum: supportedChains.map(getChainName),
                 description: 'Name of the blockchain network (only "sonic" is supported)',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Account address to check token balances for',
             }
         ],
-        function: getAcceptedTokenBalances
+        function: getUserTokenBalances
     },
     {
         name: 'getUserLiquidity',

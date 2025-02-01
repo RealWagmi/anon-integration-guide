@@ -3,11 +3,13 @@ import {
     FunctionReturn, 
     FunctionOptions, 
     toResult,
-    ChainId
+    getChainFromName
 } from '@heyanon/sdk';
 import { CONTRACT_ADDRESSES, NETWORKS } from '../../constants.js';
-import { GlpManager } from '../../abis/GlpManager.js';
-import { ERC20 } from '../../abis/ERC20.js';
+
+interface Props {
+    chainName: string;
+}
 
 // Define the specific ABI for the functions we need
 const GLP_TOKEN_ABI = [{
@@ -28,33 +30,34 @@ const GLP_MANAGER_ABI = [{
 
 /**
  * Gets the total GLP supply and Assets Under Management (AUM)
- * @param {string} chainName - The name of the chain
- * @param {FunctionOptions} options - The function options
- * @returns {Promise<FunctionReturn<{ totalSupply: string, aum: string }>>} The pool information
+ * @param props - The function parameters
+ * @param props.chainName - The name of the chain (must be "sonic")
+ * @param options - System tools for blockchain interactions
+ * @returns Pool information including total supply and AUM
  */
 export async function getPoolLiquidity(
-    chainName: 'sonic',
+    { chainName }: Props,
     { notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
-    // Input validation
-    if (!chainName) {
-        return toResult('Missing chain name', true);
-    }
-    if (!Object.values(NETWORKS).includes(chainName)) {
-        return toResult(`Network ${chainName} not supported`, true);
+    // Validate chain
+    const chainId = getChainFromName(chainName);
+    if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
+    if (chainName !== NETWORKS.SONIC) {
+        return toResult(`Protocol is only supported on Sonic chain`, true);
     }
 
-    await notify('Fetching pool liquidity information...');
     try {
-        const publicClient = getProvider(chainName as unknown as ChainId);
+        await notify('Fetching pool liquidity information...');
+        
+        const publicClient = getProvider(chainId);
         const [totalSupply, aum] = await Promise.all([
             publicClient.readContract({
-                address: CONTRACT_ADDRESSES[chainName].GLP_TOKEN,
+                address: CONTRACT_ADDRESSES[NETWORKS.SONIC].GLP_TOKEN,
                 abi: GLP_TOKEN_ABI,
                 functionName: 'totalSupply'
             }),
             publicClient.readContract({
-                address: CONTRACT_ADDRESSES[chainName].GLP_MANAGER,
+                address: CONTRACT_ADDRESSES[NETWORKS.SONIC].GLP_MANAGER,
                 abi: GLP_MANAGER_ABI,
                 functionName: 'getAum',
                 args: [true] // Include pending changes
@@ -66,7 +69,6 @@ export async function getPoolLiquidity(
             aum: formatUnits(aum as bigint, 30)
         }));
     } catch (error) {
-        console.error('Error in getPoolLiquidity:', error);
         if (error instanceof Error) {
             return toResult(`Failed to fetch pool liquidity: ${error.message}`, true);
         }

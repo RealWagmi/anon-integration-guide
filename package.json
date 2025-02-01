@@ -7,7 +7,18 @@
   "scripts": {
     "test": "vitest",
     "test:watch": "vitest watch",
-    "test:liquidity": "NODE_OPTIONS='--loader ts-node/esm' ts-node --esm projects/amped/scripts/tests/test-s-liquidity.ts"
+    "test:user-balances": "tsx projects/amped/scripts/tests/test-get-user-token-balances.ts",
+    "test:remove-liquidity": "tsx projects/amped/scripts/tests/test-remove-liquidity.ts",
+    "test:remove-liquidity:weth": "tsx projects/amped/scripts/tests/test-remove-liquidity-weth.ts",
+    "test:pool-liquidity": "tsx projects/amped/scripts/tests/test-pool-liquidity.ts",
+    "test:claim-rewards": "tsx projects/amped/scripts/tests/test-claim-rewards.ts",
+    "test:alp-apr": "tsx projects/amped/scripts/tests/test-get-alp-apr.ts",
+    "test:earnings": "tsx projects/amped/scripts/tests/test-get-earnings.ts",
+    "test:user-liquidity": "tsx projects/amped/scripts/tests/test-get-user-liquidity.ts",
+    "test:add-liquidity": "tsx projects/amped/scripts/tests/test-add-liquidity.ts",
+    "test:perps": "tsx projects/amped/scripts/tests/test-get-perps-liquidity.ts",
+    "test:positions": "tsx projects/amped/scripts/tests/test-get-positions.ts",
+    "test:close-position": "tsx projects/amped/scripts/tests/test-close-position.ts"
   },
   "keywords": [],
   "author": "",

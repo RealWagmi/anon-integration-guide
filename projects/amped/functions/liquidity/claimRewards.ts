@@ -1,35 +1,41 @@
-import { Address, getContract, encodeFunctionData } from 'viem';
-import { FunctionReturn, FunctionOptions, TransactionParams, toResult } from '@heyanon/sdk';
+import { Address, getContract, encodeFunctionData, formatUnits } from 'viem';
+import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName } from '@heyanon/sdk';
 import { CONTRACT_ADDRESSES, NETWORKS } from '../../constants.js';
 import { RewardTracker } from '../../abis/RewardTracker.js';
 
-interface ClaimRewardsParams {
+interface Props {
   chainName: string;
   account: Address;
-  tokenAddress: Address;
 }
 
 /**
- * Claims rewards for a token
- * @param props - The claim rewards parameters
- * @param options - SDK function options
- * @returns Transaction hash if successful
+ * Claims available rewards from the reward tracker
+ * @param props - The function parameters
+ * @param props.chainName - The name of the chain (must be "sonic")
+ * @param props.account - The account address to claim rewards for
+ * @param options - System tools for blockchain interactions
+ * @returns Transaction result with claim details
  */
 export async function claimRewards(
-  { chainName, account, tokenAddress }: ClaimRewardsParams,
+  { chainName, account }: Props,
   { getProvider, notify, sendTransactions }: FunctionOptions
 ): Promise<FunctionReturn> {
+  // Check wallet connection
+  if (!account) return toResult("Wallet not connected", true);
+
   // Validate chain
-  if (chainName.toLowerCase() !== "sonic") {
-    return toResult("This function is only supported on Sonic chain", true);
+  const chainId = getChainFromName(chainName);
+  if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
+  if (chainName !== NETWORKS.SONIC) {
+    return toResult(`Protocol is only supported on Sonic chain`, true);
   }
 
   await notify("Preparing to claim rewards...");
 
-  const provider = getProvider(146); // Sonic chain ID
-  const rewardTrackerAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].REWARD_ROUTER;
-
   try {
+    const provider = getProvider(chainId);
+    const rewardTrackerAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].REWARD_TRACKER;
+
     const rewardTracker = getContract({
       address: rewardTrackerAddress,
       abi: RewardTracker,
@@ -43,12 +49,18 @@ export async function claimRewards(
       return toResult("No rewards available to claim", true);
     }
 
-    await notify("Claiming rewards...");
+    await notify(`Claiming ${formatUnits(claimableAmount, 18)} wS rewards...`);
 
     const tx: TransactionParams = {
       target: rewardTrackerAddress,
       data: encodeFunctionData({
-        abi: RewardTracker,
+        abi: [{
+          inputs: [{ name: 'account', type: 'address' }],
+          name: 'claim',
+          outputs: [{ type: 'uint256' }],
+          stateMutability: 'nonpayable',
+          type: 'function'
+        }],
         functionName: 'claim',
         args: [account]
       }),
@@ -56,18 +68,27 @@ export async function claimRewards(
     };
 
     const result = await sendTransactions({
-      chainId: 146, // Sonic chain ID
+      chainId,
       account,
       transactions: [tx]
     });
 
-    const claimMessage = result.data[result.data.length - 1];
+    if (!result.data || result.data.length === 0) {
+      return toResult("Transaction failed: No transaction data returned", true);
+    }
 
-    return toResult(
-      result.isMultisig 
-        ? claimMessage.message 
-        : `Successfully claimed ${claimableAmount.toString()} rewards. ${claimMessage.message}`
-    );
+    const txHash = result.data[0]?.hash;
+    if (!txHash) {
+      return toResult("Transaction failed: No transaction hash returned", true);
+    }
+
+    return toResult(JSON.stringify({
+      success: true,
+      claimableAmount: claimableAmount.toString(),
+      isMultisig: result.isMultisig,
+      txHash,
+      message: `Successfully claimed ${formatUnits(claimableAmount, 18)} wS rewards. Transaction hash: ${txHash}`
+    }));
   } catch (error) {
     if (error instanceof Error) {
       return toResult(`Failed to claim rewards: ${error.message}`, true);

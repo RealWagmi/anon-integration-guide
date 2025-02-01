@@ -1,6 +1,8 @@
-import { getUserLiquidity } from './getUserLiquidity.js';
+import { getUserLiquidity } from '../../functions/liquidity/getUserLiquidity.js';
 import { PublicClient, createPublicClient, http, Chain } from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
 import { FunctionOptions } from '@heyanon/sdk';
+import 'dotenv/config';
 
 // Define Sonic chain
 export const sonic = {
@@ -21,6 +23,15 @@ export const sonic = {
 } as const satisfies Chain;
 
 async function test() {
+    // Check for private key in environment
+    if (!process.env.PRIVATE_KEY) {
+        throw new Error('PRIVATE_KEY environment variable is required');
+    }
+
+    // Create account from private key
+    const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`);
+    console.log('Using wallet address:', account.address);
+
     const options: FunctionOptions = {
         notify: async (msg: string) => console.log('Notification:', msg),
         getProvider: (chainId: number): PublicClient => {
@@ -36,7 +47,7 @@ async function test() {
     const result = await getUserLiquidity(
         {
             chainName: 'sonic',
-            account: '0xB1A9056a5921C0F6f2C68Ce19E08cA9A6D5FD904'
+            account: account.address
         },
         options
     );

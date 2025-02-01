@@ -3,6 +3,7 @@ import { Address } from 'viem';
 // Constants for APR calculations
 export const PRECISION = 1e30;
 export const SECONDS_PER_YEAR = 31536000; // 365 * 24 * 60 * 60
+export const BASIS_POINTS_DIVISOR = 10000;
 
 // Supported chains
 export const supportedChains = [146] as const; // Sonic chain ID
@@ -27,6 +28,7 @@ export const CONTRACT_ADDRESSES: Record<string, Record<string, Address>> = {
         GLP_TOKEN: '0x5d51a52D952A61D5d1fc19F90a8244b995877bd9' as Address,
         REWARD_ROUTER: '0xA0411BBefDC6d896615d1ece1C3212353842C2dF' as Address,
         REWARD_DISTRIBUTOR: '0x069d9C2eec92f777e80F019f944B9a8f775b3634' as Address,
+        REWARD_TRACKER: '0x21Efb5680d6127d6C39AE0d62D80cb9fc8935887' as Address,
         VAULT: '0x11944027D4eDC1C17db2D5E9020530dcEcEfb85b' as Address,
         NATIVE_TOKEN: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38' as Address,
         WETH: '0x50c42deacd8fc9773493ed674b675be577f2634b' as Address,

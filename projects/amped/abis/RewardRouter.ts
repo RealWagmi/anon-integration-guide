@@ -20,5 +20,28 @@ export const RewardRouter = [
     outputs: [{ type: 'uint256' }],
     stateMutability: 'payable',
     type: 'function'
+  },
+  {
+    inputs: [
+      { name: '_tokenOut', type: 'address' },
+      { name: '_glpAmount', type: 'uint256' },
+      { name: '_minOut', type: 'uint256' },
+      { name: '_receiver', type: 'address' }
+    ],
+    name: 'unstakeAndRedeemGlp',
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'nonpayable',
+    type: 'function'
+  },
+  {
+    inputs: [
+      { name: '_glpAmount', type: 'uint256' },
+      { name: '_minOut', type: 'uint256' },
+      { name: '_receiver', type: 'address' }
+    ],
+    name: 'unstakeAndRedeemGlpETH',
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'nonpayable',
+    type: 'function'
   }
 ] as const; 
