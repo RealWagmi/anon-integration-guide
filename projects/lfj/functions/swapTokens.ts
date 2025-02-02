@@ -7,19 +7,19 @@ import { Percent, TokenAmount } from '@traderjoe-xyz/sdk-core';
 import { getTokenInfo } from '../utils';
 
 interface Props {
-    isExactIn: boolean;
     chainName: string;
     account: Address;
     amount: string;
-    recipient?: Address;
-
-    maxSlippageInPercentage?: string;
     inputTokenAddress: Address;
     outputTokenAddress: Address;
+
+    isExactIn?: boolean;
+    recipient?: Address;
+    maxSlippageInPercentage?: string;
 }
 
 export async function swapTokens(
-    { chainName, account, amount, inputTokenAddress, outputTokenAddress, isExactIn, maxSlippageInPercentage = '0.5', recipient = account }: Props,
+    { chainName, account, amount, inputTokenAddress, outputTokenAddress, isExactIn = true, maxSlippageInPercentage = '0.5', recipient = account }: Props,
     { sendTransactions, notify, getProvider }: FunctionOptions,
 ): Promise<FunctionReturn> {
     // Check wallet connection

@@ -5,7 +5,7 @@ export const tools: AiTool[] = [
     {
         name: 'swapTokens',
         description: 'Swap tokens using lfj.gg',
-        required: ['isExactIn', 'chainName', 'account', 'amount', 'recipient', 'maxSlippageInPercentage', 'inputTokenAddress', 'outputTokenAddress'],
+        required: ['chainName', 'account', 'amount', 'inputTokenAddress', 'outputTokenAddress'],
         props: [
             {
                 name: 'isExactIn',
