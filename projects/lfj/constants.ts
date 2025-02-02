@@ -1,5 +1,6 @@
 import { WNATIVE, Token } from '@traderjoe-xyz/sdk-core';
 import { ChainId } from '@heyanon/sdk';
+import { LiquidityDistribution } from '@traderjoe-xyz/sdk-v2';
 
 export const supportedChains = [ChainId.AVALANCHE, ChainId.ARBITRUM];
 
@@ -15,4 +16,9 @@ export const swapBases = {
         new Token(ChainId.AVALANCHE as number, '0x9702230a8ea53601f5cd2dc00fdbc13d4df4a8c7', 6, 'USDT', 'Tether USD'),
         WNATIVE[ChainId.AVALANCHE],
     ],
+};
+export const liquidityDistribution: Record<'spot' | 'curve' | 'bidask', LiquidityDistribution> = {
+    spot: LiquidityDistribution.SPOT,
+    curve: LiquidityDistribution.CURVE,
+    bidask: LiquidityDistribution.BID_ASK,
 };

@@ -73,6 +73,8 @@ export async function swapTokens(
 
     await notify(`Swapping ${bestTrade.inputAmount} ${inputToken.symbol} to ${bestTrade.outputAmount} ${outputToken.symbol} ...`);
 
+    const transactions: TransactionParams[] = [];
+
     await checkToApprove({
         args: {
             account,
@@ -80,7 +82,7 @@ export async function swapTokens(
             spender: LB_ROUTER_V22_ADDRESS[chainId],
             amount: amountInParsed,
         },
-        transactions: [],
+        transactions,
         provider,
     });
 
@@ -96,7 +98,9 @@ export async function swapTokens(
         value: BigInt(value),
     };
 
-    const result = await sendTransactions({ chainId, account, transactions: [tx] });
+    transactions.push(tx);
+
+    const result = await sendTransactions({ chainId, account, transactions });
     const swapMessage = result.data[result.data.length - 1];
 
     return toResult(
