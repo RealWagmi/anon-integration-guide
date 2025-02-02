@@ -23,8 +23,6 @@ Integration with Amped Finance
    - "Check my liquidity pool balance in Amped"
    - "Calculate expected returns for my position in Amped"
 
-## Available Functions
-
 ### Basic Liquidity Operations
 
 // Add liquidity
@@ -90,6 +88,32 @@ Parameters:
 - Account: User's wallet address (required)
 - IsLong: Whether to check long positions (false for short positions)
 
+## Available Functions
+
+### Liquidity Management
+- **addLiquidity**: Add tokens as liquidity to Amped Finance, receiving ALP tokens in return.
+- **removeLiquidity**: Remove liquidity by redeeming ALP tokens for any supported token.
+- **getUserLiquidity**: Get user's current liquidity position and ALP token balance.
+- **getPoolLiquidity**: Get current liquidity pool information and token balances.
+- **getUserTokenBalances**: Get balances and USD values of all supported tokens for a specific user.
+
+### Trading Operations
+- **openPosition**: Open a leveraged long or short position with specified collateral.
+- **closePosition**: Close one or more leveraged positions, fully or partially.
+- **getAllOpenPositions**: Get all open positions for a specific account.
+- **getPosition**: Get detailed information about a specific position.
+- **marketSwap**: Execute a market swap between two tokens.
+
+### Information & Analytics
+- **getPoolLiquidity**: Get total pool liquidity information including ALP supply and Assets Under Management (AUM).
+- **getALPApr**: Calculate and retrieve the current APR for ALP tokens.
+- **getEarnings**: Get earnings information for a user's positions and liquidity.
+- **getPerpsLiquidity**: Get available liquidity information for perpetual trading.
+- **getSwapsLiquidity**: Get information about available liquidity for token swaps.
+
+### Rewards
+- **claimRewards**: Claim any available rewards from liquidity provision or trading.
+
 ## What You Need to Know
 
 1. Liquidity
@@ -114,24 +138,3 @@ Parameters:
 ```bash
 yarn add @heyanon/amped
 ```
-
-## Common Errors and Solutions
-
-1. "Insufficient liquidity"
-   - Try a smaller position size
-   - Try a different token
-   - Wait for more liquidity to become available
-
-2. "Position size too small"
-   - Minimum position size is $11
-   - Increase your position size
-
-3. "Insufficient collateral"
-   - Minimum collateral is $10
-   - Increase your collateral amount
-
-4. "Leverage too high"
-   - Maximum leverage varies by token
-   - Try reducing your leverage
-   - Or increase your collateral
-
