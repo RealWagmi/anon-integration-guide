@@ -1,6 +1,6 @@
 # Beets DEX - Swap efficiently on Sonic
 
-Beets exchange allows you to swap almost instantly between hundreds of tokens, leveraging Sonic Chain ultrafast transaction speed
+Beets DEX allows you to swap instantly hundreds of tokens, leveraging Sonic Chain ultrafast transaction speed and Balancer revolutionary architecture.
 
 ## Supported Networks
 
@@ -8,17 +8,36 @@ Beets exchange allows you to swap almost instantly between hundreds of tokens, l
 
 ## Common Tasks
 
-1. Basic Operations
-   - "Execute example operation with 100 USDT in @beets-dex on Ethereum network"
-   - "Run example transaction with 50 USDC in @beets-dex"
-   - "Perform example action with 1000 tokens in @beets-dex"
-
-2. Information Queries
-   - "Show my current status in @beets-dex"
-   - "Check my balance in @beets-dex"
-   - "Get example statistics from @beets-dex"
-   - "Calculate expected results for my position in @beets-dex"
-
+- **Swap**
+   - Swap 100 USDC for ETH on @beets-dex
+   - Swap 100 USDC for ETH with 0.1% slippage on @beets-dex
+   - Swap half of my USDC for ETH on @beets-dex
+   - Swap USDC to get exactly 1 ETH on @beets-dex
+- **Exchange rate**
+   - USDC-ETH Exchange rate on @beets-dex
+   - How much USDC for 1 ETH on @beets-dex
+- **Liquidity**
+   - Add liquidity to USDC-ETH pool on @beets-dex
+   - Remove liquidity from USDC-ETH pool on @beets-dex
+   - Withdraw all my USDC-ETH liquidity on @beets-dex
+   - Withdraw half of my USDC-ETH liquidity on @beets-dex
+   - Withdraw half of my USDC-ETH liquidity and swap all ETH for USDC on @beets-dex
+- **Yield**
+   - Best yield I can get for USDC on @beets-dex
+   - Show APR of USDC-ETH pool on @beets-dex
+   - Show APR of all my positions on @beets-dex
+- **Portfolio**
+   - My TVL on @beets-dex
+   - Show all my positions on @beets-dex
+   - Value of my USDC-ETH liquidity on @beets-dex
+   - Show my boosted positions on @beets-dex
+- **Beets liquidity**
+   - Total TVL on @beets-dex
+   - Assets in ETH-USDC pool on @beets-dex
+- **Alerts**
+   - Buy 1000 USDC of ETH when it dips below 3000 USDC on @beets-dex
+   - Sell all my ETH when it goes above 4000 USDC on @beets-dex
+   - Remove my ETH-USDC liquidity when APR goes below 4% on @beets-dex
 
 ## Available Functions
 
@@ -27,7 +46,7 @@ List of available functions will be added here.
 ## Installation
 
 ```bash
-yarn add @heyanon/Beets DEX - Swap efficiently on Sonic
+yarn add @heyanon/beets-dex
 ```
 
 ## Usage

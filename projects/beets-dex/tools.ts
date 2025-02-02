@@ -3,25 +3,20 @@ import { supportedChains } from './constants';
 
 export const tools: AiTool[] = [
     {
-        name: 'example',
-        description: 'Example function that demonstrates how to interact with the protocol. It shows basic transaction flow, including checking balances, preparing transaction data, and handling approvals if needed.',
-        required: ['chainName', 'account', 'amount'],
+        name: 'getMyPositionsPortfolio',
+        description: 'Show the liquidity positions in the user portfolio.  For each position, show the tokens in the pool, the type of pool, the amounts of tokens, the APR yield, and the dollar value of the position.',
+        required: ['chainName', 'account'],
         props: [
             {
                 name: 'chainName',
                 type: 'string',
                 enum: supportedChains.map(getChainName),
-                description: 'Chain name where to execute the example',
+                description: 'Chain name',
             },
             {
                 name: 'account',
                 type: 'string',
-                description: 'Account address that will execute the example',
-            },
-            {
-                name: 'amount',
-                type: 'string',
-                description: 'Amount of tokens for the example in decimal format',
+                description: 'Address of the user',
             },
         ],
     },

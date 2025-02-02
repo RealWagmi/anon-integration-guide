@@ -1,16 +1,26 @@
 {
-    "name": "@projects/Beets DEX - Swap efficiently on Sonic",
+    "name": "@projects/beets-lst",
     "version": "1.0.0",
     "scripts": {
-        "yarn": "yarn install"
+        "yarn": "yarn install",
+        "ask": "ts-node examples/run.ts"
     },
     "dependencies": {
-        "@heyanon/sdk": "^1.0.4"
+        "@heyanon/sdk": "^1.0.4",
+        "axios": "^1.7.9",
+        "chalk": "4"
     },
     "license": "MIT",
     "engines": {
         "npm": "please-use-yarn",
         "node": ">=18.x",
         "yarn": ">=1.22"
+    },
+    "devDependencies": {
+        "dotenv": "^16.4.7",
+        "openai": "^4.80.0",
+        "prettier": "^3.4.2",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.7.3"
     }
 }

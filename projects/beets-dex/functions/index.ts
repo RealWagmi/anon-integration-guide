@@ -1,1 +1,1 @@
-export { example } from './example';
+export { getMyPositionsPortfolio } from './getMyPositionsPortfolio';
