@@ -85,6 +85,13 @@ export class BeetsClient {
      * Same query as https://beets.fi/pools
      */
     async getPools(orderBy: GqlPoolOrderBy, orderDirection: GqlPoolOrderDirection, where: GqlPoolFilter): Promise<GqlPoolMinimal[]> {
+        const fragments = [
+            this.getHookFragment(),
+            this.getUnderlyingTokenFragment(),
+            this.getErc4626ReviewDataFragment(),
+            this.getPoolTokensFragment(),
+        ];
+
         let query = `
             query GetPools($where: GqlPoolFilter!, $orderBy: GqlPoolOrderBy!, $orderDirection: GqlPoolOrderDirection!) {
                 poolGetPools(
@@ -94,16 +101,119 @@ export class BeetsClient {
                 ) {
                     id
                     address
+                    chain
+                    createTime
+                    decimals
+                    protocolVersion
+                    tags
+                    hasErc4626
+                    hasNestedErc4626
+                    hasAnyAllowedBuffer
+                    hook {
+                        ...Hook
+                    }
+                    poolTokens {
+                        id
+                        address
+                        symbol
+                        weight
+                        name
+                        nestedPool {
+                            id
+                            address
+                            symbol
+                            name
+                            tokens {
+                                id
+                                address
+                                symbol
+                                weight
+                                name
+                            }
+                        }
+                    }
+                    dynamicData {
+                        totalLiquidity
+                        lifetimeVolume
+                        lifetimeSwapFees
+                        volume24h
+                        fees24h
+                        holdersCount
+                        swapFee
+                        swapsCount
+                        totalShares
+                        aprItems {
+                            id
+                            title
+                            apr
+                            type
+                            rewardTokenSymbol
+                            rewardTokenAddress
+                        }
+                    }
+                    staking {
+                        id
+                        type
+                        chain
+                        address
+                        gauge {
+                            id
+                            gaugeAddress
+                            version
+                            status
+                            workingSupply
+                            otherGauges {
+                                gaugeAddress
+                                version
+                                status
+                                id
+                                rewards {
+                                    id
+                                    tokenAddress
+                                    rewardPerSecond
+                                }
+                            }
+                            rewards {
+                                id
+                                rewardPerSecond
+                                tokenAddress
+                            }
+                        }
+                        aura {
+                            id
+                            apr
+                            auraPoolAddress
+                            auraPoolId
+                            isShutdown
+                        }
+                    }
+                    factory
+                    id
                     name
+                    owner
+                    swapFeeManager
+                    pauseManager
+                    poolCreator
                     symbol
                     type
-                    decimals
                     userBalance {
                         totalBalance
                         totalBalanceUsd
+                        walletBalance
+                        walletBalanceUsd
+                        stakedBalances {
+                            balance
+                            balanceUsd
+                            stakingType
+                            stakingId
+                        }
+                    }
+                    poolTokens {
+                        ...PoolTokens
                     }
                 }
             }
+            ${fragments.join('\n')}
         `;
         
         const response = await this.executeQueryWithRetry<{
@@ -168,7 +278,7 @@ export class BeetsClient {
      */
     private getPoolTokensFragment(): string {
         return `
-            fragment PoolTokens on GqlPoolToken {
+            fragment PoolTokens on GqlPoolTokenDetail {
                 id
                 chain
                 chainId
@@ -196,8 +306,8 @@ export class BeetsClient {
                     reviewed
                     warnings
                     upgradeableComponents {
-                    entryPoint
-                    implementationReviewed
+                        entryPoint
+                        implementationReviewed
                     }
                     reviewFile
                     factory
@@ -212,25 +322,25 @@ export class BeetsClient {
                     totalLiquidity
                     totalShares
                     tokens {
-                    index
-                    address
-                    decimals
-                    balance
-                    balanceUSD
-                    symbol
-                    weight
-                    isErc4626
-                    isBufferAllowed
-                    logoURI
-                    underlyingToken {
-                        ...UnderlyingToken
-                    }
-                    erc4626ReviewData {
-                        ...Erc4626ReviewData
-                    }
+                        index
+                        address
+                        decimals
+                        balance
+                        balanceUSD
+                        symbol
+                        weight
+                        isErc4626
+                        isBufferAllowed
+                        logoURI
+                        underlyingToken {
+                            ...UnderlyingToken
+                        }
+                        erc4626ReviewData {
+                            ...Erc4626ReviewData
+                        }
                     }
                     hook {
-                    ...Hook
+                        ...Hook
                     }
                 }
                 isErc4626
@@ -250,7 +360,7 @@ export class BeetsClient {
      */
     private getUnderlyingTokenFragment(): string {
         return `
-            fragment UnderlyingToken on GqlUnderlyingToken {
+            fragment UnderlyingToken on GqlToken {
                 chain
                 chainId
                 address
@@ -271,7 +381,7 @@ export class BeetsClient {
      */
     private getErc4626ReviewDataFragment(): string {
         return `
-            fragment Erc4626ReviewData on GqlErc4626ReviewData {
+            fragment Erc4626ReviewData on Erc4626ReviewData {
                 reviewFile
                 summary
                 warnings
