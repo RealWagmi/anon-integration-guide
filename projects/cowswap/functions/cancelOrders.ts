@@ -1,7 +1,8 @@
-import { Address } from 'viem';
-import { FunctionOptions, FunctionReturn, toResult, getChainFromName } from '@heyanon/sdk';
-import { HeyAnonSigner, supportedChains } from '../constants';
-import { OrderBookApi, OrderSigningUtils } from '@cowprotocol/cow-sdk';
+import { Address, encodeFunctionData } from 'viem';
+import { FunctionOptions, FunctionReturn, toResult, getChainFromName, TransactionParams } from '@heyanon/sdk';
+import { supportedChains } from '../constants';
+import { COW_PROTOCOL_SETTLEMENT_CONTRACT_ADDRESS } from '@cowprotocol/cow-sdk';
+import { cowswapSettlementAbi } from '../abis/cowswap_settlement_abi';
 
 interface Props {
     chainName: string;
@@ -9,7 +10,7 @@ interface Props {
     orderUids: string[];
 }
 
-export async function cancelOrder({ chainName, account, orderUids }: Props, { getProvider, signMessages }: FunctionOptions): Promise<FunctionReturn> {
+export async function cancelOrders({ chainName, account, orderUids }: Props, { sendTransactions }: FunctionOptions): Promise<FunctionReturn> {
     // Check wallet connection
     if (!account) return toResult('Wallet not connected', true);
 
@@ -18,16 +19,23 @@ export async function cancelOrder({ chainName, account, orderUids }: Props, { ge
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Protocol is not supported on ${chainName}`, true);
 
-    if (!signMessages) return toResult('Missing parameter `signMessages`', true);
+    const transactions: TransactionParams[] = [];
 
-    const provider = getProvider(chainId);
-    const signer = new HeyAnonSigner(account, provider, signMessages);
-    const orderBookApi = new OrderBookApi({ chainId: chainId as number });
+    for (const orderUid of orderUids) {
+        transactions.push({
+            target: COW_PROTOCOL_SETTLEMENT_CONTRACT_ADDRESS[chainId] as `0x{string}`,
+            data: encodeFunctionData({
+                abi: cowswapSettlementAbi,
+                functionName: 'invalidateOrder',
+                args: [orderUid],
+            }),
+        });
+    }
 
-    const orderCancellationSigningResult = await OrderSigningUtils.signOrderCancellations(orderUids, chainId as number, signer);
-    await orderBookApi.sendSignedOrderCancellations({
-        ...orderCancellationSigningResult,
-        orderUids,
+    await sendTransactions({
+        account,
+        chainId,
+        transactions,
     });
 
     return toResult(`Successfully cancelled the orderUids ${orderUids}`);

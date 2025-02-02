@@ -1,8 +1,18 @@
-import { FunctionReturn, toResult, getChainFromName, FunctionOptions, checkToApprove } from '@heyanon/sdk';
-import { Address, parseUnits } from 'viem';
-import { HeyAnonSigner, supportedChains } from '../constants';
-import { COW_PROTOCOL_VAULT_RELAYER_ADDRESS, LimitOrderParameters, OrderKind, TradingSdk } from '@cowprotocol/cow-sdk';
+import { FunctionReturn, toResult, getChainFromName, FunctionOptions, checkToApprove, TransactionParams } from '@heyanon/sdk';
+import { Address, parseUnits, encodeFunctionData } from 'viem';
+import { supportedChains } from '../constants';
+import { VoidSigner } from '@ethersproject/abstract-signer';
+import {
+    COW_PROTOCOL_SETTLEMENT_CONTRACT_ADDRESS,
+    COW_PROTOCOL_VAULT_RELAYER_ADDRESS,
+    LimitOrderParameters,
+    OrderKind,
+    SigningScheme,
+    SwapAdvancedSettings,
+    TradingSdk,
+} from '@cowprotocol/cow-sdk';
 import { getTokenInfo } from '../utils';
+import { cowswapSettlementAbi } from '../abis/cowswap_settlement_abi';
 
 interface Props {
     chainName: string;
@@ -18,7 +28,7 @@ interface Props {
 
 export async function postLimitBuyOrder(
     { chainName, account, sellToken, buyToken, buyTokenPrice, sellTokenPrice, buyTokenAmount, slippageInPercentage = '0.5' }: Props,
-    { signMessages, getProvider }: FunctionOptions,
+    { signMessages, getProvider, sendTransactions, notify }: FunctionOptions,
 ): Promise<FunctionReturn> {
     // Check wallet connection
     if (!account) return toResult('Wallet not connected', true);
@@ -36,7 +46,8 @@ export async function postLimitBuyOrder(
     const buyTokenInfo = await getTokenInfo(buyToken, provider);
     if (!buyTokenInfo) return toResult('Invalid ERC20 for buyToken', true);
 
-    const signer = new HeyAnonSigner(account, provider, signMessages);
+    // We use VoidSigner since settle orders on chain by sending a transaction.
+    const signer = new VoidSigner(account);
     const sdk = new TradingSdk({
         chainId: chainId as number,
         signer,
@@ -49,6 +60,11 @@ export async function postLimitBuyOrder(
     const buyTokenAmountBN = parseUnits(buyTokenAmount, buyTokenInfo.decimals);
     const sellTokenAmountBN = (sellTokenPriceBN / buyTokenPriceBN) * buyTokenAmountBN;
 
+    const sellAmount = sellTokenAmountBN / BigInt(sellTokenInfo.decimals);
+
+    await notify(`Approving ${sellTokenInfo.symbol} ...`);
+    const approval = [];
+
     await checkToApprove({
         args: {
             account,
@@ -56,9 +72,17 @@ export async function postLimitBuyOrder(
             spender: COW_PROTOCOL_VAULT_RELAYER_ADDRESS[chainId],
             amount: sellTokenAmountBN,
         },
-        transactions: [],
+        transactions: approval,
         provider,
     });
+
+    await sendTransactions({
+        chainId,
+        account,
+        transactions: approval,
+    });
+
+    await notify(`Processing limit buy order ...`);
 
     const parameters: LimitOrderParameters = {
         kind: OrderKind.BUY,
@@ -74,6 +98,33 @@ export async function postLimitBuyOrder(
         appCode: 'HeyAnon',
     };
 
-    const result = await sdk.postLimitOrder(parameters);
-    return toResult(`Successfully posted limit order ${result}`);
+    const settings: SwapAdvancedSettings = {
+        quoteRequest: {
+            signingScheme: SigningScheme.PRESIGN,
+        },
+    };
+
+    const orderUid = await sdk.postLimitOrder(parameters, settings);
+    const tx: TransactionParams = {
+        target: COW_PROTOCOL_SETTLEMENT_CONTRACT_ADDRESS[chainId] as `0x{string}`,
+        data: encodeFunctionData({
+            abi: cowswapSettlementAbi,
+            functionName: 'setPreSignature',
+            args: [orderUid, true],
+        }),
+    };
+
+    await sendTransactions({
+        chainId,
+        account,
+        transactions: [tx],
+    });
+
+    return toResult(
+        `
+Successfully posted a limit order to swap ${sellAmount} ${sellTokenInfo.symbol} to ${buyTokenInfo.symbol} when ${buyTokenInfo.symbol} is at minimum ${buyTokenPrice}. 
+OrderUid: ${orderUid}
+Slippage: ${slippageInPercentage}
+`,
+    );
 }
