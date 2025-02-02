@@ -1,3 +1,4 @@
 export * from './getPerpsLiquidity.js';
-export * from './marketPosition.js';
-export * from './limitPosition.js'; 
+export * from './openPosition.js';
+export * from './getPositions.js';
+export * from './closePosition.js';

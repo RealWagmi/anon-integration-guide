@@ -92,14 +92,9 @@ export const Router = [
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_tokenIn",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_tokenOut",
-        "type": "address"
+        "internalType": "address[]",
+        "name": "_path",
+        "type": "address[]"
       },
       {
         "internalType": "uint256",
@@ -179,6 +174,57 @@ export const Router = [
       }
     ],
     "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "_path",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_minOut",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_receiver",
+        "type": "address"
+      }
+    ],
+    "name": "swapETHToTokens",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "_path",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_amountIn",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_minOut",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_receiver",
+        "type": "address"
+      }
+    ],
+    "name": "swapTokensToETH",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   }
 ]; 

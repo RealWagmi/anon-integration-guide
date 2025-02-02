@@ -1,81 +1,101 @@
-import { getALPAPR } from '../../functions/liquidity/getALPAPR.js';
-import { PublicClient, createPublicClient, http, Chain, formatUnits } from 'viem';
+import { createPublicClient, createWalletClient, http, formatUnits } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { FunctionOptions } from '@heyanon/sdk';
-import { CONTRACT_ADDRESSES, NETWORKS } from '../../constants.js';
+import { NETWORKS, RPC_URLS, CONTRACT_ADDRESSES } from '../../constants.js';
+import { getALPAPR } from '../../functions/liquidity/getALPAPR.js';
+import { TransactionReturn } from '@heyanon/sdk';
 import 'dotenv/config';
 
-// Define Sonic chain
-export const sonic = {
+// Load private key from environment
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
+if (!PRIVATE_KEY) {
+    throw new Error('PRIVATE_KEY not found in .env file');
+}
+
+// Ensure private key is properly formatted
+const formattedPrivateKey = PRIVATE_KEY.startsWith('0x') ? PRIVATE_KEY : `0x${PRIVATE_KEY}`;
+const account = privateKeyToAccount(formattedPrivateKey as `0x${string}`);
+
+// Define chain configuration
+const sonicChain = {
     id: 146,
     name: 'Sonic',
+    network: 'sonic',
     nativeCurrency: {
-        decimals: 18,
         name: 'Sonic',
-        symbol: 'SONIC',
+        symbol: 'S',
+        decimals: 18,
     },
     rpcUrls: {
-        default: { http: ['https://rpc.soniclabs.com'] },
-        public: { http: ['https://rpc.soniclabs.com'] }
+        default: { http: [RPC_URLS[NETWORKS.SONIC]] },
+        public: { http: [RPC_URLS[NETWORKS.SONIC]] },
     },
-    blockExplorers: {
-        default: { name: 'SonicScan', url: 'https://explorer.sonic.oasys.games' }
-    }
-} as const satisfies Chain;
+};
 
-async function test() {
-    // Check for private key in environment
-    if (!process.env.PRIVATE_KEY) {
-        throw new Error('PRIVATE_KEY environment variable is required');
-    }
+async function main() {
+    try {
+        // Create clients
+        const publicClient = createPublicClient({
+            chain: sonicChain,
+            transport: http(),
+        });
 
-    // Create account from private key
-    const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`);
-    console.log('Using wallet address:', account.address);
+        const walletClient = createWalletClient({
+            account,
+            chain: sonicChain,
+            transport: http(),
+        });
 
-    const provider = createPublicClient({
-        chain: sonic,
-        transport: http('https://rpc.soniclabs.com')
-    });
+        console.log('\nTesting get ALP APR...');
+        console.log('Wallet address:', account.address);
 
-    const options: FunctionOptions = {
-        notify: async (msg: string) => console.log('Notification:', msg),
-        getProvider: (chainId: number): PublicClient => {
-            if (chainId !== 146) throw new Error('Invalid chain ID');
-            return provider;
-        },
-        sendTransactions: async () => ({ data: [], isMultisig: false })
-    };
+        const result = await getALPAPR(
+            {
+                chainName: NETWORKS.SONIC,
+                account: account.address,
+            },
+            {
+                getProvider: () => publicClient,
+                notify: async (msg: string) => console.log(msg),
+                sendTransactions: async ({ transactions }): Promise<TransactionReturn> => {
+                    throw new Error('This function should not require transactions');
+                },
+            },
+        );
 
-    console.log('\nChecking ALP APR information...');
-    const aprResult = await getALPAPR(
-        {
-            chainName: 'sonic',
-            account: account.address
-        },
-        options
-    );
+        if (result.success) {
+            const data = JSON.parse(result.data);
+            console.log('\nALP APR Information:');
+            console.log('-------------------');
+            console.log(`Base APR: ${Number(data.baseApr).toFixed(2)}%`);
 
-    if (!aprResult.success) {
-        console.log('Error getting APR:', aprResult.data);
-    } else {
-        const aprInfo = JSON.parse(aprResult.data);
-        console.log('\nALP APR Information:');
-        console.log('-------------------');
-        console.log(`Base APR: ${aprInfo.baseApr}%`);
-        console.log(`\nReward Details:`);
-        console.log(`Total Supply: ${formatUnits(BigInt(aprInfo.totalSupply), 18)} ALP`);
-        console.log(`Yearly Rewards: ${formatUnits(BigInt(aprInfo.yearlyRewards), 18)} wS`);
-        console.log(`Tokens Per Interval: ${formatUnits(BigInt(aprInfo.tokensPerInterval), 18)} wS/second`);
+            console.log('\nReward Details:');
+            console.log(`Total Supply: ${Number(formatUnits(BigInt(data.totalSupply), 18)).toLocaleString()} ALP`);
+            console.log(`Yearly Rewards: ${Number(formatUnits(BigInt(data.yearlyRewards), 18)).toLocaleString()} wS`);
+            console.log(`Tokens Per Interval: ${formatUnits(BigInt(data.tokensPerInterval), 18)} wS/second`);
 
-        // Calculate daily and weekly rewards for better understanding
-        const dailyRewards = BigInt(aprInfo.yearlyRewards) / BigInt(365);
-        const weeklyRewards = BigInt(aprInfo.yearlyRewards) / BigInt(52);
-        
-        console.log(`\nEstimated Rewards (if total supply remains constant):`);
-        console.log(`Daily Rewards: ${formatUnits(dailyRewards, 18)} wS`);
-        console.log(`Weekly Rewards: ${formatUnits(weeklyRewards, 18)} wS`);
+            // Calculate daily and weekly rewards for better understanding
+            const dailyRewards = BigInt(data.yearlyRewards) / BigInt(365);
+            const weeklyRewards = BigInt(data.yearlyRewards) / BigInt(52);
+
+            console.log('\nEstimated Rewards (if total supply remains constant):');
+            console.log(`Daily Rewards: ${Number(formatUnits(dailyRewards, 18)).toLocaleString()} wS`);
+            console.log(`Weekly Rewards: ${Number(formatUnits(weeklyRewards, 18)).toLocaleString()} wS`);
+
+            console.log('\nRaw Data:');
+            console.log(JSON.stringify(data, null, 2));
+        } else {
+            console.error('\nFailed to get ALP APR:', result.data);
+        }
+    } catch (error) {
+        console.error('\nUnexpected error:', error);
+        if (error instanceof Error) {
+            console.error('Error message:', error.message);
+            console.error('Error stack:', error.stack);
+        }
     }
 }
 
-test().catch(console.error); 
+main().catch((error) => {
+    console.error('\nFatal error:', error);
+    process.exit(1);
+});

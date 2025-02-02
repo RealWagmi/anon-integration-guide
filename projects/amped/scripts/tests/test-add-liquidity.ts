@@ -1,174 +1,172 @@
-import { createPublicClient, createWalletClient, http, parseEther, formatEther } from 'viem';
+import { createPublicClient, createWalletClient, http, Chain, Address } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { addLiquidity } from '../../functions/liquidity/addLiquidity.js';
+import { addLiquidity, SupportedToken } from '../../functions/liquidity/addLiquidity.js';
 import { CONTRACT_ADDRESSES, NETWORKS } from '../../constants.js';
-import { sonic } from '../../chains.js';
-import { ERC20 } from '../../abis/ERC20.js';
-import dotenv from 'dotenv';
+import 'dotenv/config';
 
-dotenv.config();
+// Define Sonic chain
+const sonic = {
+    id: 146,
+    name: 'Sonic',
+    network: 'sonic',
+    nativeCurrency: {
+        decimals: 18,
+        name: 'Sonic',
+        symbol: 'S',
+    },
+    rpcUrls: {
+        default: { http: ['https://rpc.soniclabs.com'] },
+        public: { http: ['https://rpc.soniclabs.com'] },
+    },
+} as const satisfies Chain;
 
-async function main() {
+interface TestParams {
+    token?: SupportedToken; // Changed from tokenAddress to token
+    amount?: string; // Optional: defaults to 25% of balance if not provided
+    percentOfBalance?: number; // Optional: used if amount not provided, defaults to 25
+}
+
+async function test(params: TestParams = {}) {
+    const { token = 'WETH', amount, percentOfBalance } = params;
+
+    console.log('\nTesting add liquidity...');
+
+    // Check for private key
     if (!process.env.PRIVATE_KEY) {
-        throw new Error('PRIVATE_KEY is required in .env file');
+        throw new Error('PRIVATE_KEY environment variable is required');
     }
 
+    // Create account and clients
     const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`);
-    console.log('Using account:', account.address);
+    console.log('\nWallet Information:');
+    console.log('------------------');
+    console.log('Address:', account.address);
 
-    // Set up the provider and wallet client
-    const rpcUrl = process.env.SONIC_RPC_URL;
-    if (!rpcUrl) {
-        throw new Error('SONIC_RPC_URL is required in .env file');
-    }
-
+    const transport = http('https://rpc.soniclabs.com');
     const publicClient = createPublicClient({
         chain: sonic,
-        transport: http(rpcUrl)
+        transport,
     });
 
     const walletClient = createWalletClient({
         chain: sonic,
-        transport: http(rpcUrl),
-        account
+        transport,
+        account,
     });
 
-    // Log contract addresses
-    console.log('\nContract Addresses:');
-    console.log('WETH:', CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH);
-    console.log('Reward Router:', CONTRACT_ADDRESSES[NETWORKS.SONIC].REWARD_ROUTER);
-    console.log('GLP Manager:', CONTRACT_ADDRESSES[NETWORKS.SONIC].GLP_MANAGER);
-
-    // Check WETH balance first
-    const wethContract = {
-        address: CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH,
-        abi: ERC20
-    };
-
-    const [wethBalance, wethDecimals, wethSymbol] = await Promise.all([
-        publicClient.readContract({
-            ...wethContract,
-            functionName: 'balanceOf',
-            args: [account.address]
-        }),
-        publicClient.readContract({
-            ...wethContract,
-            functionName: 'decimals'
-        }),
-        publicClient.readContract({
-            ...wethContract,
-            functionName: 'symbol'
-        })
-    ]);
-
-    console.log(`\nCurrent ${wethSymbol} balance: ${formatEther(wethBalance)} ${wethSymbol}`);
-
-    // We'll use a smaller amount first to test
-    const amountInEth = '0.001';
-    const parsedAmount = parseEther(amountInEth);
-
-    if (wethBalance < parsedAmount) {
-        throw new Error(`Insufficient ${wethSymbol} balance. Need ${amountInEth} ${wethSymbol} but have ${formatEther(wethBalance)} ${wethSymbol}`);
-    }
-
-    // Check current allowances
-    const [routerAllowance, glpManagerAllowance] = await Promise.all([
-        publicClient.readContract({
-            ...wethContract,
-            functionName: 'allowance',
-            args: [account.address, CONTRACT_ADDRESSES[NETWORKS.SONIC].REWARD_ROUTER]
-        }),
-        publicClient.readContract({
-            ...wethContract,
-            functionName: 'allowance',
-            args: [account.address, CONTRACT_ADDRESSES[NETWORKS.SONIC].GLP_MANAGER]
-        })
-    ]);
-
-    console.log(`\nCurrent allowances:`);
-    console.log(`- Reward Router: ${formatEther(routerAllowance)} ${wethSymbol}`);
-    console.log(`- GLP Manager: ${formatEther(glpManagerAllowance)} ${wethSymbol}`);
-
-    // Approve GLP Manager if needed
-    if (glpManagerAllowance < parsedAmount) {
-        console.log('\nApproving WETH for GLP Manager...');
-        const approvalHash = await walletClient.writeContract({
-            ...wethContract,
-            functionName: 'approve',
-            args: [CONTRACT_ADDRESSES[NETWORKS.SONIC].GLP_MANAGER, parsedAmount]
-        });
-        console.log('Approval transaction hash:', approvalHash);
-        
-        // Wait for approval to be mined
-        console.log('Waiting for approval transaction to be mined...');
-        await publicClient.waitForTransactionReceipt({ hash: approvalHash });
-        console.log('Approval confirmed');
-    }
-
-    console.log(`\nAdding liquidity with ${amountInEth} ${wethSymbol}...`);
-
     try {
-        const result = await addLiquidity({
-            chainName: NETWORKS.SONIC,
-            account: account.address,
-            tokenIn: CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH,
-            amount: amountInEth
-        }, {
-            getProvider: () => publicClient,
-            notify: async (message: string) => {
-                console.log(message);
+        const result = await addLiquidity(
+            {
+                chainName: 'sonic',
+                account: account.address,
+                tokenSymbol: token,
+                amount,
+                percentOfBalance,
             },
-            sendTransactions: async ({ transactions }) => {
-                const txResults = [];
-                
-                for (const tx of transactions) {
-                    console.log('\nSending transaction:', {
-                        to: tx.target,
-                        value: tx.value?.toString() || '0',
-                        dataLength: tx.data.length,
-                        data: tx.data // Log full data for debugging
-                    });
+            {
+                getProvider: () => publicClient,
+                notify: async (msg: string) => console.log('Notification:', msg),
+                sendTransactions: async ({ transactions }) => {
+                    const txResults = [];
 
-                    const hash = await walletClient.sendTransaction({
-                        chain: sonic,
-                        to: tx.target,
-                        value: tx.value || 0n,
-                        data: tx.data as `0x${string}`
-                    });
+                    for (const tx of transactions) {
+                        console.log('\nTransaction Details:');
+                        console.log('-------------------');
+                        console.log('To:', tx.target);
+                        console.log('Value:', (tx.value ?? 0n).toString());
+                        console.log('Data:', tx.data);
 
-                    console.log('Transaction hash:', hash);
-                    
-                    // Wait for transaction to be mined
-                    console.log('Waiting for transaction to be mined...');
-                    const receipt = await publicClient.waitForTransactionReceipt({ hash });
-                    console.log('Transaction confirmed:', receipt.status === 'success' ? 'Success' : 'Failed');
-                    
-                    txResults.push({
-                        hash,
-                        message: 'Transaction sent successfully'
-                    });
-                }
+                        const hash = await walletClient.sendTransaction({
+                            chain: sonic,
+                            to: tx.target,
+                            value: tx.value || 0n,
+                            data: tx.data as `0x${string}`,
+                        });
 
-                return {
-                    isMultisig: false,
-                    data: txResults
-                };
-            }
-        });
+                        console.log('\nTransaction submitted:', hash);
 
-        try {
+                        // Wait for confirmation
+                        console.log('\nWaiting for confirmation...');
+                        const receipt = await publicClient.waitForTransactionReceipt({ hash });
+                        console.log('\nTransaction Status:');
+                        console.log('------------------');
+                        console.log('Block Number:', receipt.blockNumber);
+                        console.log('Gas Used:', receipt.gasUsed.toString());
+                        console.log('Status:', receipt.status === 'success' ? '✅ Success' : '❌ Failed');
+
+                        txResults.push({
+                            hash,
+                            message: 'Transaction submitted successfully',
+                        });
+                    }
+
+                    return {
+                        isMultisig: false,
+                        data: txResults,
+                    };
+                },
+            },
+        );
+
+        if (result.success) {
             const response = JSON.parse(result.data);
-            console.log('\nTransaction successful!');
-            console.log('Transaction hash:', response.transactionHash);
-            console.log('\nDetails:');
-            console.log('- Amount:', formatEther(BigInt(response.details.amount)), wethSymbol);
-            console.log('- Token:', response.details.tokenIn);
-        } catch {
-            console.error('Error:', result.data);
+            console.log('\nLiquidity Addition Result:');
+            console.log('------------------------');
+            console.log('Status: ✅ Success');
+            console.log('Transaction Hash:', response.transactionHash);
+            console.log(`Amount Added: ${response.details.amount} ${response.details.tokenSymbol}`);
+            console.log(`USD Value: $${response.details.amountUsd}`);
+            console.log(`Price Impact: ${Number(response.details.priceImpact)}%`);
+            if (Number(response.details.priceImpact) > 1) {
+                console.log('\n⚠️  Warning: High price impact detected!');
+            }
+        } else {
+            console.error('\nFailed to add liquidity:', result.data);
         }
     } catch (error) {
-        console.error('Error executing addLiquidity:', error);
+        console.error('\nUnexpected Error:');
+        console.error('----------------');
+        if (error instanceof Error) {
+            console.error('Message:', error.message);
+            console.error('Stack:', error.stack);
+        } else {
+            console.error('Unknown error:', error);
+        }
+        process.exit(1);
     }
 }
 
-main().catch(console.error); 
+// Parse command line arguments
+const args = process.argv.slice(2);
+const params: TestParams = {};
+
+for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    const nextArg = args[i + 1];
+
+    switch (arg) {
+        case '--token':
+            if (!nextArg) throw new Error('--token requires a symbol');
+            params.token = nextArg as SupportedToken;
+            i++;
+            break;
+        case '--amount':
+            if (!nextArg) throw new Error('--amount requires a value');
+            params.amount = nextArg;
+            i++;
+            break;
+        case '--percent':
+            if (!nextArg) throw new Error('--percent requires a value');
+            params.percentOfBalance = Number(nextArg);
+            if (isNaN(params.percentOfBalance)) throw new Error('--percent must be a number');
+            i++;
+            break;
+        default:
+            throw new Error(`Unknown argument: ${arg}`);
+    }
+}
+
+test(params).catch((error) => {
+    console.error('\nFatal error:', error);
+    process.exit(1);
+});

@@ -1,91 +1,127 @@
-import { createPublicClient, createWalletClient, http } from 'viem';
+import { createPublicClient, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { CONTRACT_ADDRESSES, NETWORKS, CHAIN_CONFIG } from '../../constants.js';
-import { getPosition } from '../../functions/trading/leverage/getPositions.js';
+import { getPosition } from '../../functions/trading/leverage/getPosition.js';
+import { getAllOpenPositions } from '../../functions/trading/leverage/getAllOpenPositions.js';
 import { FunctionOptions } from '@heyanon/sdk';
 import 'dotenv/config';
 
-async function main() {
-  if (!process.env.PRIVATE_KEY) {
-    throw new Error('PRIVATE_KEY environment variable is required');
-  }
-
-  // Create account from private key
-  const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`);
-  console.log('Using wallet address:', account.address);
-
-  // Create public client
-  const publicClient = createPublicClient({
-    chain: CHAIN_CONFIG[NETWORKS.SONIC],
-    transport: http()
-  });
-
-  // SDK options
-  const options: FunctionOptions = {
-    getProvider: (chainId: number) => publicClient,
-    notify: async (message: string) => console.log(message),
-    sendTransactions: async () => {
-      throw new Error('sendTransactions not needed for getPosition');
-      return { isMultisig: false, data: [] };
+// Parse command line arguments
+const args = process.argv.slice(2);
+const params: { [key: string]: string } = {};
+for (let i = 0; i < args.length; i += 2) {
+    if (args[i].startsWith('--')) {
+        params[args[i].slice(2)] = args[i + 1];
     }
-  };
-
-  // Define index tokens to check
-  const indexTokens = [
-    { symbol: 'ANON', address: CONTRACT_ADDRESSES[NETWORKS.SONIC].ANON },
-    { symbol: 'S', address: CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN },
-    { symbol: 'WETH', address: CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH },
-    { symbol: 'USDC', address: CONTRACT_ADDRESSES[NETWORKS.SONIC].USDC },
-    { symbol: 'EURC', address: CONTRACT_ADDRESSES[NETWORKS.SONIC].EURC }
-  ];
-
-  // Define possible collateral tokens
-  const collateralTokens = [
-    { symbol: 'ANON', address: CONTRACT_ADDRESSES[NETWORKS.SONIC].ANON },
-    { symbol: 'S', address: CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN },
-    { symbol: 'USDC', address: CONTRACT_ADDRESSES[NETWORKS.SONIC].USDC }
-  ];
-
-  // Check positions for each index token
-  for (const indexToken of indexTokens) {
-    console.log(`\nChecking positions for ${indexToken.symbol} as index token:`);
-
-    // Check long positions with each collateral
-    console.log('\nLong positions:');
-    for (const collateral of collateralTokens) {
-      const longResult = await getPosition({
-        chainName: 'sonic',
-        account: account.address,
-        indexToken: indexToken.address as `0x${string}`,
-        collateralToken: collateral.address as `0x${string}`,
-        isLong: true
-      }, options);
-
-      const longData = JSON.parse(longResult.data);
-      if (longData.success && longData.position.size && longData.position.size !== '0') {
-        console.log(`\nActive long position found with ${collateral.symbol} as collateral:`);
-        console.log(JSON.stringify(longData.position, null, 2));
-      }
-    }
-
-    // Check short positions with each collateral
-    console.log('\nShort positions:');
-    for (const collateral of collateralTokens) {
-      const shortResult = await getPosition({
-        chainName: 'sonic',
-        account: account.address,
-        indexToken: indexToken.address as `0x${string}`,
-        collateralToken: collateral.address as `0x${string}`,
-        isLong: false
-      }, options);
-
-      const shortData = JSON.parse(shortResult.data);
-      if (shortData.success && shortData.position.size && shortData.position.size !== '0') {
-        console.log(`\nActive short position found with ${collateral.symbol} as collateral:`);
-        console.log(JSON.stringify(shortData.position, null, 2));
-      }
-    }
-  }
 }
 
-main().catch(console.error); 
+async function main() {
+    try {
+        if (!process.env.PRIVATE_KEY) {
+            throw new Error('PRIVATE_KEY environment variable is required');
+        }
+
+        // Create account from private key
+        const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`);
+        console.log('Using wallet address:', account.address);
+
+        // Create public client
+        const publicClient = createPublicClient({
+            chain: CHAIN_CONFIG[NETWORKS.SONIC],
+            transport: http(),
+        });
+
+        // SDK options
+        const options: FunctionOptions = {
+            getProvider: () => publicClient,
+            notify: async (message: string) => console.log(message),
+            sendTransactions: async ({ chainId, account, transactions }) => {
+                return { isMultisig: false, data: [] };
+            },
+        };
+
+        // If specific token is provided, check just that position
+        if (params.indexToken && params.collateralToken) {
+            console.log('\nChecking specific position:');
+            const isLong = params.isLong ? params.isLong.toLowerCase() === 'true' : true;
+            const result = await getPosition(
+                {
+                    chainName: NETWORKS.SONIC,
+                    account: account.address,
+                    indexToken: params.indexToken as `0x${string}`,
+                    collateralToken: params.collateralToken as `0x${string}`,
+                    isLong,
+                },
+                options,
+            );
+
+            if (!result.success) {
+                console.error('Error checking position:', result.data);
+                return;
+            }
+
+            const data = JSON.parse(result.data);
+            if (data.success && data.position.size && data.position.size !== '0.0') {
+                console.log('\nPosition found:');
+                console.log(JSON.stringify(data.position, null, 2));
+            } else {
+                console.log('\nNo active position found.');
+            }
+            return;
+        }
+
+        // Otherwise, check all positions
+        console.log('\nChecking all positions...');
+
+        // Check all long positions
+        console.log('\nChecking long positions:');
+        const longResult = await getAllOpenPositions(
+            {
+                chainName: NETWORKS.SONIC,
+                account: account.address,
+                isLong: true,
+            },
+            options,
+        );
+
+        if (!longResult.success) {
+            console.error('Error checking long positions:', longResult.data);
+        } else {
+            const longData = JSON.parse(longResult.data);
+            if (longData.positions.length > 0) {
+                console.log('\nActive long positions:');
+                console.log(JSON.stringify(longData.positions, null, 2));
+            } else {
+                console.log('No active long positions found.');
+            }
+        }
+
+        // Check all short positions
+        console.log('\nChecking short positions:');
+        const shortResult = await getAllOpenPositions(
+            {
+                chainName: NETWORKS.SONIC,
+                account: account.address,
+                isLong: false,
+            },
+            options,
+        );
+
+        if (!shortResult.success) {
+            console.error('Error checking short positions:', shortResult.data);
+        } else {
+            const shortData = JSON.parse(shortResult.data);
+            if (shortData.positions.length > 0) {
+                console.log('\nActive short positions:');
+                console.log(JSON.stringify(shortData.positions, null, 2));
+            } else {
+                console.log('No active short positions found.');
+            }
+        }
+    } catch (error) {
+        console.error('Error in test script:', error instanceof Error ? error.message : error);
+        process.exit(1);
+    }
+}
+
+main();

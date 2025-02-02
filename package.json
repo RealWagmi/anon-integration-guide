@@ -5,8 +5,6 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "vitest",
-    "test:watch": "vitest watch",
     "test:user-balances": "tsx projects/amped/scripts/tests/test-get-user-token-balances.ts",
     "test:remove-liquidity": "tsx projects/amped/scripts/tests/test-remove-liquidity.ts",
     "test:remove-liquidity:weth": "tsx projects/amped/scripts/tests/test-remove-liquidity-weth.ts",
@@ -24,9 +22,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@vitest/coverage-v8": "^3.0.2",
-    "tsx": "^4.19.2",
-    "vitest": "^3.0.4"
+    "tsx": "^4.19.2"
   },
   "dependencies": {
     "@heyanon/sdk": "^1.0.5",

@@ -5,4 +5,4 @@ export * from './addLiquidity.js';
 export * from './removeLiquidity.js';
 export * from './getUserLiquidity.js';
 export * from './getPoolLiquidity.js';
-export * from './getUserTokenBalances.js'; 
+export * from './getUserTokenBalances.js';

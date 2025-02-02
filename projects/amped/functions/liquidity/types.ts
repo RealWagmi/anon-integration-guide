@@ -8,7 +8,7 @@ import { NETWORKS } from '../../constants';
  * @property {string} amount - The amount to process
  */
 export interface BaseLiquidityProps {
-    chainName: typeof NETWORKS[keyof typeof NETWORKS];
+    chainName: (typeof NETWORKS)[keyof typeof NETWORKS];
     account: Address;
     amount: string;
 }
@@ -33,4 +33,4 @@ export interface AddLiquidityProps extends BaseLiquidityProps {
 export interface RemoveLiquidityProps extends BaseLiquidityProps {
     tokenOut: Address;
     minOut: string;
-} 
+}

@@ -1,12 +1,13 @@
+# SDK and build artifacts
 *.log
 .DS_Store
+node_modules
+dist
 
 # Dependencies
-node_modules
 jspm_packages
 
 # Build outputs
-dist
 build
 out
 *.tsbuildinfo
@@ -19,7 +20,6 @@ out
 
 # Logs and debugging
 logs
-*.log
 npm-debug.log*
 lerna-debug.log*
 .pnpm-debug.log*
@@ -41,8 +41,6 @@ lerna-debug.log*
 .vscode
 *.swp
 *.swo
-.DS_Store
-.env.local
 .env.development.local
 .env.test.local
 .env.production.local
@@ -52,7 +50,7 @@ coverage
 .nyc_output
 lib-cov
 
-# Yarn
+# Yarn specific
 projects/amped/.yarn/*
 !projects/amped/.yarn/patches
 !projects/amped/.yarn/plugins
@@ -65,8 +63,11 @@ yarn-debug.log*
 yarn-error.log*
 .yarn-integrity
 
-# Optional npm cache directory
-.npm
+# TypeScript
+*.tsbuildinfo
+.tscache
+tsconfig.tsbuildinfo
 
-# Optional REPL history
-.node_repl_history
+# HeyAnon SDK specific
+.heyanon-cache
+.heyanon-debug.log*

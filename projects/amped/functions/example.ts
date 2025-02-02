@@ -3,7 +3,7 @@ import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainF
 import { NETWORKS } from '../constants.js';
 
 interface Props {
-    chainName: typeof NETWORKS[keyof typeof NETWORKS];
+    chainName: (typeof NETWORKS)[keyof typeof NETWORKS];
     account: Address;
     amount: string;
 }
@@ -14,10 +14,7 @@ interface Props {
  * @param tools - System tools for blockchain interactions
  * @returns Transaction result
  */
-export async function example(
-    { chainName, account, amount }: Props,
-    { notify, getProvider }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function example({ chainName, account, amount }: Props, { notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
     // Validate chain
     if (!Object.values(NETWORKS).includes(chainName)) {
         return toResult(`Network ${chainName} not supported`);

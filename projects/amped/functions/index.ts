@@ -6,11 +6,11 @@ export { addLiquidity } from './liquidity/addLiquidity.js';
 export { removeLiquidity } from './liquidity/removeLiquidity.js';
 export { getUserLiquidity } from './liquidity/getUserLiquidity.js';
 export { getPoolLiquidity } from './liquidity/getPoolLiquidity.js';
+export { getUserTokenBalances } from './liquidity/getUserTokenBalances.js';
 
 // Swap functions
-export { getSwapLiquidity } from './trading/swaps/getLiquidity.js';
+export { getSwapsLiquidity } from './trading/swaps/getSwapsLiquidity.js';
 export { marketSwap } from './trading/swaps/marketSwap.js';
-export { limitSwap } from './trading/swaps/limitSwap.js';
 
 // Leverage trading functions
 export { getPerpsLiquidity } from './trading/leverage/getPerpsLiquidity.js';

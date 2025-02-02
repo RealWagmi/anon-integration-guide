@@ -1,11 +1,5 @@
 import { parseUnits, encodeFunctionData, formatUnits, Abi, Address, getContract } from 'viem';
-import { 
-    FunctionReturn, 
-    FunctionOptions, 
-    toResult,
-    getChainFromName,
-    TransactionParams
-} from '@heyanon/sdk';
+import { FunctionReturn, FunctionOptions, toResult, getChainFromName, TransactionParams } from '@heyanon/sdk';
 import { CONTRACT_ADDRESSES, NETWORKS } from '../../constants.js';
 import { GlpManager } from '../../abis/GlpManager.js';
 import { ERC20 } from '../../abis/ERC20.js';
@@ -36,10 +30,10 @@ interface Props {
  */
 export async function removeLiquidity(
     { chainName, account, tokenOut, amount, slippageTolerance = 0.5, skipSafetyChecks = false }: Props,
-    { notify, getProvider, sendTransactions }: FunctionOptions
+    { notify, getProvider, sendTransactions }: FunctionOptions,
 ): Promise<FunctionReturn> {
     // Check wallet connection
-    if (!account) return toResult("Wallet not connected", true);
+    if (!account) return toResult('Wallet not connected', true);
 
     // Validate chain
     const chainId = getChainFromName(chainName);
@@ -51,13 +45,13 @@ export async function removeLiquidity(
     try {
         const publicClient = getProvider(chainId);
         const amountInWei = parseUnits(amount, 18);
-        
+
         // Get token-specific details first
         const isNativeToken = tokenOut.toLowerCase() === CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN.toLowerCase();
         const outputToken = getContract({
             address: isNativeToken ? CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH : tokenOut,
             abi: ERC20,
-            client: publicClient
+            publicClient,
         });
 
         // Get token decimals
@@ -68,10 +62,13 @@ export async function removeLiquidity(
             await notify('Performing safety checks...');
 
             // First check user's available ALP balance
-            const userLiquidityResult = await getUserLiquidity({ 
-                chainName, 
-                account
-            }, { getProvider, notify, sendTransactions });
+            const userLiquidityResult = await getUserLiquidity(
+                {
+                    chainName,
+                    account,
+                },
+                { getProvider, notify, sendTransactions },
+            );
 
             if (!userLiquidityResult.success) {
                 return userLiquidityResult;
@@ -81,10 +78,7 @@ export async function removeLiquidity(
             const userAvailableAmount = parseUnits(userLiquidity.availableAmount, 18);
 
             if (amountInWei > userAvailableAmount) {
-                return toResult(
-                    `Insufficient available ALP. Requested: ${amount}, Available: ${userLiquidity.availableAmount}`,
-                    true
-                );
+                return toResult(`Insufficient available ALP. Requested: ${amount}, Available: ${userLiquidity.availableAmount}`, true);
             }
 
             // Then check pool liquidity and calculate minOut based on current price
@@ -100,32 +94,36 @@ export async function removeLiquidity(
             // Get token price and available liquidity
             const vault = getContract({
                 address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT,
-                abi: [{
-                    inputs: [{ name: '_token', type: 'address' }],
-                    name: 'getMinPrice',
-                    outputs: [{ type: 'uint256' }],
-                    stateMutability: 'view',
-                    type: 'function'
-                }, {
-                    inputs: [{ name: '_token', type: 'address' }],
-                    name: 'poolAmounts',
-                    outputs: [{ type: 'uint256' }],
-                    stateMutability: 'view',
-                    type: 'function'
-                }, {
-                    inputs: [{ name: '_token', type: 'address' }],
-                    name: 'reservedAmounts',
-                    outputs: [{ type: 'uint256' }],
-                    stateMutability: 'view',
-                    type: 'function'
-                }],
-                client: publicClient
+                abi: [
+                    {
+                        inputs: [{ name: '_token', type: 'address' }],
+                        name: 'getMinPrice',
+                        outputs: [{ type: 'uint256' }],
+                        stateMutability: 'view',
+                        type: 'function',
+                    },
+                    {
+                        inputs: [{ name: '_token', type: 'address' }],
+                        name: 'poolAmounts',
+                        outputs: [{ type: 'uint256' }],
+                        stateMutability: 'view',
+                        type: 'function',
+                    },
+                    {
+                        inputs: [{ name: '_token', type: 'address' }],
+                        name: 'reservedAmounts',
+                        outputs: [{ type: 'uint256' }],
+                        stateMutability: 'view',
+                        type: 'function',
+                    },
+                ],
+                publicClient,
             });
 
             const [tokenPrice, poolAmount, reservedAmount] = await Promise.all([
                 vault.read.getMinPrice([tokenOut]),
                 vault.read.poolAmounts([tokenOut]),
-                vault.read.reservedAmounts([tokenOut])
+                vault.read.reservedAmounts([tokenOut]),
             ]);
 
             const tokenPriceFormatted = Number(formatUnits(tokenPrice, 30));
@@ -139,21 +137,18 @@ export async function removeLiquidity(
             // Check if pool has enough available liquidity
             if (minOutAmount > tokenAvailableFormatted) {
                 const symbol = isNativeToken ? 'S' : await outputToken.read.symbol();
-                return toResult(
-                    `Insufficient pool liquidity for ${symbol}. ` +
-                    `Required: ${minOutAmount.toFixed(decimals)}, Available: ${tokenAvailableFormatted}`,
-                    true
-                );
+                return toResult(`Insufficient pool liquidity for ${symbol}. ` + `Required: ${minOutAmount.toFixed(decimals)}, Available: ${tokenAvailableFormatted}`, true);
             }
 
             // Additional safety check for extreme price impact
             const priceImpact = (minOutAmount / tokenAvailableFormatted) * 100;
-            if (priceImpact > 10) { // If removing more than 10% of available liquidity
+            if (priceImpact > 10) {
+                // If removing more than 10% of available liquidity
                 const symbol = isNativeToken ? 'S' : await outputToken.read.symbol();
                 return toResult(
                     `Removal amount too large for ${symbol} - would cause significant price impact (${priceImpact.toFixed(2)}%). ` +
-                    `Consider reducing the amount or splitting into multiple transactions.`,
-                    true
+                        `Consider reducing the amount or splitting into multiple transactions.`,
+                    true,
                 );
             }
         } else {
@@ -168,44 +163,46 @@ export async function removeLiquidity(
         const rewardRouter = getContract({
             address: CONTRACT_ADDRESSES[NETWORKS.SONIC].REWARD_ROUTER,
             abi: RewardRouter,
-            client: publicClient
+            publicClient,
         });
 
         const tx: TransactionParams = {
             target: CONTRACT_ADDRESSES[NETWORKS.SONIC].REWARD_ROUTER,
             data: isNativeToken
                 ? encodeFunctionData({
-                    abi: RewardRouter,
-                    functionName: 'unstakeAndRedeemGlpETH',
-                    args: [amountInWei, minOutInTokenWei, account]
-                })
+                      abi: RewardRouter,
+                      functionName: 'unstakeAndRedeemGlpETH',
+                      args: [amountInWei, minOutInTokenWei, account],
+                  })
                 : encodeFunctionData({
-                    abi: RewardRouter,
-                    functionName: 'unstakeAndRedeemGlp',
-                    args: [tokenOut, amountInWei, minOutInTokenWei, account]
-                })
+                      abi: RewardRouter,
+                      functionName: 'unstakeAndRedeemGlp',
+                      args: [tokenOut, amountInWei, minOutInTokenWei, account],
+                  }),
         };
 
         // Send transaction
-        const result = await sendTransactions({ 
+        const result = await sendTransactions({
             chainId,
             account,
-            transactions: [tx]
+            transactions: [tx],
         });
-        
-        return toResult(JSON.stringify({
-            success: true,
-            hash: result.data[0].hash,
-            details: {
-                amount,
-                tokenOut,
-                minOut: minOutInTokenWei.toString()
-            }
-        }));
+
+        return toResult(
+            JSON.stringify({
+                success: true,
+                hash: result.data[0].hash,
+                details: {
+                    amount,
+                    tokenOut,
+                    minOut: minOutInTokenWei.toString(),
+                },
+            }),
+        );
     } catch (error) {
         if (error instanceof Error) {
             return toResult(`Failed to remove liquidity: ${error.message}`, true);
         }
-        return toResult("Failed to remove liquidity: Unknown error", true);
+        return toResult('Failed to remove liquidity: Unknown error', true);
     }
-} 
+}

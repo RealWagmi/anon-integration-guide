@@ -1,66 +1,93 @@
-import { getUserLiquidity } from '../../functions/liquidity/getUserLiquidity.js';
-import { PublicClient, createPublicClient, http, Chain } from 'viem';
+import { createPublicClient, createWalletClient, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { FunctionOptions } from '@heyanon/sdk';
+import { NETWORKS, RPC_URLS, CONTRACT_ADDRESSES } from '../../constants.js';
+import { getUserLiquidity } from '../../functions/liquidity/getUserLiquidity.js';
+import { TransactionReturn } from '@heyanon/sdk';
 import 'dotenv/config';
 
-// Define Sonic chain
-export const sonic = {
+// Load private key from environment
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
+if (!PRIVATE_KEY) {
+    throw new Error('PRIVATE_KEY not found in .env file');
+}
+
+// Ensure private key is properly formatted
+const formattedPrivateKey = PRIVATE_KEY.startsWith('0x') ? PRIVATE_KEY : `0x${PRIVATE_KEY}`;
+const account = privateKeyToAccount(formattedPrivateKey as `0x${string}`);
+
+// Define chain configuration
+const sonicChain = {
     id: 146,
     name: 'Sonic',
+    network: 'sonic',
     nativeCurrency: {
-        decimals: 18,
         name: 'Sonic',
-        symbol: 'SONIC',
+        symbol: 'S',
+        decimals: 18,
     },
     rpcUrls: {
-        default: { http: ['https://rpc.soniclabs.com'] },
-        public: { http: ['https://rpc.soniclabs.com'] }
+        default: { http: [RPC_URLS[NETWORKS.SONIC]] },
+        public: { http: [RPC_URLS[NETWORKS.SONIC]] },
     },
-    blockExplorers: {
-        default: { name: 'SonicScan', url: 'https://explorer.sonic.oasys.games' }
-    }
-} as const satisfies Chain;
+};
 
-async function test() {
-    // Check for private key in environment
-    if (!process.env.PRIVATE_KEY) {
-        throw new Error('PRIVATE_KEY environment variable is required');
-    }
+async function main() {
+    try {
+        // Create clients
+        const publicClient = createPublicClient({
+            chain: sonicChain,
+            transport: http(),
+        });
 
-    // Create account from private key
-    const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`);
-    console.log('Using wallet address:', account.address);
+        const walletClient = createWalletClient({
+            account,
+            chain: sonicChain,
+            transport: http(),
+        });
 
-    const options: FunctionOptions = {
-        notify: async (msg: string) => console.log('Notification:', msg),
-        getProvider: (chainId: number): PublicClient => {
-            if (chainId !== 146) throw new Error('Invalid chain ID');
-            return createPublicClient({
-                chain: sonic,
-                transport: http('https://rpc.soniclabs.com')
-            });
-        },
-        sendTransactions: async () => ({ data: [], isMultisig: false })
-    };
+        console.log('\nTesting get user liquidity...');
+        console.log('Wallet address:', account.address);
 
-    const result = await getUserLiquidity(
-        {
-            chainName: 'sonic',
-            account: account.address
-        },
-        options
-    );
+        const result = await getUserLiquidity(
+            {
+                chainName: NETWORKS.SONIC,
+                account: account.address,
+            },
+            {
+                getProvider: () => publicClient,
+                notify: async (msg: string) => console.log(msg),
+                sendTransactions: async ({ transactions }): Promise<TransactionReturn> => {
+                    throw new Error('This function should not require transactions');
+                },
+            },
+        );
 
-    if (!result.success) {
-        console.log('Error:', result.data);
-    } else {
-        try {
-            console.log('Result:', JSON.parse(result.data));
-        } catch (e) {
-            console.log('Raw result:', result.data);
+        if (result.success) {
+            const data = JSON.parse(result.data);
+            console.log('\nUser Liquidity Information:');
+            console.log('-------------------------');
+            console.log(`Total fsALP Balance: ${data.balance} fsALP`);
+            console.log(`Total USD Value: $${data.usdValue}`);
+            console.log(`Current ALP Price: $${data.alpPrice}`);
+            console.log('\nVesting Details:');
+            console.log(`Reserved Amount: ${data.reservedAmount} fsALP ($${data.reservedUsdValue})`);
+            console.log(`Available Amount: ${data.availableAmount} fsALP ($${data.availableUsdValue})`);
+            if (data.claimableRewards !== '0') {
+                console.log(`\nClaimable Rewards: ${data.claimableRewards}`);
+            }
+        } else {
+            console.error('\nFailed to get user liquidity:', result.data);
+        }
+    } catch (error) {
+        console.error('\nUnexpected error:', error);
+        if (error instanceof Error) {
+            console.error('Error message:', error.message);
+            console.error('Error stack:', error.stack);
         }
     }
 }
 
-test().catch(console.error); 
+main().catch((error) => {
+    console.error('\nFatal error:', error);
+    process.exit(1);
+});

@@ -1,67 +1,77 @@
-import { createPublicClient, http, Address } from 'viem';
+import { createPublicClient, createWalletClient, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { CONTRACT_ADDRESSES, NETWORKS } from '../../constants.js';
+import { NETWORKS, RPC_URLS, CONTRACT_ADDRESSES } from '../../constants.js';
 import { getUserTokenBalances } from '../../functions/liquidity/getUserTokenBalances.js';
+import { TransactionReturn } from '@heyanon/sdk';
 import 'dotenv/config';
 
-// Define Sonic chain
-export const sonic = {
+// Load private key from environment
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
+if (!PRIVATE_KEY) {
+    throw new Error('PRIVATE_KEY not found in .env file');
+}
+
+// Ensure private key is properly formatted
+const formattedPrivateKey = PRIVATE_KEY.startsWith('0x') ? PRIVATE_KEY : `0x${PRIVATE_KEY}`;
+const account = privateKeyToAccount(formattedPrivateKey as `0x${string}`);
+
+// Define chain configuration
+const sonicChain = {
     id: 146,
     name: 'Sonic',
+    network: 'sonic',
     nativeCurrency: {
-        decimals: 18,
         name: 'Sonic',
-        symbol: 'SONIC',
+        symbol: 'S',
+        decimals: 18,
     },
     rpcUrls: {
-        default: { http: ['https://rpc.soniclabs.com'] },
-        public: { http: ['https://rpc.soniclabs.com'] }
+        default: { http: [RPC_URLS[NETWORKS.SONIC]] },
+        public: { http: [RPC_URLS[NETWORKS.SONIC]] },
     },
-    blockExplorers: {
-        default: { name: 'SonicScan', url: 'https://explorer.sonic.oasys.games' }
-    }
-} as const;
+};
 
-async function test() {
-    // Check for private key
-    const privateKey = process.env.PRIVATE_KEY;
-    if (!privateKey) {
-        throw new Error('PRIVATE_KEY environment variable is required');
-    }
-
-    // Create account and client
-    const account = privateKeyToAccount(privateKey as `0x${string}`);
-    console.log('Using wallet address:', account.address);
-
-    const transport = http('https://rpc.soniclabs.com');
-    const publicClient = createPublicClient({
-        chain: sonic,
-        transport
-    });
-
+async function main() {
     try {
+        // Create clients
+        const publicClient = createPublicClient({
+            chain: sonicChain,
+            transport: http(),
+        });
+
+        const walletClient = createWalletClient({
+            account,
+            chain: sonicChain,
+            transport: http(),
+        });
+
+        console.log('\nTesting get user token balances...');
+        console.log('Wallet address:', account.address);
+
         const result = await getUserTokenBalances(
             {
-                chainName: 'sonic',
-                account: account.address as Address
+                chainName: NETWORKS.SONIC,
+                account: account.address,
             },
             {
-                getProvider: (_chainId: number) => publicClient,
+                getProvider: () => publicClient,
                 notify: async (msg: string) => console.log(msg),
-                sendTransactions: async () => { throw new Error('Should not be called'); }
-            }
+                sendTransactions: async ({ transactions }): Promise<TransactionReturn> => {
+                    throw new Error('This function should not require transactions');
+                },
+            },
         );
 
         if (result.success) {
             const data = JSON.parse(result.data);
             console.log('\nToken Balances:');
             console.log('---------------');
-            
+
             // Display each token's balance and USD value
-            data.tokens.forEach((token: any) => {
+            data.tokens.forEach((token: { symbol: string; decimals: number; balance: string; price: string; balanceUsd: string }) => {
                 const balance = Number(token.balance) / 10 ** token.decimals;
-                const price = Number(token.price) / 1e30;  // Price is in 1e30
-                const usdValue = Number(token.balanceUsd) / 1e18;  // USD value is in 1e18
+                const price = Number(token.price) / 1e30; // Price is in 1e30
+                const usdValue = Number(token.balanceUsd);
 
                 console.log(`\n${token.symbol}:`);
                 console.log(`Balance: ${balance.toFixed(token.decimals === 6 ? 6 : 18)} ${token.symbol}`);
@@ -70,14 +80,21 @@ async function test() {
             });
 
             // Display total USD value
-            const totalUsd = Number(data.totalBalanceUsd) / 1e18;
+            const totalUsd = Number(data.totalBalanceUsd);
             console.log('\nTotal USD Value:', `$${totalUsd.toFixed(2)}`);
         } else {
-            console.error('Failed to get token balances:', result.data);
+            console.error('\nFailed to get token balances:', result.data);
         }
     } catch (error) {
-        console.error('Error getting token balances:', error);
+        console.error('\nUnexpected error:', error);
+        if (error instanceof Error) {
+            console.error('Error message:', error.message);
+            console.error('Error stack:', error.stack);
+        }
     }
 }
 
-test().catch(console.error); 
+main().catch((error) => {
+    console.error('\nFatal error:', error);
+    process.exit(1);
+});

@@ -1,9 +1,5 @@
-import { formatUnits, Address, getContract } from 'viem';
-import { 
-    FunctionReturn, 
-    FunctionOptions, 
-    toResult
-} from '@heyanon/sdk';
+import { formatUnits, Address, getContract, PublicClient, Chain, Transport } from 'viem';
+import { FunctionReturn, FunctionOptions, toResult, getChainFromName } from '@heyanon/sdk';
 import { CONTRACT_ADDRESSES, NETWORKS } from '../../constants.js';
 import { GlpManager } from '../../abis/GlpManager.js';
 import { ERC20 } from '../../abis/ERC20.js';
@@ -15,7 +11,7 @@ import { Vester } from '../../abis/Vester.js';
  * @property {string} account - The account address to check
  */
 export interface UserLiquidityProps {
-    chainName: typeof NETWORKS[keyof typeof NETWORKS];
+    chainName: (typeof NETWORKS)[keyof typeof NETWORKS];
     account: Address;
 }
 
@@ -47,13 +43,14 @@ export interface UserLiquidityInfo {
  * @param {FunctionOptions} options - The function options
  * @returns {Promise<FunctionReturn>} The user's ALP information including balances and values
  */
-export async function getUserLiquidity(
-    { chainName, account }: UserLiquidityProps,
-    { notify, getProvider }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function getUserLiquidity({ chainName, account }: UserLiquidityProps, { notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
     // Validate chain
-    if (!Object.values(NETWORKS).includes(chainName)) {
+    const chainId = getChainFromName(chainName);
+    if (!chainId) {
         return toResult(`Network ${chainName} not supported`, true);
+    }
+    if (chainName !== NETWORKS.SONIC) {
+        return toResult('This function is only supported on Sonic chain', true);
     }
 
     // Validate account
@@ -67,19 +64,19 @@ export async function getUserLiquidity(
 
     try {
         await notify('Initializing contracts...');
-        const provider = getProvider(146); // Sonic chain ID
+        const provider = getProvider(chainId) as unknown as PublicClient<Transport, Chain>;
 
         // Initialize contracts
         const glpManager = getContract({
             address: CONTRACT_ADDRESSES[NETWORKS.SONIC].GLP_MANAGER as Address,
             abi: GlpManager,
-            client: provider
+            publicClient: provider,
         });
 
         const fsAlpToken = getContract({
             address: CONTRACT_ADDRESSES[NETWORKS.SONIC].FS_ALP as Address,
             abi: ERC20,
-            client: provider
+            publicClient: provider,
         });
 
         if (!CONTRACT_ADDRESSES[NETWORKS.SONIC].ALP_VESTER) {
@@ -89,27 +86,27 @@ export async function getUserLiquidity(
         const alpVester = getContract({
             address: CONTRACT_ADDRESSES[NETWORKS.SONIC].ALP_VESTER as Address,
             abi: Vester,
-            client: provider
+            publicClient: provider,
         });
 
         await notify('Fetching user balances and positions...');
-        
+
         // Get fsALP balance
-        const balance = await fsAlpToken.read.balanceOf([account]) as bigint;
-        
+        const balance = await fsAlpToken.read.balanceOf([account]);
+
         // Get ALP price
-        const alpPrice = await glpManager.read.getPrice([false]) as bigint;
-        
+        const alpPrice = await glpManager.read.getPrice([false]);
+
         // Get reserved amount in vesting
-        const reservedAmount = await alpVester.read.pairAmounts([account]) as bigint;
+        const reservedAmount = await alpVester.read.pairAmounts([account]);
 
         // Calculate available amount (total balance - reserved)
         const availableAmount = balance - reservedAmount;
-        
+
         // Calculate USD values (ALP price is in 1e30)
-        const usdValue = (balance * alpPrice) / (10n ** 30n);
-        const availableUsdValue = (availableAmount * alpPrice) / (10n ** 30n);
-        const reservedUsdValue = (reservedAmount * alpPrice) / (10n ** 30n);
+        const usdValue = (balance * alpPrice) / 10n ** 30n;
+        const availableUsdValue = (availableAmount * alpPrice) / 10n ** 30n;
+        const reservedUsdValue = (reservedAmount * alpPrice) / 10n ** 30n;
 
         await notify('Preparing response...');
 
@@ -121,7 +118,7 @@ export async function getUserLiquidity(
             reservedUsdValue: formatUnits(reservedUsdValue, 18),
             availableAmount: formatUnits(availableAmount, 18),
             availableUsdValue: formatUnits(availableUsdValue, 18),
-            claimableRewards: "0" // To be implemented
+            claimableRewards: '0', // To be implemented
         };
 
         return toResult(JSON.stringify(result));
@@ -131,4 +128,4 @@ export async function getUserLiquidity(
         }
         return toResult('Failed to fetch user liquidity: Unknown error', true);
     }
-} 
+}

@@ -1,49 +1,49 @@
 import { AdapterExport } from '@heyanon/sdk';
 import {
   // Liquidity functions
+  addLiquidity,
+  claimRewards,
   getALPAPR,
   getEarnings,
-  claimRewards,
-  addLiquidity,
-  removeLiquidity,
-  getUserLiquidity,
   getPoolLiquidity,
+  getUserLiquidity,
+  getUserTokenBalances,
+  removeLiquidity,
   
   // Swap functions
-  getSwapLiquidity,
+  getSwapsLiquidity,
   marketSwap,
-  limitSwap,
   
   // Leverage trading functions
-  getPerpsLiquidity,
-  openPosition,
-  getPosition,
+  closePosition,
   getAllOpenPositions,
-  closePosition
+  getPerpsLiquidity,
+  getPosition,
+  openPosition
 } from './functions/index.js';
 
 export const adapter: AdapterExport = {
   functions: {
     // Liquidity functions
+    addLiquidity,
+    claimRewards,
     getALPAPR,
     getEarnings,
-    claimRewards,
-    addLiquidity,
-    removeLiquidity,
-    getUserLiquidity,
     getPoolLiquidity,
+    getUserLiquidity,
+    getUserTokenBalances,
+    removeLiquidity,
     
     // Swap functions
-    getSwapLiquidity,
+    getSwapsLiquidity,
     marketSwap,
-    limitSwap,
     
     // Leverage trading functions
-    getPerpsLiquidity,
-    openPosition,
-    getPosition,
+    closePosition,
     getAllOpenPositions,
-    closePosition
+    getPerpsLiquidity,
+    getPosition,
+    openPosition
   },
   tools: [],
   description: 'Integration with Amped Finance - A decentralized perpetual exchange and liquidity protocol'

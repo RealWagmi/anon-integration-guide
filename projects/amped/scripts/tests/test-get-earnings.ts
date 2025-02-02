@@ -1,95 +1,88 @@
-import { getEarnings } from '../../functions/liquidity/getEarnings.js';
-import { getUserLiquidity } from '../../functions/liquidity/getUserLiquidity.js';
-import { PublicClient, createPublicClient, http, Chain, formatUnits } from 'viem';
+import { createPublicClient, createWalletClient, http, formatUnits } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { FunctionOptions } from '@heyanon/sdk';
-import { CONTRACT_ADDRESSES, NETWORKS } from '../../constants.js';
+import { NETWORKS, RPC_URLS, CONTRACT_ADDRESSES } from '../../constants.js';
+import { getEarnings } from '../../functions/liquidity/getEarnings.js';
+import { TransactionReturn } from '@heyanon/sdk';
 import 'dotenv/config';
 
-// Define Sonic chain
-export const sonic = {
+// Load private key from environment
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
+if (!PRIVATE_KEY) {
+    throw new Error('PRIVATE_KEY not found in .env file');
+}
+
+// Ensure private key is properly formatted
+const formattedPrivateKey = PRIVATE_KEY.startsWith('0x') ? PRIVATE_KEY : `0x${PRIVATE_KEY}`;
+const account = privateKeyToAccount(formattedPrivateKey as `0x${string}`);
+
+// Define chain configuration
+const sonicChain = {
     id: 146,
     name: 'Sonic',
+    network: 'sonic',
     nativeCurrency: {
-        decimals: 18,
         name: 'Sonic',
-        symbol: 'SONIC',
+        symbol: 'S',
+        decimals: 18,
     },
     rpcUrls: {
-        default: { http: ['https://rpc.soniclabs.com'] },
-        public: { http: ['https://rpc.soniclabs.com'] }
+        default: { http: [RPC_URLS[NETWORKS.SONIC]] },
+        public: { http: [RPC_URLS[NETWORKS.SONIC]] },
     },
-    blockExplorers: {
-        default: { name: 'SonicScan', url: 'https://explorer.sonic.oasys.games' }
-    }
-} as const satisfies Chain;
+};
 
-async function test() {
-    // Check for private key in environment
-    if (!process.env.PRIVATE_KEY) {
-        throw new Error('PRIVATE_KEY environment variable is required');
-    }
+async function main() {
+    try {
+        // Create clients
+        const publicClient = createPublicClient({
+            chain: sonicChain,
+            transport: http(),
+        });
 
-    // Create account from private key
-    const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`);
-    console.log('Using wallet address:', account.address);
+        const walletClient = createWalletClient({
+            account,
+            chain: sonicChain,
+            transport: http(),
+        });
 
-    const provider = createPublicClient({
-        chain: sonic,
-        transport: http('https://rpc.soniclabs.com')
-    });
+        console.log('\nTesting get earnings...');
+        console.log('Wallet address:', account.address);
 
-    const options: FunctionOptions = {
-        notify: async (msg: string) => console.log('Notification:', msg),
-        getProvider: (chainId: number): PublicClient => {
-            if (chainId !== 146) throw new Error('Invalid chain ID');
-            return provider;
-        },
-        sendTransactions: async () => ({ data: [], isMultisig: false })
-    };
+        const result = await getEarnings(
+            {
+                chainName: NETWORKS.SONIC,
+                account: account.address,
+            },
+            {
+                getProvider: () => publicClient,
+                notify: async (msg: string) => console.log(msg),
+                sendTransactions: async ({ transactions }): Promise<TransactionReturn> => {
+                    throw new Error('This function should not require transactions');
+                },
+            },
+        );
 
-    console.log('\nChecking user liquidity status...');
-    const liquidityResult = await getUserLiquidity(
-        {
-            chainName: 'sonic',
-            account: account.address
-        },
-        options
-    );
-
-    if (!liquidityResult.success) {
-        console.log('Error getting liquidity:', liquidityResult.data);
-    } else {
-        const liquidityInfo = JSON.parse(liquidityResult.data);
-        console.log('\nLiquidity Information:');
-        console.log('----------------------');
-        console.log(`Total fsALP Balance: ${liquidityInfo.balance} fsALP`);
-        console.log(`Total USD Value: $${liquidityInfo.usdValue}`);
-        console.log(`ALP Price: $${liquidityInfo.alpPrice}`);
-        console.log(`\nAvailable ALP: ${liquidityInfo.availableAmount} ALP ($${liquidityInfo.availableUsdValue})`);
-        console.log(`Reserved ALP: ${liquidityInfo.reservedAmount} ALP ($${liquidityInfo.reservedUsdValue})`);
-    }
-
-    console.log('\nChecking earnings status...');
-    const earningsResult = await getEarnings(
-        {
-            chainName: 'sonic',
-            account: account.address
-        },
-        options
-    );
-
-    if (!earningsResult.success) {
-        console.log('Error getting earnings:', earningsResult.data);
-    } else {
-        const earningsInfo = JSON.parse(earningsResult.data);
-        console.log('\nEarnings Information:');
-        console.log('--------------------');
-        console.log(`Staked Amount: ${formatUnits(BigInt(earningsInfo.stakedAmount), 18)} tokens`);
-        console.log(`Claimable Rewards: ${formatUnits(BigInt(earningsInfo.claimableRewards), 18)} wS`);
-        console.log(`Reward Token Price: $${formatUnits(BigInt(earningsInfo.rewardTokenPriceUsd), 30)}`);
-        console.log(`Total Reward Value: $${formatUnits(BigInt(earningsInfo.rewardValueUsd), 18)}`);
+        if (result.success) {
+            const data = JSON.parse(result.data);
+            console.log('\nEarnings Information:');
+            console.log('--------------------');
+            console.log(`Staked Amount: ${formatUnits(BigInt(data.stakedAmount), 18)} tokens`);
+            console.log(`Claimable Rewards: ${formatUnits(BigInt(data.claimableRewards), 18)} wS`);
+            console.log(`Reward Token Price: $${formatUnits(BigInt(data.rewardTokenPriceUsd), 30)}`);
+            console.log(`Total Reward Value: $${formatUnits(BigInt(data.rewardValueUsd), 18)}`);
+        } else {
+            console.error('\nFailed to get earnings:', result.data);
+        }
+    } catch (error) {
+        console.error('\nUnexpected error:', error);
+        if (error instanceof Error) {
+            console.error('Error message:', error.message);
+            console.error('Error stack:', error.stack);
+        }
     }
 }
 
-test().catch(console.error); 
+main().catch((error) => {
+    console.error('\nFatal error:', error);
+    process.exit(1);
+});

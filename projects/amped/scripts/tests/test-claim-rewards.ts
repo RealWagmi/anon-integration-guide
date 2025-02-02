@@ -19,14 +19,16 @@ export const sonic = {
     },
     rpcUrls: {
         default: { http: ['https://rpc.soniclabs.com'] },
-        public: { http: ['https://rpc.soniclabs.com'] }
+        public: { http: ['https://rpc.soniclabs.com'] },
     },
     blockExplorers: {
-        default: { name: 'SonicScan', url: 'https://explorer.sonic.oasys.games' }
-    }
+        default: { name: 'SonicScan', url: 'https://explorer.sonic.oasys.games' },
+    },
 } as const satisfies Chain;
 
 async function test() {
+    console.log('\nTesting claim rewards...');
+
     // Check for private key in environment
     if (!process.env.PRIVATE_KEY) {
         throw new Error('PRIVATE_KEY environment variable is required');
@@ -34,20 +36,22 @@ async function test() {
 
     // Create account from private key
     const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`);
-    console.log('Using wallet address:', account.address);
+    console.log('\nWallet Information:');
+    console.log('------------------');
+    console.log('Address:', account.address);
 
     const transport = http('https://rpc.soniclabs.com');
-    
+
     const provider = createPublicClient({
         chain: sonic,
-        transport
+        transport,
     });
 
     // Create wallet client for sending transactions
     const walletClient = createWalletClient({
         chain: sonic,
         transport,
-        account
+        account,
     });
 
     const options: FunctionOptions = {
@@ -71,80 +75,107 @@ async function test() {
             console.log('To:', tx.target);
             console.log('Value:', (tx.value ?? 0n).toString());
             console.log('Data:', tx.data);
-            
+
             try {
                 const hash = await walletClient.sendTransaction({
                     to: tx.target,
                     value: tx.value ?? 0n,
-                    data: tx.data
+                    data: tx.data,
                 });
 
                 return {
-                    data: [{
-                        hash,
-                        message: 'Transaction submitted successfully'
-                    }],
-                    isMultisig: false
+                    data: [
+                        {
+                            hash,
+                            message: 'Transaction submitted successfully',
+                        },
+                    ],
+                    isMultisig: false,
                 };
             } catch (error) {
-                console.error('Transaction failed:', error);
+                console.error('\nTransaction Error:');
+                console.error('----------------');
+                if (error instanceof Error) {
+                    console.error('Message:', error.message);
+                    console.error('Stack:', error.stack);
+                } else {
+                    console.error('Unknown error:', error);
+                }
                 throw error;
             }
-        }
+        },
     };
 
-    // First check current earnings
-    console.log('\nChecking current earnings...');
-    const earningsResult = await getEarnings(
-        {
-            chainName: 'sonic',
-            account: account.address
-        },
-        options
-    );
-
-    if (!earningsResult.success) {
-        console.log('Error getting earnings:', earningsResult.data);
-        return;
-    }
-
-    const earningsInfo = JSON.parse(earningsResult.data);
-    console.log('\nCurrent Earnings:');
-    console.log('----------------');
-    console.log(`Claimable Rewards: ${formatUnits(BigInt(earningsInfo.claimableRewards), 18)} wS`);
-    console.log(`Reward Value: $${formatUnits(BigInt(earningsInfo.rewardValueUsd), 18)}`);
-
-    // If there are rewards to claim, claim them
-    if (BigInt(earningsInfo.claimableRewards) > 0n) {
-        console.log('\nAttempting to claim rewards...');
-        const claimResult = await claimRewards(
+    try {
+        // First check current earnings
+        console.log('\nChecking current earnings...');
+        const earningsResult = await getEarnings(
             {
                 chainName: 'sonic',
-                account: account.address
+                account: account.address,
             },
-            options
+            options,
         );
 
-        if (!claimResult.success) {
-            console.log('Error claiming rewards:', claimResult.data);
-        } else {
-            const claimInfo = JSON.parse(claimResult.data);
-            console.log('\nClaim Result:');
-            console.log('-------------');
-            console.log('Status:', claimInfo.success ? 'Success' : 'Failed');
-            console.log('Amount Claimed:', formatUnits(BigInt(claimInfo.claimableAmount), 18), 'wS');
-            console.log('Transaction Hash:', claimInfo.txHash);
-            console.log('\nMessage:', claimInfo.message);
-
-            // Wait for transaction confirmation
-            console.log('\nWaiting for transaction confirmation...');
-            const receipt = await provider.waitForTransactionReceipt({ hash: claimInfo.txHash });
-            console.log('Transaction confirmed in block:', receipt.blockNumber);
-            console.log('Gas used:', receipt.gasUsed.toString());
+        if (!earningsResult.success) {
+            console.error('\nError getting earnings:', earningsResult.data);
+            return;
         }
-    } else {
-        console.log('\nNo rewards available to claim.');
+
+        const earningsInfo = JSON.parse(earningsResult.data);
+        console.log('\nCurrent Earnings:');
+        console.log('----------------');
+        console.log(`Claimable Rewards: ${Number(formatUnits(BigInt(earningsInfo.claimableRewards), 18)).toLocaleString()} wS`);
+        console.log(`Reward Value: $${Number(formatUnits(BigInt(earningsInfo.rewardValueUsd), 18)).toLocaleString()}`);
+
+        // If there are rewards to claim, claim them
+        if (BigInt(earningsInfo.claimableRewards) > 0n) {
+            console.log('\nAttempting to claim rewards...');
+            const claimResult = await claimRewards(
+                {
+                    chainName: 'sonic',
+                    account: account.address,
+                },
+                options,
+            );
+
+            if (!claimResult.success) {
+                console.error('\nError claiming rewards:', claimResult.data);
+            } else {
+                const claimInfo = JSON.parse(claimResult.data);
+                console.log('\nClaim Result:');
+                console.log('-------------');
+                console.log('Status:', claimInfo.success ? 'Success' : 'Failed');
+                console.log('Amount Claimed:', Number(formatUnits(BigInt(claimInfo.claimableAmount), 18)).toLocaleString(), 'wS');
+                console.log('Transaction Hash:', claimInfo.txHash);
+                console.log('\nMessage:', claimInfo.message);
+
+                // Wait for transaction confirmation
+                console.log('\nWaiting for transaction confirmation...');
+                const receipt = await provider.waitForTransactionReceipt({ hash: claimInfo.txHash });
+                console.log('\nTransaction Status:');
+                console.log('------------------');
+                console.log('Block Number:', receipt.blockNumber);
+                console.log('Gas Used:', receipt.gasUsed.toString());
+                console.log('Status:', receipt.status === 'success' ? '✅ Success' : '❌ Failed');
+            }
+        } else {
+            console.log('\nNo rewards available to claim.');
+        }
+    } catch (error) {
+        console.error('\nUnexpected error:');
+        console.error('----------------');
+        if (error instanceof Error) {
+            console.error('Message:', error.message);
+            console.error('Stack:', error.stack);
+        } else {
+            console.error('Unknown error:', error);
+        }
+        process.exit(1);
     }
 }
 
-test().catch(console.error); 
+test().catch((error) => {
+    console.error('\nFatal error:', error);
+    process.exit(1);
+});
