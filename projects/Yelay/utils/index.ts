@@ -11,6 +11,11 @@ export function getChainConfig(chainId: ChainId) {
     return config[chainId];
 }
 
+export function getStaticProvider(chainId: ChainId) {
+    const chainConfig = getChainConfig(chainId);
+    return new StaticJsonRpcProvider(chainConfig.providerUrl);
+}
+
 export function getSdk(chainId: ChainId) {
     const chainConfig = getChainConfig(chainId);
     const rpc = new StaticJsonRpcProvider(chainConfig.providerUrl);
@@ -32,4 +37,9 @@ export function wrapWithResult<T extends (...args: any[]) => any>(
             return { success: false, error };
         }
     };
+}
+
+export function validateAddress(s: string): `0x${string}` {
+    if (!s.startsWith('0x')) throw new Error('Invalid address');
+    return s as `0x${string}`;
 }
