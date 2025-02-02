@@ -1,6 +1,6 @@
 import {ChainId, getChainFromName} from '@heyanon/sdk';
 import {Address, isAddress,} from 'viem';
-import {CORE_POOL_MARKET_TOKENS, supportedChains, supportedPools, POOLS} from "./constants";
+import {CORE_POOL_MARKET_TOKENS, supportedChains, supportedPools, POOLS, BLOCKS_PER_YEAR} from "./constants";
 
 type Result<Data> =
     | {
@@ -36,6 +36,7 @@ export const validateAndGetTokenDetails = <Props extends { chainName: string; po
     tokenAddress: Address,
     tokenDecimals: number,
     isChainBased?: boolean
+    blocksPerYear: number
 }> => {
     pool = validateOrDefaultPool(pool.toUpperCase(), supportedPools);
     const poolDetails = POOLS[pool];
@@ -49,6 +50,7 @@ export const validateAndGetTokenDetails = <Props extends { chainName: string; po
     const tokenAddress = tokenDetails.address;
     const tokenDecimals = tokenDetails.decimals;
     const isChainBased = tokenDetails.chainBased;
+    const blocksPerYear = BLOCKS_PER_YEAR[chainId];
     return {
         success: true,
         data: {
@@ -57,6 +59,7 @@ export const validateAndGetTokenDetails = <Props extends { chainName: string; po
             tokenAddress,
             tokenDecimals,
             isChainBased,
+            blocksPerYear,
         },
     };
 }

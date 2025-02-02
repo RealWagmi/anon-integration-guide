@@ -1,6 +1,5 @@
 import {
-    Address,
-    formatUnits
+    formatUnits, Address
 } from "viem";
 import {
     FunctionReturn,
@@ -13,6 +12,7 @@ import {
 } from "../constants";
 import {vBNBAbi} from "../abis/vBNBAbi";
 import {validateAndGetTokenDetails, validateWallet} from "../utils";
+import {vComptrollerAbi} from "../abis/vComptrollerAbi";
 
 interface Props {
     chainName: string;
@@ -22,12 +22,12 @@ interface Props {
 }
 
 /**
- * Retrieves the balance of token from the Venus protocol.
+ * Retrieves the Liquidity of token from the Venus protocol.
  *
- * @returns {Promise<FunctionReturn>} - The balance of Token.
+ * @returns {Promise<FunctionReturn>}.
  */
-export async function balanceOf({chainName, account, token, pool}: Props,
-                                {notify, getProvider}: FunctionOptions): Promise<FunctionReturn> {
+export async function accountLiquidity({chainName, account, token, pool}: Props,
+                                       {notify, getProvider}: FunctionOptions): Promise<FunctionReturn> {
     const wallet = validateWallet({account})
     if (!wallet.success) {
         return toResult(wallet.errorMessage, true);
@@ -43,18 +43,21 @@ export async function balanceOf({chainName, account, token, pool}: Props,
         return toResult(`Protocol is not supported on ${chainName}`, true);
     try {
         const provider = getProvider(chainId);
-        await notify('Checking Balance of token...');
-        const balanceOf = await provider.readContract({
-            abi: vBNBAbi,
-            address: tokenDetails.data.tokenAddress,
-            functionName: 'balanceOf',
+        await notify('Getting Account Liquidity...');
+        const [shortfall, liquidity] = await provider.readContract({
+            abi: vComptrollerAbi,
+            address: tokenDetails.data.poolAddress,
+            functionName: 'getAccountLiquidity',
             args: [account],
-        }) as bigint;
-        //All vTokens are 8 decimals
-        return toResult(`Balance of ${token}: ${formatUnits(balanceOf, 8)}`);
+        });
+        //Always 18
+        const borrowLimit = parseFloat(formatUnits(liquidity, 18)).toFixed(2);
+        const shortFall = parseFloat(formatUnits(shortfall, 18)).toFixed(2);
+        return toResult(`Borrow Limit: $${borrowLimit}, Shortfall: $${shortFall}`);
+
     } catch (error) {
         return toResult(
-            `Failed to Get Balance: ${error instanceof Error ? error.message : "Unknown error"}`,
+            `Failed to get account liquidity: ${error instanceof Error ? error.message : "Unknown error"}`,
             true
         );
     }

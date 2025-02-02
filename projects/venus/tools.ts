@@ -30,6 +30,25 @@ const baseProps = [
     },
 ];
 
+const APRProps = [
+    {
+        name: "chainName",
+        type: "string",
+        enum: supportedChains.map(getChainName),
+        description: "Chain name where to execute the transaction",
+    },
+    {
+        name: "token",
+        type: "string",
+        description: "The token that is involved in the transaction.",
+    },
+    {
+        name: "pool",
+        type: "string",
+        description: "The Pool in which the transaction will be executed.",
+    },
+];
+
 
 const stakeProps = [
     {
@@ -105,6 +124,24 @@ export const tools: AiTool[] = [
     {
         name: "borrowBalanceCurrentToken",
         description: "Borrow balance Of token using venus lending protocol.",
+        required: ["chainName", "account", "token", "pool"],
+        props: basePropsNoAmount,
+    },
+    {
+        name: "borrowAPR",
+        description: "Get Current Supply APR for a token in a particular pool.",
+        required: ["chainName", "token", "pool"],
+        props: APRProps,
+    },
+    {
+        name: "supplyAPR",
+        description: "Get Current Supply APR for a token in a particular pool.",
+        required: ["chainName", "token", "pool"],
+        props: APRProps,
+    },
+    {
+        name: "accountLiquidity",
+        description: "Get the borrow Limit and shortfall of a account for a token in particular pool.",
         required: ["chainName", "account", "token", "pool"],
         props: basePropsNoAmount,
     },

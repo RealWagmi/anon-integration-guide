@@ -1,6 +1,5 @@
 import {
-    Address,
-    formatUnits
+    formatUnits,
 } from "viem";
 import {
     FunctionReturn,
@@ -12,26 +11,21 @@ import {
     supportedChains,
 } from "../constants";
 import {vBNBAbi} from "../abis/vBNBAbi";
-import {validateAndGetTokenDetails, validateWallet} from "../utils";
+import {validateAndGetTokenDetails} from "../utils";
 
 interface Props {
     chainName: string;
-    account: Address;
     token: string;
     pool: string;
 }
 
 /**
- * Retrieves the balance of token from the Venus protocol.
+ * Retrieves the Supply APR from the Venus protocol.
  *
- * @returns {Promise<FunctionReturn>} - The balance of Token.
+ * @returns {Promise<FunctionReturn>} - The Supply APR.
  */
-export async function balanceOf({chainName, account, token, pool}: Props,
+export async function supplyAPR({chainName, token, pool}: Props,
                                 {notify, getProvider}: FunctionOptions): Promise<FunctionReturn> {
-    const wallet = validateWallet({account})
-    if (!wallet.success) {
-        return toResult(wallet.errorMessage, true);
-    }
     // Validate chain
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
@@ -43,18 +37,21 @@ export async function balanceOf({chainName, account, token, pool}: Props,
         return toResult(`Protocol is not supported on ${chainName}`, true);
     try {
         const provider = getProvider(chainId);
-        await notify('Checking Balance of token...');
-        const balanceOf = await provider.readContract({
+        await notify('Getting Current Supply APR...');
+        const supplyRatePerBlock = await provider.readContract({
             abi: vBNBAbi,
             address: tokenDetails.data.tokenAddress,
-            functionName: 'balanceOf',
-            args: [account],
-        }) as bigint;
-        //All vTokens are 8 decimals
-        return toResult(`Balance of ${token}: ${formatUnits(balanceOf, 8)}`);
+            functionName: 'supplyRatePerBlock',
+            args: [],
+        });
+
+        const blocksPerYear = tokenDetails.data.blocksPerYear;
+        const supplyAPR = (supplyRatePerBlock * blocksPerYear);
+        //16 to get the percent as decimals is always 18 here.
+        return toResult(`Supply APR for ${token}: ${parseFloat(formatUnits(supplyAPR, 16)).toFixed(2)}%`);
     } catch (error) {
         return toResult(
-            `Failed to Get Balance: ${error instanceof Error ? error.message : "Unknown error"}`,
+            `Failed to get Supply APR: ${error instanceof Error ? error.message : "Unknown error"}`,
             true
         );
     }

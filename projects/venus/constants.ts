@@ -273,6 +273,12 @@ export const CORE_POOL_MARKET_TOKENS: TokenConfig = {
     }
 }
 
+export const BLOCKS_PER_YEAR = {
+    [ChainId.BSC]: BigInt(10512000),
+    [ChainId.ETHEREUM]: BigInt(2628000),
+    [ChainId.BASE]: BigInt(15768000),
+};
+
 
 export const POOLS: Pool = {
     CORE: {
