@@ -91,28 +91,28 @@ Parameters:
 ## Available Functions
 
 ### Liquidity Management
-- **addLiquidity**: Add tokens as liquidity to Amped Finance, receiving ALP tokens in return.
-- **removeLiquidity**: Remove liquidity by redeeming ALP tokens for any supported token.
-- **getUserLiquidity**: Get user's current liquidity position and ALP token balance.
-- **getPoolLiquidity**: Get current liquidity pool information and token balances.
-- **getUserTokenBalances**: Get balances and USD values of all supported tokens for a specific user.
+- `addLiquidity`: Add tokens as liquidity to Amped Finance, receiving ALP tokens in return.
+- `removeLiquidity`: Remove liquidity by redeeming ALP tokens for any supported token.
+- `getUserLiquidity`: Get user's current liquidity position and ALP token balance.
+- `getPoolLiquidity`: Get current liquidity pool information and token balances.
+- `getUserTokenBalances`: Get balances and USD values of all supported tokens for a specific user.
 
 ### Trading Operations
-- **openPosition**: Open a leveraged long or short position with specified collateral.
-- **closePosition**: Close one or more leveraged positions, fully or partially.
-- **getAllOpenPositions**: Get all open positions for a specific account.
-- **getPosition**: Get detailed information about a specific position.
-- **marketSwap**: Execute a market swap between two tokens.
+- `openPosition`: Open a leveraged long or short position with specified collateral.
+- `closePosition`: Close one or more leveraged positions, fully or partially.
+- `getAllOpenPositions`: Get all open positions for a specific account.
+- `getPosition`: Get detailed information about a specific position.
+- `marketSwap`: Execute a market swap between two tokens.
 
 ### Information & Analytics
-- **getPoolLiquidity**: Get total pool liquidity information including ALP supply and Assets Under Management (AUM).
-- **getALPApr**: Calculate and retrieve the current APR for ALP tokens.
-- **getEarnings**: Get earnings information for a user's positions and liquidity.
-- **getPerpsLiquidity**: Get available liquidity information for perpetual trading.
-- **getSwapsLiquidity**: Get information about available liquidity for token swaps.
+- `getPoolLiquidity`: Get total pool liquidity information including ALP supply and Assets Under Management (AUM).
+- `getALPApr`: Calculate and retrieve the current APR for ALP tokens.
+- `getEarnings`: Get earnings information for a user's positions and liquidity.
+- `getPerpsLiquidity`: Get available liquidity information for perpetual trading.
+- `getSwapsLiquidity`: Get information about available liquidity for token swaps.
 
 ### Rewards
-- **claimRewards**: Claim any available rewards from liquidity provision or trading.
+- `claimRewards`: Claim any available rewards from liquidity provision or trading.
 
 ## What You Need to Know
 
