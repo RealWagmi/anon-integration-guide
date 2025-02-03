@@ -10,6 +10,9 @@ export type ChainConfig = {
             referralAddress: string;
             allowedVaults: Array<string>;
         };
+        fastRedeem: {
+            apiUrl: string;
+        };
     };
     deployments: {
         ISmartVaultManager: string;
@@ -25,6 +28,9 @@ export const config: Partial<Record<ChainId, ChainConfig>> = {
             deposit: {
                 referralAddress: '0x0000000000000000000000000000000000000000',
                 allowedVaults: ['0xf07ac7f7dac4eaab2e4c6fc78230d8256df33cc8'],
+            },
+            fastRedeem: {
+                apiUrl: 'https://fastwithdraw.v2.spool.fi/',
             },
         },
         deployments: {

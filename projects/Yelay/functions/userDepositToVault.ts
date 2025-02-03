@@ -7,13 +7,7 @@ import {
     TransactionParams,
 } from '@heyanon/sdk';
 import { supportedChains } from '../constants';
-import {
-    getChainConfig,
-    getSdk,
-    getStaticProvider,
-    validateAddress,
-    wrapWithResult,
-} from '../utils';
+import { getChainConfig, getSdk, getProvider, validateAddress, wrapWithResult } from '../utils';
 
 import {
     DepositBagStruct,
@@ -66,7 +60,7 @@ export async function userDepositToVault(
     const sdk = await wrapWithResult(getSdk)(chainId);
     if (!sdk.success) return toResult(`Failed to setup SDK`, true);
 
-    const ethersProvider = await wrapWithResult(getStaticProvider)(chainId);
+    const ethersProvider = await wrapWithResult(getProvider)(chainId);
     if (!ethersProvider.success) return toResult(`Failed to get ethers provider`, true);
 
     // Get vault token type

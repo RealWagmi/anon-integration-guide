@@ -11,14 +11,14 @@ export function getChainConfig(chainId: ChainId) {
     return config[chainId];
 }
 
-export function getStaticProvider(chainId: ChainId) {
+export function getProvider(chainId: ChainId) {
     const chainConfig = getChainConfig(chainId);
     return new StaticJsonRpcProvider(chainConfig.providerUrl);
 }
 
 export function getSdk(chainId: ChainId) {
     const chainConfig = getChainConfig(chainId);
-    const rpc = new StaticJsonRpcProvider(chainConfig.providerUrl);
+    const rpc = getProvider(chainId);
     return new SpoolSdk(getMainnetConfig(chainConfig.subGraphUrl), rpc);
 }
 
@@ -34,6 +34,7 @@ export function wrapWithResult<T extends (...args: any[]) => any>(
             const result = await fn(...args); // Works for both async and non-async functions
             return { success: true, result };
         } catch (error) {
+            console.error(fn.name, error);
             return { success: false, error };
         }
     };
