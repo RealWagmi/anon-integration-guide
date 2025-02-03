@@ -90,9 +90,35 @@ export function computePoolTotalApr(pool: GqlPoolMinimal | GqlPoolBase): [number
  */
 export function getPoolStakingBoostApr(pool: GqlPoolMinimal | GqlPoolBase): number {
     const stakingBoostAprItem = pool.dynamicData.aprItems.find((item) => item.type === GqlPoolAprItemType.StakingBoost);
-    console.log(stakingBoostAprItem);
     if (!stakingBoostAprItem) {
         return 0;
     }
     return stakingBoostAprItem.apr;
+}
+
+/**
+ * Check if a pool contains a specific token, including in nested pools and
+ * underlying tokens
+ */
+export function poolContainsToken(pool: GqlPoolMinimal | GqlPoolBase, tokenAddress: string): boolean {
+    // Normalize addresses for comparison
+    const normalizedSearchAddress = tokenAddress.toLowerCase();
+    
+    return pool.poolTokens.some(token => {
+        // Check direct token address
+        if (token.address.toLowerCase() === normalizedSearchAddress) return true;
+
+        // Check underlying token if it exists
+        if (token.underlyingToken?.address.toLowerCase() === normalizedSearchAddress) return true;
+
+        // Check nested pool tokens if they exist
+        if (token.nestedPool?.tokens) {
+            return token.nestedPool.tokens.some(nestedToken => 
+                nestedToken.address.toLowerCase() === normalizedSearchAddress ||
+                nestedToken.underlyingToken?.address.toLowerCase() === normalizedSearchAddress
+            );
+        }
+
+        return false;
+    });
 }

@@ -1,6 +1,6 @@
 import { Address } from 'viem';
 import { FunctionReturn, toResult, FunctionOptions, getChainFromName } from '@heyanon/sdk';
-import { supportedChains } from '../constants';
+import { MAX_FETCH_POOLS, supportedChains } from '../constants';
 import { BeetsClient } from '../helpers/beets/client';
 import { GqlPoolOrderBy, GqlPoolOrderDirection } from '../helpers/beets/types';
 import { formatPoolMinimal } from '../helpers/format';
@@ -20,6 +20,7 @@ export async function getMyPositionsPortfolio({ chainName, account }: Props, { n
     const positions = await client.getPools(
         GqlPoolOrderBy.UserbalanceUsd,
         GqlPoolOrderDirection.Desc,
+        MAX_FETCH_POOLS,
         {
             userAddress: account,
             chainIn: [client.getBeetsChain(chainName)]

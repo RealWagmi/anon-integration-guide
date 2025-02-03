@@ -20,4 +20,22 @@ export const tools: AiTool[] = [
             },
         ],
     },
+    {
+        name: 'getBestAprForToken',
+        description: 'Show the top pools containing a specific token, sorted by APR. Only includes pools with TVL > $200,000.',
+        required: ['chainName', 'tokenAddress'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name',
+            },
+            {
+                name: 'tokenAddress',
+                type: 'string',
+                description: 'Address of the token to search for',
+            },
+        ],
+    },
 ];

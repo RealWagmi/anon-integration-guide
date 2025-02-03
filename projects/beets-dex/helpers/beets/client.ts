@@ -86,7 +86,7 @@ export class BeetsClient {
      * 
      * Same query as https://beets.fi/pools
      */
-    async getPools(orderBy: GqlPoolOrderBy, orderDirection: GqlPoolOrderDirection, where: GqlPoolFilter): Promise<GqlPoolMinimal[]> {
+    async getPools(orderBy: GqlPoolOrderBy, orderDirection: GqlPoolOrderDirection, first: number, where: GqlPoolFilter): Promise<GqlPoolMinimal[]> {
         const fragments = [
             this.getHookFragment(),
             this.getUnderlyingTokenFragment(),
@@ -95,9 +95,10 @@ export class BeetsClient {
         ];
 
         let query = `
-            query GetPools($where: GqlPoolFilter!, $orderBy: GqlPoolOrderBy!, $orderDirection: GqlPoolOrderDirection!) {
+            query GetPools($where: GqlPoolFilter!, $orderBy: GqlPoolOrderBy!, $orderDirection: GqlPoolOrderDirection!, $first: Int!) {
                 poolGetPools(
                     where: $where,
+                    first: $first,
                     orderBy: $orderBy,
                     orderDirection: $orderDirection
                 ) {
@@ -222,6 +223,7 @@ export class BeetsClient {
         }>(query, {
             where,
             orderBy,
+            first,
             orderDirection
         }, fragments);
 

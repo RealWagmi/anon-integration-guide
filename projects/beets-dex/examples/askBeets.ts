@@ -37,7 +37,7 @@ IMPORTANT: For all tool responses:
 2. Do not reformat, summarize, or add explanatory text
 3. Do not interpret or process the data in any way`;
 
-    const toolConfigPrompt = `\nAll tools will need the chainName and account arguments: chainName: "${chainName}", account: "${account}".`;
+    const toolConfigPrompt = `\nAll tools that require the chainName and account arguments will need the following default values: chainName: "${chainName}", account: "${account}".`;
 
     const nextStepsPrompt = `\nAfter each tool response, determine if additional steps are needed.`;
 
