@@ -1,41 +1,49 @@
+import { SimplifiedPool } from './beets/client';
 import { GqlPoolMinimal, GqlPoolBase } from './beets/types';
 
+
 /**
- * Given the position of a user in a pool, format it into a multi-line string
+ * Given a pool, format it into a multi-line string, with just the essential
+ * information, including the pool ID.
+ *
+ * If the pool is a user position, also show the user's position balance.
  */
-export function formatPosition(pool: GqlPoolMinimal | GqlPoolBase): string {
-    const tokens = pool.poolTokens
-        .map(token => `${token.symbol}: ${token.balance}${token.weight ? ` (${token.weight}%)` : ''}`)
-        .join(', ');
+export function formatPoolMinimal(pool: SimplifiedPool, titlePrefix: string = ''): string {
+    const tokens = pool.tokens
+        .map((token) => {
+            const weight = token.weight ? ` (${token.weight * 100}%)` : '';
+            return `${token.symbol}${weight}`;
+        })
+        .join('-');
+    
+    let parts = [];
+    parts.push(`${titlePrefix}${pool.name} [${tokens}]:`);
+    const offset = '   ';
+    if (pool.userBalanceUsd) {
+        parts.push(`${offset}- Value $${pool.userBalanceUsd.toFixed(2)}`);
+    }
+    if (pool.userStakedBalanceUsd) {
+        parts.push(`${offset}- Staked $${pool.userStakedBalanceUsd.toFixed(2)}`);
+    }
+    parts.push(`${offset}- APR: ${(pool.apr * 100).toFixed(2)}%`);
+    parts.push(`${offset}- TVL: $${pool.tvlUsd.toFixed(0)}`);
+    parts.push(`${offset}- Pool ID: ${pool.id}`);
+    parts.push(`${offset}- Pool type: ${formatPoolType(pool.type)}`);
 
-    const userBalanceInfo = pool.userBalance ? [
-        `Total Balance: ${pool.userBalance.totalBalance} ($${pool.userBalance.totalBalanceUsd.toFixed(2)})`,
-        `Wallet Balance: ${pool.userBalance.walletBalance} ($${pool.userBalance.walletBalanceUsd.toFixed(2)})`,
-        ...pool.userBalance.stakedBalances.map(staked => 
-            `Staked (${staked.stakingType}): ${staked.balance} ($${staked.balanceUsd.toFixed(2)})`
-        )
-    ].join('\n') : 'No balance';
-
-    const aprInfo = pool.dynamicData.aprItems
-        .map(item => `${item.type}: ${item.apr.toFixed(2)}%`)
-        .join(', ');
-
-    return [
-        `Pool: ${pool.name} (${pool.type})`,
-        `Tokens: ${tokens}`,
-        `Balance:\n${userBalanceInfo}`,
-        `APR: ${aprInfo}`,
-        `Total Liquidity: $${Number(pool.dynamicData.totalLiquidity).toFixed(2)}`
-    ].join('\n');
-}
+    return parts.join('\n');
+} 
 
 /**
  * Given the position of a user in a pool, format it into a one-line string,
  * showing dollar value, APR and pool ID, similar to the https://beets.fi/pools page
  */
-export function formatPositionMinimal(pool: GqlPoolMinimal | GqlPoolBase, bullet: string = ''): string {
+export function formatPositionOneLine(pool: GqlPoolMinimal | GqlPoolBase, bullet: string = ''): string {
         const tokens = pool.poolTokens
-            .map(token => `${token.symbol}${token.weight ? ` (${token.weight}%)` : ''}`)
+            .map((token) => {
+                const weight = token.weight ? ` (${token.weight * 100}%)` : '';
+                const symbol = token.underlyingToken ? token.underlyingToken.symbol : token.symbol;
+                return `${symbol}${weight}`;
+            })
             .join('-');
         
         const totalBalanceUsd = pool.userBalance?.totalBalanceUsd || 0;
@@ -50,4 +58,15 @@ export function formatPositionMinimal(pool: GqlPoolMinimal | GqlPoolBase, bullet
         parts.push(`ID: ${pool.id}`);
 
         return parts.join(' ');
-} 
+}
+
+/**
+ * Given a pool type, format it into a human-readable string
+ */
+export function formatPoolType(type: string): string {
+    return type
+        .toLowerCase()
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}

@@ -49,6 +49,7 @@ const ANALYSIS_PROMPT = `IMPORTANT: For the last tool response, follow these rul
 1. If the user asked a direct question that requires the raw tool data (like "show my positions" or "get my portfolio"):
    - Return the EXACT tool response without ANY modifications or additional text
    - Do not reformat, summarize, or add explanatory text
+   - Do not convert to JSON or any other format
 
 2. ONLY analyze or process the data if:
    - The user specifically asked for analysis (e.g., "find the highest", "which is the largest", etc.)

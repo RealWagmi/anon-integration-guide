@@ -2,8 +2,8 @@ import { Address } from 'viem';
 import { FunctionReturn, toResult, FunctionOptions, getChainFromName } from '@heyanon/sdk';
 import { supportedChains } from '../constants';
 import { BeetsClient } from '../helpers/beets/client';
-import { formatPositionMinimal } from '../helpers/format';
 import { GqlPoolOrderBy, GqlPoolOrderDirection } from '../helpers/beets/types';
+import { formatPoolMinimal } from '../helpers/format';
 
 interface Props {
     chainName: string;
@@ -29,5 +29,7 @@ export async function getMyPositionsPortfolio({ chainName, account }: Props, { n
         return toResult("No positions found in your portfolio");
     }
 
-    return toResult(positions.map((position) => formatPositionMinimal(position)).join('\n'));
+    return toResult(positions.map((position, index) => 
+        formatPoolMinimal(client.simplifyPool(position), `${index + 1}. `)
+    ).join('\n'));
 }
