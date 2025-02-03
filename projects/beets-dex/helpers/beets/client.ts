@@ -1,6 +1,5 @@
-import axios, { AxiosError, AxiosInstance } from 'axios';
-import { GqlChain, GqlHook, GqlPoolFilter, GqlPoolMinimal, GqlPoolOrderBy, GqlPoolOrderDirection } from './types';
-import { formatPoolType } from '../format';
+import axios, { AxiosInstance } from 'axios';
+import { GqlChain, GqlPoolFilter, GqlPoolMinimal, GqlPoolOrderBy, GqlPoolOrderDirection } from './types';
 
 // Constants for configuration
 const DEFAULT_TIMEOUT = 10000; // 10 seconds
@@ -390,48 +389,4 @@ export class BeetsClient {
             }
         `;
     }
-
-    /**
-     * Utility function to convert a pool object from the API to
-     * a simplified pool object, keeping only:
-     * - Name of the pool
-     * - Tokens in the pool
-     * - Value of position held by the user (if any)
-     * - Total APR yield of the pool
-     * - TVL of the pool in USD
-     * - Pool ID
-     */
-    public simplifyPool(pool: GqlPoolMinimal): SimplifiedPool {
-        return {
-            name: pool.name,
-            type: formatPoolType(pool.type),
-            tokens: pool.poolTokens.map((token) => ({
-                name: token.name,
-                symbol: token.underlyingToken ? token.underlyingToken.symbol : token.symbol,
-                weight: token.weight ? parseFloat(token.weight) : null,
-            })),
-            userBalanceUsd: pool.userBalance?.totalBalanceUsd || null,
-            userStakedBalanceUsd: pool.userBalance?.stakedBalances.reduce((total, balance) => total + balance.balanceUsd, 0) || null,
-            tvlUsd: parseFloat(pool.dynamicData.totalLiquidity),
-            apr: pool.dynamicData.aprItems.reduce((total, item) => total + item.apr, 0),
-            id: pool.id,
-        };
-    }
-}
-
-export interface SimplifiedPool {
-    name: string;
-    type: string;
-    tokens: SimplifiedPoolToken[];
-    userBalanceUsd: number | null;
-    userStakedBalanceUsd: number | null;
-    tvlUsd: number;
-    apr: number;
-    id: string;
-}
-
-export interface SimplifiedPoolToken {
-    name: string;
-    symbol: string;
-    weight: number | null;
 }

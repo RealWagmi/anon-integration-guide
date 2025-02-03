@@ -1,0 +1,98 @@
+import { GqlPoolAprItemType, GqlPoolBase, GqlPoolMinimal } from "./beets/types";
+import { formatPoolType } from "./format";
+
+/**
+ * Types of APR items returned by the API that we should consider
+ * to compute the total APR yield of a pool.  Please note that
+ * the Staking Boost APR deriving from staking the protocol token
+ * is not considered here, but instead is added in the `computePoolTotalApr`
+ * function.
+ */
+export const VALID_APR_TYPES = [
+    GqlPoolAprItemType.Aura,
+    GqlPoolAprItemType.IbYield,
+    GqlPoolAprItemType.Locking,
+    GqlPoolAprItemType.MabeetsEmissions,
+    GqlPoolAprItemType.Merkl,
+    GqlPoolAprItemType.Nested,
+    GqlPoolAprItemType.Staking,
+    GqlPoolAprItemType.Surplus_24H,
+    GqlPoolAprItemType.SwapFee_24H,
+    GqlPoolAprItemType.VebalEmissions,
+    GqlPoolAprItemType.Voting,
+];
+
+export interface SimplifiedPool {
+    name: string;
+    type: string;
+    tokens: SimplifiedPoolToken[];
+    userBalanceUsd: number | null;
+    userStakedBalanceUsd: number | null;
+    tvlUsd: number;
+    apr: number;
+    aprBoost: number | null;
+    id: string;
+}
+
+export interface SimplifiedPoolToken {
+    name: string;
+    symbol: string;
+    weight: number | null;
+}
+
+/**
+ * Utility function to convert a pool object from the API to
+ * a simplified pool object, including:
+ * - Name of the pool
+ * - Tokens in the pool
+ * - Value of position held by the user (if any)
+ * - Total APR yield of the pool
+ * - Minimum APR yield of the pool, if the pool has a staking boost
+ * - TVL of the pool in USD
+ * - Pool ID
+ * - Pool type
+ */
+export function simplifyPool(pool: GqlPoolMinimal): SimplifiedPool {
+    const [minApr, maxApr] = computePoolTotalApr(pool);
+    return {
+        name: pool.name,
+        type: formatPoolType(pool.type),
+        tokens: pool.poolTokens.map((token) => ({
+            name: token.name,
+            symbol: token.underlyingToken ? token.underlyingToken.symbol : token.symbol,
+            weight: token.weight ? parseFloat(token.weight) : null,
+        })),
+        userBalanceUsd: pool.userBalance?.totalBalanceUsd || null,
+        userStakedBalanceUsd: pool.userBalance?.stakedBalances.reduce((total, balance) => total + balance.balanceUsd, 0) || null,
+        tvlUsd: parseFloat(pool.dynamicData.totalLiquidity),
+        apr: minApr,
+        aprBoost: getPoolStakingBoostApr(pool),
+        id: pool.id,
+    };
+}
+
+/**
+ * Given a pool from the API, compute the total APR yield of the pool.
+ * 
+ * This is expressed as a range, since the APR can be increased by
+ * staking the protocol token.
+ */
+export function computePoolTotalApr(pool: GqlPoolMinimal | GqlPoolBase): [number, number] {
+    const validAprItems = pool.dynamicData.aprItems.filter((item) => VALID_APR_TYPES.includes(item.type));
+    const minTotalApr = validAprItems.reduce((total, item) => total + item.apr, 0);
+    const maxTotalApr = minTotalApr + getPoolStakingBoostApr(pool);
+    return [minTotalApr, maxTotalApr];
+}
+
+/**
+ * Given a pool from the API, return the APR boost from max staking the
+ * protocol token.
+ */
+export function getPoolStakingBoostApr(pool: GqlPoolMinimal | GqlPoolBase): number {
+    const stakingBoostAprItem = pool.dynamicData.aprItems.find((item) => item.type === GqlPoolAprItemType.StakingBoost);
+    console.log(stakingBoostAprItem);
+    if (!stakingBoostAprItem) {
+        return 0;
+    }
+    return stakingBoostAprItem.apr;
+}

@@ -1,5 +1,5 @@
-import { SimplifiedPool } from './beets/client';
 import { GqlPoolMinimal, GqlPoolBase } from './beets/types';
+import { SimplifiedPool } from './pools';
 
 
 /**
@@ -26,6 +26,9 @@ export function formatPoolMinimal(pool: SimplifiedPool, titlePrefix: string = ''
         parts.push(`${offset}- Staked $${pool.userStakedBalanceUsd.toFixed(2)}`);
     }
     parts.push(`${offset}- APR: ${(pool.apr * 100).toFixed(2)}%`);
+    if (pool.aprBoost) {
+        parts.push(`${offset}- Max APR: ${(((pool.apr+pool.aprBoost) * 100).toFixed(2))}% when max staked`);
+    }
     parts.push(`${offset}- TVL: $${pool.tvlUsd.toFixed(0)}`);
     parts.push(`${offset}- Pool ID: ${pool.id}`);
     parts.push(`${offset}- Pool type: ${formatPoolType(pool.type)}`);

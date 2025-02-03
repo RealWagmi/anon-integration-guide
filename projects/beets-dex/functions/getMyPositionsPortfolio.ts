@@ -4,6 +4,7 @@ import { supportedChains } from '../constants';
 import { BeetsClient } from '../helpers/beets/client';
 import { GqlPoolOrderBy, GqlPoolOrderDirection } from '../helpers/beets/types';
 import { formatPoolMinimal } from '../helpers/format';
+import { simplifyPool } from '../helpers/pools';
 
 interface Props {
     chainName: string;
@@ -30,6 +31,6 @@ export async function getMyPositionsPortfolio({ chainName, account }: Props, { n
     }
 
     return toResult(positions.map((position, index) => 
-        formatPoolMinimal(client.simplifyPool(position), `${index + 1}. `)
+        formatPoolMinimal(simplifyPool(position), `${index + 1}. `)
     ).join('\n'));
 }
