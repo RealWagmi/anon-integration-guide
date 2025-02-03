@@ -11,14 +11,15 @@ if (!question) {
 }
 
 const verbose = process.argv.includes('--verbose');
+const analysis = process.argv.includes('--analysis');
 
 async function main() {
-    const result = await askBeets(question, { verbose });
+    const result = await askBeets(question, { verbose, analysis });
     if (!result.success) {
         console.error(`${result.data}`);
         process.exit(0);
     }
-    console.log(`[Response]\n${chalk.bold(result.data)}`);
+    console.log(`[Response]\n${result.data}`);
 }
 
 main().catch(console.error);

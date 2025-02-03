@@ -12,6 +12,7 @@ import { fromHeyAnonToolsToOpenAiTools } from '../helpers/openai';
 interface AskBeetsOptions {
     verbose?: boolean;
     notify?: (message: string) => Promise<void>;
+    analysis?: boolean;
 }
 
 interface ConversationMessage {
@@ -22,47 +23,29 @@ interface ConversationMessage {
     name?: string;
 }
 
-const SYSTEM_PROMPT = `You will interact with the Beets protocol via your tools. Given a request, you will need to determine which tools to call.
+function getSystemPrompt(options: AskBeetsOptions | undefined, chainName: string, account: string) {
+    const basePrompt = `You will interact with the Beets protocol via your tools. Given a request, you will need to determine which tools to call.
 
 For operations that require multiple steps (like "withdraw all"), you should first get required information before executing actions.
 For example, to withdraw all liquidity positions:
 1. First call getMyPositionsPortfolio to get a list of all the positions
-2. Then use the ID of each position to withdraw it
+2. Then use the ID of each position to withdraw it`;
 
-IMPORTANT: For analytical questions about data:
-1. ALWAYS call the relevant tool first to get the data
-2. When you receive the tool response, analyze the data and provide the answer
-3. DO NOT try to answer analytical questions without first calling the appropriate tool
+    const rawResponsePrompt = `
+IMPORTANT: For all tool responses:
+1. Return the EXACT tool response without ANY modifications or analysis
+2. Do not reformat, summarize, or add explanatory text
+3. Do not interpret or process the data in any way`;
 
-For example:
-- If asked "Show my position with the highest TVL":
-    1. First call getMyPositionsPortfolio
-    2. Then analyze the response to find the position with the highest dollar value of TVL
+    const toolConfigPrompt = `\nAll tools will need the chainName and account arguments: chainName: "${chainName}", account: "${account}".`;
 
-After each tool response, analyze the data to determine if:
-- Additional steps are needed
-- The data needs to be processed to answer the user's question (e.g., finding highest/lowest values, filtering, etc.)
-`;
+    const nextStepsPrompt = `\nAfter each tool response, determine if additional steps are needed.`;
 
-const ANALYSIS_PROMPT = `IMPORTANT: For the last tool response, follow these rules carefully:
-
-1. If the user asked a direct question that requires the raw tool data (like "show my positions" or "get my portfolio"):
-   - Return the EXACT tool response without ANY modifications or additional text
-   - Do not reformat, summarize, or add explanatory text
-   - Do not convert to JSON or any other format
-
-2. ONLY analyze or process the data if:
-   - The user specifically asked for analysis (e.g., "find the highest", "which is the largest", etc.)
-   - Multiple tool calls were needed and the data needs to be combined
-   - The user asked a specific question that requires filtering or processing the data
-
-Examples:
-- User: "Show my positions" -> Return raw tool output
-- User: "Which of my positions has the highest TVL?" -> Analyze and answer
-- User: "Get my portfolio" -> Return raw tool output
-- User: "What's my total TVL across all positions?" -> Analyze and calculate
-
-Remember: When in doubt, prefer returning the raw tool output over analysis.`;
+    return basePrompt + 
+           rawResponsePrompt + 
+           toolConfigPrompt + 
+           nextStepsPrompt;
+}
 
 /**
  * The askBeets agent.
@@ -104,7 +87,7 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
                 transport: http(),
             });
 
-            const results = [];
+            const txsReturns = [];
 
             // Send transactions sequentially
             for (const tx of transactions) {
@@ -116,7 +99,7 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
 
                 const receipt = await provider.waitForTransactionReceipt({ hash });
 
-                results.push({
+                txsReturns.push({
                     hash: receipt.transactionHash,
                     message: `Transaction confirmed with hash: ${receipt.transactionHash}`,
                 });
@@ -124,7 +107,7 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
 
             return {
                 isMultisig: false,
-                data: results,
+                data: txsReturns,
             };
         },
         notify,
@@ -133,12 +116,12 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
     const messages: ConversationMessage[] = [
         {
             role: 'system',
-            content: SYSTEM_PROMPT + `All tools will need the chainName and account arguments: chainName: "sonic", account: "${signer.address}".`,
+            content: getSystemPrompt(options, 'sonic', signer.address),
         },
         { role: 'user', content: question },
     ];
 
-    const results: FunctionReturn[] = [];
+    const funcReturns: FunctionReturn[] = [];
     let isComplete = false;
 
     if (options?.verbose) {
@@ -169,10 +152,6 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
         // If no tool calls, the assistant is done
         if (!assistantMessage.tool_calls) {
             isComplete = true;
-            // Add the final analysis to results if we have previous tool results
-            if (results.length > 0 && assistantMessage.content) {
-                return toResult(assistantMessage.content);
-            }
             continue;
         }
 
@@ -195,11 +174,12 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
 
         // Call the tool and add the result to the conversation
         try {
-            const result = await func(functionArgs, functionOptions);
-            results.push(result);
+            const funcReturn = await func(functionArgs, functionOptions);
+            funcReturns.push(funcReturn);
+            console.log(chalk.gray(`[Debug] Tool returned ${funcReturn.success ? 'success' : 'failure'}`));
 
-            if (!result.success) {
-                return result;
+            if (!funcReturn.success) {
+                return funcReturn;
             }
 
             // Add the tool response to the conversation with more context
@@ -207,44 +187,39 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
                 role: 'tool',
                 tool_call_id: functionCall.id,
                 name: functionName,
-                content: result.data,
+                content: funcReturn.data,
             });
 
             if (options?.verbose) {
                 console.log(`Tool '${functionName}' message:`, util.inspect(messages[messages.length - 1], { depth: null, colors: true }));
-            }
-
-            // Add an analysis prompt if this was the last tool call
-            if (!assistantMessage.tool_calls?.[1]) {
-                messages.push({
-                    role: 'user',
-                    content: ANALYSIS_PROMPT,
-                });
-
-                if (options?.verbose) {
-                    console.log('Analysis prompt:', util.inspect(messages[messages.length - 1], { depth: null, colors: true }));
-                }
             }
         } catch (error) {
             return toResult(`Error executing ${functionName}: ${error instanceof Error ? error.message : 'Unknown error'}`, true);
         }
     }
 
-    // Modify the final return logic
-    if (results.length === 0) {
+    // Return if we have no results
+    if (funcReturns.length === 0) {
         return toResult('Could not identify any operations to perform.', true);
-    } else if (results.length === 1 && !messages[messages.length - 1].content) {
-        // If we only have one result and no final analysis, return the tool result
-        return results[0];
     }
 
-    // If we have a final analysis message, use that as the result
+    // Internal consistency check
     const finalMessage = messages[messages.length - 1];
-    if (finalMessage.role === 'assistant' && finalMessage.content) {
-        return toResult(finalMessage.content);
+    if (finalMessage.role !== 'assistant') {
+        throw new Error('Final message is not an assistant message');
+    }
+    const assistantFinalComment = finalMessage.content;
+
+    // Return all tool calls followed by the final comment of the assistant
+    let combinedMessage = funcReturns.map((r, i) => {
+        const msg = chalk.underline.bold(`TOOL CALL ${i + 1}`);
+        return `${msg}\n${r.data}`;
+    }).join('\n');
+
+    // Add the final comment of the assistant
+    if (assistantFinalComment) {
+        combinedMessage += `\n${chalk.underline.bold('ASSISTANT FINAL COMMENT')}\n${assistantFinalComment}`;
     }
 
-    // Fallback to combining all results if no final analysis
-    const combinedMessage = results.map((r, i) => `Step ${i + 1}: ${r.data}`).join('\n');
     return toResult(combinedMessage);
 }
