@@ -30,20 +30,24 @@ export function formatPosition(pool: GqlPoolMinimal | GqlPoolBase): string {
 }
 
 /**
- * Given a list of pool positions of a user, format them into a multi-line string
- * where each line is a pool position
+ * Given the position of a user in a pool, format it into a one-line string,
+ * showing dollar value, APR and pool ID, similar to the https://beets.fi/pools page
  */
-export function formatPositions(pools: (GqlPoolMinimal | GqlPoolBase)[]): string {
-    return pools.map(pool => {
+export function formatPositionMinimal(pool: GqlPoolMinimal | GqlPoolBase, bullet: string = ''): string {
         const tokens = pool.poolTokens
             .map(token => `${token.symbol}${token.weight ? ` (${token.weight}%)` : ''}`)
             .join('-');
         
         const totalBalanceUsd = pool.userBalance?.totalBalanceUsd || 0;
-        const apr = pool.dynamicData.aprItems
-            .reduce((total, item) => total + item.apr, 0)
-            .toFixed(2);
+        const apr = pool.dynamicData.aprItems.reduce((total, item) => total + item.apr, 0)
 
-        return `${pool.name}: $${totalBalanceUsd.toFixed(2)} [${tokens}] (${apr}% APR)`;
-    }).join('\n');
+        let parts = [];
+        if (bullet) parts.push(bullet);
+        parts.push(`${pool.name} [${tokens}]:`);
+        parts.push(`$${totalBalanceUsd.toFixed(2)},`);
+        parts.push(`${(apr * 100).toFixed(2)}% APR,`);
+        parts.push(`$${parseFloat(pool.dynamicData.totalLiquidity).toFixed(0)} TVL,`);
+        parts.push(`ID: ${pool.id}`);
+
+        return parts.join(' ');
 } 

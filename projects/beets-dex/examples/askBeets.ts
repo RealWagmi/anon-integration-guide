@@ -22,6 +22,47 @@ interface ConversationMessage {
     name?: string;
 }
 
+const SYSTEM_PROMPT = `You will interact with the Beets protocol via your tools. Given a request, you will need to determine which tools to call.
+
+For operations that require multiple steps (like "withdraw all"), you should first get required information before executing actions.
+For example, to withdraw all liquidity positions:
+1. First call getMyPositionsPortfolio to get a list of all the positions
+2. Then use the ID of each position to withdraw it
+
+IMPORTANT: For analytical questions about data:
+1. ALWAYS call the relevant tool first to get the data
+2. When you receive the tool response, analyze the data and provide the answer
+3. DO NOT try to answer analytical questions without first calling the appropriate tool
+
+For example:
+- If asked "Show my position with the highest TVL":
+    1. First call getMyPositionsPortfolio
+    2. Then analyze the response to find the position with the highest dollar value of TVL
+
+After each tool response, analyze the data to determine if:
+- Additional steps are needed
+- The data needs to be processed to answer the user's question (e.g., finding highest/lowest values, filtering, etc.)
+`;
+
+const ANALYSIS_PROMPT = `IMPORTANT: For the last tool response, follow these rules carefully:
+
+1. If the user asked a direct question that requires the raw tool data (like "show my positions" or "get my portfolio"):
+   - Return the EXACT tool response without ANY modifications or additional text
+   - Do not reformat, summarize, or add explanatory text
+
+2. ONLY analyze or process the data if:
+   - The user specifically asked for analysis (e.g., "find the highest", "which is the largest", etc.)
+   - Multiple tool calls were needed and the data needs to be combined
+   - The user asked a specific question that requires filtering or processing the data
+
+Examples:
+- User: "Show my positions" -> Return raw tool output
+- User: "Which of my positions has the highest TVL?" -> Analyze and answer
+- User: "Get my portfolio" -> Return raw tool output
+- User: "What's my total TVL across all positions?" -> Analyze and calculate
+
+Remember: When in doubt, prefer returning the raw tool output over analysis.`;
+
 /**
  * The askBeets agent.
  *
@@ -30,12 +71,6 @@ interface ConversationMessage {
  *
  * The agent has an additional step to analyze the data provided by the tools
  * and provide a final answer.
- *
- * For example, if asked "Show the withdrawal request with the highest amount",
- * the agent will:
- * 1. First call getOpenWithdrawRequests
- * 2. Then analyze the response to find the highest amount
- * 3. Then provide the answer
  */
 export async function askBeets(question: string, options?: AskBeetsOptions): Promise<FunctionReturn> {
     const openaiApiKey = process.env.OPENAI_API_KEY;
@@ -97,27 +132,7 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
     const messages: ConversationMessage[] = [
         {
             role: 'system',
-            content: `You will interact with the Beets protocol via your tools. Given a request, you will need to determine which tools to call.
-            For operations that require multiple steps (like "withdraw all"), you should first get required information before executing actions.
-            For example, to withdraw all liquidity positions:
-            1. First call getMyPositionsPortfolio to get a list of all the positions
-            2. Then use the ID of each position to withdraw it
-
-            IMPORTANT: For analytical questions about data:
-            1. ALWAYS call the relevant tool first to get the data
-            2. When you receive the tool response, analyze the data and provide the answer
-            3. DO NOT try to answer analytical questions without first calling the appropriate tool
-
-            For example:
-            - If asked "Show my position with the highest TVL":
-              1. First call getMyPositionsPortfolio
-              2. Then analyze the response to find the position with the highest dollar value of TVL
-
-            After each tool response, analyze the data to determine if:
-            - Additional steps are needed
-            - The data needs to be processed to answer the user's question (e.g., finding highest/lowest values, filtering, etc.)
-            
-            All tools will need the chainName and account arguments: chainName: "sonic", account: "${signer.address}".`,
+            content: SYSTEM_PROMPT + `All tools will need the chainName and account arguments: chainName: "sonic", account: "${signer.address}".`,
         },
         { role: 'user', content: question },
     ];
@@ -191,22 +206,23 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
                 role: 'tool',
                 tool_call_id: functionCall.id,
                 name: functionName,
-                content: JSON.stringify({
-                    toolName: functionName,
-                    data: result.data,
-                }),
+                content: result.data,
             });
 
             if (options?.verbose) {
-                console.log('Tool message:', util.inspect(messages[messages.length - 1], { depth: null, colors: true }));
+                console.log(`Tool '${functionName}' message:`, util.inspect(messages[messages.length - 1], { depth: null, colors: true }));
             }
 
             // Add an analysis prompt if this was the last tool call
             if (!assistantMessage.tool_calls?.[1]) {
                 messages.push({
                     role: 'user',
-                    content: 'Provide an answer to my original question using the data you collected. If you need more tools, call them.',
+                    content: ANALYSIS_PROMPT,
                 });
+
+                if (options?.verbose) {
+                    console.log('Analysis prompt:', util.inspect(messages[messages.length - 1], { depth: null, colors: true }));
+                }
             }
         } catch (error) {
             return toResult(`Error executing ${functionName}: ${error instanceof Error ? error.message : 'Unknown error'}`, true);
