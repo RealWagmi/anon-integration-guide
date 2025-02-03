@@ -67,4 +67,34 @@ export const tools: AiTool[] = [
             },
         ],
     },
+    // transactions
+    {
+        name: 'userDepositToVault',
+        description:
+            'Deposits an asset amount in vault, the amount asset type is defined by the vault',
+        required: ['chainName', 'account', 'vaultAddress'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name where the vault exists',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: "The user's address",
+            },
+            {
+                name: 'vaultAddress',
+                type: 'string',
+                description: 'Vault address',
+            },
+            {
+                name: 'amount',
+                type: 'the amount to be deposited to vault, the token type is defined by the vault',
+                description: 'Vault address',
+            },
+        ],
+    },
 ];
