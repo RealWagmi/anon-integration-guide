@@ -1,4 +1,4 @@
-import { Address, parseUnits } from 'viem';
+import { Address, formatUnits, parseUnits } from 'viem';
 import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName, checkToApprove } from '@heyanon/sdk';
 import { getDataForCrossChain, supportedChains, TSS_ADDRESS, getNativeTokenName } from '../constants';
 
@@ -17,7 +17,7 @@ interface Props {
  * @param amount - Amount to bridge
  * @returns Transaction result
  */
-export async function bridgeToEthereum({ chainName, account, destToken, amount }: Props, { sendTransactions, notify }: FunctionOptions): Promise<FunctionReturn> {
+export async function bridgeToEthereum({ chainName, account, destToken, amount }: Props, { sendTransactions, notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
     try {
         // Check wallet connection
         if (!account) return toResult('Wallet not connected', true);
@@ -30,6 +30,17 @@ export async function bridgeToEthereum({ chainName, account, destToken, amount }
         // Validate amount
         const amountInWei = parseUnits(amount, 18);
         if (amountInWei === 0n) return toResult('Amount must be greater than 0', true);
+
+        // Check user balance
+        const provider = getProvider(chainId);
+        await notify('Checking user balance ⏳ ...');
+        const balance = await provider.getBalance({
+            address: account,
+        });
+
+        if (balance < amountInWei) {
+            return toResult(`Insufficient balance.Required: ${amount} but got: ${formatUnits(balance, 18)}`, true);
+        }
 
         await notify('Preparing to bridge to Ethereum 🚀');
 

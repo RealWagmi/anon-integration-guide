@@ -16,6 +16,7 @@ describe('bridgeToEthereum', () => {
     const mockProvider = jest.fn().mockReturnValue({
         readContract: jest.fn(),
         simulateContract: jest.fn(),
+        getBalance: jest.fn().mockReturnValue(1000000000000000000n),
     });
 
     beforeEach(() => {
@@ -147,6 +148,23 @@ describe('bridgeToEthereum', () => {
         });
 
         expect(result).toEqual(toResult('Failed to bridge funds to Ethereum. Please try again.', true));
+    });
+
+    it('should handle balance check errors', async () => {
+        const mockProvider = jest.fn().mockReturnValue({
+            readContract: jest.fn(),
+            simulateContract: jest.fn(),
+            getBalance: jest.fn().mockReturnValue(0n),
+        });
+
+        const result = await bridgeToEthereum(props, {
+            notify: mockNotify,
+            sendTransactions: jest.fn(),
+            getProvider: mockProvider,
+        });
+
+        expect(mockNotify).toHaveBeenCalledWith('Checking user balance ⏳ ...');
+        expect(result).toEqual(toResult('Insufficient balance.Required: 0.01 but got: 0', true));
     });
 
     it('should return ETH for Ethereum chain', () => {

@@ -3,6 +3,7 @@ import { Address } from 'viem';
 import { toResult, TransactionReturn, ChainId } from '@heyanon/sdk';
 import { TransactionParams } from '@heyanon/sdk/dist/blockchain/types';
 import { getNativeTokenName } from '../constants';
+import { getBalance } from 'viem/_types/actions/public/getBalance';
 
 const account = '0xF493118C11E32c6622933010775119622190BF2D' as Address;
 const btcWallet = 'bc1qzvyawuse72fwwksy04luc0yqrd2n2er3h6jz0e' as string;
@@ -16,6 +17,7 @@ describe('bridgeToBitcoin', () => {
     const mockProvider = jest.fn().mockReturnValue({
         readContract: jest.fn(),
         simulateContract: jest.fn(),
+        getBalance: jest.fn().mockReturnValue(1000000000000000000n),
     });
 
     beforeEach(() => {
@@ -149,6 +151,23 @@ describe('bridgeToBitcoin', () => {
         });
 
         expect(result).toEqual(toResult('Failed to bridge funds to Bitcoin. Please try again.', true));
+    });
+
+    it('should handle balance check errors', async () => {
+        const mockProvider = jest.fn().mockReturnValue({
+            readContract: jest.fn(),
+            simulateContract: jest.fn(),
+            getBalance: jest.fn().mockReturnValue(0n),
+        });
+
+        const result = await bridgeToBitcoin(props, {
+            notify: mockNotify,
+            sendTransactions: jest.fn(),
+            getProvider: mockProvider,
+        });
+
+        expect(mockNotify).toHaveBeenCalledWith('Checking user balance ⏳ ...');
+        expect(result).toEqual(toResult('Insufficient balance.Required: 0.05 but got: 0', true));
     });
 
     it('should return ETH for Ethereum chain', () => {
