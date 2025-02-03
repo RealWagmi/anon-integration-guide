@@ -1,5 +1,4 @@
 import { GqlPoolAprItemType, GqlPoolBase, GqlPoolMinimal } from "./beets/types";
-import { formatPoolType } from "./format";
 
 /**
  * Types of APR items returned by the API that we should consider
@@ -121,4 +120,49 @@ export function poolContainsToken(pool: GqlPoolMinimal | GqlPoolBase, tokenAddre
 
         return false;
     });
+}
+
+/**
+ * Given a pool, format it into a multi-line string, with just the essential
+ * information, including the pool ID.
+ *
+ * If the pool is a user position, also show the user's position balance.
+ */
+export function formatPoolMinimal(pool: SimplifiedPool, titlePrefix: string = ''): string {
+    const tokens = pool.tokens
+        .map((token) => {
+            const weight = token.weight ? ` (${token.weight * 100}%)` : '';
+            return `${token.symbol}${weight}`;
+        })
+        .join('-');
+    
+    let parts = [];
+    parts.push(`${titlePrefix}${pool.name} [${tokens}]:`);
+    const offset = '   ';
+    if (pool.userBalanceUsd) {
+        parts.push(`${offset}- Value $${pool.userBalanceUsd.toFixed(2)}`);
+    }
+    if (pool.userStakedBalanceUsd) {
+        parts.push(`${offset}- Staked $${pool.userStakedBalanceUsd.toFixed(2)}`);
+    }
+    parts.push(`${offset}- APR: ${(pool.apr * 100).toFixed(2)}%`);
+    if (pool.aprBoost) {
+        parts.push(`${offset}- Max APR: ${(((pool.apr+pool.aprBoost) * 100).toFixed(2))}% when max staked`);
+    }
+    parts.push(`${offset}- TVL: $${pool.tvlUsd.toFixed(0)}`);
+    parts.push(`${offset}- Pool ID: ${pool.id}`);
+    parts.push(`${offset}- Pool type: ${formatPoolType(pool.type)}`);
+
+    return parts.join('\n');
+} 
+
+/**
+ * Given a pool type, format it into a human-readable string
+ */
+export function formatPoolType(type: string): string {
+    return type
+        .toLowerCase()
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
 }

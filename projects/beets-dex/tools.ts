@@ -1,7 +1,36 @@
 import { AiTool, getChainName } from '@heyanon/sdk';
 import { supportedChains } from './constants';
+import { WHITELISTED_TOKENS } from './constants/tokens';
 
 export const tools: AiTool[] = [
+    {
+        name: 'getQuoteForSwapExactIn',
+        description: 'Get a quote for a swap where the amount of tokens to swap in is known.',
+        required: ['chainName', 'tokenIn', 'tokenOut', 'swapAmount'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name',
+            },
+            {
+                name: 'tokenIn',
+                type: 'string',
+                description: 'Address of the token to swap from',
+            },
+            {
+                name: 'tokenOut',
+                type: 'string',
+                description: 'Address of the token to swap to',
+            },
+            {
+                name: 'swapAmount',
+                type: 'string',
+                description: 'Amount of tokens to swap, expressed as decimals (e.g. 1 ETH rather than 10^18)',
+            },
+        ],
+    },
     {
         name: 'getMyPositionsPortfolio',
         description: 'Show the liquidity positions in the user portfolio.  For each position, show the tokens in the pool, the type of pool, the amounts of tokens, the APR yield, and the dollar value of the position.',
@@ -34,7 +63,7 @@ export const tools: AiTool[] = [
             {
                 name: 'tokenAddress',
                 type: 'string',
-                description: 'Address of the token to search for',
+                description: 'Address of the token to search for'
             },
         ],
     },

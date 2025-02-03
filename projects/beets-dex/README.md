@@ -15,7 +15,7 @@ Beets DEX allows you to swap instantly hundreds of tokens, leveraging Sonic Chai
    - Swap USDC to get exactly 1 ETH on @beets-dex
 - **Exchange rate**
    - USDC-ETH Exchange rate on @beets-dex
-   - How much USDC for 1 ETH on @beets-dex
+   - How much USDC for 1.20 ETH on @beets-dex
 - **Liquidity**
    - Add liquidity to USDC-ETH pool on @beets-dex
    - Remove liquidity from USDC-ETH pool on @beets-dex
@@ -24,7 +24,7 @@ Beets DEX allows you to swap instantly hundreds of tokens, leveraging Sonic Chai
    - Withdraw half of my USDC-ETH liquidity on @beets-dex
    - Withdraw half of my USDC-ETH liquidity and swap all ETH for USDC on @beets-dex
 - **Yield**
-   - Best yield I can get for USDC on @beets-dex
+   - Best yield I can get for USDC.e on @beets-dex
    - Show APR of USDC-ETH pool on @beets-dex
    - Show APR of all my positions on @beets-dex
 - **Portfolio**

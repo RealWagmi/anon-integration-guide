@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
-import { GqlChain, GqlPoolFilter, GqlPoolMinimal, GqlPoolOrderBy, GqlPoolOrderDirection } from './types';
+import { GqlChain, GqlPoolFilter, GqlPoolMinimal, GqlPoolOrderBy, GqlPoolOrderDirection, GqlSorGetSwapsResponse, GqlSorSwapType, GqlTokenAmountHumanReadable } from './types';
 
 // Constants for configuration
 const DEFAULT_TIMEOUT = 10000; // 10 seconds
@@ -94,7 +94,7 @@ export class BeetsClient {
             this.getPoolTokensFragment(),
         ];
 
-        let query = `
+        const query = `
             query GetPools($where: GqlPoolFilter!, $orderBy: GqlPoolOrderBy!, $orderDirection: GqlPoolOrderDirection!, $first: Int!) {
                 poolGetPools(
                     where: $where,
@@ -230,6 +230,84 @@ export class BeetsClient {
         return response.poolGetPools;
     }
 
+    async getSorSwap(tokenIn: string, tokenOut: string, swapType: GqlSorSwapType, swapAmount: string, chain: GqlChain): Promise<GqlSorGetSwapsResponse> {
+        const query = `
+            query GetSorSwaps($tokenIn: String!, $tokenOut: String!, $swapType: GqlSorSwapType!, $swapAmount: AmountHumanReadable!, $chain: GqlChain!, $poolIds: [String!]) {
+                swaps: sorGetSwapPaths(
+                    tokenIn: $tokenIn
+                    tokenOut: $tokenOut
+                    swapType: $swapType
+                    swapAmount: $swapAmount
+                    chain: $chain
+                    poolIds: $poolIds
+                ) {
+                    effectivePrice
+                    effectivePriceReversed
+                    swapType
+                    paths {
+                        inputAmountRaw
+                        outputAmountRaw
+                        pools
+                        isBuffer
+                        protocolVersion
+                        tokens {
+                            address
+                            decimals
+                        }
+                    }
+                    priceImpact {
+                        priceImpact
+                        error
+                    }
+                    returnAmount
+                    routes {
+                        hops {
+                            pool {
+                                symbol
+                            }
+                            poolId
+                            tokenIn
+                            tokenInAmount
+                            tokenOut
+                            tokenOutAmount
+                        }
+                        share
+                        tokenInAmount
+                        tokenInAmount
+                        tokenOut
+                        tokenOutAmount
+                        
+                    }
+                    swapAmount
+                    swaps {
+                        amount
+                        assetInIndex
+                        assetOutIndex
+                        poolId
+                        userData
+                    }
+                    tokenIn
+                    tokenInAmount
+                    tokenOut
+                    tokenOutAmount
+                    protocolVersion
+                }
+              }
+        `;
+
+        const response = await this.executeQueryWithRetry<{
+            swaps: GqlSorGetSwapsResponse;
+        }>(query, {
+            tokenIn,
+            tokenOut,
+            swapType,
+            swapAmount,
+            chain
+        });
+
+        return response.swaps;
+    }
+
     /**
      * Helper function that convert HeyAnon chain identifiers to
      * Beets chain identifiers
@@ -241,7 +319,6 @@ export class BeetsClient {
             default: throw new Error(`Unsupported chain: ${chain}`);
         }
     }
-
 
     /**
      * Hook fragment

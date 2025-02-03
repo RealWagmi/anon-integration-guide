@@ -3,7 +3,7 @@ import { FunctionReturn, toResult, FunctionOptions, getChainFromName } from '@he
 import { MAX_FETCH_POOLS, supportedChains } from '../constants';
 import { BeetsClient } from '../helpers/beets/client';
 import { GqlPoolOrderBy, GqlPoolOrderDirection } from '../helpers/beets/types';
-import { formatPoolMinimal } from '../helpers/format';
+import { formatPoolMinimal } from '../helpers/pools';
 import { simplifyPool } from '../helpers/pools';
 
 interface Props {

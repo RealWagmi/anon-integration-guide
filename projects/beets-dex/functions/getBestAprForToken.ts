@@ -3,7 +3,7 @@ import { FunctionReturn, toResult, FunctionOptions, getChainFromName } from '@he
 import { MAX_FETCH_POOLS, supportedChains } from '../constants';
 import { BeetsClient } from '../helpers/beets/client';
 import { GqlPoolOrderBy, GqlPoolOrderDirection } from '../helpers/beets/types';
-import { formatPoolMinimal } from '../helpers/format';
+import { formatPoolMinimal } from '../helpers/pools';
 import { simplifyPool, poolContainsToken } from '../helpers/pools';
 
 const MIN_TVL = 200_000;
@@ -19,6 +19,7 @@ export async function getBestAprForToken({ chainName, tokenAddress }: Props, { n
     if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
 
     const client = new BeetsClient();
+
     // Get pools sorted by APR
     const pools = await client.getPools(
         GqlPoolOrderBy.Apr,
