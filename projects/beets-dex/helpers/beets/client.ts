@@ -45,11 +45,12 @@ export class BeetsClient {
     private async executeQueryWithRetry<T>(
         query: string, 
         variables?: any,
+        fragments: string[] = [],
         attempt: number = 1,
     ): Promise<T> {
         try {
             const response = await this.axiosInstance.post('', {
-                query,
+                query: query + fragments.join('\n'),
                 variables
             });
 
@@ -68,7 +69,7 @@ export class BeetsClient {
             // Retry logic
             if (attempt < this.maxRetries) {
                 await this.sleep(this.retryDelay * attempt); // Exponential backoff
-                return this.executeQueryWithRetry<T>(query, variables, attempt + 1);
+                return this.executeQueryWithRetry<T>(query, variables, fragments, attempt + 1);
             }
 
             // If we've exhausted all retries, throw the error
@@ -213,7 +214,6 @@ export class BeetsClient {
                     }
                 }
             }
-            ${fragments.join('\n')}
         `;
         
         const response = await this.executeQueryWithRetry<{
@@ -222,7 +222,7 @@ export class BeetsClient {
             where,
             orderBy,
             orderDirection
-        });
+        }, fragments);
 
         return response.poolGetPools;
     }
