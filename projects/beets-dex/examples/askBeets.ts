@@ -176,7 +176,7 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
         try {
             const funcReturn = await func(functionArgs, functionOptions);
             funcReturns.push(funcReturn);
-            console.log(chalk.gray(`[Debug] Tool returned ${funcReturn.success ? 'success' : 'failure'}`));
+            console.log(chalk.gray(`[Debug] Function returned ${funcReturn.success ? 'success' : 'failure'}`));
 
             if (!funcReturn.success) {
                 return funcReturn;

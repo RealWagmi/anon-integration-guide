@@ -38,4 +38,22 @@ export const tools: AiTool[] = [
             },
         ],
     },
+    {
+        name: 'getTokenAddressFromSymbol',
+        description: 'Get the address of a token from its symbol on a specific chain',
+        required: ['chainName', 'symbol'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name',
+            },
+            {
+                name: 'symbol',
+                type: 'string',
+                description: 'Token symbol (e.g. "wS", "stS", "USDC.e")',
+            },
+        ],
+    },
 ];
