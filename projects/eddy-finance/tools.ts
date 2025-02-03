@@ -21,7 +21,7 @@ export const tools: AiTool[] = [
             {
                 name: 'destToken',
                 type: 'string',
-                description: 'Corresponding zrc20 token address of desired token on Ethereum chain',
+                description: 'Destination token symbol, example: USDT, USDC, etc.',
             },
             {
                 name: 'amount',
@@ -50,6 +50,55 @@ export const tools: AiTool[] = [
                 name: 'btcWallet',
                 type: 'string',
                 description: 'Bitcoin wallet address to receive funds',
+            },
+            {
+                name: 'amount',
+                type: 'string',
+                description: 'Amount of tokens for the example in decimal format',
+            },
+        ],
+    },
+    {
+        name: 'getBridgeQuote',
+        description: 'Get quote for bridging tokens between chains. This function is used to get a quote for bridging tokens between chains.',
+        required: ['srcChain', 'destChain', 'slippage', 'inputToken', 'outputToken', 'inputTokenDecimals', 'outputTokenDecimals', 'amount'],
+        props: [
+            {
+                name: 'srcChain',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Source chain to bridge from',
+            },
+            {
+                name: 'destChain',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Destination chain to bridge to',
+            },
+            {
+                name: 'slippage',
+                type: 'number',
+                description: 'Slippage tolerance for the quote',
+            },
+            {
+                name: 'inputToken',
+                type: 'string',
+                description: 'Input token address. Use - 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee for native token',
+            },
+            {
+                name: 'outputToken',
+                type: 'string',
+                description: 'Output token address. Use - 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee for native token',
+            },
+            {
+                name: 'inputTokenDecimals',
+                type: 'number',
+                description: 'Decimals of input token',
+            },
+            {
+                name: 'outputTokenDecimals',
+                type: 'number',
+                description: 'Decimals of output token',
             },
             {
                 name: 'amount',

@@ -5,7 +5,6 @@ import { TransactionParams } from '@heyanon/sdk/dist/blockchain/types';
 import { getNativeTokenName } from '../constants';
 
 const account = '0xF493118C11E32c6622933010775119622190BF2D' as Address;
-const destToken = '0xd97b1de3619ed2c6beb3860147e30ca8a7dc9891' as Address;
 
 describe('bridgeToEthereum', () => {
     const mockNotify = jest.fn((message: string) => {
@@ -27,7 +26,7 @@ describe('bridgeToEthereum', () => {
         chainName: 'base',
         account: account,
         amount: '0.01',
-        destToken: destToken,
+        destToken: 'USDC',
     };
 
     it('Should prepare and send bridge transaction correctly', async () => {
@@ -165,6 +164,19 @@ describe('bridgeToEthereum', () => {
 
         expect(mockNotify).toHaveBeenCalledWith('Checking user balance ⏳ ...');
         expect(result).toEqual(toResult('Insufficient balance.Required: 0.01 but got: 0', true));
+    });
+
+    it('should return error for unsupported destination token', async () => {
+        const result = await bridgeToEthereum(
+            { ...props, destToken: 'USPT' },
+            {
+                notify: mockNotify,
+                sendTransactions: jest.fn(),
+                getProvider: mockProvider,
+            },
+        );
+
+        expect(result).toEqual(toResult('Unsupported destination token', true));
     });
 
     it('should return ETH for Ethereum chain', () => {

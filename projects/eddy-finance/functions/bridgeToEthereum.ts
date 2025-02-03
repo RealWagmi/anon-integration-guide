@@ -1,10 +1,10 @@
 import { Address, formatUnits, parseUnits } from 'viem';
 import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName, checkToApprove } from '@heyanon/sdk';
-import { getDataForCrossChain, supportedChains, TSS_ADDRESS, getNativeTokenName } from '../constants';
+import { getDataForCrossChain, supportedChains, TSS_ADDRESS, getNativeTokenName, getZRC20Address } from '../constants';
 
 interface Props {
     chainName: string;
-    destToken: Address;
+    destToken: string;
     account: Address;
     amount: string;
 }
@@ -12,7 +12,7 @@ interface Props {
 /**
  * Bridge native token to any destination token on Ethereum.
  * @param chainName - Source chain
- * @param destToken - zrc20 token address of desired token on destination chain
+ * @param destToken - Destination token symbol, example: USDT,USDC, etc.
  * @param account - User account address
  * @param amount - Amount to bridge
  * @returns Transaction result
@@ -50,8 +50,15 @@ export async function bridgeToEthereum({ chainName, account, destToken, amount }
             return toResult('Destination token address is required', true);
         }
 
+        // Get zrc20 address
+        const destTokenAddress = getZRC20Address(destToken);
+
+        if (destTokenAddress === 'Unsupported') {
+            return toResult('Unsupported destination token', true);
+        }
+
         // Get data for bridge
-        const data: `0x${string}` = getDataForCrossChain(destToken, account) as `0x${string}`;
+        const data: `0x${string}` = getDataForCrossChain(destTokenAddress, account) as `0x${string}`;
 
         // TSS_ADDRESS info : https://www.zetachain.com/docs/reference/network/contracts/
         // TSS is a special address that triggers crosschain transactions
