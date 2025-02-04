@@ -9,13 +9,13 @@ import {
 } from '@heyanon/sdk';
 import { supportedChains } from '../constants';
 import { getChainConfig, getSdk, getProvider, validateAddress, wrapWithResult } from '../utils';
-import { MinimumBurnRedeemBag, RedeemBagStruct } from '@spool.fi/spool-v2-sdk';
+import { MinimumBurnRedeemBag, RedeemBagStruct, VaultDetailsQuery } from '@spool.fi/spool-v2-sdk';
 
 export interface UserFastRedeemFromVaultProps {
     chainName: string;
     account: Address;
     vaultAddress: Address;
-    assetsToWithdraw: string;
+    amount: string;
 }
 
 /**
@@ -25,7 +25,7 @@ export interface UserFastRedeemFromVaultProps {
  * @returns Transaction result
  */
 export async function userFastRedeemFromVault(
-    { chainName, account, vaultAddress, assetsToWithdraw }: UserFastRedeemFromVaultProps,
+    { chainName, account, vaultAddress, amount }: UserFastRedeemFromVaultProps,
     { sendTransactions, notify }: FunctionOptions,
 ): Promise<FunctionReturn> {
     // Check wallet connection
@@ -38,9 +38,9 @@ export async function userFastRedeemFromVault(
         return toResult(`Protocol is not supported on ${chainName}`, true);
 
     // Validate amount
-    const assetsToWithdrawBigInt = BigInt(assetsToWithdraw);
-    if (assetsToWithdrawBigInt <= BigInt(0)) {
-        return toResult(`Assets withdraw should be a positive number`, true);
+    const amountBigInt = BigInt(amount);
+    if (amountBigInt <= BigInt(0)) {
+        return toResult(`Amount should be a positive number`, true);
     }
 
     const config = await wrapWithResult(getChainConfig)(chainId);
@@ -60,8 +60,22 @@ export async function userFastRedeemFromVault(
     const ethersProvider = await wrapWithResult(getProvider)(chainId);
     if (!ethersProvider.success) return toResult(`Failed to get ethers provider`, true);
 
+    // Get vault token type
+    const vaultDetailsQuery: VaultDetailsQuery = {
+        vaultAddress: vaultAddressValidation.result,
+    };
+    const vaultDetails = await wrapWithResult(sdk.result.views.vaultInfo.getVaultDetails)(
+        vaultDetailsQuery,
+    );
+    if (!vaultDetails.success) return toResult(`Failed to get vault asset types`, true);
+
+    if (vaultDetails.result.assetGroup.tokens.length != 1) {
+        return toResult(`Only vaults with one asset are supported`, true);
+    }
+    const vaultTokenType = vaultDetails.result.assetGroup.tokens[0];
+
     // Get redeem bag for amount
-    const assetsToWithdrawNoDecimals = parseUnits(assetsToWithdrawBigInt.toString(), 18);
+    const assetsToWithdrawNoDecimals = parseUnits(amountBigInt.toString(), vaultTokenType.decimals);
 
     const minimumBurnRedeemBag: MinimumBurnRedeemBag = {
         userAddress: account,
@@ -105,14 +119,14 @@ export async function userFastRedeemFromVault(
 
     // sign and send ts
     await notify(
-        `Fast redeeming ${assetsToWithdraw} SVTs from vault ${vaultAddressValidation.result} for account ${account}...`,
+        `Fast redeeming ${amount} ${vaultTokenType.symbol} from vault ${vaultAddressValidation.result} for account ${account}...`,
     );
 
     const transactions: Array<TransactionParams> = [userFastRedeemFromVaultTxParams];
     await sendTransactions({ chainId, account, transactions });
 
     return toResult(
-        `Redeemed ${assetsToWithdraw} SVTs from vault ${vaultAddressValidation.result} for account ${account}...`,
+        `Redeemed ${amount} ${vaultTokenType.symbol} from vault ${vaultAddressValidation.result} for account ${account}...`,
     );
 }
 
