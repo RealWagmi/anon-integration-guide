@@ -6,15 +6,10 @@ import {
     TransactionParams,
 } from '@heyanon/sdk';
 import { Address, Hex, parseUnits } from 'viem';
-import { parseWallet } from '../utils.js';
+import { parseSlippageTolerance, parseWallet } from '../utils.js';
 import { ShadowSDK } from '../sdk.js';
 import { NonfungiblePositionManager, Position } from '@kingdomdotone/v3-sdk';
-import { Percent } from '@uniswap/sdk-core';
-import {
-    DEFAULT_LIQUIDITY_SLIPPAGE,
-    NFP_MANAGER_ADDRESS,
-    SLIPPAGE_PRECISION,
-} from '../constants.js';
+import { NFP_MANAGER_ADDRESS } from '../constants.js';
 
 export interface Props {
     chainName: string;
@@ -23,8 +18,8 @@ export interface Props {
     tokenB: Address;
     amountA: string;
     amountB: string;
-    tokenId?: number;
-    slippageTolerance?: number;
+    tokenId: number | null;
+    slippageTolerance: number | null;
 }
 
 export async function increaseLiquidityFunction(
@@ -155,12 +150,12 @@ export async function increaseLiquidity(
         token1.decimals,
     );
 
-    const slippageTolerance = props.slippageTolerance
-        ? new Percent(
-              Math.round(props.slippageTolerance * SLIPPAGE_PRECISION),
-              SLIPPAGE_PRECISION * 100,
-          )
-        : DEFAULT_LIQUIDITY_SLIPPAGE;
+    const slippageToleranceResult = parseSlippageTolerance(props.slippageTolerance);
+    if (!slippageToleranceResult.success) {
+        throw new Error(slippageToleranceResult.errorMessage);
+    }
+
+    const slippageTolerance = slippageToleranceResult.data.slippageTolerance;
 
     // Fetch pool again the get the latest slot0 data
     const pool = await sdk.getPool(

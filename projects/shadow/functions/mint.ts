@@ -6,7 +6,7 @@ import {
     TransactionParams,
 } from '@heyanon/sdk';
 import { Address, Hex, parseUnits } from 'viem';
-import { parsePrice, parseWallet } from '../utils.js';
+import { parsePrice, parseSlippageTolerance, parseWallet } from '../utils.js';
 import { ShadowSDK } from '../sdk.js';
 import {
     nearestUsableTick,
@@ -14,13 +14,9 @@ import {
     Position,
     priceToClosestTick,
 } from '@kingdomdotone/v3-sdk';
-import { Percent, Price } from '@uniswap/sdk-core';
+import { Price } from '@uniswap/sdk-core';
 import JSBI from 'jsbi';
-import {
-    DEFAULT_LIQUIDITY_SLIPPAGE,
-    NFP_MANAGER_ADDRESS,
-    SLIPPAGE_PRECISION,
-} from '../constants.js';
+import { NFP_MANAGER_ADDRESS } from '../constants.js';
 
 export interface Props {
     chainName: string;
@@ -29,13 +25,13 @@ export interface Props {
     tokenB: Address;
     amountA: string;
     amountB: string;
-    tickSpacing?: number;
-    slippageTolerance?: number;
-    lowerPrice?: string; // lower price as tokenB / tokenA
-    upperPrice?: string; // upper price as tokenB / tokenA
-    lowerPricePercentage?: number;
-    upperPricePercentage?: number;
-    recipient?: Address;
+    tickSpacing: number | null;
+    slippageTolerance: number | null;
+    lowerPrice: string | null; // lower price as tokenB / tokenA
+    upperPrice: string | null; // upper price as tokenB / tokenA
+    lowerPricePercentage: number | null;
+    upperPricePercentage: number | null;
+    recipient: Address | null;
 }
 
 /**
@@ -227,12 +223,13 @@ export async function mint(
 
     const tickLower = nearestUsableTick(priceToClosestTick(lowerPrice), pool.tickSpacing);
     const tickUpper = nearestUsableTick(priceToClosestTick(upperPrice), pool.tickSpacing);
-    const slippageTolerance = props.slippageTolerance
-        ? new Percent(
-              Math.round(props.slippageTolerance * SLIPPAGE_PRECISION),
-              SLIPPAGE_PRECISION * 100,
-          )
-        : DEFAULT_LIQUIDITY_SLIPPAGE;
+
+    const slippageToleranceResult = parseSlippageTolerance(props.slippageTolerance);
+    if (!slippageToleranceResult.success) {
+        throw new Error(slippageToleranceResult.errorMessage);
+    }
+
+    const slippageTolerance = slippageToleranceResult.data.slippageTolerance;
 
     const position = Position.fromAmounts({
         pool,

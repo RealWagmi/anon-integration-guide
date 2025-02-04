@@ -1,7 +1,11 @@
 import { getChainFromName } from '@heyanon/sdk';
 import { Address, isAddress } from 'viem';
-import { SUPPORTED_CHAINS } from './constants.js';
-import { Price, Token } from '@uniswap/sdk-core';
+import {
+    DEFAULT_LIQUIDITY_SLIPPAGE,
+    SLIPPAGE_PRECISION,
+    SUPPORTED_CHAINS,
+} from './constants.js';
+import { Percent, Price, Token } from '@uniswap/sdk-core';
 import JSBI from 'jsbi';
 
 type Result<Data> =
@@ -13,6 +17,36 @@ type Result<Data> =
           success: true;
           data: Data;
       };
+
+export function parseSlippageTolerance(
+    slippageTolerance: number | null,
+): Result<{ slippageTolerance: Percent }> {
+    if (
+        slippageTolerance &&
+        Number.isFinite(slippageTolerance) &&
+        slippageTolerance < 0 &&
+        slippageTolerance > 100
+    ) {
+        return {
+            success: false,
+            errorMessage: 'Slippage must be non-negative number between 0 and 100',
+        };
+    }
+
+    const parsedSlippageTolerance = slippageTolerance
+        ? new Percent(
+              Math.round(slippageTolerance * SLIPPAGE_PRECISION),
+              SLIPPAGE_PRECISION * 100,
+          )
+        : DEFAULT_LIQUIDITY_SLIPPAGE;
+
+    return {
+        success: true,
+        data: {
+            slippageTolerance: parsedSlippageTolerance,
+        },
+    };
+}
 
 export function parseWallet(
     chainName: string,
