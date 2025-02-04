@@ -29,8 +29,8 @@ const validateOrDefaultPool = (pool: string | undefined, supportedPools: string[
 };
 
 
-export const validateAndGetTokenDetails = <Props extends { chainName: string; pool: string; token: string }>
-({chainName, pool, token}: Props): Result<{
+export const validateAndGetTokenDetails = <Props extends { chainName: string; pool: string; tokenSymbol: string }>
+({chainName, pool, tokenSymbol}: Props): Result<{
     chainId: ChainId;
     poolAddress: Address,
     tokenAddress: Address,
@@ -44,8 +44,8 @@ export const validateAndGetTokenDetails = <Props extends { chainName: string; po
     if (!chainId) return {success: false, errorMessage: `Unsupported chain name: ${chainName}`};
     if (supportedChains.indexOf(chainId) === -1 || !poolDetails.poolTokens[chainId])
         return {success: false, errorMessage: `Protocol is not supported on ${chainName}`};
-    const tokenDetails = poolDetails.poolTokens[chainId][token.toUpperCase()];
-    if (!tokenDetails) return {success: false, errorMessage: `Token ${token} not found on chain ${chainName}`};
+    const tokenDetails = poolDetails.poolTokens[chainId][tokenSymbol.toUpperCase()];
+    if (!tokenDetails) return {success: false, errorMessage: `Token ${tokenSymbol} not found on chain ${chainName}`};
     const poolAddress = poolDetails.poolAddress;
     const tokenAddress = tokenDetails.address;
     const tokenDecimals = tokenDetails.decimals;

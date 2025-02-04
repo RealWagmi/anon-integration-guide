@@ -10,14 +10,13 @@ import {
 import {
     supportedChains,
 } from "../constants";
-import {vBNBAbi} from "../abis/vBNBAbi";
 import {validateAndGetTokenDetails, validateWallet} from "../utils";
 import {vComptrollerAbi} from "../abis/vComptrollerAbi";
 
 interface Props {
     chainName: string;
     account: Address;
-    token: string;
+    tokenSymbol: string;
     pool: string;
 }
 
@@ -26,8 +25,8 @@ interface Props {
  *
  * @returns {Promise<FunctionReturn>}.
  */
-export async function accountLiquidity({chainName, account, token, pool}: Props,
-                                       {notify, getProvider}: FunctionOptions): Promise<FunctionReturn> {
+export async function getAccountLiquidity({chainName, account, tokenSymbol, pool}: Props,
+                                          {notify, getProvider}: FunctionOptions): Promise<FunctionReturn> {
     const wallet = validateWallet({account})
     if (!wallet.success) {
         return toResult(wallet.errorMessage, true);
@@ -35,7 +34,7 @@ export async function accountLiquidity({chainName, account, token, pool}: Props,
     // Validate chain
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
-    const tokenDetails = validateAndGetTokenDetails({chainName, pool, token})
+    const tokenDetails = validateAndGetTokenDetails({chainName, pool, tokenSymbol})
     if (!tokenDetails.success) {
         return toResult(tokenDetails.errorMessage, true);
     }

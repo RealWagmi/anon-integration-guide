@@ -18,7 +18,7 @@ import {validateAndGetTokenDetails, validateWallet} from "../utils";
 interface Props {
     chainName: string;
     account: Address;
-    token: string;
+    tokenSymbol: string;
     pool: string;
 }
 
@@ -28,13 +28,13 @@ interface Props {
  *
  * @returns {Promise<FunctionReturn>} - The borrow balance of Token.
  */
-export async function borrowBalanceCurrentToken({chainName, account, token, pool}: Props,
+export async function borrowBalanceCurrentToken({chainName, account, tokenSymbol, pool}: Props,
                                                 {sendTransactions, notify,}: FunctionOptions): Promise<FunctionReturn> {
     const wallet = validateWallet({account})
     if (!wallet.success) {
         return toResult(wallet.errorMessage, true);
     }
-    const tokenDetails = validateAndGetTokenDetails({chainName, pool, token})
+    const tokenDetails = validateAndGetTokenDetails({chainName, pool, tokenSymbol: tokenSymbol})
     if (!tokenDetails.success) {
         return toResult(tokenDetails.errorMessage, true);
     }
@@ -55,7 +55,7 @@ export async function borrowBalanceCurrentToken({chainName, account, token, pool
             transactions: [borrowBalanceCurrent],
         });
         const borrowMessage = result.data[result.data.length - 1];
-        return toResult(result.isMultisig ? borrowMessage.message : `Successfully fetched borrow balance of ${token}.`);
+        return toResult(result.isMultisig ? borrowMessage.message : `Successfully fetched borrow balance of ${tokenSymbol}.`);
     } catch (error) {
         return toResult(
             `Failed to redeem token: ${error instanceof Error ? error.message : "Unknown error"}`,

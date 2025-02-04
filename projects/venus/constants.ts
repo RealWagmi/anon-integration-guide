@@ -9,6 +9,8 @@ export const VBNB_ADDRESS = '0xa07c5b74c9b40447a954e1466938b865b6bbea36'
 
 export const XVS_STAKE_ADDRESS = '0x051100480289e704d20e9DB4804837068f3f9204'
 
+export const XVS_TOKEN = "0xcF6BB5389c92Bdda8a3747Ddb454cB7a64626C63"
+
 
 interface Token {
     address: Address;

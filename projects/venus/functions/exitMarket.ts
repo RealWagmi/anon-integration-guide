@@ -17,7 +17,7 @@ import {validateAndGetTokenDetails, validateWallet} from "../utils";
 interface Props {
     chainName: string;
     account: Address;
-    token: string;
+    tokenSymbol: string;
     pool: string;
 }
 
@@ -29,7 +29,7 @@ interface Props {
  * @returns result containing the transaction hash.
  */
 export async function exitMarket(
-    {chainName, account, token, pool}: Props,
+    {chainName, account, tokenSymbol, pool}: Props,
     {sendTransactions, notify}: FunctionOptions
 ): Promise<FunctionReturn> {
     const wallet = validateWallet({account})
@@ -37,7 +37,7 @@ export async function exitMarket(
         return toResult(wallet.errorMessage, true);
     }
     // Validate chain
-    const tokenDetails = validateAndGetTokenDetails({chainName, pool, token})
+    const tokenDetails = validateAndGetTokenDetails({chainName, pool, tokenSymbol: tokenSymbol})
     if (!tokenDetails.success) {
         return toResult(tokenDetails.errorMessage, true);
     }

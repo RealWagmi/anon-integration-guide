@@ -16,7 +16,7 @@ interface Props {
     chainName: string;
     account: Address;
     amount: string;
-    token: string;
+    tokenSymbol: string;
     pool: string;
 }
 
@@ -28,7 +28,7 @@ interface Props {
  * @returns Borrow result containing the transaction hash.
  */
 export async function mintToken(
-    {chainName, account, amount, token, pool}: Props,
+    {chainName, account, amount, tokenSymbol, pool}: Props,
     {sendTransactions, notify, getProvider}: FunctionOptions
 ): Promise<FunctionReturn> {
     const wallet = validateWallet({account})
@@ -38,7 +38,7 @@ export async function mintToken(
     if (!amount || typeof amount !== 'string') {
         return toResult('Invalid amount', true);
     }
-    const tokenDetails = validateAndGetTokenDetails({chainName, pool, token})
+    const tokenDetails = validateAndGetTokenDetails({chainName, pool, tokenSymbol: tokenSymbol})
     if (!tokenDetails.success) {
         return toResult(tokenDetails.errorMessage, true);
     }
@@ -93,7 +93,7 @@ export async function mintToken(
             transactions: transactions
         });
         const depositMessage = result.data[result.data.length - 1];
-        return toResult(result.isMultisig ? depositMessage.message : `Successfully deposited ${amount} ${token}.`);
+        return toResult(result.isMultisig ? depositMessage.message : `Successfully deposited ${amount} ${tokenSymbol}.`);
     } catch (error) {
         return toResult(
             `Failed to mint token: ${error instanceof Error ? error.message : "Unknown error"}`,

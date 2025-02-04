@@ -41,7 +41,7 @@ export async function borrowToken(
         return toResult('Invalid amount', true);
     }
     // Validate chain
-    const tokenDetails = validateAndGetTokenDetails({chainName, pool, token})
+    const tokenDetails = validateAndGetTokenDetails({chainName, pool, tokenSymbol: token})
     if (!tokenDetails.success) {
         return toResult(tokenDetails.errorMessage, true);
     }

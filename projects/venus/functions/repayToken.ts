@@ -20,7 +20,7 @@ interface Props {
     chainName: string;
     account: Address;
     amount: string;
-    token: string;
+    tokenSymbol: string;
     pool: string;
 }
 
@@ -32,7 +32,7 @@ interface Props {
  * @returns Repay result containing the transaction hash.
  */
 export async function repayToken(
-    {chainName, account, amount, token, pool}: Props,
+    {chainName, account, amount, tokenSymbol, pool}: Props,
     {sendTransactions, notify, getProvider}: FunctionOptions
 ): Promise<FunctionReturn> {
     const wallet = validateWallet({account})
@@ -43,7 +43,7 @@ export async function repayToken(
         return toResult('Invalid amount', true);
     }
     // Validate chain
-    const tokenDetails = validateAndGetTokenDetails({chainName, pool, token})
+    const tokenDetails = validateAndGetTokenDetails({chainName, pool, tokenSymbol: tokenSymbol})
     if (!tokenDetails.success) {
         return toResult(tokenDetails.errorMessage, true);
     }
@@ -99,7 +99,7 @@ export async function repayToken(
         });
         const message = result.data[result.data.length - 1];
         // return toResult("Repaying Token...");
-        return toResult(result.isMultisig ? message.message : `Successfully repayed ${amount} ${token}.`);
+        return toResult(result.isMultisig ? message.message : `Successfully repayed ${amount} ${tokenSymbol}.`);
     } catch (error) {
         return toResult(
             `Failed to repay token: ${error instanceof Error ? error.message : "Unknown error"}`,

@@ -9,7 +9,7 @@ import {
     toResult, checkToApprove, getChainFromName,
 } from "@heyanon/sdk";
 import {validateWallet} from "../utils";
-import {supportedChains, XVS_STAKE_ADDRESS} from "../constants";
+import {supportedChains, XVS_STAKE_ADDRESS, XVS_TOKEN} from "../constants";
 import {XVSVaultAbi} from "../abis/XVSVaultAbi";
 
 interface Props {
@@ -66,7 +66,7 @@ export async function stakeXVS(
             data: encodeFunctionData({
                 abi: XVSVaultAbi,
                 functionName: "deposit",
-                args: ["0xcF6BB5389c92Bdda8a3747Ddb454cB7a64626C63", pid, parseUnits(amount, 18)]
+                args: [XVS_TOKEN, pid, parseUnits(amount, 18)]
             }),
         };
         transactions.push(stakeTx);

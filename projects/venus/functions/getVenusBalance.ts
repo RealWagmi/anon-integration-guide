@@ -17,7 +17,7 @@ import {validateAndGetTokenDetails, validateWallet} from "../utils";
 interface Props {
     chainName: string;
     account: Address;
-    token: string;
+    tokenSymbol: string;
     pool: string;
 }
 
@@ -26,7 +26,7 @@ interface Props {
  *
  * @returns {Promise<FunctionReturn>} - The balance of Token.
  */
-export async function balanceOf({chainName, account, token, pool}: Props,
+export async function getVenusBalance({chainName, account, tokenSymbol, pool}: Props,
                                 {notify, getProvider}: FunctionOptions): Promise<FunctionReturn> {
     const wallet = validateWallet({account})
     if (!wallet.success) {
@@ -35,7 +35,7 @@ export async function balanceOf({chainName, account, token, pool}: Props,
     // Validate chain
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
-    const tokenDetails = validateAndGetTokenDetails({chainName, pool, token})
+    const tokenDetails = validateAndGetTokenDetails({chainName, pool, tokenSymbol: tokenSymbol})
     if (!tokenDetails.success) {
         return toResult(tokenDetails.errorMessage, true);
     }
@@ -51,7 +51,7 @@ export async function balanceOf({chainName, account, token, pool}: Props,
             args: [account],
         }) as bigint;
         //All vTokens are 8 decimals
-        return toResult(`Balance of ${token}: ${formatUnits(balanceOf, 8)}`);
+        return toResult(`Balance of ${tokenSymbol}: ${formatUnits(balanceOf, 8)}`);
     } catch (error) {
         return toResult(
             `Failed to Get Balance: ${error instanceof Error ? error.message : "Unknown error"}`,

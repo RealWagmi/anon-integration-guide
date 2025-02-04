@@ -18,7 +18,7 @@ interface Props {
     chainName: string;
     account: Address;
     amount: string;
-    token: string;
+    tokenSymbol: string;
     pool: string;
 }
 
@@ -30,7 +30,7 @@ interface Props {
  * @returns Redeem result containing the transaction hash.
  */
 export async function redeemUnderlying(
-    {chainName, account, amount, token, pool}: Props,
+    {chainName, account, amount, tokenSymbol, pool}: Props,
     {sendTransactions, notify}: FunctionOptions
 ): Promise<FunctionReturn> {
     const wallet = validateWallet({account})
@@ -40,7 +40,7 @@ export async function redeemUnderlying(
     if (!amount || typeof amount !== 'string') {
         return toResult('Invalid amount', true);
     }
-    const tokenDetails = validateAndGetTokenDetails({chainName, pool, token})
+    const tokenDetails = validateAndGetTokenDetails({chainName, pool, tokenSymbol: tokenSymbol})
     if (!tokenDetails.success) {
         return toResult(tokenDetails.errorMessage, true);
     }
