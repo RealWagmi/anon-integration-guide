@@ -63,6 +63,12 @@ describe('Minting', () => {
         amountA: '10.5',
         amountB: '7.5',
         recipient: zeroAddress,
+        slippageTolerance: null,
+        lowerPrice: null,
+        upperPrice: null,
+        lowerPricePercentage: null,
+        upperPricePercentage: null,
+        tickSpacing: null,
     };
 
     it('it should create a mint position using a default range of +-15%', async () => {

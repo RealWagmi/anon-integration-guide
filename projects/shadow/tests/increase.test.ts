@@ -78,6 +78,8 @@ describe('Minting', () => {
         tokenB: USDC_ADDRESS,
         amountA: '10.5',
         amountB: '7.5',
+        slippageTolerance: null,
+        tokenId: null,
     };
 
     it('it should add liquidity to an existing position with a range of +-15%', async () => {

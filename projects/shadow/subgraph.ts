@@ -2,9 +2,6 @@ import { gql, request } from 'graphql-request';
 import { SUBGRAPH_API_URL, SUBGRAPH_DOCS_PER_PAGE } from './constants.js';
 import { AnyToken } from './tokens.js';
 import { Address } from 'viem';
-import { FeeAmount, Pool } from '@kingdomdotone/v3-sdk';
-import { ChainId } from '@heyanon/sdk';
-import { Token as UniswapToken } from '@uniswap/sdk-core';
 
 interface ClPoolsResponse {
     clPools: ClPool[];
