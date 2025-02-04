@@ -58,8 +58,8 @@ describe('Minting', () => {
     const props: MintProps = {
         chainName: 'sonic',
         account: zeroAddress,
-        tokenA: WRAPPED_NATIVE_ADDRESS,
-        tokenB: USDC_ADDRESS,
+        tokenAAddress: WRAPPED_NATIVE_ADDRESS,
+        tokenBAddress: USDC_ADDRESS,
         amountA: '10.5',
         amountB: '7.5',
         recipient: zeroAddress,

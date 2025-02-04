@@ -113,8 +113,8 @@ export const tools: AiTool[] = [
         required: [
             'chainName',
             'account',
-            'tokenA',
-            'tokenB',
+            'tokenAAddress',
+            'tokenBAddress',
             'amountA',
             'amountB',
             'slippageTolerance',
@@ -137,12 +137,12 @@ export const tools: AiTool[] = [
                 description: 'Address providing liquidity.',
             },
             {
-                name: 'tokenA',
+                name: 'tokenAAddress',
                 type: 'string',
                 description: 'Address of token A.',
             },
             {
-                name: 'tokenB',
+                name: 'tokenBAddress',
                 type: 'string',
                 description: 'Address of token B.',
             },
@@ -200,8 +200,8 @@ export const tools: AiTool[] = [
         required: [
             'chainName',
             'account',
-            'tokenA',
-            'tokenB',
+            'tokenAAddress',
+            'tokenBAddress',
             'collectPercentage',
             'amountAMax',
             'amountBMax',
@@ -220,12 +220,12 @@ export const tools: AiTool[] = [
                 description: 'Address collecting fees.',
             },
             {
-                name: 'tokenA',
+                name: 'tokenAAddress',
                 type: 'string',
                 description: 'Token A associated with the position.',
             },
             {
-                name: 'tokenB',
+                name: 'tokenBAddress',
                 type: 'string',
                 description: 'Token B associated with the position.',
             },
@@ -263,8 +263,8 @@ export const tools: AiTool[] = [
         required: [
             'chainName',
             'account',
-            'tokenA',
-            'tokenB',
+            'tokenAAddress',
+            'tokenBAddress',
             'decreasePercentage',
             'tokenId',
             'slippageTolerance',
@@ -282,12 +282,12 @@ export const tools: AiTool[] = [
                 description: 'Address reducing liquidity.',
             },
             {
-                name: 'tokenA',
+                name: 'tokenAAddress',
                 type: 'string',
                 description: 'Token A linked to the position.',
             },
             {
-                name: 'tokenB',
+                name: 'tokenBAddress',
                 type: 'string',
                 description: 'Token B linked to the position.',
             },
@@ -312,7 +312,14 @@ export const tools: AiTool[] = [
         name: 'increaseLiquidity',
         description:
             'Add liquidity to an existing position, specifying token amounts and optional minimum values.',
-        required: ['chainName', 'account', 'tokenA', 'tokenB', 'amountA', 'amountB'],
+        required: [
+            'chainName',
+            'account',
+            'tokenAAddress',
+            'tokenBAddress',
+            'amountA',
+            'amountB',
+        ],
         props: [
             {
                 name: 'chainName',
@@ -326,12 +333,12 @@ export const tools: AiTool[] = [
                 description: 'Address adding liquidity.',
             },
             {
-                name: 'tokenA',
+                name: 'tokenAAddress',
                 type: 'string',
                 description: 'Address of token A.',
             },
             {
-                name: 'tokenB',
+                name: 'tokenBAddress',
                 type: 'string',
                 description: 'Address of token B.',
             },

@@ -14,8 +14,8 @@ import { NFP_MANAGER_ADDRESS } from '../constants.js';
 export interface Props {
     chainName: string;
     account: Address;
-    tokenA: Address;
-    tokenB: Address;
+    tokenAAddress: Address;
+    tokenBAddress: Address;
     amountA: string;
     amountB: string;
     tokenId: number | null;
@@ -108,8 +108,8 @@ export async function increaseLiquidity(
     notify: (message: string) => Promise<void>,
 ) {
     const allPositions = await ShadowSDK.getLpPositions(props.account, [
-        props.tokenA,
-        props.tokenB,
+        props.tokenAAddress,
+        props.tokenBAddress,
     ]);
     if (allPositions.length == 0) {
         throw new Error('No positions found');
@@ -126,14 +126,14 @@ export async function increaseLiquidity(
         `Found position with token ID ${position.tokenId} for pool ${position.poolSymbol}`,
     );
 
-    const baseToken = await sdk.getToken(props.tokenA);
-    const quoteToken = await sdk.getToken(props.tokenB);
+    const baseToken = await sdk.getToken(props.tokenAAddress);
+    const quoteToken = await sdk.getToken(props.tokenBAddress);
 
     if (!baseToken) {
-        throw new Error(`Token (${props.tokenA}) not found`);
+        throw new Error(`Token (${props.tokenAAddress}) not found`);
     }
     if (!quoteToken) {
-        throw new Error(`Token (${props.tokenB}) not found`);
+        throw new Error(`Token (${props.tokenBAddress}) not found`);
     }
 
     const isBaseToken0 = baseToken.wrapped.sortsBefore(quoteToken.wrapped);

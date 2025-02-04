@@ -21,8 +21,8 @@ import { NFP_MANAGER_ADDRESS } from '../constants.js';
 export interface Props {
     chainName: string;
     account: Address;
-    tokenA: Address;
-    tokenB: Address;
+    tokenAAddress: Address;
+    tokenBAddress: Address;
     amountA: string;
     amountB: string;
     tickSpacing: number | null;
@@ -121,14 +121,14 @@ export async function mint(
     sdk: ShadowSDK,
     notify: (message: string) => Promise<void>,
 ) {
-    const baseToken = await sdk.getToken(props.tokenA);
-    const quoteToken = await sdk.getToken(props.tokenB);
+    const baseToken = await sdk.getToken(props.tokenAAddress);
+    const quoteToken = await sdk.getToken(props.tokenBAddress);
 
     if (!baseToken) {
-        throw new Error(`Token (${props.tokenA}) not found`);
+        throw new Error(`Token (${props.tokenAAddress}) not found`);
     }
     if (!quoteToken) {
-        throw new Error(`Token (${props.tokenB}) not found`);
+        throw new Error(`Token (${props.tokenBAddress}) not found`);
     }
 
     const isBaseToken0 = baseToken.wrapped.sortsBefore(quoteToken.wrapped);
