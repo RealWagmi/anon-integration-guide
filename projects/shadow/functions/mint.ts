@@ -244,7 +244,7 @@ export async function mint(
     });
 
     notify(
-        `Building new position with ${position.amount0.toSignificant(6)} ${token0.symbol} and ${position.amount1.toSignificant(6)} ${token1.symbol}...`,
+        `Creating new position with ${position.amount0.toSignificant(6)} ${token0.symbol} and ${position.amount1.toSignificant(6)} ${token1.symbol}...`,
     );
 
     const mintNativeToken = [token0, token1].find((tk) => tk.isNative);

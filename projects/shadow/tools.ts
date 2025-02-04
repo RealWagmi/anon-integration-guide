@@ -248,7 +248,7 @@ export const tools: AiTool[] = [
             {
                 name: 'decreasePercentage',
                 type: 'number',
-                description: 'Percentage of liquidity to remove.',
+                description: 'Percentage of liquidity to remove, between 0 and 100.',
             },
             {
                 name: 'tokenId',

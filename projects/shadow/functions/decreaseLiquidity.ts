@@ -5,11 +5,11 @@ import {
     toResult,
     TransactionParams,
 } from '@heyanon/sdk';
-import { Address, Hex, parseUnits } from 'viem';
+import { Address, Hex } from 'viem';
 import { parseWallet } from '../utils.js';
 import { ShadowSDK } from '../sdk.js';
 import { NonfungiblePositionManager, Position } from '@kingdomdotone/v3-sdk';
-import { Percent } from '@uniswap/sdk-core';
+import { CurrencyAmount, Percent } from '@uniswap/sdk-core';
 import {
     DEFAULT_LIQUIDITY_SLIPPAGE,
     NFP_MANAGER_ADDRESS,
@@ -21,13 +21,12 @@ export interface Props {
     account: Address;
     tokenA: Address;
     tokenB: Address;
-    amountA: string;
-    amountB: string;
+    decreasePercentage: number;
     tokenId?: number;
     slippageTolerance?: number;
 }
 
-export async function increaseLiquidityFunction(
+export async function decreaseLiquidityFunction(
     props: Props,
     { sendTransactions, notify, getProvider }: FunctionOptions,
 ): Promise<FunctionReturn> {
@@ -43,7 +42,7 @@ export async function increaseLiquidityFunction(
         const transactions = new Array<TransactionParams>();
 
         try {
-            const { position, calldata, msgValue } = await increaseLiquidity(
+            const { position, calldata, msgValue } = await decreaseLiquidity(
                 props,
                 sdk,
                 notify,
@@ -79,7 +78,7 @@ export async function increaseLiquidityFunction(
                 transactions,
             });
 
-            await notify('Preparing increase liquidity transaction...');
+            await notify('Preparing decrease liquidity transaction...');
 
             transactions.push({
                 target: NFP_MANAGER_ADDRESS,
@@ -107,7 +106,7 @@ export async function increaseLiquidityFunction(
     }
 }
 
-export async function increaseLiquidity(
+export async function decreaseLiquidity(
     props: Props,
     sdk: ShadowSDK,
     notify: (message: string) => Promise<void>,
@@ -146,15 +145,6 @@ export async function increaseLiquidity(
         ? [baseToken, quoteToken]
         : [quoteToken, baseToken];
 
-    const amount0 = parseUnits(
-        isBaseToken0 ? props.amountA : props.amountB,
-        token0.decimals,
-    );
-    const amount1 = parseUnits(
-        isBaseToken0 ? props.amountB : props.amountA,
-        token1.decimals,
-    );
-
     const slippageTolerance = props.slippageTolerance
         ? new Percent(
               Math.round(props.slippageTolerance * SLIPPAGE_PRECISION),
@@ -172,32 +162,39 @@ export async function increaseLiquidity(
         throw new Error(`Pool not found`);
     }
 
-    const newPosition = Position.fromAmounts({
+    const sdkPosition = new Position({
         pool,
         tickLower: position.position.tickLower,
         tickUpper: position.position.tickUpper,
-        amount0: amount0.toString(),
-        amount1: amount1.toString(),
-        useFullPrecision: true,
+        liquidity: position.position.liquidity,
     });
 
-    await notify(
-        `Updating position ${position.tokenId} with ${newPosition.amount0.toSignificant(6)} ${pool.token0.symbol} and ${newPosition.amount1.toSignificant(6)} ${pool.token1.symbol}...`,
+    const liquidityPercentage = new Percent(
+        Math.round(props.decreasePercentage * 100),
+        1e4,
     );
 
-    const mintNativeToken = [token0, token1].find((tk) => tk.isNative);
+    await notify(
+        `Decreasing position #${position.tokenId} by ${liquidityPercentage.toFixed(2)}`,
+    );
+
     const deadline = Math.floor(Date.now() / 1000) + 60 * 10; // 10 minutes from now
 
-    const { calldata, value: msgValue } = NonfungiblePositionManager.addCallParameters(
-        newPosition,
+    const { calldata, value: msgValue } = NonfungiblePositionManager.removeCallParameters(
+        sdkPosition,
         {
             tokenId: position.tokenId,
+            liquidityPercentage,
             slippageTolerance,
-            recipient: props.account,
+            burnToken: liquidityPercentage.equalTo(1),
             deadline,
-            useNative: mintNativeToken,
+            collectOptions: {
+                expectedCurrencyOwed0: CurrencyAmount.fromRawAmount(token0, 0),
+                expectedCurrencyOwed1: CurrencyAmount.fromRawAmount(token1, 0),
+                recipient: props.account,
+            },
         },
     );
 
-    return { position: newPosition, calldata, msgValue };
+    return { position: sdkPosition, calldata, msgValue };
 }
