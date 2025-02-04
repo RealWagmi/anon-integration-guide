@@ -5,14 +5,12 @@ Yelay automatically reallocates user's liquidity among bluechip DeFi protocols i
 ## Supported Networks
 
 - ETHEREUM
-- ARBITRUM
 
 ## Common Tasks
 
 1. Basic Operations
    - "Execute example operation with 100 USDT in @Yelay on Ethereum network"
    - "Run example transaction with 50 USDC in @Yelay"
-   - "Perform example action with 1000 tokens in @Yelay"
 
 2. Information Queries
    - "Show my current status in @Yelay"
@@ -25,6 +23,12 @@ Yelay automatically reallocates user's liquidity among bluechip DeFi protocols i
 
 List of available functions will be added here.
 
+- getUserVaultAssetBalance
+- getUserVaultSvtBalance
+- getVaultBaseApy
+- userDepositToVault
+- userFastRedeemFromVault
+
 ## Installation
 
 ```bash
@@ -33,4 +37,18 @@ yarn add @heyanon/Yelay
 
 ## Usage
 
-Example usage will be added here.
+### getUserVaultAssetBalance
+Can you get me my assets balance for vault `VAULT_ADDRESS`
+
+### getUserVaultSvtBalance
+Can you get me my SVT balance for vault `VAULT_ADDRESS`
+
+### getVaultBaseApy
+Can you get the APY for vault `VAULT_ADDRESS`
+
+### userDepositToVault
+I would like to deposit `AMOUNT` `VAULT_TOKEN_SYMBOL` to vault `VAULT_ADDRESS`
+
+### userFastRedeemFromVault
+I would like to fast redeem`AMOUNT` `VAULT_TOKEN_SYMBOL` from vault `VAULT_ADDRESS`
+
