@@ -4,8 +4,8 @@ import { CONTRACT_ADDRESSES, NETWORKS } from '../../../constants.js';
 import { PositionRouter } from '../../../abis/PositionRouter.js';
 import { Vault } from '../../../abis/Vault.js';
 import { VaultPriceFeed } from '../../../abis/VaultPriceFeed.js';
-import { getPosition } from './getPosition.js';
 import { getAllOpenPositions } from './getAllOpenPositions.js';
+import { decodeEventLog, formatUnits } from 'viem';
 
 interface Props {
     chainName: (typeof NETWORKS)[keyof typeof NETWORKS];
@@ -231,14 +231,88 @@ export async function closePosition(
             return toResult('Failed to send transactions', true);
         }
 
+        // Get transaction receipts and parse DecreasePosition events
+        const positionEvents = [];
+
+        for (const tx of txResult.data) {
+            if (!tx.hash) continue;
+
+            const receipt = await provider.getTransactionReceipt({ hash: tx.hash });
+            const decreaseEvents = receipt.logs.filter(log => {
+                return log.address.toLowerCase() === CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT.toLowerCase() &&
+                       log.topics[0] === '0x93d75d64d1f84fc6f430a64fc578bdd4c1e090e90ea2d51773e626d19de56d30'; // keccak256('DecreasePosition(address,address,address,bool,uint256,uint256,uint256,uint256,uint256,uint256)')
+            });
+
+            if (decreaseEvents.length > 0) {
+                for (const eventData of decreaseEvents) {
+                    const decodedEvent = decodeEventLog({
+                        abi: [{
+                            anonymous: false,
+                            inputs: [
+                                { indexed: false, name: 'account', type: 'address' },
+                                { indexed: false, name: 'collateralToken', type: 'address' },
+                                { indexed: false, name: 'indexToken', type: 'address' },
+                                { indexed: false, name: 'isLong', type: 'bool' },
+                                { indexed: false, name: 'size', type: 'uint256' },
+                                { indexed: false, name: 'collateral', type: 'uint256' },
+                                { indexed: false, name: 'averagePrice', type: 'uint256' },
+                                { indexed: false, name: 'entryFundingRate', type: 'uint256' },
+                                { indexed: false, name: 'reserveAmount', type: 'uint256' },
+                                { indexed: false, name: 'realisedPnl', type: 'uint256' }
+                            ],
+                            name: 'DecreasePosition',
+                            type: 'event'
+                        }],
+                        data: eventData.data,
+                        topics: eventData.topics
+                    });
+
+                    // Verify the event data matches our expectations
+                    if (decodedEvent.args.account.toLowerCase() !== account.toLowerCase()) {
+                        return toResult(
+                            `Position decrease event validation failed. Expected account ${account}, but got ${decodedEvent.args.account}`,
+                            true
+                        );
+                    }
+
+                    positionEvents.push({
+                        hash: tx.hash,
+                        collateralToken: decodedEvent.args.collateralToken,
+                        indexToken: decodedEvent.args.indexToken,
+                        isLong: decodedEvent.args.isLong,
+                        size: formatUnits(decodedEvent.args.size, 30),
+                        collateral: formatUnits(decodedEvent.args.collateral, 30),
+                        averagePrice: formatUnits(decodedEvent.args.averagePrice, 30),
+                        realisedPnl: formatUnits(decodedEvent.args.realisedPnl, 30),
+                    });
+                }
+            }
+        }
+
+        if (positionEvents.length === 0) {
+            return toResult(
+                JSON.stringify({
+                    success: true,
+                    txHashes: txResult.data.map(tx => tx.hash),
+                    details: {
+                        positionsCount: positionsToClose.length,
+                        slippageBps,
+                        withdrawETH,
+                        warning: 'Could not parse DecreasePosition events from transaction receipts'
+                    },
+                }),
+            );
+        }
+
         return toResult(
             JSON.stringify({
                 success: true,
-                txHashes: txResult.data,
+                txHashes: txResult.data.map(tx => tx.hash),
                 details: {
                     positionsCount: positionsToClose.length,
                     slippageBps,
                     withdrawETH,
+                    closedPositions: positionEvents,
                 },
             }),
         );

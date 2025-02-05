@@ -62,7 +62,7 @@ export async function getPerpsLiquidity({ chainName, account, indexToken, collat
         }
 
         // Validate trading token
-        const supportedTradingTokens = [CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH, CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN, CONTRACT_ADDRESSES[NETWORKS.SONIC].ANON];
+        const supportedTradingTokens = [CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH, CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN, CONTRACT_ADDRESSES[NETWORKS.SONIC].ANON];
 
         if (!supportedTradingTokens.includes(indexToken)) {
             return toResult(`Token ${indexToken} is not supported for trading`, true);

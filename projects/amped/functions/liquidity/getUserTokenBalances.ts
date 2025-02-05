@@ -50,7 +50,7 @@ export async function getUserTokenBalances({ chainName, account }: Props, { getP
         await notify('Initializing vault contract...');
         await notify(`Vault address: ${CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT}`);
 
-        // Get native token balance
+        // Get native token (S) balance
         try {
             const nativeBalance = await provider.request({
                 method: 'eth_getBalance',
@@ -62,22 +62,23 @@ export async function getUserTokenBalances({ chainName, account }: Props, { getP
             await notify(`Native balance BigInt: ${nativeBalanceBigInt.toString()}`);
 
             await notify('Getting native token price...');
-            await notify(`Native token address: ${CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN}`);
+            await notify(`Native token address: ${CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN}`);
 
             const nativePrice = await provider.readContract({
                 address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT,
                 abi: Vault,
                 functionName: 'getMaxPrice',
-                args: [CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN],
+                args: [CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN],
             }) as bigint;
 
-            await notify(`Native price: ${nativePrice.toString()}`);
+            await notify(`Native price from Amped Finance: ${nativePrice.toString()}`);
 
             // Price is in 1e30, balance in 1e18, result should be in USD
-            const nativeBalanceUsd = (Number(nativeBalanceBigInt) * Number(nativePrice)) / 1e48;
+            const nativeBalanceUsd = (nativeBalanceBigInt * nativePrice) / BigInt(1e48);
 
-            await notify(`Native balance USD: ${nativeBalanceUsd}`);
+            await notify(`Native balance USD from Amped Finance: ${nativeBalanceUsd.toString()}`);
 
+            // Add native token (S)
             tokenInfos.push({
                 symbol: 'S',
                 address: CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN,
@@ -86,6 +87,27 @@ export async function getUserTokenBalances({ chainName, account }: Props, { getP
                 balanceUsd: nativeBalanceUsd.toString(),
                 price: nativePrice.toString(),
             });
+
+            // Get wrapped native token (WS) balance
+            const wrappedBalance = await provider.readContract({
+                address: CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN,
+                abi: ERC20,
+                functionName: 'balanceOf',
+                args: [account],
+            }) as bigint;
+
+            const wrappedBalanceUsd = (wrappedBalance * nativePrice) / BigInt(1e48);
+
+            // Add wrapped native token (WS)
+            tokenInfos.push({
+                symbol: 'WS',
+                address: CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN,
+                decimals: 18,
+                balance: wrappedBalance.toString(),
+                balanceUsd: wrappedBalanceUsd.toString(),
+                price: nativePrice.toString(),
+            });
+
         } catch (error) {
             console.error('Error details:', error);
             if (error instanceof Error) {
@@ -101,32 +123,37 @@ export async function getUserTokenBalances({ chainName, account }: Props, { getP
             { symbol: 'EURC', address: CONTRACT_ADDRESSES[NETWORKS.SONIC].EURC, decimals: 6 },
         ];
 
-        // Get ERC20 token balances
-        for (const token of acceptedTokens) {
-            const balance = await provider.readContract({
-                address: token.address,
-                abi: ERC20,
-                functionName: 'balanceOf',
-                args: [account],
-            }) as bigint;
-
-            const price = await provider.readContract({
-                address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT,
-                abi: Vault,
-                functionName: 'getMaxPrice',
-                args: [token.address],
-            }) as bigint;
+        // Get ERC20 token balances and prices in parallel
+        const tokenDataPromises = acceptedTokens.map(async (token) => {
+            const [balance, price] = await Promise.all([
+                provider.readContract({
+                    address: token.address,
+                    abi: ERC20,
+                    functionName: 'balanceOf',
+                    args: [account],
+                }) as Promise<bigint>,
+                provider.readContract({
+                    address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT,
+                    abi: Vault,
+                    functionName: 'getMaxPrice',
+                    args: [token.address],
+                }) as Promise<bigint>,
+            ]);
 
             // Price is in 1e30, balance in token decimals, result should be in USD
-            const balanceUsd = (Number(balance) * Number(price)) / (Math.pow(10, token.decimals) * 1e30);
+            const balanceUsd = (balance * price) / (BigInt(10) ** BigInt(token.decimals) * BigInt(1e30));
 
-            tokenInfos.push({
+            return {
                 ...token,
                 balance: balance.toString(),
                 balanceUsd: balanceUsd.toString(),
                 price: price.toString(),
-            });
-        }
+            };
+        });
+
+        // Wait for all token data to be fetched
+        const tokenResults = await Promise.all(tokenDataPromises);
+        tokenInfos.push(...tokenResults);
 
         return toResult(
             JSON.stringify({

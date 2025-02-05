@@ -64,41 +64,31 @@ export async function getUserLiquidity({ chainName, account }: UserLiquidityProp
 
     try {
         await notify('Initializing contracts...');
-        const provider = getProvider(chainId) as unknown as PublicClient<Transport, Chain>;
-
-        // Initialize contracts
-        const glpManager = getContract({
-            address: CONTRACT_ADDRESSES[NETWORKS.SONIC].GLP_MANAGER as Address,
-            abi: GlpManager,
-            publicClient: provider,
-        });
-
-        const fsAlpToken = getContract({
-            address: CONTRACT_ADDRESSES[NETWORKS.SONIC].FS_ALP as Address,
-            abi: ERC20,
-            publicClient: provider,
-        });
-
-        if (!CONTRACT_ADDRESSES[NETWORKS.SONIC].ALP_VESTER) {
-            return toResult('ALP_VESTER address is not configured', true);
-        }
-
-        const alpVester = getContract({
-            address: CONTRACT_ADDRESSES[NETWORKS.SONIC].ALP_VESTER as Address,
-            abi: Vester,
-            publicClient: provider,
-        });
-
-        await notify('Fetching user balances and positions...');
+        const provider = getProvider(chainId);
 
         // Get fsALP balance
-        const balance = await fsAlpToken.read.balanceOf([account]);
+        const balance = await provider.readContract({
+            address: CONTRACT_ADDRESSES[NETWORKS.SONIC].FS_ALP,
+            abi: ERC20,
+            functionName: 'balanceOf',
+            args: [account],
+        }) as bigint;
 
         // Get ALP price
-        const alpPrice = await glpManager.read.getPrice([false]);
+        const alpPrice = await provider.readContract({
+            address: CONTRACT_ADDRESSES[NETWORKS.SONIC].GLP_MANAGER,
+            abi: GlpManager,
+            functionName: 'getPrice',
+            args: [false],
+        }) as bigint;
 
         // Get reserved amount in vesting
-        const reservedAmount = await alpVester.read.pairAmounts([account]);
+        const reservedAmount = await provider.readContract({
+            address: CONTRACT_ADDRESSES[NETWORKS.SONIC].ALP_VESTER,
+            abi: Vester,
+            functionName: 'pairAmounts',
+            args: [account],
+        }) as bigint;
 
         // Calculate available amount (total balance - reserved)
         const availableAmount = balance - reservedAmount;

@@ -98,7 +98,7 @@ async function main() {
     // Test supported trading tokens
     const supportedTokens = [
         { name: 'WETH', address: CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH },
-        { name: 'S', address: CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN },
+        { name: 'S', address: CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN },
         { name: 'ANON', address: CONTRACT_ADDRESSES[NETWORKS.SONIC].ANON },
     ];
 
@@ -128,7 +128,6 @@ async function main() {
             console.log(`Reserved Amount: ${data.reservedAmount} ${token.name} ($${data.reservedAmountUsd})`);
             console.log(`Available Liquidity: ${data.availableLiquidity} ${token.name} ($${data.availableLiquidityUsd})`);
             console.log(`Current Price: $${data.priceUsd}`);
-            console.log(`Max Position Size: $${Number(data.maxPositionSize).toLocaleString()}`);
         });
 
         // Test short position
@@ -156,7 +155,6 @@ async function main() {
             console.log(`Reserved Amount: ${data.reservedAmount} ${token.name} ($${data.reservedAmountUsd})`);
             console.log(`Available Liquidity: ${data.availableLiquidity} ${token.name} ($${data.availableLiquidityUsd})`);
             console.log(`Current Price: $${data.priceUsd}`);
-            console.log(`Max Position Size: $${Number(data.maxPositionSize).toLocaleString()}`);
         });
     }
 

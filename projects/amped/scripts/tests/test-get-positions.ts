@@ -1,8 +1,8 @@
 import { createPublicClient, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { CONTRACT_ADDRESSES, NETWORKS, CHAIN_CONFIG } from '../../constants.js';
-import { getPosition } from '../../functions/trading/leverage/getPosition.js';
-import { getAllOpenPositions } from '../../functions/trading/leverage/getAllOpenPositions.js';
+import { CONTRACT_ADDRESSES, NETWORKS, CHAIN_CONFIG } from '../../constants';
+import { getPosition } from '../../functions/trading/leverage/getPositions';
+import { getAllOpenPositions } from '../../functions/trading/leverage/getAllOpenPositions';
 import { FunctionOptions } from '@heyanon/sdk';
 import 'dotenv/config';
 

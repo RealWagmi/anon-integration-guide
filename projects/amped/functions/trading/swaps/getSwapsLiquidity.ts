@@ -43,7 +43,8 @@ export async function getSwapsLiquidity({ chainName, account }: Props, { getProv
         // Define tokens to check
         const tokens = [
             { address: CONTRACT_ADDRESSES[NETWORKS.SONIC].ANON, symbol: 'ANON', decimals: 18 },
-            { address: CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN, symbol: 'S', decimals: 18 },
+            { address: CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN, symbol: 'S', decimals: 18 },
+            { address: CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN, symbol: 'WS', decimals: 18 },
             { address: CONTRACT_ADDRESSES[NETWORKS.SONIC].USDC, symbol: 'USDC', decimals: 6 },
             { address: CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH, symbol: 'WETH', decimals: 18 },
             { address: CONTRACT_ADDRESSES[NETWORKS.SONIC].EURC, symbol: 'EURC', decimals: 6 },

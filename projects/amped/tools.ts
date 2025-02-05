@@ -3,7 +3,7 @@ import { supportedChains } from './constants.js';
 import { addLiquidity } from './functions/liquidity/addLiquidity.js';
 import { removeLiquidity } from './functions/liquidity/removeLiquidity.js';
 import { getPerpsLiquidity } from './functions/trading/leverage/getPerpsLiquidity.js';
-import { getPosition } from './functions/trading/leverage/getPositions.js';
+import { getPosition } from './functions/trading/leverage/getPosition.js';
 import { getALPAPR } from './functions/liquidity/getALPAPR.js';
 import { getUserTokenBalances } from './functions/liquidity/getUserTokenBalances.js';
 import { getUserLiquidity } from './functions/liquidity/getUserLiquidity.js';
@@ -47,7 +47,7 @@ interface Tool extends AiTool {
 export const tools: Tool[] = [
     {
         name: 'addLiquidity',
-        description: 'Add liquidity to the protocol by providing tokens in exchange for GLP',
+        description: 'Add liquidity to the protocol by providing tokens in exchange for GLP. You must specify either amount or percentOfBalance.',
         props: [
             {
                 name: 'chainName',
@@ -61,36 +61,32 @@ export const tools: Tool[] = [
                 description: 'Account address that will execute the transaction',
             },
             {
-                name: 'tokenIn',
+                name: 'tokenSymbol',
                 type: 'string',
-                description: 'Address of the token to provide as liquidity',
+                description: 'Symbol of the token to provide as liquidity (S, WETH, ANON, USDC, EURC)',
             },
             {
                 name: 'amount',
                 type: 'string',
-                description: 'Amount of tokens to provide as liquidity',
-                optional: true,
+                description: 'Exact amount of tokens to provide as liquidity. Required if percentOfBalance is not provided.',
             },
             {
                 name: 'percentOfBalance',
                 type: 'number',
-                description: 'Percent of balance to use (1-100), defaults to 25 if amount not provided',
-                optional: true,
+                description: 'Percentage of your token balance to use (1-100). Required if amount is not provided.',
             },
             {
                 name: 'minUsdg',
                 type: 'string',
-                description: 'Minimum USDG to receive (default: 0)',
-                optional: true,
+                description: 'Minimum USDG to receive in decimal format (e.g., "1.5" for 1.5 USDG). Uses 18 decimals. Defaults to "0" if not specified.',
             },
             {
                 name: 'minGlp',
                 type: 'string',
-                description: 'Minimum GLP to receive (default: 0)',
-                optional: true,
+                description: 'Minimum GLP to receive in decimal format (e.g., "1.5" for 1.5 GLP). Uses 18 decimals. Defaults to "0" if not specified.',
             },
         ],
-        required: ['chainName', 'account', 'tokenIn'],
+        required: ['chainName', 'account', 'tokenSymbol', 'minUsdg', 'minGlp'],
         parameters: {
             type: 'object',
             properties: {
@@ -103,28 +99,28 @@ export const tools: Tool[] = [
                     type: 'string',
                     description: 'Account address that will execute the transaction',
                 },
-                tokenIn: {
+                tokenSymbol: {
                     type: 'string',
-                    description: 'Address of the token to provide as liquidity',
+                    description: 'Symbol of the token to provide as liquidity (S, WETH, ANON, USDC, EURC)',
                 },
                 amount: {
                     type: 'string',
-                    description: 'Amount of tokens to provide as liquidity',
+                    description: 'Exact amount of tokens to provide as liquidity. Required if percentOfBalance is not provided.',
                 },
                 percentOfBalance: {
                     type: 'number',
-                    description: 'Percent of balance to use (1-100), defaults to 25 if amount not provided',
+                    description: 'Percentage of your token balance to use (1-100). Required if amount is not provided.',
                 },
                 minUsdg: {
                     type: 'string',
-                    description: 'Minimum USDG to receive (default: 0)',
+                    description: 'Minimum USDG to receive in decimal format (e.g., "1.5" for 1.5 USDG). Uses 18 decimals. Defaults to "0" if not specified.',
                 },
                 minGlp: {
                     type: 'string',
-                    description: 'Minimum GLP to receive (default: 0)',
+                    description: 'Minimum GLP to receive in decimal format (e.g., "1.5" for 1.5 GLP). Uses 18 decimals. Defaults to "0" if not specified.',
                 },
             },
-            required: ['chainName', 'account', 'tokenIn'],
+            required: ['chainName', 'account', 'tokenSymbol', 'minUsdg', 'minGlp'],
         },
         function: addLiquidity,
     },
@@ -158,7 +154,6 @@ export const tools: Tool[] = [
                 name: 'slippageTolerance',
                 type: 'number',
                 description: 'Maximum acceptable slippage as a percentage (e.g., 0.5 for 0.5%). Defaults to 0.5%.',
-                optional: true,
             },
             {
                 name: 'skipSafetyChecks',
@@ -167,7 +162,7 @@ export const tools: Tool[] = [
                 optional: true,
             },
         ],
-        required: ['chainName', 'account', 'tokenOut', 'amount'],
+        required: ['chainName', 'account', 'tokenOut', 'amount', 'slippageTolerance'],
         parameters: {
             type: 'object',
             properties: {
@@ -197,7 +192,7 @@ export const tools: Tool[] = [
                     description: 'Skip balance and liquidity verification checks',
                 },
             },
-            required: ['chainName', 'account', 'tokenOut', 'amount'],
+            required: ['chainName', 'account', 'tokenOut', 'amount', 'slippageTolerance'],
         },
         function: removeLiquidity,
     },
@@ -502,7 +497,6 @@ export const tools: Tool[] = [
                 name: 'slippageBps',
                 type: 'number',
                 description: 'Slippage tolerance in basis points (1 bps = 0.01%). Defaults to 30.',
-                optional: true,
             },
             {
                 name: 'withdrawETH',
@@ -511,7 +505,7 @@ export const tools: Tool[] = [
                 optional: true,
             },
         ],
-        required: ['chainName', 'account'],
+        required: ['chainName', 'account', 'slippageBps'],
         parameters: {
             type: 'object',
             properties: {
@@ -549,7 +543,7 @@ export const tools: Tool[] = [
                     description: 'Whether to withdraw in native token (S) instead of wrapped token. Defaults to false.',
                 },
             },
-            required: ['chainName', 'account'],
+            required: ['chainName', 'account', 'slippageBps'],
         },
         function: closePosition,
     },
@@ -655,10 +649,9 @@ export const tools: Tool[] = [
                 name: 'slippageBps',
                 type: 'number',
                 description: 'Slippage tolerance in basis points (1 bps = 0.01%). Defaults to 100.',
-                optional: true,
             },
         ],
-        required: ['chainName', 'account', 'tokenIn', 'tokenOut', 'amountIn'],
+        required: ['chainName', 'account', 'tokenIn', 'tokenOut', 'amountIn', 'slippageBps'],
         parameters: {
             type: 'object',
             properties: {
@@ -688,7 +681,7 @@ export const tools: Tool[] = [
                     description: 'Slippage tolerance in basis points (1 bps = 0.01%). Defaults to 100.',
                 },
             },
-            required: ['chainName', 'account', 'tokenIn', 'tokenOut', 'amountIn'],
+            required: ['chainName', 'account', 'tokenIn', 'tokenOut', 'amountIn', 'slippageBps'],
         },
         function: marketSwap,
     },
@@ -767,19 +760,18 @@ export const tools: Tool[] = [
                 description: 'Amount of collateral in USD (minimum $10)',
             },
             {
+                name: 'slippageBps',
+                type: 'number',
+                description: 'Slippage tolerance in basis points (1 bps = 0.01%). Defaults to 30.',
+            },
+            {
                 name: 'referralCode',
                 type: 'string',
                 description: 'Optional referral code',
                 optional: true,
             },
-            {
-                name: 'slippageBps',
-                type: 'number',
-                description: 'Slippage tolerance in basis points (1 bps = 0.01%). Defaults to 30.',
-                optional: true,
-            },
         ],
-        required: ['chainName', 'account', 'indexToken', 'collateralToken', 'isLong', 'sizeUsd', 'collateralUsd'],
+        required: ['chainName', 'account', 'indexToken', 'collateralToken', 'isLong', 'sizeUsd', 'collateralUsd', 'slippageBps'],
         parameters: {
             type: 'object',
             properties: {
@@ -812,16 +804,16 @@ export const tools: Tool[] = [
                     type: 'number',
                     description: 'Amount of collateral in USD (minimum $10)',
                 },
-                referralCode: {
-                    type: 'string',
-                    description: 'Optional referral code',
-                },
                 slippageBps: {
                     type: 'number',
                     description: 'Slippage tolerance in basis points (1 bps = 0.01%). Defaults to 30.',
                 },
+                referralCode: {
+                    type: 'string',
+                    description: 'Optional referral code',
+                },
             },
-            required: ['chainName', 'account', 'indexToken', 'collateralToken', 'isLong', 'sizeUsd', 'collateralUsd'],
+            required: ['chainName', 'account', 'indexToken', 'collateralToken', 'isLong', 'sizeUsd', 'collateralUsd', 'slippageBps'],
         },
         function: openPosition,
     },

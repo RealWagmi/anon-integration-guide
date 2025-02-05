@@ -134,7 +134,7 @@ export async function getPosition({ chainName, account, indexToken, collateralTo
         await notify(`Size: ${Number(formattedPosition.size).toFixed(2)} USD`);
         await notify(
             `Collateral: ${Number(formattedPosition.collateral).toFixed(8)} ${
-                collateralToken === CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN ? 'S' : collateralToken === CONTRACT_ADDRESSES[NETWORKS.SONIC].USDC ? 'USDC' : 'ANON'
+                collateralToken === CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN ? 'S' : collateralToken === CONTRACT_ADDRESSES[NETWORKS.SONIC].USDC ? 'USDC' : 'ANON'
             } (${Number(formattedPosition.collateralUsd).toFixed(2)} USD)`,
         );
         await notify(`Average Entry Price: ${Number(formattedPosition.averagePrice).toFixed(4)} USD`);

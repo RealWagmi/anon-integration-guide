@@ -15,5 +15,6 @@ export { marketSwap } from './trading/swaps/marketSwap.js';
 // Leverage trading functions
 export { getPerpsLiquidity } from './trading/leverage/getPerpsLiquidity.js';
 export { openPosition } from './trading/leverage/openPosition.js';
-export { getPosition, getAllOpenPositions } from './trading/leverage/getPositions.js';
+export { getPosition } from './trading/leverage/getPosition.js';
+export { getAllOpenPositions } from './trading/leverage/getAllOpenPositions.js';
 export { closePosition } from './trading/leverage/closePosition.js';

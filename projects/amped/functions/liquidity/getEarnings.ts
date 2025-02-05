@@ -29,31 +29,28 @@ export async function getEarnings({ chainName, account }: Props, { getProvider, 
         const provider = getProvider(146) as unknown as PublicClient<Transport, Chain>; // Sonic chain ID
         const rewardTrackerAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].REWARD_TRACKER;
         const fsAlpAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].FS_ALP;
-        const nativeTokenAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN;
+        const wrappedNativeTokenAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN;
         const vaultPriceFeedAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT_PRICE_FEED;
 
-        const rewardTracker = getContract({
-            address: rewardTrackerAddress,
-            abi: RewardTracker,
-            publicClient: provider,
-        });
-
-        const fsAlp = getContract({
-            address: fsAlpAddress,
-            abi: RewardTracker,
-            publicClient: provider,
-        });
-
-        const vaultPriceFeed = getContract({
-            address: vaultPriceFeedAddress,
-            abi: VaultPriceFeed,
-            publicClient: provider,
-        });
-
         const [claimableRewards, stakedAmount, rewardTokenPrice] = await Promise.all([
-            rewardTracker.read.claimable([account]),
-            fsAlp.read.stakedAmounts([account]),
-            vaultPriceFeed.read.getPrice([nativeTokenAddress, false, true, false]),
+            provider.readContract({
+                address: rewardTrackerAddress,
+                abi: RewardTracker,
+                functionName: 'claimable',
+                args: [account],
+            }),
+            provider.readContract({
+                address: fsAlpAddress,
+                abi: RewardTracker,
+                functionName: 'stakedAmounts',
+                args: [account],
+            }),
+            provider.readContract({
+                address: vaultPriceFeedAddress,
+                abi: VaultPriceFeed,
+                functionName: 'getPrice',
+                args: [wrappedNativeTokenAddress, false, true, false],
+            }),
         ]);
 
         // The price is returned with 30 decimals of precision

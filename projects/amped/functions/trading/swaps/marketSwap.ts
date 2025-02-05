@@ -1,5 +1,5 @@
-import { type Address, encodeFunctionData } from 'viem';
-import { FunctionReturn, FunctionOptions, toResult, getChainFromName, TransactionParams } from '@heyanon/sdk';
+import { type Address, encodeFunctionData, getAddress } from 'viem';
+import { FunctionReturn, FunctionOptions, toResult, getChainFromName, TransactionParams, checkToApprove } from '@heyanon/sdk';
 import { CONTRACT_ADDRESSES, NETWORKS } from '../../../constants.js';
 import { Router } from '../../../abis/Router.js';
 import { Vault } from '../../../abis/Vault.js';
@@ -7,8 +7,9 @@ import { getUserTokenBalances } from '../../liquidity/getUserTokenBalances.js';
 import { getSwapsLiquidity } from '../swaps/getSwapsLiquidity.js';
 import { ERC20 } from '../../../abis/ERC20.js';
 import { formatUnits } from 'viem';
+import { decodeEventLog } from 'viem';
 
-type TokenSymbol = 'S' | 'WETH' | 'ANON' | 'USDC' | 'EURC';
+type TokenSymbol = 'S' | 'WS' | 'WETH' | 'ANON' | 'USDC' | 'EURC';
 
 interface Props {
     chainName: (typeof NETWORKS)[keyof typeof NETWORKS];
@@ -19,16 +20,22 @@ interface Props {
     slippageBps?: number;
 }
 
-const TOKEN_ADDRESSES: Record<TokenSymbol, Address> = {
-    S: CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN,
-    WETH: CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH,
-    ANON: CONTRACT_ADDRESSES[NETWORKS.SONIC].ANON,
-    USDC: CONTRACT_ADDRESSES[NETWORKS.SONIC].USDC,
-    EURC: CONTRACT_ADDRESSES[NETWORKS.SONIC].EURC,
-} as const;
+// Helper function to get token address
+function getTokenAddress(symbol: TokenSymbol): Address {
+    const address = CONTRACT_ADDRESSES[NETWORKS.SONIC][
+        symbol === 'S' ? 'NATIVE_TOKEN' :
+        symbol === 'WS' ? 'WRAPPED_NATIVE_TOKEN' :
+        symbol === 'WETH' ? 'WETH' :
+        symbol === 'ANON' ? 'ANON' :
+        symbol === 'USDC' ? 'USDC' :
+        'EURC'
+    ];
+    return address;
+}
 
 const TOKEN_DECIMALS: Record<TokenSymbol, number> = {
     S: 18,
+    WS: 18,
     WETH: 18,
     ANON: 18,
     USDC: 6,
@@ -76,8 +83,8 @@ export async function marketSwap(
         return toResult('Cannot swap token to itself', true);
     }
 
-    if (!TOKEN_ADDRESSES[tokenIn] || !TOKEN_ADDRESSES[tokenOut]) {
-        return toResult(`Invalid token symbol. Supported tokens are: ${Object.keys(TOKEN_ADDRESSES).join(', ')}`, true);
+    if (!getTokenAddress(tokenIn) || !getTokenAddress(tokenOut)) {
+        return toResult(`Invalid token symbol. Supported tokens are: ${Object.keys(getTokenAddress).join(', ')}`, true);
     }
 
     try {
@@ -105,6 +112,107 @@ export async function marketSwap(
             return toResult(`Insufficient ${tokenIn} balance. You have ${formatUnits(BigInt(tokenBalance.balance), TOKEN_DECIMALS[tokenIn])} ${tokenIn}, but tried to swap ${amountIn} ${tokenIn}`, true);
         }
 
+        // Special case: S to WS conversion uses deposit function
+        if (tokenIn === 'S' && tokenOut === 'WS') {
+            await notify('Converting S to WS using deposit...');
+            const depositData = encodeFunctionData({
+                abi: [{
+                    inputs: [],
+                    name: 'deposit',
+                    outputs: [],
+                    stateMutability: 'payable',
+                    type: 'function',
+                }],
+                functionName: 'deposit',
+                args: [],
+            });
+
+            const transaction: TransactionParams = {
+                target: getTokenAddress('WS'),
+                data: depositData,
+                value: amountInBigInt,
+            };
+
+            const txResult = await sendTransactions({
+                chainId,
+                account,
+                transactions: [transaction],
+            });
+
+            if (!txResult.data) {
+                return toResult(`Deposit failed: No transaction hash returned`, true);
+            }
+
+            return toResult(
+                JSON.stringify({
+                    success: true,
+                    tokenIn,
+                    tokenOut,
+                    amountIn: amountInBigInt.toString(),
+                    txHash: txResult.data,
+                }),
+            );
+        }
+
+        // Special case: WS to S conversion uses withdraw function
+        if (tokenIn === 'WS' && tokenOut === 'S') {
+            await notify('Converting WS to S using withdraw...');
+            const transactions: TransactionParams[] = [];
+            const provider = getProvider(chainId);
+
+            // Check and prepare approve transaction if needed
+            await checkToApprove({
+                args: {
+                    account,
+                    target: getTokenAddress('WS'),
+                    spender: getTokenAddress('WS'),
+                    amount: amountInBigInt
+                },
+                provider,
+                transactions
+            });
+
+            // Add withdraw transaction
+            const withdrawData = encodeFunctionData({
+                abi: [{
+                    inputs: [{ name: 'value', type: 'uint256' }],
+                    name: 'withdraw',
+                    outputs: [],
+                    stateMutability: 'nonpayable',
+                    type: 'function',
+                }],
+                functionName: 'withdraw',
+                args: [amountInBigInt],
+            });
+
+            transactions.push({
+                target: getTokenAddress('WS'),
+                data: withdrawData,
+                value: 0n,
+            });
+
+            const txResult = await sendTransactions({
+                chainId,
+                account,
+                transactions,
+            });
+
+            if (!txResult.data) {
+                return toResult(`Withdraw failed: No transaction hash returned`, true);
+            }
+
+            return toResult(
+                JSON.stringify({
+                    success: true,
+                    tokenIn,
+                    tokenOut,
+                    amountIn: amountInBigInt.toString(),
+                    txHash: txResult.data,
+                }),
+            );
+        }
+
+        // For all other cases, proceed with normal swap logic
         // Check liquidity
         const liquidityResult = await getSwapsLiquidity({ chainName, account }, { getProvider, notify, sendTransactions });
 
@@ -132,7 +240,10 @@ export async function marketSwap(
             return toResult(`Pool liquidity for ${tokenOut} (${formatUnits(availableOutAmount, TOKEN_DECIMALS[tokenOut])} ${tokenOut}) is too low for swaps`, true);
         }
 
-        const provider = getProvider(chainId); // Use chainId from validation
+        // Calculate minimum output amount with slippage tolerance
+        const minOutBigInt = (availableOutAmount * BigInt(10000 - slippageBps)) / BigInt(10000);
+
+        const provider = getProvider(chainId);
 
         // Prepare transaction data
         const transactions: TransactionParams[] = [];
@@ -140,7 +251,7 @@ export async function marketSwap(
         // Add approval transaction if needed for non-native token swaps
         if (tokenIn !== 'S') {
             const allowance = (await provider.readContract({
-                address: TOKEN_ADDRESSES[tokenIn],
+                address: getTokenAddress(tokenIn),
                 abi: ERC20,
                 functionName: 'allowance',
                 args: [account, CONTRACT_ADDRESSES[NETWORKS.SONIC].ROUTER],
@@ -154,7 +265,7 @@ export async function marketSwap(
                 });
 
                 transactions.push({
-                    target: TOKEN_ADDRESSES[tokenIn],
+                    target: getTokenAddress(tokenIn),
                     data: approvalData,
                     value: 0n,
                 });
@@ -162,76 +273,140 @@ export async function marketSwap(
         }
 
         // Prepare swap path
-        const swapPath = [TOKEN_ADDRESSES[tokenIn], TOKEN_ADDRESSES[tokenOut]];
+        const tokenInAddress = tokenIn === 'S' ? CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN : getTokenAddress(tokenIn);
+        const tokenOutAddress = tokenOut === 'S' ? CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN : getTokenAddress(tokenOut);
 
-        // Add swap transaction based on token types
-        let swapData: `0x${string}`;
-        let swapValue = 0n;
+        console.log('Token addresses:', {
+            tokenInAddress,
+            tokenOutAddress,
+            account
+        });
 
-        if (tokenIn === 'S') {
-            // Native token to token swap
-            swapData = encodeFunctionData({
-                abi: Router,
-                functionName: 'swapETHToTokens',
-                args: [
-                    swapPath,
-                    0n, // minOut set to 0 for market swaps
-                    account,
-                ],
-            });
-            swapValue = amountInBigInt;
-        } else if (tokenOut === 'S') {
-            // Token to native token swap
-            swapData = encodeFunctionData({
-                abi: Router,
-                functionName: 'swapTokensToETH',
-                args: [
-                    swapPath,
-                    amountInBigInt,
-                    0n, // minOut set to 0 for market swaps
-                    account,
-                ],
-            });
-        } else {
-            // Token to token swap
-            swapData = encodeFunctionData({
-                abi: Router,
-                functionName: 'swap',
-                args: [
-                    swapPath,
-                    amountInBigInt,
-                    0n, // minOut set to 0 for market swaps
-                    account,
-                ],
-            });
-        }
+        // For ETH to token swaps, construct the path with checksummed addresses
+        const path = tokenIn === 'S' 
+            ? [getAddress(CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN), getAddress(tokenOutAddress)] 
+            : tokenOut === 'S'
+            ? [getAddress(tokenInAddress), getAddress(CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN)]
+            : [getAddress(tokenInAddress), getAddress(tokenOutAddress)];
+
+        console.log('Swap path:', path);
+        console.log('Function:', tokenIn === 'S' ? 'swapETHToTokens' : tokenOut === 'S' ? 'swapTokensToETH' : 'swapTokensToTokens');
+
+        // Add swap transaction
+        const swapData = encodeFunctionData({
+            abi: Router,
+            functionName: tokenIn === 'S' ? 'swapETHToTokens' : tokenOut === 'S' ? 'swapTokensToETH' : 'swapTokensToTokens',
+            args:
+                tokenIn === 'S'
+                    ? [path, 0n, getAddress(account)]
+                    : tokenOut === 'S'
+                    ? [path, amountInBigInt, 0n, getAddress(account)]
+                    : [path, amountInBigInt, 0n, getAddress(account)],
+        });
+
+        console.log('Swap args:', tokenIn === 'S'
+            ? { path, minOut: '0', receiver: account }
+            : { path, amountIn: amountInBigInt.toString(), minOut: '0', receiver: account }
+        );
 
         transactions.push({
             target: CONTRACT_ADDRESSES[NETWORKS.SONIC].ROUTER,
             data: swapData,
-            value: swapValue,
+            value: tokenIn === 'S' ? amountInBigInt : 0n,
         });
 
         await notify('Executing swap transaction...');
 
         // Send transactions
-        const txResult = await sendTransactions({
+        const result = await sendTransactions({
             chainId,
             account,
             transactions,
         });
 
-        if (!txResult.data) {
-            return toResult(`Swap failed: No transaction hash returned`, true);
+        if (!result.data?.[0]?.hash) {
+            return toResult('Transaction failed: No transaction hash returned', true);
+        }
+
+        // Get transaction receipt and parse Swap event
+        const receipt = await provider.getTransactionReceipt({ hash: result.data[0].hash });
+
+        const swapEvents = receipt.logs.filter(log => {
+            return log.address.toLowerCase() === CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT.toLowerCase() &&
+                   log.topics[0] === '0x0874b2d545cb271cdbda4e093020c452328b24af34e886f927f48e67422d4c95'; // keccak256('Swap(address,address,address,uint256,uint256,uint256,uint256)')
+        });
+
+        if (swapEvents.length === 0) {
+            return toResult(
+                JSON.stringify({
+                    success: true,
+                    hash: result.data[0].hash,
+                    details: {
+                        tokenIn,
+                        tokenOut,
+                        amountIn: formatUnits(amountInBigInt, TOKEN_DECIMALS[tokenIn]),
+                        minOut: formatUnits(minOutBigInt, TOKEN_DECIMALS[tokenOut]),
+                        warning: 'Could not parse Swap event from transaction receipt'
+                    },
+                }),
+            );
+        }
+
+        // Parse the event data
+        const eventData = swapEvents[0];
+        const decodedEvent = decodeEventLog({
+            abi: [{
+                anonymous: false,
+                inputs: [
+                    { indexed: false, name: 'account', type: 'address' },
+                    { indexed: false, name: 'tokenIn', type: 'address' },
+                    { indexed: false, name: 'tokenOut', type: 'address' },
+                    { indexed: false, name: 'amountIn', type: 'uint256' },
+                    { indexed: false, name: 'amountOut', type: 'uint256' },
+                    { indexed: false, name: 'amountOutAfterFees', type: 'uint256' },
+                    { indexed: false, name: 'feeBasisPoints', type: 'uint256' }
+                ],
+                name: 'Swap',
+                type: 'event'
+            }],
+            data: eventData.data,
+            topics: eventData.topics
+        });
+
+        // Verify the event data matches our expectations
+        const expectedTokenIn = tokenIn === 'S' ? getTokenAddress('WS') : getTokenAddress(tokenIn);
+        const expectedTokenOut = tokenOut === 'S' ? getTokenAddress('WS') : getTokenAddress(tokenOut);
+
+        if (decodedEvent.args.account.toLowerCase() !== account.toLowerCase() ||
+            decodedEvent.args.tokenIn.toLowerCase() !== expectedTokenIn.toLowerCase() ||
+            decodedEvent.args.tokenOut.toLowerCase() !== expectedTokenOut.toLowerCase()) {
+            return toResult(
+                `Swap event validation failed. Expected account ${account}, tokenIn ${expectedTokenIn}, and tokenOut ${expectedTokenOut}, but got account ${decodedEvent.args.account}, tokenIn ${decodedEvent.args.tokenIn}, and tokenOut ${decodedEvent.args.tokenOut}`,
+                true
+            );
+        }
+
+        // Verify the amount received is not less than minOut
+        if (decodedEvent.args.amountOutAfterFees < minOutBigInt) {
+            return toResult(
+                `Received amount ${decodedEvent.args.amountOutAfterFees} is less than minimum expected ${minOutBigInt}`,
+                true
+            );
         }
 
         return toResult(
             JSON.stringify({
                 success: true,
-                tokenIn,
-                tokenOut,
-                amountIn: amountInBigInt.toString(),
-                txHash: txResult.data,
+                hash: result.data[0].hash,
+                details: {
+                    tokenIn,
+                    tokenOut,
+                    amountIn: formatUnits(amountInBigInt, TOKEN_DECIMALS[tokenIn]),
+                    minOut: formatUnits(minOutBigInt, TOKEN_DECIMALS[tokenOut]),
+                    receivedAmount: formatUnits(decodedEvent.args.amountOutAfterFees, TOKEN_DECIMALS[tokenOut]),
+                    amountBeforeFees: formatUnits(decodedEvent.args.amountOut, TOKEN_DECIMALS[tokenOut]),
+                    feeBasisPoints: Number(decodedEvent.args.feeBasisPoints),
+                },
             }),
         );
     } catch (error) {

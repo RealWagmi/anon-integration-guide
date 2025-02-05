@@ -1,5 +1,5 @@
-import { Address, getContract, encodeFunctionData, parseUnits, formatUnits } from 'viem';
-import { FunctionReturn, FunctionOptions, toResult, TransactionParams, getChainFromName } from '@heyanon/sdk';
+import { Address, getContract, encodeFunctionData, parseUnits, formatUnits, decodeEventLog } from 'viem';
+import { FunctionReturn, FunctionOptions, toResult, TransactionParams, getChainFromName, checkToApprove } from '@heyanon/sdk';
 import { CONTRACT_ADDRESSES, NETWORKS } from '../../constants.js';
 import { ERC20 } from '../../abis/ERC20.js';
 import { RewardRouter } from '../../abis/RewardRouter.js';
@@ -7,14 +7,14 @@ import { getUserTokenBalances } from './getUserTokenBalances.js';
 import { getPoolLiquidity } from './getPoolLiquidity.js';
 
 // Define supported token symbols
-export type SupportedToken = 'S' | 'WETH' | 'ANON' | 'USDC' | 'EURC';
+export type SupportedToken = 'S' | 'WS' | 'WETH' | 'ANON' | 'USDC' | 'EURC';
 
 interface Props {
     chainName: string;
     account: Address;
-    tokenSymbol: SupportedToken; // Changed from tokenIn to tokenSymbol
-    amount?: string; // Optional: if not provided, will use percentOfBalance
-    percentOfBalance?: number; // Optional: used if amount not provided, defaults to 25
+    tokenSymbol: SupportedToken;
+    amount?: string;
+    percentOfBalance?: number;
     minUsdg?: string;
     minGlp?: string;
 }
@@ -24,6 +24,8 @@ function getTokenAddress(symbol: SupportedToken): Address {
     switch (symbol) {
         case 'S':
             return CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN;
+        case 'WS':
+            return CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN;
         case 'WETH':
             return CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH;
         case 'ANON':
@@ -37,21 +39,25 @@ function getTokenAddress(symbol: SupportedToken): Address {
     }
 }
 
+function getNativeTokenAddress(): Address {
+    return CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN;
+}
+
 /**
  * Add liquidity to the Amped Finance protocol by providing tokens in exchange for ALP
  * @param props - The liquidity addition parameters
  * @param props.chainName - The name of the chain (must be "sonic")
  * @param props.account - The account providing liquidity
  * @param props.tokenSymbol - Symbol of the token to provide as liquidity (S, WETH, ANON, USDC, EURC)
- * @param props.amount - Optional: specific amount to provide as liquidity
- * @param props.percentOfBalance - Optional: percent of balance to use (1-100), defaults to 25 if amount not provided
+ * @param props.amount - Exact amount of tokens to provide as liquidity. Required if percentOfBalance is not provided.
+ * @param props.percentOfBalance - Percentage of balance to use (1-100). Required if amount is not provided.
  * @param props.minUsdg - Optional minimum USDG to receive (default: 0)
  * @param props.minGlp - Optional minimum ALP to receive (default: 0)
  * @param options - System tools for blockchain interactions
  * @returns Transaction result with liquidity addition details
  */
 export async function addLiquidity(
-    { chainName, account, tokenSymbol, amount, percentOfBalance = 25, minUsdg = '0', minGlp = '0' }: Props,
+    { chainName, account, tokenSymbol, amount, percentOfBalance, minUsdg = '0', minGlp = '0' }: Props,
     { getProvider, notify, sendTransactions }: FunctionOptions,
 ): Promise<FunctionReturn> {
     // Check wallet connection
@@ -64,9 +70,17 @@ export async function addLiquidity(
         return toResult(`Protocol is only supported on Sonic chain`, true);
     }
 
-    // Validate percentOfBalance if provided
-    if (percentOfBalance <= 0 || percentOfBalance > 100) {
-        return toResult('Percent of balance must be between 0 and 100', true);
+    // Validate input parameters
+    if (!amount && !percentOfBalance) {
+        return toResult('Either amount or percentOfBalance must be provided', true);
+    }
+
+    if (amount && percentOfBalance) {
+        return toResult('Cannot specify both amount and percentOfBalance. Please provide only one.', true);
+    }
+
+    if (percentOfBalance && (percentOfBalance <= 0 || percentOfBalance > 100)) {
+        return toResult('Percentage must be between 1 and 100', true);
     }
 
     try {
@@ -93,9 +107,12 @@ export async function addLiquidity(
         let amountToAdd: string;
         if (amount) {
             amountToAdd = amount;
-        } else {
+        } else if (percentOfBalance) {
             const balance = Number(formatUnits(BigInt(tokenInfo.balance), tokenInfo.decimals));
             amountToAdd = (balance * (percentOfBalance / 100)).toFixed(tokenInfo.decimals);
+        } else {
+            // This should never happen due to earlier validation
+            return toResult('Internal error: No amount specified', true);
         }
 
         // Parse amounts using the correct decimals
@@ -134,66 +151,24 @@ export async function addLiquidity(
         const provider = getProvider(chainId);
 
         // Check token approval if not native token
+        const transactions: TransactionParams[] = [];
         if (tokenIn !== CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN) {
             await notify('Checking token approval...');
 
-            // Check current allowance for RewardRouterV2
-            const allowance = await provider.readContract({
-                address: tokenIn,
-                abi: ERC20,
-                functionName: 'allowance',
-                args: [account, CONTRACT_ADDRESSES[NETWORKS.SONIC].GLP_MANAGER],
-            }) as bigint;
-
-            await notify(`Current allowance: ${formatUnits(allowance, tokenInfo.decimals)} ${tokenInfo.symbol}`);
-
-            // If allowance is insufficient, request approval
-            if (allowance < parsedAmount) {
-                await notify(`Insufficient allowance. Need: ${amountToAdd} ${tokenInfo.symbol}, Have: ${formatUnits(allowance, tokenInfo.decimals)} ${tokenInfo.symbol}`);
-                await notify('Requesting approval...');
-
-                // Request approval for a large amount to avoid frequent approvals
-                const approvalAmount = parsedAmount * 1000n; // Approve 1000x the amount needed
-                const approvalTx = await sendTransactions({
-                    chainId,
+            // Use checkApprove helper to handle token approval
+            await checkToApprove({
+                args: {
                     account,
-                    transactions: [
-                        {
-                            target: tokenIn,
-                            data: encodeFunctionData({
-                                abi: ERC20,
-                                functionName: 'approve',
-                                args: [CONTRACT_ADDRESSES[NETWORKS.SONIC].GLP_MANAGER, approvalAmount],
-                            }),
-                        },
-                    ],
-                });
+                    target: tokenIn,
+                    spender: CONTRACT_ADDRESSES[NETWORKS.SONIC].GLP_MANAGER,
+                    amount: parsedAmount
+                },
+                provider,
+                transactions
+            });
 
-                if (!approvalTx.data?.[0]?.hash) {
-                    return toResult('Failed to approve token', true);
-                }
-
-                await notify(`Approval transaction submitted. Waiting for confirmation...`);
-
-                // Wait for approval to be confirmed before proceeding
-                await provider.waitForTransactionReceipt({ hash: approvalTx.data[0].hash });
-
-                // Verify the new allowance
-                const newAllowance = await provider.readContract({
-                    address: tokenIn,
-                    abi: ERC20,
-                    functionName: 'allowance',
-                    args: [account, CONTRACT_ADDRESSES[NETWORKS.SONIC].GLP_MANAGER],
-                }) as bigint;
-
-                if (newAllowance < parsedAmount) {
-                    return toResult(
-                        `Approval failed. Required: ${amountToAdd} ${tokenInfo.symbol}, Current allowance: ${formatUnits(newAllowance, tokenInfo.decimals)} ${tokenInfo.symbol}`,
-                        true,
-                    );
-                }
-
-                await notify(`Token approved successfully for ${formatUnits(approvalAmount, tokenInfo.decimals)} ${tokenInfo.symbol}`);
+            if (transactions.length > 0) {
+                await notify('Token approval needed, adding approval transaction...');
             } else {
                 await notify('Token already has sufficient approval.');
             }
@@ -205,8 +180,8 @@ export async function addLiquidity(
         const parsedMinUsdg = parseUnits(minUsdg, 18);
         const parsedMinGlp = parseUnits(minGlp, 18);
 
-        // Prepare transaction data
-        const txData: TransactionParams = {
+        // Add the main transaction
+        transactions.push({
             target: CONTRACT_ADDRESSES[NETWORKS.SONIC].REWARD_ROUTER,
             value: tokenIn === CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN ? parsedAmount : 0n,
             data: tokenIn === CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN
@@ -220,18 +195,75 @@ export async function addLiquidity(
                     functionName: 'mintAndStakeGlp',
                     args: [tokenIn, parsedAmount, parsedMinUsdg, parsedMinGlp],
                 }),
-        };
+        });
 
-        // Send transaction
+        // Send transactions
         await notify('Executing transaction...');
         const txResult = await sendTransactions({
             chainId,
             account,
-            transactions: [txData],
+            transactions,
         });
 
         if (!txResult.data?.[0]?.hash) {
             return toResult('Transaction failed: No transaction hash returned', true);
+        }
+
+        // Get transaction receipt and parse AddLiquidity event
+        const receipt = await provider.getTransactionReceipt({ hash: txResult.data[0].hash });
+
+        const addLiquidityEvents = receipt.logs.filter(log => {
+            return log.address.toLowerCase() === CONTRACT_ADDRESSES[NETWORKS.SONIC].GLP_MANAGER.toLowerCase() &&
+                   log.topics[0] === '0x2c76ed4ddb0c8a6e4c6f8f266e08ee5b5f4b9a5e0e8f591b6eec14e821b7f1ac'; // keccak256('AddLiquidity(address,address,uint256,uint256,uint256,uint256,uint256)')
+        });
+
+        if (addLiquidityEvents.length === 0) {
+            return toResult(
+                JSON.stringify({
+                    success: true,
+                    transactionHash: txResult.data[0].hash,
+                    details: {
+                        token: tokenSymbol,
+                        amount: formatUnits(parsedAmount, tokenInfo.decimals),
+                        tokenSymbol: tokenInfo.symbol,
+                        amountUsd: tokenValueUsd.toFixed(2),
+                        minUsdg: formatUnits(parsedMinUsdg, 18),
+                        minGlp: formatUnits(parsedMinGlp, 18),
+                        priceImpact: priceImpact.toFixed(4),
+                        warning: 'Could not parse AddLiquidity event from transaction receipt'
+                    },
+                }),
+            );
+        }
+
+        // Parse the event data
+        const eventData = addLiquidityEvents[0];
+        const decodedEvent = decodeEventLog({
+            abi: [{
+                anonymous: false,
+                inputs: [
+                    { indexed: false, name: 'account', type: 'address' },
+                    { indexed: false, name: 'token', type: 'address' },
+                    { indexed: false, name: 'amount', type: 'uint256' },
+                    { indexed: false, name: 'aumInUsdg', type: 'uint256' },
+                    { indexed: false, name: 'glpSupply', type: 'uint256' },
+                    { indexed: false, name: 'usdgAmount', type: 'uint256' },
+                    { indexed: false, name: 'mintAmount', type: 'uint256' }
+                ],
+                name: 'AddLiquidity',
+                type: 'event'
+            }],
+            data: eventData.data,
+            topics: eventData.topics
+        });
+
+        // Verify the event data matches our expectations
+        if (decodedEvent.args.account.toLowerCase() !== account.toLowerCase() ||
+            decodedEvent.args.token.toLowerCase() !== tokenIn.toLowerCase()) {
+            return toResult(
+                `Add liquidity event validation failed. Expected account ${account} and token ${tokenIn}, but got account ${decodedEvent.args.account} and token ${decodedEvent.args.token}`,
+                true
+            );
         }
 
         return toResult(
@@ -246,6 +278,11 @@ export async function addLiquidity(
                     minUsdg: formatUnits(parsedMinUsdg, 18),
                     minGlp: formatUnits(parsedMinGlp, 18),
                     priceImpact: priceImpact.toFixed(4),
+                    // Add event data
+                    receivedAlp: formatUnits(decodedEvent.args.mintAmount, 18),
+                    aumInUsdg: formatUnits(decodedEvent.args.aumInUsdg, 18),
+                    glpSupply: formatUnits(decodedEvent.args.glpSupply, 18),
+                    usdgAmount: formatUnits(decodedEvent.args.usdgAmount, 18),
                 },
             }),
         );

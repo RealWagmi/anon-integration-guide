@@ -1,6 +1,6 @@
-import { Address, getContract, PublicClient, Chain, Transport } from 'viem';
+import { Address } from 'viem';
 import { FunctionReturn, FunctionOptions, toResult, getChainFromName } from '@heyanon/sdk';
-import { CONTRACT_ADDRESSES, NETWORKS, PRECISION, SECONDS_PER_YEAR, BASIS_POINTS_DIVISOR } from '../../constants.js';
+import { CONTRACT_ADDRESSES, NETWORKS, PRECISION, SECONDS_PER_YEAR } from '../../constants.js';
 import { RewardTracker } from '../../abis/RewardTracker.js';
 import { RewardDistributor } from '../../abis/RewardDistributor.js';
 
@@ -30,28 +30,23 @@ export async function getALPAPR({ chainName, account }: Props, { getProvider, no
     await notify('Checking ALP APR information...');
 
     try {
-        const provider = getProvider(chainId) as unknown as PublicClient<Transport, Chain>;
+        const provider = getProvider(chainId);
         const rewardTrackerAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].REWARD_TRACKER;
         const rewardDistributorAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].REWARD_DISTRIBUTOR;
 
-        // Initialize contracts
-        const rewardTracker = getContract({
+        await notify('Fetching total supply...');
+        const totalSupply = await provider.readContract({
             address: rewardTrackerAddress,
             abi: RewardTracker,
-            publicClient: provider,
-        });
-
-        const distributor = getContract({
-            address: rewardDistributorAddress,
-            abi: RewardDistributor,
-            publicClient: provider,
-        });
-
-        await notify('Fetching total supply...');
-        const totalSupply = await rewardTracker.read.totalSupply();
+            functionName: 'totalSupply',
+        }) as bigint;
 
         await notify('Fetching tokens per interval...');
-        const tokensPerInterval = await distributor.read.tokensPerInterval();
+        const tokensPerInterval = await provider.readContract({
+            address: rewardDistributorAddress,
+            abi: RewardDistributor,
+            functionName: 'tokensPerInterval',
+        }) as bigint;
 
         // Calculate yearly rewards
         const yearlyRewards = tokensPerInterval * BigInt(SECONDS_PER_YEAR);

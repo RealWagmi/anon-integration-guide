@@ -34,7 +34,8 @@ export const CONTRACT_ADDRESSES: Record<string, Record<string, Address>> = {
         REWARD_DISTRIBUTOR: '0x069d9C2eec92f777e80F019f944B9a8f775b3634' as Address,
         REWARD_TRACKER: '0x21Efb5680d6127d6C39AE0d62D80cb9fc8935887' as Address,
         VAULT: '0x11944027D4eDC1C17db2D5E9020530dcEcEfb85b' as Address,
-        NATIVE_TOKEN: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38' as Address, // Native token (S)
+        NATIVE_TOKEN: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE' as Address, // Native token (S)
+        WRAPPED_NATIVE_TOKEN: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38' as Address, // Wrapped native token (wS)
         WETH: '0x50c42deacd8fc9773493ed674b675be577f2634b' as Address,
         USDC: '0x29219dd400f2bf60e5a23d13be72b486d4038894' as Address,
         EURC: '0xe715cbA7B5cCb33790ceBFF1436809d36cb17E57' as Address,

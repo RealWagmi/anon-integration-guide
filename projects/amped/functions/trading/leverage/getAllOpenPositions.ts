@@ -1,6 +1,6 @@
-import { CONTRACT_ADDRESSES, NETWORKS } from '../../../constants.js';
+import { CONTRACT_ADDRESSES, NETWORKS } from '../../../constants';
 import { FunctionOptions, FunctionReturn, toResult, getChainFromName } from '@heyanon/sdk';
-import { getPosition } from './getPosition.js';
+import { getPosition } from './getPositions';
 
 interface Props {
     chainName: (typeof NETWORKS)[keyof typeof NETWORKS];
@@ -48,10 +48,10 @@ export async function getAllOpenPositions({ chainName, account, isLong }: Props,
         await notify('Checking all positions...');
 
         // Define valid index tokens for positions
-        const indexTokens = [CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN, CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH, CONTRACT_ADDRESSES[NETWORKS.SONIC].ANON] as const;
+        const indexTokens = [CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN, CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH, CONTRACT_ADDRESSES[NETWORKS.SONIC].ANON] as const;
 
-        // Define possible collateral tokens
-        const collateralTokens = [CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN, CONTRACT_ADDRESSES[NETWORKS.SONIC].USDC, CONTRACT_ADDRESSES[NETWORKS.SONIC].ANON] as const;
+        // Define possible collateral tokens for short positions (only stablecoins)
+        const shortCollateralTokens = [CONTRACT_ADDRESSES[NETWORKS.SONIC].USDC, CONTRACT_ADDRESSES[NETWORKS.SONIC].EURC] as const;
 
         const openPositions: OpenPosition[] = [];
 
@@ -59,12 +59,15 @@ export async function getAllOpenPositions({ chainName, account, isLong }: Props,
         for (const indexToken of indexTokens) {
             await notify(
                 `\nChecking ${isLong ? 'long' : 'short'} positions for ${
-                    indexToken === CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN ? 'S' : indexToken === CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH ? 'WETH' : 'ANON'
+                    indexToken === CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN ? 'S' : indexToken === CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH ? 'WETH' : 'ANON'
                 }...`,
             );
 
-            // Check each possible collateral token for this index
-            for (const collateralToken of collateralTokens) {
+            // For long positions, only check when collateral matches index token
+            // For short positions, check USDC and EURC as collateral
+            const collateralTokensToCheck = isLong ? [indexToken] : shortCollateralTokens;
+
+            for (const collateralToken of collateralTokensToCheck) {
                 const positionResult = await getPosition(
                     {
                         chainName,
@@ -98,12 +101,12 @@ export async function getAllOpenPositions({ chainName, account, isLong }: Props,
             notify(`\n${index + 1}. Position Details:`);
             notify(
                 `Index Token: ${
-                    pos.indexToken === CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN ? 'S' : pos.indexToken === CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH ? 'WETH' : 'ANON'
+                    pos.indexToken === CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN ? 'S' : pos.indexToken === CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH ? 'WETH' : 'ANON'
                 }`,
             );
             notify(
                 `Collateral Token: ${
-                    pos.collateralToken === CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN
+                    pos.collateralToken === CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN
                         ? 'S'
                         : pos.collateralToken === CONTRACT_ADDRESSES[NETWORKS.SONIC].USDC
                           ? 'USDC'
@@ -113,7 +116,7 @@ export async function getAllOpenPositions({ chainName, account, isLong }: Props,
             notify(`Size: ${pos.position.size} USD`);
             notify(
                 `Collateral: ${pos.position.collateral} ${
-                    pos.collateralToken === CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN
+                    pos.collateralToken === CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN
                         ? 'S'
                         : pos.collateralToken === CONTRACT_ADDRESSES[NETWORKS.SONIC].USDC
                           ? 'USDC'

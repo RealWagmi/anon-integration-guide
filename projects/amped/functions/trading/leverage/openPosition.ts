@@ -67,6 +67,11 @@ async function checkTokenBalance(publicClient: PublicClient, tokenAddress: `0x${
 
 export async function validateOpenPosition(publicClient: PublicClient, params: Props, account: Account): Promise<PositionValidation> {
     try {
+        // For S token collateral, we need to use the wrapped token (wS) price as reference
+        const priceReferenceToken = params.collateralToken.toLowerCase() === CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN.toLowerCase() 
+            ? CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN 
+            : params.collateralToken;
+
         // Get token prices
         const [indexTokenPrice, collateralTokenPrice] = (await Promise.all([
             publicClient.readContract({
@@ -79,7 +84,7 @@ export async function validateOpenPosition(publicClient: PublicClient, params: P
                 address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT_PRICE_FEED as `0x${string}`,
                 abi: VaultPriceFeed,
                 functionName: 'getPrice',
-                args: [params.collateralToken, false, true, true],
+                args: [priceReferenceToken, false, true, true],
             }),
         ])) as [bigint, bigint];
 
@@ -101,13 +106,16 @@ export async function validateOpenPosition(publicClient: PublicClient, params: P
             functionName: 'minExecutionFee',
         })) as bigint;
 
-        // Check token allowance
-        const allowance = (await publicClient.readContract({
-            address: params.collateralToken,
-            abi: ERC20,
-            functionName: 'allowance',
-            args: [account.address, CONTRACT_ADDRESSES[NETWORKS.SONIC].ROUTER],
-        })) as bigint;
+        // Check token allowance only for non-native tokens
+        let allowance = 0n;
+        if (params.collateralToken.toLowerCase() !== CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN.toLowerCase()) {
+            allowance = (await publicClient.readContract({
+                address: params.collateralToken,
+                abi: ERC20,
+                functionName: 'allowance',
+                args: [account.address, CONTRACT_ADDRESSES[NETWORKS.SONIC].ROUTER],
+            })) as bigint;
+        }
 
         return {
             success: true,
@@ -136,7 +144,7 @@ async function checkAlternativeLiquidity(
 ): Promise<{ token: string; address: `0x${string}`; availableLiquidityUsd: string }[]> {
     // Define available tokens based on position type
     const longTokens = [
-        { symbol: 'S', address: CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN },
+        { symbol: 'S', address: CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN },
         { symbol: 'ANON', address: CONTRACT_ADDRESSES[NETWORKS.SONIC].ANON },
         { symbol: 'WETH', address: CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH },
     ];
@@ -411,6 +419,8 @@ export async function openPosition(
                     return toResult('Failed to approve token spending', true);
                 }
             }
+        } else {
+            await notify('Using native token (S) - no approval needed');
         }
 
         // Calculate sizeDelta in USD terms with 30 decimals
@@ -444,9 +454,9 @@ export async function openPosition(
                 args:
                     collateralToken.toLowerCase() === CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN.toLowerCase()
                         ? [
-                              CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN.toLowerCase() === indexToken.toLowerCase()
-                                  ? [CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN]
-                                  : [CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN, indexToken],
+                              CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN.toLowerCase() === indexToken.toLowerCase()
+                                  ? [CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN]
+                                  : [CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN, indexToken],
                               indexToken,
                               0n, // minOut
                               sizeDelta,

@@ -1,63 +1,40 @@
-import { createPublicClient, createWalletClient, http } from 'viem';
+import { createPublicClient, http, Address } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { NETWORKS, RPC_URLS, CONTRACT_ADDRESSES } from '../../constants.js';
+import { CONTRACT_ADDRESSES, NETWORKS, CHAIN_CONFIG } from '../../constants.js';
 import { getUserLiquidity } from '../../functions/liquidity/getUserLiquidity.js';
-import { TransactionReturn } from '@heyanon/sdk';
 import 'dotenv/config';
 
-// Load private key from environment
-const PRIVATE_KEY = process.env.PRIVATE_KEY;
-if (!PRIVATE_KEY) {
-    throw new Error('PRIVATE_KEY not found in .env file');
-}
+async function test() {
+    console.log('\nTesting getUserLiquidity function...');
 
-// Ensure private key is properly formatted
-const formattedPrivateKey = PRIVATE_KEY.startsWith('0x') ? PRIVATE_KEY : `0x${PRIVATE_KEY}`;
-const account = privateKeyToAccount(formattedPrivateKey as `0x${string}`);
+    // Check for private key
+    const privateKey = process.env.PRIVATE_KEY;
+    if (!privateKey) {
+        throw new Error('PRIVATE_KEY environment variable is required');
+    }
 
-// Define chain configuration
-const sonicChain = {
-    id: 146,
-    name: 'Sonic',
-    network: 'sonic',
-    nativeCurrency: {
-        name: 'Sonic',
-        symbol: 'S',
-        decimals: 18,
-    },
-    rpcUrls: {
-        default: { http: [RPC_URLS[NETWORKS.SONIC]] },
-        public: { http: [RPC_URLS[NETWORKS.SONIC]] },
-    },
-};
+    // Create account and client
+    const account = privateKeyToAccount(privateKey as `0x${string}`);
+    console.log('\nWallet Information:');
+    console.log('------------------');
+    console.log('Address:', account.address);
 
-async function main() {
+    const publicClient = createPublicClient({
+        chain: CHAIN_CONFIG[NETWORKS.SONIC],
+        transport: http(),
+    });
+
     try {
-        // Create clients
-        const publicClient = createPublicClient({
-            chain: sonicChain,
-            transport: http(),
-        });
-
-        const walletClient = createWalletClient({
-            account,
-            chain: sonicChain,
-            transport: http(),
-        });
-
-        console.log('\nTesting get user liquidity...');
-        console.log('Wallet address:', account.address);
-
+        // Test with valid parameters
+        console.log('\nTesting with valid parameters:');
+        console.log('----------------------------');
         const result = await getUserLiquidity(
+            { chainName: 'sonic', account: account.address as Address },
             {
-                chainName: NETWORKS.SONIC,
-                account: account.address,
-            },
-            {
-                getProvider: () => publicClient,
-                notify: async (msg: string) => console.log(msg),
-                sendTransactions: async ({ transactions }): Promise<TransactionReturn> => {
-                    throw new Error('This function should not require transactions');
+                getProvider: (_chainId: number) => publicClient,
+                notify: async (msg: string) => console.log('Notification:', msg),
+                sendTransactions: async () => {
+                    throw new Error('Should not be called');
                 },
             },
         );
@@ -66,28 +43,74 @@ async function main() {
             const data = JSON.parse(result.data);
             console.log('\nUser Liquidity Information:');
             console.log('-------------------------');
-            console.log(`Total fsALP Balance: ${data.balance} fsALP`);
-            console.log(`Total USD Value: $${data.usdValue}`);
-            console.log(`Current ALP Price: $${data.alpPrice}`);
-            console.log('\nVesting Details:');
-            console.log(`Reserved Amount: ${data.reservedAmount} fsALP ($${data.reservedUsdValue})`);
-            console.log(`Available Amount: ${data.availableAmount} fsALP ($${data.availableUsdValue})`);
-            if (data.claimableRewards !== '0') {
-                console.log(`\nClaimable Rewards: ${data.claimableRewards}`);
-            }
+            console.log(`Total Balance: ${Number(data.balance).toLocaleString()} ALP`);
+            console.log(`Available Amount: ${Number(data.availableAmount).toLocaleString()} ALP`);
+            console.log(`Reserved Amount: ${Number(data.reservedAmount).toLocaleString()} ALP`);
+            console.log(`USD Value: $${Number(data.usdValue).toLocaleString()}`);
+            console.log(`Available USD Value: $${Number(data.availableUsdValue).toLocaleString()}`);
+            console.log(`Reserved USD Value: $${Number(data.reservedUsdValue).toLocaleString()}`);
+            console.log(`ALP Price: $${Number(data.alpPrice).toLocaleString()}`);
+            console.log(`Claimable Rewards: ${data.claimableRewards}`);
         } else {
-            console.error('\nFailed to get user liquidity:', result.data);
+            console.error('\nError:', result.data);
         }
+
+        // Test with invalid chain
+        console.log('\nTesting with invalid chain:');
+        console.log('-------------------------');
+        try {
+            await getUserLiquidity(
+                { chainName: 'invalid' as any, account: account.address as Address },
+                {
+                    getProvider: (_chainId: number) => publicClient,
+                    notify: async (msg: string) => console.log('Notification:', msg),
+                    sendTransactions: async () => {
+                        throw new Error('Should not be called');
+                    },
+                },
+            );
+            console.error('❌ Should have rejected invalid chain');
+        } catch (error) {
+            console.log('✅ Successfully rejected invalid chain');
+            console.log('Error:', error instanceof Error ? error.message : 'Unknown error');
+        }
+
+        // Test with zero address
+        console.log('\nTesting with zero address:');
+        console.log('------------------------');
+        const zeroAddressResult = await getUserLiquidity(
+            { chainName: 'sonic', account: '0x0000000000000000000000000000000000000000' as Address },
+            {
+                getProvider: (_chainId: number) => publicClient,
+                notify: async (msg: string) => console.log('Notification:', msg),
+                sendTransactions: async () => {
+                    throw new Error('Should not be called');
+                },
+            },
+        );
+
+        if (!zeroAddressResult.success) {
+            console.log('✅ Successfully rejected zero address');
+            console.log('Error:', zeroAddressResult.data);
+        } else {
+            console.error('❌ Should have rejected zero address');
+        }
+
+        console.log('\nAll tests completed successfully! ✨');
     } catch (error) {
-        console.error('\nUnexpected error:', error);
+        console.error('\nUnexpected Error:');
+        console.error('----------------');
         if (error instanceof Error) {
-            console.error('Error message:', error.message);
-            console.error('Error stack:', error.stack);
+            console.error('Message:', error.message);
+            console.error('Stack:', error.stack);
+        } else {
+            console.error('Unknown error:', error);
         }
+        process.exit(1);
     }
 }
 
-main().catch((error) => {
+test().catch((error) => {
     console.error('\nFatal error:', error);
     process.exit(1);
 });
