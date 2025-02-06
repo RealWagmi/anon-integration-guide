@@ -5,7 +5,7 @@ export const tools: AiTool[] = [
     {
         name: 'getQuoteForSwapExactIn',
         description: 'Get a quote for a swap where the amount of tokens to swap in is known.',
-        required: ['chainName', 'tokenIn', 'tokenOut', 'swapAmount'],
+        required: ['chainName', 'tokenInAddress', 'tokenOutAddress', 'swapAmount'],
         props: [
             {
                 name: 'chainName',
@@ -14,12 +14,12 @@ export const tools: AiTool[] = [
                 description: 'Chain name',
             },
             {
-                name: 'tokenIn',
+                name: 'tokenInAddress',
                 type: 'string',
                 description: 'Address of the token to swap from',
             },
             {
-                name: 'tokenOut',
+                name: 'tokenOutAddress',
                 type: 'string',
                 description: 'Address of the token to swap to',
             },
@@ -32,7 +32,8 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getMyPositionsPortfolio',
-        description: 'Show the liquidity positions in the user portfolio.  For each position, show the tokens in the pool, the type of pool, the amounts of tokens, the APR yield, and the dollar value of the position.',
+        description:
+            'Show the liquidity positions in the user portfolio.  For each position, show the tokens in the pool, the type of pool, the amounts of tokens, the APR yield, and the dollar value of the position.',
         required: ['chainName', 'account'],
         props: [
             {
@@ -62,7 +63,7 @@ export const tools: AiTool[] = [
             {
                 name: 'tokenAddress',
                 type: 'string',
-                description: 'Address of the token to search for'
+                description: 'Address of the token to search for',
             },
         ],
     },

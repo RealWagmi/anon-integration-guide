@@ -11,22 +11,23 @@ import { getChainFromName } from '@heyanon/sdk';
  * the Balancer SDK.
  */
 export function gqlTokenToBalancerToken(token: GqlToken): BalancerToken {
-    return new BalancerToken(
-        token.chainId,
-        token.address as Address,
-        token.decimals,
-        token.symbol,
-        token.name
-    );   
+    return new BalancerToken(token.chainId, token.address as Address, token.decimals, token.symbol, token.name);
 }
 
 /**
- * Get a token's address by its case-insensitive symbol, returning null
- * if the token is not found
+ * Get a token by its case-insensitive symbol, returning null
+ * if the token is not found.
+ *
+ * If acceptSynonyms is true, the function will also accept
+ * synonyms of the token symbol, and not just the exact symbol.
  */
-export async function getTokenBySymbol(chainName: string, symbol: string, acceptSynonyms = false): Promise<BalancerToken | null> {
+export async function getTokenBySymbol(chainName: string, symbol: string, acceptSynonyms = false): Promise<GqlToken | null> {
     const client = new BeetsClient();
-    const allTokens = await client.getTokens([anonChainNameToGqlChain(chainName)]);
+    const gqlChain = anonChainNameToGqlChain(chainName);
+    if (!gqlChain) {
+        throw new Error(`Chain ${chainName} not supported by Beets backend`);
+    }
+    const allTokens = await client.getTokens([gqlChain]);
     const chainId = getChainFromName(chainName);
     if (acceptSynonyms) {
         const synonyms = TOKEN_SYNONYMS[chainId as keyof typeof TOKEN_SYNONYMS];
@@ -38,8 +39,24 @@ export async function getTokenBySymbol(chainName: string, symbol: string, accept
         }
     }
 
-    const token = allTokens.find(token => token.symbol.toLowerCase() === symbol.toLowerCase());
+    const token = allTokens.find((token) => token.symbol.toLowerCase() === symbol.toLowerCase());
     if (!token) return null;
 
-    return gqlTokenToBalancerToken(token);
-} 
+    return token;
+}
+
+/**
+ * Get a token by its case-insensitive address, returning null
+ * if the token is not found
+ */
+export async function getTokenByAddress(chainName: string, address: Address): Promise<GqlToken | null> {
+    const client = new BeetsClient();
+    const gqlChain = anonChainNameToGqlChain(chainName);
+    if (!gqlChain) {
+        throw new Error(`Chain ${chainName} not supported by Beets backend`);
+    }
+    const allTokens = await client.getTokens([gqlChain]);
+    const token = allTokens.find((token) => token.address.toLowerCase() === address.toLowerCase());
+    if (!token) return null;
+    return token;
+}

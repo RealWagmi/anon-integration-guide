@@ -1,4 +1,4 @@
-import { GqlSorGetSwapsResponse, GqlSorSwapType } from "./beets/types";
+import { GqlSorGetSwapsResponse, GqlSorSwapType, GqlToken } from './beets/types';
 
 /**
  * Given a quote for a swap returned by the API, format it into a human-readable
@@ -8,33 +8,26 @@ import { GqlSorGetSwapsResponse, GqlSorSwapType } from "./beets/types";
  *
  * Importantly, the string will contain a warning in the case that the price
  * impact is greater than 0.5%.
- *
- * // TODO:
- * - Define SimplifiedSwap where prices, amounts and price impacts are
- *   already numbers
- * - Find a way to use token symbols in the output, instead of the token
- *   address
  */
-export function formatSwapQuote(quote: GqlSorGetSwapsResponse): string {
+export function formatSwapQuote(quote: GqlSorGetSwapsResponse, tokenIn: GqlToken, tokenOut: GqlToken): string {
     const parts = [];
-    
+
     // Add basic swap information
     if (quote.swapType === GqlSorSwapType.ExactIn) {
-        parts.push(`Swap ${quote.swapAmount} ${quote.tokenIn}`);
-        parts.push(`For ${quote.returnAmount} ${quote.tokenOut}`);
+        parts.push(`Swap ${quote.swapAmount} ${tokenIn.symbol}`);
+        parts.push(`For ${quote.returnAmount} ${tokenOut.symbol}`);
     } else {
-        parts.push(`Swap ${quote.returnAmount} ${quote.tokenIn}`);
-        parts.push(`For ${quote.swapAmount} ${quote.tokenOut}`);
+        parts.push(`Swap ${quote.returnAmount} ${tokenIn.symbol}`);
+        parts.push(`For ${quote.swapAmount} ${tokenOut.symbol}`);
     }
-    parts.push(`Price: ${quote.effectivePrice} ${quote.tokenIn} per ${quote.tokenOut}`);
-    parts.push(`Price: ${quote.effectivePriceReversed} ${quote.tokenOut} per ${quote.tokenIn}`);
-    
+    parts.push(`Price: ${quote.effectivePrice} ${tokenIn.symbol} per ${tokenOut.symbol}`);
+    parts.push(`Price: ${quote.effectivePriceReversed} ${tokenOut.symbol} per ${tokenIn.symbol}`);
+
     // Add price impact warning if > 0.5%
     if (!quote.priceImpact?.priceImpact) {
         parts.push(`⚠️ Warning: No price impact information available, proceed with caution`);
-    }
-    else {
-        const priceImpact = parseFloat(quote.priceImpact.priceImpact);
+    } else {
+        const priceImpact = parseFloat(quote.priceImpact.priceImpact) / parseFloat(quote.effectivePriceReversed);
         if (priceImpact > 0.005) {
             parts.push(`⚠️  Warning: High price impact of ${(priceImpact * 100).toFixed(2)}%`);
         } else {

@@ -2,7 +2,7 @@ import { Address } from 'viem';
 import { FunctionReturn, toResult, FunctionOptions, getChainFromName } from '@heyanon/sdk';
 import { MAX_FETCH_POOLS, supportedChains } from '../constants';
 import { BeetsClient } from '../helpers/beets/client';
-import { GqlPoolOrderBy, GqlPoolOrderDirection } from '../helpers/beets/types';
+import { GqlChain, GqlPoolOrderBy, GqlPoolOrderDirection } from '../helpers/beets/types';
 import { formatPoolMinimal } from '../helpers/pools';
 import { simplifyPool } from '../helpers/pools';
 import { anonChainNameToGqlChain } from '../helpers/chains';
@@ -18,21 +18,15 @@ export async function getMyPositionsPortfolio({ chainName, account }: Props, { n
     if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
 
     const client = new BeetsClient();
-    const positions = await client.getPools(
-        GqlPoolOrderBy.UserbalanceUsd,
-        GqlPoolOrderDirection.Desc,
-        MAX_FETCH_POOLS,
-        {
-            userAddress: account,
-            chainIn: [anonChainNameToGqlChain(chainName)]
-        }
-    );
+
+    const positions = await client.getPools(GqlPoolOrderBy.UserbalanceUsd, GqlPoolOrderDirection.Desc, MAX_FETCH_POOLS, {
+        userAddress: account,
+        chainIn: [anonChainNameToGqlChain(chainName) as GqlChain],
+    });
 
     if (!positions || positions.length === 0) {
-        return toResult("No positions found in your portfolio");
+        return toResult('No positions found in your portfolio');
     }
 
-    return toResult(positions.map((position, index) => 
-        formatPoolMinimal(simplifyPool(position), `${index + 1}. `)
-    ).join('\n'));
+    return toResult(positions.map((position, index) => formatPoolMinimal(simplifyPool(position), `${index + 1}. `)).join('\n'));
 }

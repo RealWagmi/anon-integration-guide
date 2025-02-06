@@ -14,9 +14,10 @@ export const MAX_FETCH_POOLS = 100;
  */
 export const TOKEN_SYNONYMS = {
     [ChainId.SONIC]: {
-        'SONIC': 'S',
-        'WSONIC': 'wS',
-        'USDC': 'USDC.e',
-        'ETHER': 'ETH'
+        SONIC: 'S',
+        WSONIC: 'wS',
+        USDC: 'USDC.e',
+        WETH: 'ETH',
+        ETHER: 'ETH',
     },
 };
