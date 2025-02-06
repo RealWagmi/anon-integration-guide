@@ -7,6 +7,7 @@ import { formatPoolMinimal } from '../helpers/pools';
 import { simplifyPool, poolContainsToken } from '../helpers/pools';
 import { validateTokenPositiveDecimalAmount } from '../helpers/validation';
 import { formatSwapQuote } from '../helpers/swaps';
+import { anonChainNameToGqlChain } from '../helpers/chains';
 
 const MIN_TVL = 200_000;
 
@@ -24,7 +25,7 @@ export async function getQuoteForSwapExactIn({ chainName, tokenIn, tokenOut, swa
     if (!validateTokenPositiveDecimalAmount(swapAmount)) return toResult(`Invalid swap amount: ${swapAmount}`, true);
 
     const client = new BeetsClient();
-    const swaps = await client.getSorSwap(tokenIn, tokenOut, GqlSorSwapType.ExactIn, swapAmount, client.getBeetsChain(chainName));
+    const swaps = await client.getSorSwap(tokenIn, tokenOut, GqlSorSwapType.ExactIn, swapAmount, anonChainNameToGqlChain(chainName));
 
     if (!swaps?.routes || !swaps.returnAmount) return toResult(`No swap routes found for the requested swap`, true);
 

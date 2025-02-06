@@ -5,6 +5,7 @@ import { BeetsClient } from '../helpers/beets/client';
 import { GqlPoolOrderBy, GqlPoolOrderDirection } from '../helpers/beets/types';
 import { formatPoolMinimal } from '../helpers/pools';
 import { simplifyPool } from '../helpers/pools';
+import { anonChainNameToGqlChain } from '../helpers/chains';
 
 interface Props {
     chainName: string;
@@ -23,7 +24,7 @@ export async function getMyPositionsPortfolio({ chainName, account }: Props, { n
         MAX_FETCH_POOLS,
         {
             userAddress: account,
-            chainIn: [client.getBeetsChain(chainName)]
+            chainIn: [anonChainNameToGqlChain(chainName)]
         }
     );
 

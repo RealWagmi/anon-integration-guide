@@ -5,6 +5,7 @@ import { BeetsClient } from '../helpers/beets/client';
 import { GqlPoolOrderBy, GqlPoolOrderDirection } from '../helpers/beets/types';
 import { formatPoolMinimal } from '../helpers/pools';
 import { simplifyPool, poolContainsToken } from '../helpers/pools';
+import { anonChainNameToGqlChain } from '../helpers/chains';
 
 const MIN_TVL = 200_000;
 
@@ -26,7 +27,7 @@ export async function getBestAprForToken({ chainName, tokenAddress }: Props, { n
         GqlPoolOrderDirection.Desc,
         MAX_FETCH_POOLS,
         {
-            chainIn: [client.getBeetsChain(chainName)],
+            chainIn: [anonChainNameToGqlChain(chainName)],
             minTvl: MIN_TVL
         }
     );

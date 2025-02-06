@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
-import { GqlChain, GqlPoolFilter, GqlPoolMinimal, GqlPoolOrderBy, GqlPoolOrderDirection, GqlSorGetSwapsResponse, GqlSorSwapType, GqlTokenAmountHumanReadable } from './types';
+import { GqlChain, GqlPoolFilter, GqlPoolMinimal, GqlPoolOrderBy, GqlPoolOrderDirection, GqlSorGetSwapsResponse, GqlSorSwapType, GqlToken, GqlTokenAmountHumanReadable, GqlTokenFilter } from './types';
 
 // Constants for configuration
 const DEFAULT_TIMEOUT = 10000; // 10 seconds
@@ -309,15 +309,29 @@ export class BeetsClient {
     }
 
     /**
-     * Helper function that convert HeyAnon chain identifiers to
-     * Beets chain identifiers
+     * Get all tokens on the given chains
      */
-    public getBeetsChain(chain: string): GqlChain {
-        switch (chain.toUpperCase()) {
-            case "SONIC": return GqlChain.Sonic;
-            case "OPTIMISM": return GqlChain.Optimism;
-            default: throw new Error(`Unsupported chain: ${chain}`);
-        }
+    async getTokens(chains: GqlChain[]): Promise<GqlToken[]> {
+        const query = `
+            query GetTokens($chains: [GqlChain!]) {
+                tokenGetTokens(chains: $chains) {
+                    name
+                    symbol
+                    address
+                    decimals
+                    chain
+                    chainId
+                }
+            }
+        `;
+
+        const response = await this.executeQueryWithRetry<{
+            tokenGetTokens: GqlToken[];
+        }>(query, {
+            chains
+        });
+
+        return response.tokenGetTokens;
     }
 
     /**
