@@ -7,13 +7,17 @@ interface Props {
     symbol: string;
 }
 
-export async function getTokenAddressFromSymbol({ chainName, symbol }: Props): Promise<FunctionReturn> {
+export async function getTokenAddressFromSymbol({ chainName, symbol }: Props, { notify }: FunctionOptions): Promise<FunctionReturn> {
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Chain ${chainName} is not supported`, true);
     
-    const token = await getTokenBySymbol(chainName, symbol);
+    // Look for the token with the exact symbol, or a synonym
+    const token = await getTokenBySymbol(chainName, symbol, true);
     if (!token) return toResult(`Token ${symbol} not found on ${chainName}`, true);
+    if (symbol !== token?.symbol) {
+        return toResult(`Token ${symbol} not found on ${chainName}, did you mean ${token?.symbol}?`, true);
+    }
     
     return toResult(token.address);
 } 

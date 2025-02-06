@@ -1,6 +1,5 @@
 import { AiTool, getChainName } from '@heyanon/sdk';
 import { supportedChains } from './constants';
-import { WHITELISTED_TOKENS } from './constants/tokens';
 
 export const tools: AiTool[] = [
     {
