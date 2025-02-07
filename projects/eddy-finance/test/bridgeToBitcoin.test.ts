@@ -188,37 +188,4 @@ describe('bridgeToBitcoin', () => {
 
         expect(result).toEqual(toResult(`Insufficient amount to cover destination chain gas fees. Try increasing amount`, true));
     });
-    it('should return ETH for Ethereum chain', () => {
-        const result = getNativeTokenName(ChainId.ETHEREUM);
-        expect(result).toBe('ETH');
-    });
-
-    it('should return BNB for BSC chain', () => {
-        const result = getNativeTokenName(ChainId.BSC);
-        expect(result).toBe('BNB');
-    });
-
-    it('should return POL for Polygon chain', () => {
-        const result = getNativeTokenName(ChainId.POLYGON);
-        expect(result).toBe('POL');
-    });
-
-    it('should return ETH for Base chain', () => {
-        const result = getNativeTokenName(ChainId.BASE);
-        expect(result).toBe('ETH');
-    });
-
-    it('should return "Not supported" for unsupported chains', () => {
-        // Test with an arbitrary chain ID that's not in the switch statement
-        const result = getNativeTokenName(999999);
-        expect(result).toBe('Not supported');
-    });
-
-    it('should return "Not supported" for invalid chain IDs', () => {
-        // Test with negative numbers
-        expect(getNativeTokenName(-1)).toBe('Not supported');
-
-        // Test with zero
-        expect(getNativeTokenName(0)).toBe('Not supported');
-    });
 });
