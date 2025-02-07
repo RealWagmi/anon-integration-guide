@@ -5,8 +5,8 @@ export const tools: AiTool[] = [
     {
         name: 'executeSwapExactIn',
         description:
-            'Execute a swap where you specify the EXACT AMOUNT YOU WANT TO SEND. For example, "Swap exactly 1 ETH for whatever amount of USDC I can get". Use this when you know exactly how much you want to spend.',
-        required: ['chainName', 'tokenInAddress', 'tokenOutAddress', 'humanReadableAmountIn'],
+            'Execute a swap where you specify the EXACT AMOUNT YOU WANT TO SEND in order to buy a token. For example: "Swap 1 ETH for USDC", "Sell 1 ETH for USDC", "Buy USDC with 1 ETH".',
+        required: ['chainName', 'account', 'tokenInAddress', 'tokenOutAddress', 'humanReadableAmountIn', 'slippageAsPercentage'],
         props: [
             {
                 name: 'chainName',
@@ -14,6 +14,12 @@ export const tools: AiTool[] = [
                 enum: supportedChains.map(getChainName),
                 description: 'Chain name',
             },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Account address performing the swap',
+            },
+
             {
                 name: 'tokenInAddress',
                 type: 'string',
@@ -29,19 +35,29 @@ export const tools: AiTool[] = [
                 type: 'string',
                 description: 'The exact amount of tokens you want to swap in, expressed as decimals (e.g. 1 ETH rather than 10^18)',
             },
+            {
+                name: 'slippageAsPercentage',
+                type: ['string', 'null'],
+                description: 'The maximum slippage you are willing to tolerate, expressed as a percentage (e.g. 10 for 10%)',
+            },
         ],
     },
     {
         name: 'executeSwapExactOut',
         description:
-            'Execute a swap where you specify the EXACT AMOUNT YOU WANT TO RECEIVE. For example, "Swap whatever ETH is needed to get exactly 1000 USDC". Use this when you know exactly how much you want to receive.',
-        required: ['chainName', 'tokenInAddress', 'tokenOutAddress', 'humanReadableAmountOut'],
+            'Execute a swap where you specify the EXACT AMOUNT YOU WANT TO RECEIVE of the token you want to buy. For example: "Swap ETH for 1000 USDC", "Sell ETH for 1000 USDC", "Buy 1000 USDC with ETH"',
+        required: ['chainName', 'account', 'tokenInAddress', 'tokenOutAddress', 'humanReadableAmountOut', 'slippageAsPercentage'],
         props: [
             {
                 name: 'chainName',
                 type: 'string',
                 enum: supportedChains.map(getChainName),
                 description: 'Chain name',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Account address performing the swap',
             },
             {
                 name: 'tokenInAddress',
@@ -58,11 +74,17 @@ export const tools: AiTool[] = [
                 type: 'string',
                 description: 'The exact amount of tokens you want to receive, expressed as decimals (e.g. 1000 USDC rather than 10^9)',
             },
+            {
+                name: 'slippageAsPercentage',
+                type: ['string', 'null'],
+                description: 'The maximum slippage you are willing to tolerate, expressed as a percentage (e.g. 10 for 10%)',
+            },
         ],
     },
     {
         name: 'getQuoteForSwapExactIn',
-        description: 'Given a FIXED AMOUNT TO SEND (e.g., "I want to swap exactly 1 ETH"), calculate how many tokens will be received in return.',
+        description:
+            'Given a FIXED AMOUNT TO SEND ORDER TO BUY A TOKEN, calculate how many tokens will be received in return.  For example: "How much USDC will I get for 1 ETH?", "USDC if I sell 1 ETH?", "USDC I can get for 1 ETH?"',
         required: ['chainName', 'tokenInAddress', 'tokenOutAddress', 'humanReadableAmountIn'],
         props: [
             {
@@ -90,7 +112,8 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getQuoteForSwapExactOut',
-        description: 'Given a FIXED AMOUNT TO RECEIVE (e.g., "Swap whatever ETH is needed to get exactly 1000 USDC"), calculate how many tokens need to be sent.',
+        description:
+            'Given a FIXED AMOUNT TO RECEIVE, calculate how many tokens need to be sent.  For example: "How much ETH do I need to buy 1000 USDC?", "USDC needed to buy 1 ETH?", "How much USDC to reeive exactly 1 ETH?"',
         required: ['chainName', 'tokenInAddress', 'tokenOutAddress', 'humanReadableAmountOut'],
         props: [
             {

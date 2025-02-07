@@ -33,6 +33,8 @@ export interface GetQuoteResult {
  * 2. Fetch and validate the token information
  * 3. Query the Balancer Smart Order Router (SOR) for optimal swap paths
  * 4. Get up-to-date quotes by querying the blockchain
+ *
+ * Source: https://docs.balancer.fi/integration-guides/swapping/swaps-with-sor-sdk.html
  */
 export async function getSwapQuote(
     { chainName, tokenInAddress, tokenOutAddress, humanReadableAmount, swapKind }: GetQuoteProps,

@@ -37,12 +37,12 @@ export const ALLOW_TOKEN_SYNONYMS = true;
 export const DEFAULT_PRECISION = 6;
 
 /**
- * The default deadline to use for swaps, in seconds.
+ * Used to calculate the default deadline for swaps,
  */
-export const DEFAULT_DEADLINE = 7200n;
+export const DEFAULT_DEADLINE_FROM_NOW = 7200n;
 
 /**
  * The default slippage percentage to use for swaps,
  * expressed as a number between 0 and 1.
  */
-export const DEFAULT_SLIPPAGE = 0.01;
+export const DEFAULT_SLIPPAGE_AS_PERCENTAGE = 1;
