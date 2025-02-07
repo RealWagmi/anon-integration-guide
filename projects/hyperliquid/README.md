@@ -10,20 +10,28 @@ The Hyperliquid L1 uses a custom consensus algorithm called HyperBFT which is he
 
 ## Supported Networks
 
--   ARBITRUM
+- ARBITRUM
 
 ## Common Tasks
 
--   "Bridge 100 USDC to Hyperliquid from Arbitrum network"
--   "Move 50 USDC from Arbitrum network to Hyperliquid"
--   "Send 25.5 USDC to Hyperliquid bridge on Arbitrum network"
--   "Withdraw 20 USDC from Hyperliquid to Arbitrum"
--   "Move 10.5 USDC from Hyperliquid back to Arbitrum"
+- "Bridge 100 USDC to Hyperliquid from Arbitrum network"
+- "Move 50 USDC from Arbitrum network to Hyperliquid"
+- "Send 25.5 USDC to Hyperliquid bridge on Arbitrum network"
+- "Withdraw 20 USDC from Hyperliquid to Arbitrum"
+- "Move 10.5 USDC from Hyperliquid back to Arbitrum"
+- "Move 100USDC from my spot to my perp balance on Hyperliquid"
+- "I need you to transfer 55.5 USD from perps to spot on Hyperliquid"
+- "Open a long on 12$ of BTC with no leverage on Hyperliquid"
+- "Short me 1 BTC with 50x leverage on Hyperliquid"
+- "Close my ARB position on Hyperliquid"
+- "Close my Bitcoin position on Hyperliquid"
 
 ## Available Functions
 
--   Bridging to Hyperliquid (minimum 5 USDC)
--   Withdrawing from Hyperliquid (minimum 2 USDC)
+- Bridging to Hyperliquid (minimum 5 USDC)
+- Withdrawing from Hyperliquid (minimum 2 USDC)
+- Moving USDC between spot and perp balances on Hyperliquid
+- Opening and closing perp positions on Hyperliquid
 
 ## Tests
 
@@ -67,6 +75,38 @@ await withdrawFromHyperliquid({
     account: '0x...',
     amount: '5', // Amount in USDC
 });
+```
+
+### Moving USDC from spot to perp balance on Hyperliquid
+
+```typescript
+// Move funds from spot to perp account
+await transferToPerpetual({
+    amount: '5', // Amount in USDC
+});
+```
+
+### Moving USDC from perp to spot balance on Hyperliquid
+
+```typescript
+// Move funds from perp to spot account
+await transferToSpot({
+    amount: '900', // Amount in USDC
+});
+```
+
+### Opening a perp position
+
+```typescript
+// Shorts 1000$ of BTC at 50x leverage on Hyperliquid
+await openPerp({ account: '0xYourAddress', asset: 'BTC', size: '1000', sizeUnit: 'USD', leverage: 50, short: true });
+```
+
+### Closing a perp position
+
+```typescript
+// Closes the open ETH perp position on Hyperliquid
+await closePerp({ account: '0xYourAddress', asset: 'ETH' });
 ```
 
 ## Note

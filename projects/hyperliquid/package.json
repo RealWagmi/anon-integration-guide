@@ -4,10 +4,13 @@
     "scripts": {
         "yarn": "yarn install",
         "test": "jest",
-        "test:coverage": "jest --coverage"
+        "test:coverage": "jest --coverage",
+        "test2": "npx tsx test.ts",
+        "testtools": "npx tsx testtools.ts"
     },
     "dependencies": {
         "@heyanon/sdk": "^1.0.5",
+        "@msgpack/msgpack": "^2.8.0",
         "axios": "^1.7.9"
     },
     "license": "MIT",

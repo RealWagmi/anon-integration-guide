@@ -33,7 +33,9 @@ describe('withdrawFromHyperliquid', () => {
     it('should prepare and send withdraw transaction correctly', async () => {
         const mockSignTypedDatas = jest.fn((...args: unknown[]) => {
             console.log('Signing typed datas:', args);
-            return Promise.resolve(['0x5ab40c899edec6de87fce05f2babe8ba378981d6e7e77324c64c5cd58c6af6d2'] as `0x${string}`[]);
+            return Promise.resolve([
+                '0x9f8f577823132326a0b55dea300f5b2427f3affe5b9c11eeef1ebf969238038b56bf4176fd974312f8d074eb4a5250480c088897c416098decf89a0ceaaf7cc51c',
+            ] as `0x${string}`[]);
         });
 
         jest.spyOn(require('@heyanon/sdk'), 'getChainFromName').mockImplementation((...args: unknown[]) => {
@@ -65,7 +67,7 @@ describe('withdrawFromHyperliquid', () => {
             expect.objectContaining({
                 action: expect.any(Object),
                 nonce: expect.any(Number),
-                signature: expect.any(Array),
+                signature: expect.any(Object),
             }),
             {
                 headers: {
@@ -73,6 +75,55 @@ describe('withdrawFromHyperliquid', () => {
                 },
             },
         );
+    });
+
+    it('should handle non-ok API status with error message', async () => {
+        const mockSignTypedDatas = jest
+            .fn()
+            .mockResolvedValue([
+                '0x9f8f577823132326a0b55dea300f5b2427f3affe5b9c11eeef1ebf969238038b56bf4176fd974312f8d074eb4a5250480c088897c416098decf89a0ceaaf7cc51c',
+            ] as `0x${string}`[]);
+
+        mockedAxios.post.mockResolvedValue({
+            data: {
+                status: 'error',
+                error: 'Insufficient balance',
+                details: 'User does not have enough funds',
+            },
+        });
+
+        const result = await withdrawFromHyperliquid(props, {
+            notify: mockNotify,
+            signTypedDatas: mockSignTypedDatas,
+            getProvider: mockProvider,
+            sendTransactions: jest.fn(),
+        });
+
+        expect(result).toEqual(toResult('Failed to withdraw funds from Hyperliquid. Please try again.', true));
+    });
+
+    it('should handle signature without v parameter for withdraw', async () => {
+        const mockSignTypedDatas = jest
+            .fn()
+            .mockResolvedValue([
+                '0x7f8f577823132326a0b55dea300f5b2427f3affe5b9c11eeef1ebf969238038b56bf4176fd974312f8d074eb4a5250480c088897c416098decf89a0ceaaf7cc501',
+            ] as `0x${string}`[]);
+
+        mockedAxios.post.mockResolvedValue({
+            data: {
+                status: 'ok',
+            },
+        });
+
+        const result = await withdrawFromHyperliquid(props, {
+            notify: mockNotify,
+            signTypedDatas: mockSignTypedDatas,
+            getProvider: mockProvider,
+            sendTransactions: jest.fn(),
+        });
+
+        expect(result.success).toEqual(true);
+        expect(result.data).toContain('Successfully initiated withdraw');
     });
 
     it('should return error if no account is found', async () => {
@@ -159,7 +210,9 @@ describe('withdrawFromHyperliquid', () => {
     it('should return error if axios post request fails', async () => {
         const mockSignTypedDatas = jest.fn((...args: unknown[]) => {
             console.log('Signing typed datas:', args);
-            return Promise.resolve(['0x5ab40c899edec6de87fce05f2babe8ba378981d6e7e77324c64c5cd58c6af6d2'] as `0x${string}`[]);
+            return Promise.resolve([
+                '0x9f8f577823132326a0b55dea300f5b2427f3affe5b9c11eeef1ebf969238038b56bf4176fd974312f8d074eb4a5250480c088897c416098decf89a0ceaaf7cc51c',
+            ] as `0x${string}`[]);
         });
 
         mockedAxios.post.mockRejectedValue(new Error('Network error'));
@@ -209,7 +262,9 @@ describe('withdrawFromHyperliquid', () => {
         for (const testCase of testCases) {
             const mockSignTypedDatas = jest.fn((...args: unknown[]) => {
                 console.log('Signing typed datas:', args);
-                return Promise.resolve(['0x5ab40c899edec6de87fce05f2babe8ba378981d6e7e77324c64c5cd58c6af6d2'] as `0x${string}`[]);
+                return Promise.resolve([
+                    '0x9f8f577823132326a0b55dea300f5b2427f3affe5b9c11eeef1ebf969238038b56bf4176fd974312f8d074eb4a5250480c088897c416098decf89a0ceaaf7cc51c',
+                ] as `0x${string}`[]);
             });
 
             if (testCase.expectedSuccess) {

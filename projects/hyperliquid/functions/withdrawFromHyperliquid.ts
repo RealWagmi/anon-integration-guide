@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { Address } from 'viem';
+import { Address, parseSignature, zeroAddress } from 'viem';
 import { FunctionReturn, FunctionOptions, toResult, getChainFromName } from '@heyanon/sdk';
-import { ARBITRUM_CHAIN_ID, MIN_WITHDRAW_AMOUNT } from '../constants';
+import { ARBITRUM_CHAIN_ID, ARBITRUM_CHAIN_ID_HEX, MIN_WITHDRAW_AMOUNT } from '../constants';
 
 interface Props {
     chainName: string;
@@ -59,7 +59,7 @@ export async function withdrawFromHyperliquid({ chainName, account, amount }: Pr
         const action = {
             type: 'withdraw3',
             hyperliquidChain: 'Mainnet',
-            signatureChainId: '0xa4b1',
+            signatureChainId: ARBITRUM_CHAIN_ID_HEX,
             amount,
             time: nonce,
             destination: account,
@@ -69,14 +69,35 @@ export async function withdrawFromHyperliquid({ chainName, account, amount }: Pr
             throw new Error('signTypedDatas is not available');
         }
 
-        const signature = await signTypedDatas([{ primaryType: 'HyperliquidTransaction:Withdraw', types, message: action }]);
+        const domain = {
+            name: 'HyperliquidSignTransaction',
+            version: '1',
+            chainId: ARBITRUM_CHAIN_ID,
+            verifyingContract: zeroAddress,
+        };
+
+        const signatureHex = await signTypedDatas([
+            {
+                domain,
+                primaryType: 'HyperliquidTransaction:Withdraw',
+                types,
+                message: action,
+            },
+        ]);
+        const signature = parseSignature(signatureHex[0]);
+        let signatureSerializable;
+        if (signature.v) {
+            signatureSerializable = { r: signature.r, s: signature.s, yParity: signature.yParity, v: Number(signature.v) };
+        } else {
+            signatureSerializable = { r: signature.r, s: signature.s, yParity: signature.yParity };
+        }
 
         const res = await axios.post(
             'https://api.hyperliquid.xyz/exchange',
             {
                 action,
                 nonce,
-                signature,
+                signature: signatureSerializable,
             },
             {
                 headers: {
