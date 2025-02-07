@@ -1,5 +1,12 @@
 import { DECIMAL_SCALES, ExactInQueryOutput, ExactOutQueryOutput, SwapKind, Token } from '@balancer/sdk';
 import util from 'util';
+import { Address } from 'viem';
+import { FunctionReturn, toResult, FunctionOptions, getChainFromName } from '@heyanon/sdk';
+import { supportedChains } from '../constants';
+import { validateTokenPositiveDecimalAmount } from '../helpers/validation';
+import { anonChainNameToBalancerChainId, getDefaultRpcUrl } from '../helpers/chains';
+import { BalancerApi, Swap, TokenAmount } from '@balancer/sdk';
+import { getBalancerTokenByAddress } from '../helpers/tokens';
 /**
  * Given a quote for a swap returned by the Balancer SDK, format it into a
  * human-readable multi-line string, including information about the price, the
@@ -53,4 +60,83 @@ export function formatSwapQuote(quote: ExactInQueryOutput | ExactOutQueryOutput,
     // }
 
     return parts.join('\n');
+}
+
+interface GetQuoteProps {
+    chainName: string;
+    tokenInAddress: Address;
+    tokenOutAddress: Address;
+    humanReadableAmount: string;
+    swapKind: SwapKind;
+}
+
+/**
+ * Get a quote for swapping tokens on the Balancer protocol.
+ *
+ * This function handles both exact-in swaps ("I want to swap ETH to get exactly 100 USDC")
+ * and exact-out swaps ("I want to receive exactly 1 ETH paying in USDC").
+ *
+ * The function will:
+ * 1. Validate the input parameters and chain support
+ * 2. Fetch and validate the token information
+ * 3. Query the Balancer Smart Order Router (SOR) for optimal swap paths
+ * 4. Get up-to-date quotes by querying the blockchain
+ */
+export async function getSwapQuote(
+    { chainName, tokenInAddress, tokenOutAddress, humanReadableAmount, swapKind }: GetQuoteProps,
+    { notify, getProvider }: FunctionOptions,
+): Promise<FunctionReturn> {
+    // Validation
+    const chainId = getChainFromName(chainName);
+    if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
+    if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
+    if (!validateTokenPositiveDecimalAmount(humanReadableAmount)) return toResult(`Invalid swap amount: ${humanReadableAmount}`, true);
+
+    // Get tokens
+    const balancerTokenIn = await getBalancerTokenByAddress(chainName, tokenInAddress);
+    if (!balancerTokenIn) return toResult(`Input token ${tokenInAddress} not found on ${chainName}`, true);
+    const balancerTokenOut = await getBalancerTokenByAddress(chainName, tokenOutAddress);
+    if (!balancerTokenOut) return toResult(`Output token ${tokenOutAddress} not found on ${chainName}`, true);
+
+    // Notify with appropriate message based on swap kind
+    if (swapKind === SwapKind.GivenIn) {
+        notify(`Getting quote for swap ${humanReadableAmount} ${balancerTokenIn.symbol} -> ${balancerTokenOut.symbol} on ${chainName}`);
+    } else {
+        notify(`Getting quote for swap ${balancerTokenIn.symbol} -> ${humanReadableAmount} ${balancerTokenOut.symbol} on ${chainName}`);
+    }
+
+    // Get balancer chain ID
+    const balancerChainId = anonChainNameToBalancerChainId(chainName);
+    if (!balancerChainId) return toResult(`Chain ${chainName} not supported by SDK`, true);
+
+    // Get balancer swap amount using the appropriate token based on swap kind
+    const tokenForAmount = swapKind === SwapKind.GivenIn ? balancerTokenIn : balancerTokenOut;
+    const balancerSwapAmount = TokenAmount.fromHumanAmount(tokenForAmount, humanReadableAmount as `${number}`);
+
+    // Get SOR paths
+    const balancerClient = new BalancerApi('https://backend-v3.beets-ftm-node.com/', balancerChainId);
+    const sorPaths = await balancerClient.sorSwapPaths.fetchSorSwapPaths({
+        chainId: balancerChainId,
+        tokenIn: tokenInAddress,
+        tokenOut: tokenOutAddress,
+        swapKind,
+        swapAmount: balancerSwapAmount,
+    });
+    notify(`Found ${sorPaths.length} paths for the swap`);
+
+    const swap = new Swap({
+        chainId: balancerChainId,
+        paths: sorPaths,
+        swapKind,
+    });
+
+    // Get RPC URL
+    const publicClient = getProvider(chainId);
+    const rpcUrl = getDefaultRpcUrl(publicClient);
+    if (!rpcUrl) return toResult(`Chain ${chainName} not supported by viem`, true);
+
+    // Get up to date swap result by querying onchain
+    const updated = (await swap.query(rpcUrl)) as ExactInQueryOutput | ExactOutQueryOutput;
+
+    return toResult(formatSwapQuote(updated, balancerTokenIn, balancerTokenOut));
 }
