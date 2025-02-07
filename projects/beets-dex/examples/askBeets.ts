@@ -9,6 +9,9 @@ import util from 'util';
 import chalk from 'chalk';
 import { fromHeyAnonToolsToOpenAiTools } from '../helpers/openai';
 
+const OPENAI_MODEL = 'gpt-4o';
+const DEEPSEEK_MODEL = 'deepseek-reasoner';
+
 interface AskBeetsOptions {
     verbose?: boolean;
     notify?: (message: string) => Promise<void>;
@@ -44,6 +47,27 @@ IMPORTANT: For all tool responses:
     return basePrompt + rawResponsePrompt + toolConfigPrompt + nextStepsPrompt;
 }
 
+function getLlmClient() {
+    const openaiApiKey = process.env.OPENAI_API_KEY;
+    const deepseekApiKey = process.env.DEEPSEEK_API_KEY;
+    if (!openaiApiKey && !deepseekApiKey) {
+        throw new Error('OPENAI_API_KEY or DEEPSEEK_API_KEY environment variable is required');
+    }
+    if (deepseekApiKey) {
+        return new OpenAI({ apiKey: deepseekApiKey, baseURL: 'https://api.deepseek.com/v1' });
+    } else {
+        return new OpenAI({ apiKey: openaiApiKey });
+    }
+}
+
+function getLlmModel() {
+    const deepseekApiKey = process.env.DEEPSEEK_API_KEY;
+    if (deepseekApiKey) {
+        return DEEPSEEK_MODEL;
+    } else {
+        return OPENAI_MODEL;
+    }
+}
 /**
  * The askBeets agent.
  *
@@ -54,11 +78,7 @@ IMPORTANT: For all tool responses:
  * and provide a final answer.
  */
 export async function askBeets(question: string, options?: AskBeetsOptions): Promise<FunctionReturn> {
-    const openaiApiKey = process.env.OPENAI_API_KEY;
-    if (!openaiApiKey) {
-        throw new Error('OPENAI_API_KEY environment variable is required');
-    }
-    const openai = new OpenAI({ apiKey: openaiApiKey });
+    const llmClient = getLlmClient();
 
     const privateKey = process.env.PRIVATE_KEY;
     if (!privateKey) {
@@ -127,8 +147,8 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
 
     while (!isComplete) {
         // Call the LLM to determine which tools to call
-        const completion = await openai.chat.completions.create({
-            model: 'gpt-4',
+        const completion = await llmClient.chat.completions.create({
+            model: getLlmModel(),
             messages: messages as OpenAI.Chat.Completions.ChatCompletionMessageParam[],
             tools: tools.map((tool) => fromHeyAnonToolsToOpenAiTools(tool)),
             tool_choice: 'auto',
