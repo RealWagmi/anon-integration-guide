@@ -93,7 +93,7 @@ describe('bridgeToEthereum', () => {
             },
         );
 
-        expect(result).toEqual(toResult('Destination token address is required', true));
+        expect(result).toEqual(toResult('Unsupported destination token', true));
     });
 
     it('should return error for zero amount', async () => {
@@ -177,6 +177,19 @@ describe('bridgeToEthereum', () => {
         );
 
         expect(result).toEqual(toResult('Unsupported destination token', true));
+    });
+
+    it('Should return error if amount is less than the minimum transaction amount', async () => {
+        const result = await bridgeToEthereum(
+            { ...props, amount: '0.00000001' },
+            {
+                notify: mockNotify,
+                sendTransactions: jest.fn(),
+                getProvider: mockProvider,
+            },
+        );
+
+        expect(result).toEqual(toResult(`Insufficient amount to cover destination chain gas fees. Try increasing amount`, true));
     });
 
     it('should return ETH for Ethereum chain', () => {

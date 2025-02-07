@@ -3,12 +3,18 @@ import { Address } from 'viem';
 import { toResult, TransactionReturn, ChainId } from '@heyanon/sdk';
 import { TransactionParams } from '@heyanon/sdk/dist/blockchain/types';
 import { getNativeTokenName } from '../constants';
-import { getBalance } from 'viem/_types/actions/public/getBalance';
 
 const account = '0xF493118C11E32c6622933010775119622190BF2D' as Address;
 const btcWallet = 'bc1qzvyawuse72fwwksy04luc0yqrd2n2er3h6jz0e' as string;
 
 describe('bridgeToBitcoin', () => {
+    // Mock the fetchPrice function
+    jest.mock('../constants', () => ({
+        ...jest.requireActual('../constants'),
+        fetchPrice: jest.fn(),
+        MIN_TX_AMOUNT_BTC: 6,
+    }));
+
     const mockNotify = jest.fn((message: string) => {
         console.log(message);
         return Promise.resolve();
@@ -170,6 +176,18 @@ describe('bridgeToBitcoin', () => {
         expect(result).toEqual(toResult('Insufficient balance.Required: 0.05 but got: 0', true));
     });
 
+    it('Should return error if amount is less than the minimum transaction amount', async () => {
+        const result = await bridgeToBitcoin(
+            { ...props, amount: '0.00000001' },
+            {
+                notify: mockNotify,
+                sendTransactions: jest.fn(),
+                getProvider: mockProvider,
+            },
+        );
+
+        expect(result).toEqual(toResult(`Insufficient amount to cover destination chain gas fees. Try increasing amount`, true));
+    });
     it('should return ETH for Ethereum chain', () => {
         const result = getNativeTokenName(ChainId.ETHEREUM);
         expect(result).toBe('ETH');

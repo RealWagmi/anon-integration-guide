@@ -15,6 +15,10 @@ export const USDT_ZRC20 = '0x7c8dda80bbbe1254a7aacf3219ebe1481c6e01d7';
 export const ETH_ZRC20 = '0xd97b1de3619ed2c6beb3860147e30ca8a7dc9891';
 export const PEPE_ZRC20 = '0x236b0de675cc8f46ae186897fccefe3370c9eded';
 export const DAI_ZRC20 = '0xcc683a782f4b30c138787cb5576a86af66fdc31d';
+export const POL_ZRC20 = '0xadf73eba3ebaa7254e859549a44c74ef7cff7501';
+export const ETH_BASE_ZRC20 = '0x1de70f3e971b62a0707da18100392af14f7fb677';
+export const BNB_ZRC20 = '0x48f80608b672dc30dc7e3dbbd0343c5f02c738eb';
+export const MIN_TX_AMOUNT_BTC = 6;
 export const EDDY_GRAPHQL_URL = 'https://apiv2.eddy.finance/graphql';
 
 interface BridgeQuoteResponse {
@@ -47,6 +51,23 @@ export const getZRC20Address = (destTokenSymbol: string) => {
 export const getDataForCrossChain = (destToken: string, walletAddress: string) => {
     let data = '0x' + EDDY_CROSS_CHAIN_BRIDGE.slice(2) + destToken.slice(2) + walletAddress.slice(2);
     return data;
+};
+
+export const getZRC20ForNativeToken = (chainId: number) => {
+    switch (chainId) {
+        case ChainId.ETHEREUM:
+            return ETH_ZRC20;
+        case ChainId.BASE:
+            return ETH_BASE_ZRC20;
+        case ChainId.POLYGON:
+            return POL_ZRC20;
+        case ChainId.BSC:
+            return BNB_ZRC20;
+        case BTC_CHAIN_ID:
+            return BTC_ZRC20;
+        default:
+            return 'Unsupported';
+    }
 };
 
 const getEncodedBitcoinWalletAddress = (bitcoinWalletAddress: string) => {
@@ -117,6 +138,47 @@ export const fetchBridgeQuote = async (
         return result.data.getBridgeQuoteByTokenAddress;
     } catch (error) {
         console.error('Error fetching bridge quote:', error);
+        throw error;
+    }
+};
+
+export const fetchPrice = async (address: string): Promise<number> => {
+    const query = `query{
+            getDollarValueFromAddress(
+                dollarValueAddressData : {
+                    tokenAddress: "${address}"
+                }
+             ){
+                price
+                expo
+            }
+        }`;
+    try {
+        const response = await fetch(EDDY_GRAPHQL_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+            },
+            body: JSON.stringify({ query }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (!result.data) {
+            throw new Error(`Invalid response: ${JSON.stringify(result)}`);
+        }
+
+        const price = result.data.getDollarValueFromAddress.price;
+        const expo = result.data.getDollarValueFromAddress.expo;
+
+        return price * 10 ** expo;
+    } catch (error) {
+        console.error('Error fetching price:', error);
         throw error;
     }
 };
