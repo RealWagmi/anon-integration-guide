@@ -29,3 +29,20 @@ export const TOKEN_SYNONYMS = {
  * their synonyms, e.g. "ETH" -> "WETH" or "USDC" -> "USDC.e".
  */
 export const ALLOW_TOKEN_SYNONYMS = true;
+
+/**
+ * The default precision used to show token amounts,
+ * expressed as a number of decimal places.
+ */
+export const DEFAULT_PRECISION = 6;
+
+/**
+ * The default deadline to use for swaps, in seconds.
+ */
+export const DEFAULT_DEADLINE = 7200n;
+
+/**
+ * The default slippage percentage to use for swaps,
+ * expressed as a number between 0 and 1.
+ */
+export const DEFAULT_SLIPPAGE = 0.01;
