@@ -41,10 +41,7 @@ IMPORTANT: For all tool responses:
 
     const nextStepsPrompt = `\nAfter each tool response, determine if additional steps are needed.`;
 
-    return basePrompt + 
-           rawResponsePrompt + 
-           toolConfigPrompt + 
-           nextStepsPrompt;
+    return basePrompt + rawResponsePrompt + toolConfigPrompt + nextStepsPrompt;
 }
 
 /**
@@ -165,7 +162,7 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
 
         const func = functions[functionName];
         if (!func) {
-            return toResult(`Function ${functionName} not found.`, true);
+            throw new Error(`Function ${functionName} not found.`);
         }
 
         // Replace chain & address for good measure
@@ -194,13 +191,13 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
                 console.log(`Tool '${functionName}' message:`, util.inspect(messages[messages.length - 1], { depth: null, colors: true }));
             }
         } catch (error) {
-            return toResult(`Error executing ${functionName}: ${error instanceof Error ? error.message : 'Unknown error'}`, true);
+            throw new Error(`Error executing ${functionName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
     // Return if we have no results
     if (funcReturns.length === 0) {
-        return toResult('Could not identify any operations to perform.', true);
+        throw new Error('Could not identify any operations to perform.');
     }
 
     // Internal consistency check
@@ -211,10 +208,12 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
     const assistantFinalComment = finalMessage.content;
 
     // Return all tool calls followed by the final comment of the assistant
-    let combinedMessage = funcReturns.map((r, i) => {
-        const msg = chalk.underline.bold(`TOOL CALL ${i + 1}`);
-        return `${msg}\n${r.data}`;
-    }).join('\n');
+    let combinedMessage = funcReturns
+        .map((r, i) => {
+            const msg = chalk.underline.bold(`TOOL CALL ${i + 1}`);
+            return `${msg}\n${r.data}`;
+        })
+        .join('\n');
 
     // Add the final comment of the assistant
     if (assistantFinalComment) {

@@ -11,13 +11,15 @@ export const MAX_FETCH_POOLS = 100;
 /**
  * Token synonyms, used to accept multiple spellings or slight variants
  * of the "official" token symbol.
+ *
+ * Always use upper-case symbols as keys.
  */
 export const TOKEN_SYNONYMS = {
     [ChainId.SONIC]: {
         SONIC: 'S',
         WSONIC: 'wS',
         USDC: 'USDC.e',
-        WETH: 'ETH',
-        ETHER: 'ETH',
+        ETH: 'WETH',
+        ETHER: 'WETH',
     },
 };

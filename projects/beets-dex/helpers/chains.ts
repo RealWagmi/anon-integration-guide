@@ -1,3 +1,4 @@
+import { PublicClient, createPublicClient, http, createWalletClient } from 'viem';
 import { ChainId as BalancerChainId } from '@balancer/sdk';
 import { GqlChain } from './beets/types';
 
@@ -30,4 +31,13 @@ export function anonChainNameToBalancerChainId(chainName: string): BalancerChain
         default:
             return null;
     }
+}
+
+/**
+ * Helper function that returns the default RPC URL for a chain
+ * given its provider
+ */
+export function getDefaultRpcUrl(provider: PublicClient): string | null {
+    if (!provider.chain) return null;
+    return provider.chain.rpcUrls.default.http[0];
 }

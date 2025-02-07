@@ -32,7 +32,7 @@ export async function getTokenBySymbol(chainName: string, symbol: string, accept
     if (acceptSynonyms) {
         const synonyms = TOKEN_SYNONYMS[chainId as keyof typeof TOKEN_SYNONYMS];
         if (synonyms) {
-            const synonym = synonyms[symbol as keyof typeof synonyms];
+            const synonym = synonyms[symbol.toUpperCase() as keyof typeof synonyms];
             if (synonym) {
                 symbol = synonym;
             }
@@ -46,10 +46,10 @@ export async function getTokenBySymbol(chainName: string, symbol: string, accept
 }
 
 /**
- * Get a token by its case-insensitive address, returning null
+ * Get a GrahQL Token by its case-insensitive address, returning null
  * if the token is not found
  */
-export async function getTokenByAddress(chainName: string, address: Address): Promise<GqlToken | null> {
+export async function getGqlTokenByAddress(chainName: string, address: Address): Promise<GqlToken | null> {
     const client = new BeetsClient();
     const gqlChain = anonChainNameToGqlChain(chainName);
     if (!gqlChain) {
@@ -59,4 +59,14 @@ export async function getTokenByAddress(chainName: string, address: Address): Pr
     const token = allTokens.find((token) => token.address.toLowerCase() === address.toLowerCase());
     if (!token) return null;
     return token;
+}
+
+/**
+ * Get a Balancer SDK Token by its case-insensitive address, returning null
+ * if the token is not found
+ */
+export async function getBalancerTokenByAddress(chainName: string, address: Address): Promise<BalancerToken | null> {
+    const gqlToken = await getGqlTokenByAddress(chainName, address);
+    if (!gqlToken) return null;
+    return gqlTokenToBalancerToken(gqlToken);
 }

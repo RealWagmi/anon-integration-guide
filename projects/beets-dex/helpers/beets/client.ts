@@ -1,8 +1,8 @@
 import axios, { AxiosInstance } from 'axios';
-import { GqlChain, GqlPoolFilter, GqlPoolMinimal, GqlPoolOrderBy, GqlPoolOrderDirection, GqlSorGetSwapsResponse, GqlSorSwapType, GqlToken, GqlTokenAmountHumanReadable, GqlTokenFilter } from './types';
+import { GqlChain, GqlPoolFilter, GqlPoolMinimal, GqlPoolOrderBy, GqlPoolOrderDirection, GqlSorGetSwapsResponse, GqlSorSwapType, GqlToken } from './types';
 
 // Constants for configuration
-const DEFAULT_TIMEOUT = 10000; // 10 seconds
+const DEFAULT_TIMEOUT = 30000; // 30 seconds
 const DEFAULT_RETRY_ATTEMPTS = 0;
 const DEFAULT_RETRY_DELAY = 1000; // 1 second
 
@@ -19,12 +19,7 @@ export class BeetsClient {
     private readonly retryDelay: number;
 
     constructor(config: BeetsClientConfig = {}) {
-        const {
-            baseUrl = 'https://backend-v3.beets-ftm-node.com',
-            timeout = DEFAULT_TIMEOUT,
-            maxRetries = DEFAULT_RETRY_ATTEMPTS,
-            retryDelay = DEFAULT_RETRY_DELAY
-        } = config;
+        const { baseUrl = 'https://backend-v3.beets-ftm-node.com', timeout = DEFAULT_TIMEOUT, maxRetries = DEFAULT_RETRY_ATTEMPTS, retryDelay = DEFAULT_RETRY_DELAY } = config;
 
         this.maxRetries = maxRetries;
         this.retryDelay = retryDelay;
@@ -34,25 +29,20 @@ export class BeetsClient {
             timeout,
             headers: {
                 'Content-Type': 'application/json',
-            }
+            },
         });
     }
 
     private async sleep(ms: number): Promise<void> {
-        return new Promise(resolve => setTimeout(resolve, ms));
+        return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
-    private async executeQueryWithRetry<T>(
-        query: string, 
-        variables?: any,
-        fragments: string[] = [],
-        attempt: number = 1,
-    ): Promise<T> {
+    private async executeQueryWithRetry<T>(query: string, variables?: any, fragments: string[] = [], attempt: number = 1): Promise<T> {
         const queryWithFragments = query + fragments.join('\n');
         try {
             const response = await this.axiosInstance.post('', {
                 query: queryWithFragments,
-                variables
+                variables,
             });
 
             if (!response.data?.data) {
@@ -83,16 +73,11 @@ export class BeetsClient {
 
     /**
      * Get Beets pools based on the provided filters
-     * 
+     *
      * Same query as https://beets.fi/pools
      */
     async getPools(orderBy: GqlPoolOrderBy, orderDirection: GqlPoolOrderDirection, first: number, where: GqlPoolFilter): Promise<GqlPoolMinimal[]> {
-        const fragments = [
-            this.getHookFragment(),
-            this.getUnderlyingTokenFragment(),
-            this.getErc4626ReviewDataFragment(),
-            this.getPoolTokensFragment(),
-        ];
+        const fragments = [this.getHookFragment(), this.getUnderlyingTokenFragment(), this.getErc4626ReviewDataFragment(), this.getPoolTokensFragment()];
 
         const query = `
             query GetPools($where: GqlPoolFilter!, $orderBy: GqlPoolOrderBy!, $orderDirection: GqlPoolOrderDirection!, $first: Int!) {
@@ -217,15 +202,19 @@ export class BeetsClient {
                 }
             }
         `;
-        
+
         const response = await this.executeQueryWithRetry<{
             poolGetPools: GqlPoolMinimal[];
-        }>(query, {
-            where,
-            orderBy,
-            first,
-            orderDirection
-        }, fragments);
+        }>(
+            query,
+            {
+                where,
+                orderBy,
+                first,
+                orderDirection,
+            },
+            fragments,
+        );
 
         return response.poolGetPools;
     }
@@ -302,7 +291,7 @@ export class BeetsClient {
             tokenOut,
             swapType,
             swapAmount,
-            chain
+            chain,
         });
 
         return response.swaps;
@@ -328,7 +317,7 @@ export class BeetsClient {
         const response = await this.executeQueryWithRetry<{
             tokenGetTokens: GqlToken[];
         }>(query, {
-            chains
+            chains,
         });
 
         return response.tokenGetTokens;

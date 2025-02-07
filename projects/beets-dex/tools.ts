@@ -4,8 +4,8 @@ import { supportedChains } from './constants';
 export const tools: AiTool[] = [
     {
         name: 'getQuoteForSwapExactIn',
-        description: 'Get a quote for a swap where the amount of tokens to swap in is known.',
-        required: ['chainName', 'tokenInAddress', 'tokenOutAddress', 'swapAmount'],
+        description: 'Return how many tokens the user will receive in exchange for a given amount of tokens they are willing to swap in.',
+        required: ['chainName', 'tokenInAddress', 'tokenOutAddress', 'humanReadableSwapAmount'],
         props: [
             {
                 name: 'chainName',
@@ -16,17 +16,17 @@ export const tools: AiTool[] = [
             {
                 name: 'tokenInAddress',
                 type: 'string',
-                description: 'Address of the token to swap from',
+                description: 'Address of the token the user wants to swap in',
             },
             {
                 name: 'tokenOutAddress',
                 type: 'string',
-                description: 'Address of the token to swap to',
+                description: 'Address of the token the user wants to receive from the swap',
             },
             {
-                name: 'swapAmount',
+                name: 'humanReadableSwapAmount',
                 type: 'string',
-                description: 'Amount of tokens to swap, expressed as decimals (e.g. 1 ETH rather than 10^18)',
+                description: 'Amount of tokens the user wants to swap in, expressed as decimals (e.g. 1 ETH rather than 10^18)',
             },
         ],
     },
