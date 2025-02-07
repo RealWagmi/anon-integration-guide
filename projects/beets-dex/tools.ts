@@ -4,8 +4,8 @@ import { supportedChains } from './constants';
 export const tools: AiTool[] = [
     {
         name: 'getQuoteForSwapExactIn',
-        description: 'Return how many tokens the user will receive in exchange for a given amount of tokens they are willing to swap in.',
-        required: ['chainName', 'tokenInAddress', 'tokenOutAddress', 'humanReadableSwapAmount'],
+        description: 'Given a FIXED AMOUNT TO SEND (e.g., "I want to swap exactly 1 ETH"), calculate how many tokens will be received in return.',
+        required: ['chainName', 'tokenInAddress', 'tokenOutAddress', 'humanReadableAmountIn'],
         props: [
             {
                 name: 'chainName',
@@ -24,9 +24,37 @@ export const tools: AiTool[] = [
                 description: 'Address of the token the user wants to receive from the swap',
             },
             {
-                name: 'humanReadableSwapAmount',
+                name: 'humanReadableAmountIn',
                 type: 'string',
                 description: 'Amount of tokens the user wants to swap in, expressed as decimals (e.g. 1 ETH rather than 10^18)',
+            },
+        ],
+    },
+    {
+        name: 'getQuoteForSwapExactOut',
+        description: 'Given a FIXED AMOUNT TO RECEIVE (e.g., "I want to receive exactly 1000 USDC"), calculate how many tokens need to be sent.',
+        required: ['chainName', 'tokenInAddress', 'tokenOutAddress', 'humanReadableAmountOut'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name',
+            },
+            {
+                name: 'tokenInAddress',
+                type: 'string',
+                description: 'Address of the token the user wants to swap in',
+            },
+            {
+                name: 'tokenOutAddress',
+                type: 'string',
+                description: 'Address of the token the user wants to receive from the swap',
+            },
+            {
+                name: 'humanReadableAmountOut',
+                type: 'string',
+                description: 'Amount of tokens the user wants to receive, expressed as decimals (e.g. 1 ETH rather than 10^18)',
             },
         ],
     },

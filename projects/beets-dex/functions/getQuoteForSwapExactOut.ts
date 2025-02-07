@@ -11,32 +11,32 @@ interface Props {
     chainName: string;
     tokenInAddress: Address;
     tokenOutAddress: Address;
-    humanReadableAmountIn: string;
+    humanReadableAmountOut: string;
 }
 
-export async function getQuoteForSwapExactIn(
-    { chainName, tokenInAddress, tokenOutAddress, humanReadableAmountIn }: Props,
+export async function getQuoteForSwapExactOut(
+    { chainName, tokenInAddress, tokenOutAddress, humanReadableAmountOut }: Props,
     { notify, getProvider }: FunctionOptions,
 ): Promise<FunctionReturn> {
     // Validation
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
-    if (!validateTokenPositiveDecimalAmount(humanReadableAmountIn)) return toResult(`Invalid swap amount: ${humanReadableAmountIn}`, true);
+    if (!validateTokenPositiveDecimalAmount(humanReadableAmountOut)) return toResult(`Invalid swap amount: ${humanReadableAmountOut}`, true);
 
     // Get tokens
     const balancerTokenIn = await getBalancerTokenByAddress(chainName, tokenInAddress);
     if (!balancerTokenIn) return toResult(`Input token ${tokenInAddress} not found on ${chainName}`, true);
     const balancerTokenOut = await getBalancerTokenByAddress(chainName, tokenOutAddress);
     if (!balancerTokenOut) return toResult(`Output token ${tokenOutAddress} not found on ${chainName}`, true);
-    notify(`Getting quote for swap ${humanReadableAmountIn} ${balancerTokenIn.symbol} -> ${balancerTokenOut.symbol} on ${chainName}`);
+    notify(`Getting quote for swap ${balancerTokenIn.symbol} -> ${humanReadableAmountOut} ${balancerTokenOut.symbol} on ${chainName}`);
 
     // Get balancer chain ID
     const balancerChainId = anonChainNameToBalancerChainId(chainName);
     if (!balancerChainId) return toResult(`Chain ${chainName} not supported by SDK`, true);
 
     // Get balancer swap amount
-    const balancerSwapAmount = TokenAmount.fromHumanAmount(balancerTokenIn, humanReadableAmountIn as `${number}`);
+    const balancerSwapAmount = TokenAmount.fromHumanAmount(balancerTokenIn, humanReadableAmountOut as `${number}`);
 
     // Get SOR paths
     const balancerClient = new BalancerApi('https://backend-v3.beets-ftm-node.com/', balancerChainId);
@@ -44,7 +44,7 @@ export async function getQuoteForSwapExactIn(
         chainId: balancerChainId,
         tokenIn: tokenInAddress,
         tokenOut: tokenOutAddress,
-        swapKind: SwapKind.GivenIn,
+        swapKind: SwapKind.GivenOut,
         swapAmount: balancerSwapAmount,
     });
     notify(`Found ${sorPaths.length} paths for the swap`);
@@ -52,7 +52,7 @@ export async function getQuoteForSwapExactIn(
     const swap = new Swap({
         chainId: balancerChainId,
         paths: sorPaths,
-        swapKind: SwapKind.GivenIn,
+        swapKind: SwapKind.GivenOut,
     });
 
     // Get RPC URL

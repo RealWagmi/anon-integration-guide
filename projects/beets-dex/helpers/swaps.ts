@@ -17,8 +17,8 @@ export function formatSwapQuote(quote: ExactInQueryOutput | ExactOutQueryOutput,
         parts.push(`Swap ${quote.amountIn.toSignificant(significatDigits)} ${tokenIn.symbol}`);
         parts.push(`For ${quote.expectedAmountOut.toSignificant(significatDigits)} ${tokenOut.symbol}`);
     } else {
-        parts.push(`Swap ${quote.expectedAmountIn.toSignificant(significatDigits)} ${tokenOut.symbol}`);
-        parts.push(`For ${quote.amountOut.toSignificant(significatDigits)} ${tokenIn.symbol}`);
+        parts.push(`Swap ${quote.expectedAmountIn.toSignificant(significatDigits)} ${tokenIn.symbol}`);
+        parts.push(`For ${quote.amountOut.toSignificant(significatDigits)} ${tokenOut.symbol}`);
     }
 
     // Add price information
