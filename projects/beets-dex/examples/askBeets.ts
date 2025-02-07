@@ -172,46 +172,47 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
             continue;
         }
 
-        // Determine which tool to call and its arguments
-        const functionCall = assistantMessage.tool_calls[0];
-        const functionName = functionCall.function.name as keyof typeof functions;
-        const functionArgs = JSON.parse(functionCall.function.arguments);
+        // Execute all tool calls instead of just the first one
+        for (const functionCall of assistantMessage.tool_calls) {
+            const functionName = functionCall.function.name as keyof typeof functions;
+            const functionArgs = JSON.parse(functionCall.function.arguments);
 
-        console.log(chalk.gray(`[Debug] Executing function: ${functionName}`));
-        console.log(chalk.gray(`[Debug] Args: ${JSON.stringify(functionArgs)}`));
+            console.log(chalk.gray(`[Debug] Executing function: ${functionName}`));
+            console.log(chalk.gray(`[Debug] Args: ${JSON.stringify(functionArgs)}`));
 
-        const func = functions[functionName];
-        if (!func) {
-            throw new Error(`Function ${functionName} not found.`);
-        }
-
-        // Replace chain & address for good measure
-        functionArgs.chainName = 'sonic';
-        functionArgs.account = signer.address;
-
-        // Call the tool and add the result to the conversation
-        try {
-            const funcReturn = await func(functionArgs, functionOptions);
-            funcReturns.push(funcReturn);
-            console.log(chalk.gray(`[Debug] Function returned ${funcReturn.success ? 'success' : 'failure'}`));
-
-            if (!funcReturn.success) {
-                return funcReturn;
+            const func = functions[functionName];
+            if (!func) {
+                throw new Error(`Function ${functionName} not found.`);
             }
 
-            // Add the tool response to the conversation with more context
-            messages.push({
-                role: 'tool',
-                tool_call_id: functionCall.id,
-                name: functionName,
-                content: funcReturn.data,
-            });
+            // Replace chain & address for good measure
+            functionArgs.chainName = 'sonic';
+            functionArgs.account = signer.address;
 
-            if (options?.verbose) {
-                console.log(`Tool '${functionName}' message:`, util.inspect(messages[messages.length - 1], { depth: null, colors: true }));
+            // Call the tool and add the result to the conversation
+            try {
+                const funcReturn = await func(functionArgs, functionOptions);
+                funcReturns.push(funcReturn);
+                console.log(chalk.gray(`[Debug] Function returned ${funcReturn.success ? 'success' : 'failure'}`));
+
+                if (!funcReturn.success) {
+                    return funcReturn;
+                }
+
+                // Add the tool response to the conversation with more context
+                messages.push({
+                    role: 'tool',
+                    tool_call_id: functionCall.id,
+                    name: functionName,
+                    content: funcReturn.data,
+                });
+
+                if (options?.verbose) {
+                    console.log(`Tool '${functionName}' message:`, util.inspect(messages[messages.length - 1], { depth: null, colors: true }));
+                }
+            } catch (error) {
+                throw new Error(`Error executing ${functionName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
             }
-        } catch (error) {
-            throw new Error(`Error executing ${functionName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
