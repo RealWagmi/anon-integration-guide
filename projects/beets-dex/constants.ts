@@ -23,3 +23,9 @@ export const TOKEN_SYNONYMS = {
         ETHER: 'WETH',
     },
 };
+
+/**
+ * Whether to allow the LLM to replace token tickers with
+ * their synonyms, e.g. "ETH" -> "WETH" or "USDC" -> "USDC.e".
+ */
+export const ALLOW_TOKEN_SYNONYMS = true;

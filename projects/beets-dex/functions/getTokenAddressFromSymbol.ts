@@ -1,5 +1,5 @@
 import { FunctionReturn, toResult, FunctionOptions, getChainFromName } from '@heyanon/sdk';
-import { supportedChains } from '../constants';
+import { ALLOW_TOKEN_SYNONYMS, supportedChains } from '../constants';
 import { getTokenBySymbol } from '../helpers/tokens';
 
 interface Props {
@@ -16,7 +16,11 @@ export async function getTokenAddressFromSymbol({ chainName, symbol }: Props, { 
     const token = await getTokenBySymbol(chainName, symbol, true);
     if (!token) return toResult(`Token ${symbol} not found on ${chainName}`, true);
     if (symbol.toLowerCase() !== token?.symbol?.toLowerCase()) {
-        return toResult(`Token ${symbol} not found on ${chainName}, did you mean ${token?.symbol}?`, true);
+        if (!ALLOW_TOKEN_SYNONYMS) {
+            return toResult(`Token ${symbol} not found on ${chainName}, did you mean ${token?.symbol}?`, true);
+        } else {
+            notify(`Token ${symbol} not found on ${chainName}, using ${token?.symbol} instead`);
+        }
     }
 
     return toResult(token.address);
