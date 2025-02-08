@@ -5,7 +5,7 @@ export const tools: AiTool[] = [
     {
         name: 'executeSwapExactIn',
         description:
-            'Execute a swap where you specify the EXACT AMOUNT YOU WANT TO SEND in order to buy a token. For example: "Swap 1 ETH for USDC", "Sell 1 ETH for USDC", "Buy USDC with 1 ETH".',
+            'Get a quote for and then execute a swap where you specify the EXACT AMOUNT YOU WANT TO SEND in order to buy a token. For example: "Swap 1 ETH for USDC", "Sell 1 ETH for USDC", "Buy USDC with 1 ETH".',
         required: ['chainName', 'account', 'tokenInAddress', 'tokenOutAddress', 'humanReadableAmountIn', 'slippageAsPercentage'],
         props: [
             {
@@ -38,14 +38,15 @@ export const tools: AiTool[] = [
             {
                 name: 'slippageAsPercentage',
                 type: ['string', 'null'],
-                description: 'The maximum slippage you are willing to tolerate, expressed as a percentage (e.g. 10 for 10%)',
+                description:
+                    'The maximum slippage you are willing to tolerate, expressed as a percentage (e.g. 10 for 10%). If null, the default slippage for the chain will be used.',
             },
         ],
     },
     {
         name: 'executeSwapExactOut',
         description:
-            'Execute a swap where you specify the EXACT AMOUNT YOU WANT TO RECEIVE of the token you want to buy. For example: "Swap ETH for 1000 USDC", "Sell ETH for 1000 USDC", "Buy 1000 USDC with ETH"',
+            'Get a quote for and then execute a swap where you specify the EXACT AMOUNT YOU WANT TO RECEIVE of the token you want to buy. For example: "Swap ETH for 1000 USDC", "Sell ETH for 1000 USDC", "Buy 1000 USDC with ETH"',
         required: ['chainName', 'account', 'tokenInAddress', 'tokenOutAddress', 'humanReadableAmountOut', 'slippageAsPercentage'],
         props: [
             {
@@ -77,7 +78,8 @@ export const tools: AiTool[] = [
             {
                 name: 'slippageAsPercentage',
                 type: ['string', 'null'],
-                description: 'The maximum slippage you are willing to tolerate, expressed as a percentage (e.g. 10 for 10%)',
+                description:
+                    'The maximum slippage you are willing to tolerate, expressed as a percentage (e.g. 10 for 10%). If null, the default slippage for the chain will be used.',
             },
         ],
     },

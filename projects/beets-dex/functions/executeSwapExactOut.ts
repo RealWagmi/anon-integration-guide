@@ -1,6 +1,6 @@
 import { Address, formatUnits } from 'viem';
 import { FunctionReturn, FunctionOptions, getChainFromName, toResult, TransactionParams } from '@heyanon/sdk';
-import { ExactInQueryOutput, Slippage, SwapBuildCallInput, SwapBuildOutputExactIn, SwapKind } from '@balancer/sdk';
+import { ExactOutQueryOutput, Slippage, SwapBuildCallInput, SwapBuildOutputExactOut, SwapKind } from '@balancer/sdk';
 import { GetQuoteResult, getSwapQuote } from '../helpers/swaps';
 import { DEFAULT_DEADLINE_FROM_NOW, DEFAULT_PRECISION, DEFAULT_SLIPPAGE_AS_PERCENTAGE, supportedChains } from '../constants';
 import { validateSlippageAsPercentage, validateTokenPositiveDecimalAmount } from '../helpers/validation';
@@ -10,18 +10,18 @@ interface Props {
     account: Address;
     tokenInAddress: Address;
     tokenOutAddress: Address;
-    humanReadableAmountIn: string;
+    humanReadableAmountOut: string;
     slippageAsPercentage: `${number}` | null;
 }
 
-export async function executeSwapExactIn(
-    { chainName, account, tokenInAddress, tokenOutAddress, humanReadableAmountIn, slippageAsPercentage }: Props,
+export async function executeSwapExactOut(
+    { chainName, account, tokenInAddress, tokenOutAddress, humanReadableAmountOut, slippageAsPercentage }: Props,
     options: FunctionOptions,
 ): Promise<FunctionReturn> {
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
-    if (!validateTokenPositiveDecimalAmount(humanReadableAmountIn)) return toResult(`Invalid swap amount: ${humanReadableAmountIn}`, true);
+    if (!validateTokenPositiveDecimalAmount(humanReadableAmountOut)) return toResult(`Invalid swap amount: ${humanReadableAmountOut}`, true);
 
     const notify = options.notify;
     const sendTransactions = options.sendTransactions;
@@ -34,8 +34,8 @@ export async function executeSwapExactIn(
                 chainName,
                 tokenInAddress,
                 tokenOutAddress,
-                humanReadableAmount: humanReadableAmountIn,
-                swapKind: SwapKind.GivenIn,
+                humanReadableAmount: humanReadableAmountOut,
+                swapKind: SwapKind.GivenOut,
             },
             options,
         );
@@ -56,7 +56,7 @@ export async function executeSwapExactIn(
 
     // Extract quote and swap objects
     const { quote: _q, swap, tokenIn, tokenOut } = quote;
-    const q = _q as ExactInQueryOutput;
+    const q = _q as ExactOutQueryOutput;
 
     // TODO: Allow the user to send ETH, for now only WETH is supported
     const wethIsEth = false;
@@ -83,15 +83,15 @@ export async function executeSwapExactIn(
         };
     }
 
-    const callData = swap.buildCall(buildInput) as SwapBuildOutputExactIn;
-    const minAmountOut = Number(formatUnits(callData.minAmountOut.amount, tokenOut.decimals)).toFixed(DEFAULT_PRECISION);
-    const expectedAmountOut = q.expectedAmountOut.toSignificant(DEFAULT_PRECISION);
+    const callData = swap.buildCall(buildInput) as SwapBuildOutputExactOut;
+    const maxAmountIn = Number(formatUnits(callData.maxAmountIn.amount, tokenIn.decimals));
+    const expectedAmountIn = q.expectedAmountIn.toSignificant(DEFAULT_PRECISION);
 
     await notify(
-        `You are about to swap ${humanReadableAmountIn} ${tokenIn.symbol} on ${chainName}` +
-            ` for approximately ${expectedAmountOut} ${tokenOut.symbol}` +
+        `You are about to swap approximately ${expectedAmountIn} ${tokenIn.symbol} on ${chainName}` +
+            ` for exactly ${humanReadableAmountOut} ${tokenOut.symbol}` +
             ` with a slippage tolerance of ${slippageAsPercentage}%` +
-            ` meaning you'll get at least ${minAmountOut} ${tokenOut.symbol}`,
+            ` meaning you'll pay maximum ${maxAmountIn} ${tokenIn.symbol}`,
     );
     const transactions: TransactionParams[] = [];
     const tx: TransactionParams = {

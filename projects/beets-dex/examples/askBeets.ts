@@ -11,6 +11,7 @@ import { fromHeyAnonToolsToOpenAiTools } from '../helpers/openai';
 
 const OPENAI_MODEL = 'gpt-4o';
 const DEEPSEEK_MODEL = 'deepseek-reasoner';
+const PROMPT_TYPE: 'minimal' | 'extended' = 'minimal';
 
 interface AskBeetsOptions {
     verbose?: boolean;
@@ -27,6 +28,21 @@ interface ConversationMessage {
 }
 
 function getSystemPrompt(options: AskBeetsOptions | undefined, chainName: string, account: string) {
+    if (PROMPT_TYPE === 'minimal') {
+        return getSystemPromptMinimal(options, chainName, account);
+    } else {
+        return getSystemPromptExtended(options, chainName, account);
+    }
+}
+function getSystemPromptMinimal(options: AskBeetsOptions | undefined, chainName: string, account: string) {
+    const basePrompt = `You will interact with the Beets protocol via your tools. Given a request, you will need to determine which tools to call.`;
+
+    const toolConfigPrompt = `\nAll tools that require the chainName and account arguments will need the following default values: chainName: "${chainName}", account: "${account}".`;
+
+    return basePrompt + toolConfigPrompt;
+}
+
+function getSystemPromptExtended(options: AskBeetsOptions | undefined, chainName: string, account: string) {
     const basePrompt = `You will interact with the Beets protocol via your tools. Given a request, you will need to determine which tools to call.
 
 For operations that require multiple steps (like "withdraw all"), you should first get required information before executing actions.
@@ -197,6 +213,8 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
 
                 if (!funcReturn.success) {
                     return funcReturn;
+                } else {
+                    console.log(chalk.gray(`[Debug] Function output: ${funcReturn.data}`));
                 }
 
                 // Add the tool response to the conversation with more context
@@ -231,7 +249,8 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
     // Return all tool calls followed by the final comment of the assistant
     let combinedMessage = funcReturns
         .map((r, i) => {
-            const msg = chalk.underline.bold(`TOOL CALL ${i + 1}`);
+            const toolName = messages.find((m) => m.role === 'tool' && m.content === r.data)?.name || 'Unknown Tool';
+            const msg = chalk.underline.bold(`TOOL CALL ${i + 1}`) + `: ${toolName}`;
             return `${msg}\n${r.data}`;
         })
         .join('\n');
