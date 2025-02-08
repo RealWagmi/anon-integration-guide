@@ -5,6 +5,9 @@ import { anonChainNameToBalancerChainId, getDefaultRpcUrl } from '../helpers/cha
 import { BalancerApi, Swap, TokenAmount } from '@balancer/sdk';
 import { getBalancerTokenByAddress } from '../helpers/tokens';
 import { DEFAULT_PRECISION } from '../constants';
+import { Slippage, SwapBuildCallInput, SwapBuildOutputExactIn, SwapBuildOutputExactOut } from '@balancer/sdk';
+import { TransactionParams } from '@heyanon/sdk';
+import { formatUnits } from 'viem';
 
 export interface GetQuoteProps {
     chainName: string;
@@ -145,4 +148,83 @@ export function formatSwapQuote(quote: GetQuoteResult, significatDigits = DEFAUL
     // }
 
     return parts.join('\n');
+}
+
+interface BuildSwapTransactionProps {
+    account: Address;
+    quote: GetQuoteResult;
+    slippageAsPercentage: `${number}`;
+    deadline: bigint;
+}
+
+interface BuildSwapTransactionResult {
+    transactions: TransactionParams[];
+    minAmountOutOrMaxAmountIn: number;
+    expectedAmount: string;
+    tokenIn: Token;
+    tokenOut: Token;
+}
+
+/**
+ * Builds the transaction data for executing a swap on Balancer.
+ * This handles both exact-in and exact-out swaps.
+ *
+ * Returns the transaction data and amounts for notification purposes.
+ */
+export function buildSwapTransaction({ account, quote, slippageAsPercentage, deadline }: BuildSwapTransactionProps): BuildSwapTransactionResult {
+    const { quote: q, swap, tokenIn, tokenOut, swapKind } = quote;
+
+    // TODO: Allow the user to send ETH, for now only WETH is supported
+    const wethIsEth = false;
+
+    // Build the call input for the swap transaction
+    // In v2 the sender/recipient can be set, in v3 it is always the msg.sender
+    let buildInput: SwapBuildCallInput;
+    if (swap.protocolVersion === 2) {
+        buildInput = {
+            slippage: Slippage.fromPercentage(slippageAsPercentage),
+            deadline,
+            queryOutput: q,
+            wethIsEth,
+            sender: account as `0x${string}`,
+            recipient: account as `0x${string}`,
+        };
+    } else {
+        buildInput = {
+            slippage: Slippage.fromPercentage(slippageAsPercentage),
+            deadline,
+            queryOutput: q,
+            wethIsEth,
+        };
+    }
+
+    const callData = swap.buildCall(buildInput);
+    const transactions: TransactionParams[] = [
+        {
+            target: callData.to,
+            data: callData.callData,
+        },
+    ];
+
+    // Handle amounts based on swap type
+    let minAmountOutOrMaxAmountIn: number;
+    let expectedAmount: string;
+
+    if (swapKind === SwapKind.GivenIn) {
+        const exactInCallData = callData as SwapBuildOutputExactIn;
+        minAmountOutOrMaxAmountIn = Number(formatUnits(exactInCallData.minAmountOut.amount, tokenOut.decimals));
+        expectedAmount = (q as ExactInQueryOutput).expectedAmountOut.toSignificant(DEFAULT_PRECISION);
+    } else {
+        const exactOutCallData = callData as SwapBuildOutputExactOut;
+        minAmountOutOrMaxAmountIn = Number(formatUnits(exactOutCallData.maxAmountIn.amount, tokenIn.decimals));
+        expectedAmount = (q as ExactOutQueryOutput).expectedAmountIn.toSignificant(DEFAULT_PRECISION);
+    }
+
+    return {
+        transactions,
+        minAmountOutOrMaxAmountIn,
+        expectedAmount,
+        tokenIn,
+        tokenOut,
+    };
 }
