@@ -3,7 +3,7 @@ import { userDepositToVault } from '../functions';
 import { UserDepositToVaultProps } from '../functions/userDepositToVault';
 import * as constants from '../constants';
 import { config } from '../constants';
-import { spawn, ChildProcess } from 'child_process';
+import { ChildProcess } from 'child_process';
 import { TransactionReturn } from '@heyanon/sdk/dist/blockchain';
 import hre from 'hardhat';
 import { parseUnits } from 'viem';
@@ -14,6 +14,7 @@ import {
     stopImpersonatingAccount,
 } from '@nomicfoundation/hardhat-network-helpers';
 import ERC20 from '../abis/ERC20.json';
+import { setupMainnetFork } from './_testUtils';
 
 jest.setTimeout(20000);
 
@@ -24,24 +25,7 @@ describe('userDepositToVault test', () => {
     let hardhatNode: ChildProcess;
 
     beforeAll(async () => {
-        hardhatNode = spawn(
-            'npx',
-            [
-                'hardhat',
-                'node',
-                '--fork',
-                `${config[1]?.providerUrl}`,
-                '--fork-block-number',
-                '21767852',
-            ],
-            {
-                detached: true,
-                stdio: 'ignore',
-            },
-        );
-
-        // Wait for Hardhat node to start
-        await new Promise((resolve) => setTimeout(resolve, 5000));
+        hardhatNode = await setupMainnetFork(config[1]!.providerUrl);
     });
 
     afterAll(() => {
