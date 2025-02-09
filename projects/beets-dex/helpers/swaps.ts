@@ -4,7 +4,7 @@ import { FunctionOptions, getChainFromName } from '@heyanon/sdk';
 import { anonChainNameToBalancerChainId, getDefaultRpcUrl } from '../helpers/chains';
 import { BalancerApi, Swap, TokenAmount } from '@balancer/sdk';
 import { getBalancerTokenByAddress, toHumanReadableAmount, toSignificant } from '../helpers/tokens';
-import { DEFAULT_PRECISION } from '../constants';
+import { DEFAULT_PRECISION, NATIVE_TOKEN_ADDRESS } from '../constants';
 import { Slippage, SwapBuildCallInput, SwapBuildOutputExactIn, SwapBuildOutputExactOut } from '@balancer/sdk';
 import { TransactionParams } from '@heyanon/sdk';
 import { formatUnits } from 'viem';
@@ -175,8 +175,11 @@ export function formatSwapQuote(quote: GetQuoteResult, significatDigits = DEFAUL
 export function buildSwapTransaction({ account, quote, slippageAsPercentage, deadline }: BuildSwapTransactionProps): BuildSwapTransactionResult {
     const { quote: q, swap, tokenIn, tokenOut, swapKind } = quote;
 
-    // TODO: Allow the user to send ETH, for now only WETH is supported
-    const wethIsEth = false;
+    // Allow the user to send the native token directly,
+    // without the need to wrap it
+    const tokenInIsNative = tokenIn.address === NATIVE_TOKEN_ADDRESS;
+    const tokenOutIsNative = tokenOut.address === NATIVE_TOKEN_ADDRESS;
+    const wethIsEth = tokenInIsNative || tokenOutIsNative;
 
     // Build the call input for the swap transaction
     // In v2 the sender/recipient can be set, in v3 it is always the msg.sender
@@ -203,6 +206,7 @@ export function buildSwapTransaction({ account, quote, slippageAsPercentage, dea
     const transaction: TransactionParams = {
         target: callData.to,
         data: callData.callData,
+        value: callData.value,
     };
 
     return {

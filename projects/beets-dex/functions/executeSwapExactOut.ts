@@ -1,8 +1,8 @@
-import { Address, formatUnits, parseUnits, erc20Abi } from 'viem';
+import { Address, erc20Abi } from 'viem';
 import { FunctionReturn, FunctionOptions, getChainFromName, toResult, checkToApprove, TransactionParams } from '@heyanon/sdk';
 import { SwapKind } from '@balancer/sdk';
 import { GetQuoteResult, getSwapQuote, buildSwapTransaction } from '../helpers/swaps';
-import { DEFAULT_DEADLINE_FROM_NOW, DEFAULT_SLIPPAGE_AS_PERCENTAGE, supportedChains } from '../constants';
+import { DEFAULT_DEADLINE_FROM_NOW, DEFAULT_SLIPPAGE_AS_PERCENTAGE, NATIVE_TOKEN_ADDRESS, supportedChains } from '../constants';
 import { validateSlippageAsPercentage, validateTokenPositiveDecimalAmount } from '../helpers/validation';
 import { toHumanReadableAmount } from '../helpers/tokens';
 
@@ -49,7 +49,11 @@ export async function executeSwapExactOut(
     const tokenOut = quote.tokenOut;
 
     // Build the swap transaction
-    const { minAmountOutOrMaxAmountIn } = buildSwapTransaction({
+    const {
+        transaction: swapTransaction,
+        expectedAmount,
+        minAmountOutOrMaxAmountIn,
+    } = buildSwapTransaction({
         account,
         quote,
         slippageAsPercentage,
@@ -59,36 +63,38 @@ export async function executeSwapExactOut(
     // Check token balance against max amount in (including slippage)
     const maxAmountInInWei = minAmountOutOrMaxAmountIn.amount;
     const provider = options.getProvider(chainId);
-    const balance = await provider.readContract({
-        address: tokenInAddress,
-        abi: erc20Abi,
-        functionName: 'balanceOf',
-        args: [account],
-    });
+    let balance: bigint;
+    if (tokenInAddress === NATIVE_TOKEN_ADDRESS) {
+        balance = await provider.getBalance({
+            address: account,
+        });
+    } else {
+        balance = await provider.readContract({
+            address: tokenInAddress,
+            abi: erc20Abi,
+            functionName: 'balanceOf',
+            args: [account],
+        });
+    }
     if (balance < maxAmountInInWei) {
-        return toResult(`Not enough tokens: has ${formatUnits(balance, tokenIn.decimals)} ${tokenIn.symbol}, needs ${minAmountOutOrMaxAmountIn} ${tokenIn.symbol}`);
+        return toResult(`Not enough tokens: has ${toHumanReadableAmount(balance, tokenIn.decimals)} ${tokenIn.symbol}, needs ${minAmountOutOrMaxAmountIn} ${tokenIn.symbol}`);
     }
 
     const transactions: TransactionParams[] = [];
 
     // Should we approve the token spend?
-    await checkToApprove({
-        args: { account, target: tokenInAddress, spender: quote.quote.to, amount: maxAmountInInWei },
-        provider,
-        transactions,
-    });
-    if (transactions.length > 0) {
-        await options.notify(`Will need to approve the token spend of ${minAmountOutOrMaxAmountIn} ${tokenIn.symbol} on ${chainName}`);
+    if (tokenInAddress !== NATIVE_TOKEN_ADDRESS) {
+        await checkToApprove({
+            args: { account, target: tokenInAddress, spender: quote.quote.to, amount: maxAmountInInWei },
+            provider,
+            transactions,
+        });
+        if (transactions.length > 0) {
+            await options.notify(`Will need to approve the token spend of ${minAmountOutOrMaxAmountIn} ${tokenIn.symbol} on ${chainName}`);
+        }
     }
 
-    // Build the swap transaction
-    const { transaction, expectedAmount } = buildSwapTransaction({
-        account,
-        quote,
-        slippageAsPercentage,
-        deadline,
-    });
-    transactions.push(transaction);
+    transactions.push(swapTransaction);
 
     await options.notify(
         `You are about to swap approximately ${toHumanReadableAmount(expectedAmount.amount, expectedAmount.token.decimals)} ${tokenIn.symbol} on ${chainName}` +

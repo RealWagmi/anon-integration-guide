@@ -3,6 +3,12 @@ import { ChainId } from '@heyanon/sdk';
 export const supportedChains = [ChainId.SONIC];
 
 /**
+ * The address used to identify the native token by Balancer,
+ * valid for all chains.
+ */
+export const NATIVE_TOKEN_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
+
+/**
  * Maximum number of pools to fetch from the backend in
  * a single request.
  */

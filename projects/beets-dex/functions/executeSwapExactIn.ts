@@ -1,8 +1,8 @@
-import { Address, erc20Abi, formatUnits, parseUnits } from 'viem';
+import { Address, erc20Abi, parseUnits } from 'viem';
 import { FunctionReturn, FunctionOptions, getChainFromName, toResult, checkToApprove, TransactionParams } from '@heyanon/sdk';
 import { SwapKind } from '@balancer/sdk';
 import { GetQuoteResult, getSwapQuote, buildSwapTransaction } from '../helpers/swaps';
-import { DEFAULT_DEADLINE_FROM_NOW, DEFAULT_SLIPPAGE_AS_PERCENTAGE, supportedChains } from '../constants';
+import { DEFAULT_DEADLINE_FROM_NOW, DEFAULT_SLIPPAGE_AS_PERCENTAGE, NATIVE_TOKEN_ADDRESS, supportedChains } from '../constants';
 import { validateSlippageAsPercentage, validateTokenPositiveDecimalAmount } from '../helpers/validation';
 import { toHumanReadableAmount } from '../helpers/tokens';
 
@@ -51,26 +51,35 @@ export async function executeSwapExactIn(
     // Check token balance
     const amountInInWei = parseUnits(humanReadableAmountIn, tokenIn.decimals);
     const provider = options.getProvider(chainId);
-    const balance = await provider.readContract({
-        address: tokenInAddress,
-        abi: erc20Abi,
-        functionName: 'balanceOf',
-        args: [account],
-    });
+    let balance: bigint;
+    if (tokenInAddress === NATIVE_TOKEN_ADDRESS) {
+        balance = await provider.getBalance({
+            address: account,
+        });
+    } else {
+        balance = await provider.readContract({
+            address: tokenInAddress,
+            abi: erc20Abi,
+            functionName: 'balanceOf',
+            args: [account],
+        });
+    }
     if (balance < amountInInWei) {
-        return toResult(`Not enough tokens: has ${formatUnits(balance, tokenIn.decimals)} ${tokenIn.symbol}, needs ${humanReadableAmountIn} ${tokenIn.symbol}`);
+        return toResult(`Not enough tokens: has ${toHumanReadableAmount(balance, tokenIn.decimals)} ${tokenIn.symbol}, needs ${humanReadableAmountIn} ${tokenIn.symbol}`);
     }
 
     const transactions: TransactionParams[] = [];
 
     // Should we approve the token spend?
-    await checkToApprove({
-        args: { account, target: tokenInAddress, spender: quote.quote.to, amount: amountInInWei },
-        provider,
-        transactions,
-    });
-    if (transactions.length > 0) {
-        await options.notify(`Will need to approve the token spend of ${humanReadableAmountIn} ${tokenIn.symbol} on ${chainName}`);
+    if (tokenInAddress !== NATIVE_TOKEN_ADDRESS) {
+        await checkToApprove({
+            args: { account, target: tokenInAddress, spender: quote.quote.to, amount: amountInInWei },
+            provider,
+            transactions,
+        });
+        if (transactions.length > 0) {
+            await options.notify(`Will need to approve the token spend of ${humanReadableAmountIn} ${tokenIn.symbol} on ${chainName}`);
+        }
     }
 
     // Build the swap transaction
