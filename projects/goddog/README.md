@@ -1,210 +1,98 @@
-# Goddog DeFi Integration Library
+# GODDOG Protocol
 
-A TypeScript-based DeFi integration library for managing Uniswap V3 liquidity and vault operations on the Arbitrum network.
+## Introduction
+GODDOG is a DeFi integration protocol that streamlines Uniswap V3 liquidity management and vault operations via Charm Finance on Arbitrum.
 
-## Overview
-
-Goddog simplifies DeFi operations on Arbitrum by providing seamless integration with Uniswap V3 and vault management. The protocol enables:
-
+### Main Features
 - One-sided liquidity provision to Uniswap V3 pools
 - Automated vault creation and management
-- Efficient token deposits and withdrawals
-- Automated token approvals and transaction handling
+- Smart position monitoring and analytics
+- Efficient token deposit and withdrawal handling
 
-## Supported Networks
+### Supported Networks
 - Arbitrum One (Chain ID: 42161)
 
-## 🤝 How can I help you today?
+## Common Tasks
 
-Start by selecting what you want to do:
+1. Add Liquidity
+   - "Add 42069 $BOOP on @GODDOG"
+   - "Add 69420 $GOGLZ on @GODDOG"
+   - "Add 100000 $WAGMI on @GODDOG"
 
-### Option A: "I want to provide liquidity" 🌊
-Then choose:
-1. Token Selection
-   ```
-   Select: [ETH] [USDC] [USDT] [Other]
-   ```
 
-2. Amount
-   ```
-   Enter: [Specific Amount] or [MAX]
-   ```
+2. Create Vault   
+   - "Create vault for $BOOP on @GODDOG"
+   - "Create vault for $GOGLZ on @GODDOG"
+   - "Create vault for $WAGMI on @GODDOG"
 
-Example result: "Add 0.1 ETH to a new Uniswap V3 pool"
 
-### Option B: "I want to use vaults" 🏦
-Then choose:
-1. Action Type
-   ```
-   Select: [Create] [Deposit] [Withdraw] [View]
-   ```
+3. Deposit
+   - "Deposit 1000 $BOOP on @GODDOG"
+   - "Deposit 1000 $GOGLZ on @GODDOG"
+   - "Deposit 1000 $WAGMI on @GODDOG"
 
-2. If Create:
-   ```
-   Select Pool: [ETH/USDC] [ETH/USDT] [Custom]
-   ```
+4. Withdraw
+   - "Withdraw 100% of my $BOOP position from @GODDOG"
+   - "Withdraw 50% of my $GOGLZ position from @GODDOG"
+   - "Withdraw 100% of my $WAGMI position from @GODDOG"
 
-3. If Deposit/Withdraw:
-   ```
-   Select Vault: [Your Active Vaults]
-   Enter Amount: [Amount] or [MAX]
-   ```
+5. Information Queries
+   - "Show my active positions on @GODDOG"
+   - "Get current APY for BOOP vault on @GODDOG"
+   - "Show my rewards on @GODDOG"
+   - "Check my balance on @GODDOG"
 
-Example result: "Create new vault for ETH/USDC"
+## Pain Points Solved
 
-Just select your options, and I'll help you build the perfect command! 🎯
-
-## Pain Points Solved by Goddog
-
-1. **Complex Liquidity Management**
+1. Complex Liquidity Management
    - Simplified one-sided liquidity provision
-   - Automated price range calculation
-   - Smart rebalancing strategies
-   - Reduced impermanent loss through vault strategies
+   - Automated price range optimization
+   - Streamlined position management
+   - Reduced impermanent loss exposure
 
-2. **DeFi Accessibility**
-   - One-click vault creation
+2. DeFi Accessibility
+   - One-click vault deployment
    - Automated token approvals
-   - Simplified position management
+   - Intuitive position management
    - Clear transaction status updates
 
-3. **Risk Management**
+3. Risk Management
+   - Real-time position monitoring
    - Built-in slippage protection
-   - Automated position monitoring
-   - Configurable risk parameters
-   - Real-time position analytics
+   - Automated risk assessment
+   - Impermanent loss warnings
 
-4. **Gas Optimization**
+4. Gas Optimization
    - Batched transactions
    - Efficient contract interactions
+   - Smart timing for rebalancing
    - Optimized approval process
-   - Smart gas estimation
 
-## Installation and Setup
 
-1. Install the package:
-```bash
-npm install
-```
 
-2. Configure environment:
-```env
-PRIVATE_KEY=your_private_key_here
-INFURA_KEY=your_infura_key_here
-```
 
-## Core Functions
 
-### addLiquidityOnUniswapV3
 
-```typescript
-const params = {
-    account: "0x...", // Your wallet address
-    tokenAddress: "0x...", // Token address to provide liquidity for
-    tokenAmount: "0.01", // Amount of tokens to add
-    chainId: 42161, // Arbitrum chainId
-};
 
-const result = await addLiquidityOnUniswapV3(params, { notify, getProvider, sendTransactions });
-```
 
-### createVault
 
-```typescript
-const params = {
-    account: "0x...", // Your wallet address
-    poolAddress: "0x...", // Uniswap V3 pool address
-    agentAddress: "0x...", // Address that will call rebalance function
-    chainId: 42161, // Arbitrum chainId
-};
 
-const result = await createVault(params, { notify, getProvider, sendTransactions });
-```
 
-### depositToVault
 
-```typescript
-const params = {
-    account: "0x...", // Your wallet address
-    vaultAddress: "0x...", // Vault address
-    amount0: "1", // Amount of token0 to deposit
-    amount1: "0.1", // Amount of token1 to deposit
-    recipient: "0x...", // Address to receive share tokens
-    chainId: 42161, // Arbitrum chainId
-};
 
-const result = await depositToVault(params, { notify, getProvider, sendTransactions });
-```
 
-### withdrawFromVault
 
-```typescript
-const params = {
-    account: "0x...", // Your wallet address
-    vaultAddress: "0x...", // Vault address
-    shareAmount: "0.5", // Amount of share tokens to burn
-    recipient: "0x...", // Address to receive underlying tokens
-    chainId: 42161, // Arbitrum chainId
-};
 
-const result = await withdrawFromVault(params, { notify, getProvider, sendTransactions });
-```
 
-## Error Handling
 
-All functions return a `FunctionReturn` type:
 
-```typescript
-interface FunctionReturn {
-    message: string;
-    error?: boolean;
-}
-```
 
-Error handling example:
-```typescript
-const result = await depositToVault(params, options);
-if (result.error) {
-    console.error('Operation failed:', result.message);
-    return;
-}
-```
 
-## Security Considerations
 
-1. **Private Key Safety**: Never commit your private key or expose it in client-side code
-2. **Token Approvals**: The library handles token approvals automatically, but be aware of approval amounts
-3. **Slippage Protection**: Use appropriate minimum amounts when depositing/withdrawing
-4. **Network Confirmation**: Always verify you're connected to Arbitrum network
 
-## Testing
 
-1. Set up environment:
-```bash
-npm install -D vitest @types/node
-```
 
-2. Run tests:
-```bash
-npm run test
-```
 
-## Network Details
 
-Arbitrum One Configuration:
-- Network Name: Arbitrum One
-- Chain ID: 42161
-- RPC URL: https://arb1.arbitrum.io/rpc
-- Currency: ETH
 
-## Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-## License
-
-MIT License
