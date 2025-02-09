@@ -3,10 +3,13 @@ import { FunctionOptions, SendTransactionProps } from '@heyanon/sdk';
 import { TransactionReturn } from '@heyanon/sdk/dist/blockchain';
 import {
     impersonateAccount,
+    setBalance,
     stopImpersonatingAccount,
 } from '@nomicfoundation/hardhat-network-helpers';
-import { getSigner } from '@nomiclabs/hardhat-ethers/internal/helpers';
+import { getContractAt, getSigner } from '@nomiclabs/hardhat-ethers/internal/helpers';
 import hre from 'hardhat';
+import { parseUnits } from 'viem';
+import ERC20 from '../abis/ERC20.json';
 
 export async function setupMainnetFork(providerUrl: string) {
     const hardhatNode = spawn(
@@ -54,3 +57,24 @@ export const mockedFunctionOptions = {
         console.info(`Notification message to user: ${message}`);
     }),
 } as jest.Mocked<FunctionOptions>;
+
+export async function transferUSDC(recipient: string, amount: string): Promise<void> {
+    const usdcAddress = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'; // USDC token contract
+    const whale = '0xCB66f5e69427b3947C62408aD8081A5047b6B3FD'; // USDC-rich account
+    const amountInDecimals = parseUnits('1000', 6); // USDC has 6 decimals
+
+    await setBalance(whale, 100n ** 18n);
+
+    await impersonateAccount(whale);
+
+    const whaleSigner = await getSigner(hre, whale);
+
+    const usdc = await getContractAt(hre, ERC20.abi, usdcAddress, whaleSigner);
+
+    const tx = await usdc.transfer(recipient, amountInDecimals);
+    await tx.wait();
+
+    await stopImpersonatingAccount(whale);
+
+    console.log(`Transferred ${amount} USDC to ${recipient}`);
+}

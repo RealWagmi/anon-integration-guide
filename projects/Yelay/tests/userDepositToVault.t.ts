@@ -12,7 +12,7 @@ import {
     stopImpersonatingAccount,
 } from '@nomicfoundation/hardhat-network-helpers';
 import ERC20 from '../abis/ERC20.json';
-import { mockedFunctionOptions, setupMainnetFork } from './_testUtils';
+import { mockedFunctionOptions, setupMainnetFork, transferUSDC } from './_testUtils';
 
 jest.setTimeout(20000);
 
@@ -53,24 +53,3 @@ describe('userDepositToVault test', () => {
         expect(result.success).toBeTruthy();
     });
 });
-
-async function transferUSDC(recipient: string, amount: string): Promise<void> {
-    const usdcAddress = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'; // USDC token contract
-    const whale = '0xCB66f5e69427b3947C62408aD8081A5047b6B3FD'; // USDC-rich account
-    const amountInDecimals = parseUnits('1000', 6); // USDC has 6 decimals
-
-    await setBalance(whale, 100n ** 18n);
-
-    await impersonateAccount(whale);
-
-    const whaleSigner = await getSigner(hre, whale);
-
-    const usdc = await getContractAt(hre, ERC20.abi, usdcAddress, whaleSigner);
-
-    const tx = await usdc.transfer(recipient, amountInDecimals);
-    await tx.wait();
-
-    await stopImpersonatingAccount(whale);
-
-    console.log(`Transferred ${amount} USDC to ${recipient}`);
-}
