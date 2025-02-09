@@ -4,6 +4,7 @@ import { SwapKind } from '@balancer/sdk';
 import { GetQuoteResult, getSwapQuote, buildSwapTransaction } from '../helpers/swaps';
 import { DEFAULT_DEADLINE_FROM_NOW, DEFAULT_SLIPPAGE_AS_PERCENTAGE, supportedChains } from '../constants';
 import { validateSlippageAsPercentage, validateTokenPositiveDecimalAmount } from '../helpers/validation';
+import { toHumanReadableAmount } from '../helpers/tokens';
 
 interface Props {
     chainName: string;
@@ -90,10 +91,10 @@ export async function executeSwapExactOut(
     transactions.push(transaction);
 
     await options.notify(
-        `You are about to swap approximately ${formatUnits(expectedAmount.amount, expectedAmount.token.decimals)} ${tokenIn.symbol} on ${chainName}` +
+        `You are about to swap approximately ${toHumanReadableAmount(expectedAmount.amount, expectedAmount.token.decimals)} ${tokenIn.symbol} on ${chainName}` +
             ` for exactly ${humanReadableAmountOut} ${tokenOut.symbol}` +
             ` with a slippage tolerance of ${slippageAsPercentage}%` +
-            ` meaning you'll spend at most ${formatUnits(minAmountOutOrMaxAmountIn.amount, minAmountOutOrMaxAmountIn.token.decimals)} ${tokenIn.symbol}`,
+            ` meaning you'll spend at most ${toHumanReadableAmount(minAmountOutOrMaxAmountIn.amount, minAmountOutOrMaxAmountIn.token.decimals)} ${tokenIn.symbol}`,
     );
 
     await options.notify(transactions.length > 1 ? `Sending approve & swap transactions...` : 'Sending swap transaction...');
