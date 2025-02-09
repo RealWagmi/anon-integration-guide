@@ -1,10 +1,8 @@
-import { FunctionOptions, SendTransactionProps } from '@heyanon/sdk';
 import { userDepositToVault } from '../functions';
 import { UserDepositToVaultProps } from '../functions/userDepositToVault';
 import * as constants from '../constants';
 import { config } from '../constants';
 import { ChildProcess } from 'child_process';
-import { TransactionReturn } from '@heyanon/sdk/dist/blockchain';
 import hre from 'hardhat';
 import { parseUnits } from 'viem';
 import { getContractAt, getSigner } from '@nomiclabs/hardhat-ethers/internal/helpers';
@@ -14,63 +12,30 @@ import {
     stopImpersonatingAccount,
 } from '@nomicfoundation/hardhat-network-helpers';
 import ERC20 from '../abis/ERC20.json';
-import { setupMainnetFork } from './_testUtils';
+import { mockedFunctionOptions, setupMainnetFork } from './_testUtils';
 
 jest.setTimeout(20000);
-
-const mainnetForkConfig = structuredClone(config);
-mainnetForkConfig[1]!.providerUrl = 'http://127.0.0.1:8545/';
 
 describe('userDepositToVault test', () => {
     let hardhatNode: ChildProcess;
 
     beforeAll(async () => {
         hardhatNode = await setupMainnetFork(config[1]!.providerUrl);
+
+        // change config to point to hardhat mainnet fork
+        const mainnetForkConfig = structuredClone(config);
+        mainnetForkConfig[1]!.providerUrl = 'http://127.0.0.1:8545/';
+        jest.replaceProperty(constants, 'config', mainnetForkConfig);
     });
 
     afterAll(() => {
-        if (hardhatNode) {
-            hardhatNode.kill();
-        }
+        if (hardhatNode) hardhatNode.kill();
     });
 
     it('happy path', async () => {
         const userAddress = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
 
         // arrange
-        const mockedFunctionOptions = {
-            getProvider: jest.fn(),
-            sendTransactions: jest.fn(
-                async (props: SendTransactionProps): Promise<TransactionReturn> => {
-                    await impersonateAccount(props.account);
-
-                    const userSigner = await getSigner(hre, props.account);
-                    for (const tx of props.transactions) {
-                        const sentTx = await userSigner.sendTransaction({
-                            to: tx.target,
-                            data: tx.data,
-                        });
-                        await sentTx.wait();
-                    }
-
-                    await stopImpersonatingAccount(props.account);
-
-                    return {
-                        isMultisig: false,
-                        data: [
-                            {
-                                message: 'mock approved',
-                                hash: '0x00',
-                            },
-                        ],
-                    };
-                },
-            ),
-            notify: jest.fn(),
-        } as jest.Mocked<FunctionOptions>;
-
-        jest.replaceProperty(constants, 'config', mainnetForkConfig);
-
         await transferUSDC(userAddress, '1000');
 
         // act
