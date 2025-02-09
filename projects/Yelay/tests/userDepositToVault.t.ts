@@ -3,15 +3,6 @@ import { UserDepositToVaultProps } from '../functions/userDepositToVault';
 import * as constants from '../constants';
 import { config } from '../constants';
 import { ChildProcess } from 'child_process';
-import hre from 'hardhat';
-import { parseUnits } from 'viem';
-import { getContractAt, getSigner } from '@nomiclabs/hardhat-ethers/internal/helpers';
-import {
-    impersonateAccount,
-    setBalance,
-    stopImpersonatingAccount,
-} from '@nomicfoundation/hardhat-network-helpers';
-import ERC20 from '../abis/ERC20.json';
 import { mockedFunctionOptions, setupMainnetFork, transferUSDC } from './_testUtils';
 
 jest.setTimeout(20000);
