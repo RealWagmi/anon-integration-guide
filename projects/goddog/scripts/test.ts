@@ -1,6 +1,6 @@
 import { createPublicClient, createWalletClient, http, parseEther } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { addLiquidityOnUniswapV3, createVault, depositToVault, withdrawFromVault } from '../functions/index';
+import { addLiquidityOnUniswapV3, createVault, depositToVault, withdrawFromVault, rebalance } from '../functions/index';
 import { TransactionReturnData, SendTransactionProps } from '@heyanon/sdk';
 import { CHAIN_CONFIG, NETWORKS, RPC_URLS, CHAIN_IDS } from '../constants';
 import dotenv from 'dotenv';
@@ -70,7 +70,7 @@ const testAddLiquidity = async () => {
             chainId: CHAIN_IDS[NETWORKS.ARBITRUM],
         };
         const result = await addLiquidityOnUniswapV3(params, { notify, getProvider, sendTransactions });
-        console.log('Add Liquidity Transaction result:', result);
+        console.log('Transaction result:', result);
     } catch (error) {
         console.error('Error:', error);
     }
@@ -84,7 +84,7 @@ const testCreateVault = async () => {
             chainId: CHAIN_IDS[NETWORKS.ARBITRUM],
         };
         const result = await createVault(params, { notify, getProvider, sendTransactions });
-        console.log('Create Vault Transaction result:', result);
+        console.log('Transaction result:', result);
     } catch (error) {
         console.error('Error:', error);
     }
@@ -100,7 +100,7 @@ const testDepositToVault = async () => {
             chainId: CHAIN_IDS[NETWORKS.ARBITRUM],
         };
         const result = await depositToVault(params, { notify, getProvider, sendTransactions });
-        console.log('Create Vault Transaction result:', result);
+        console.log('Transaction result:', result);
     } catch (error) {
         console.error('Error:', error);
     }
@@ -115,17 +115,30 @@ const testWithdrawFromVault = async () => {
             chainId: CHAIN_IDS[NETWORKS.ARBITRUM],
         };
         const result = await withdrawFromVault(params, { notify, getProvider, sendTransactions });
-        console.log('Create Vault Transaction result:', result);
+        console.log('Transaction result:', result);
     } catch (error) {
         console.error('Error:', error);
     }
 };
-
+const testRebalance = async () => {
+    try {
+        const params = {
+            account: account.address,
+            vaultAddress: '0xCB95056E8bE266F6E661C0409385e671791CF7Fb' as `0x${string}`,
+            chainId: CHAIN_IDS[NETWORKS.ARBITRUM],
+        };
+        const result = await rebalance(params, { notify, getProvider, sendTransactions });
+        console.log('Transaction result:', result);
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
 const main = async () => {
     testAddLiquidity();
     testCreateVault();
     testDepositToVault();
     testWithdrawFromVault();
+    testRebalance();
 };
 
 main();

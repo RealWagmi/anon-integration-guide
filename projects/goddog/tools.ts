@@ -128,4 +128,27 @@ export const tools: AiTool[] = [
             },
         ],
     },
+    {
+        name: 'rebalance',
+        description: 'Rebalance on the specific Charming Vault',
+        required: ['account', 'vaultAddress', 'chainId'],
+        props: [
+            {
+                name: 'account',
+                type: 'string',
+                description: 'account address',
+            },
+            {
+                name: 'vaultAddress',
+                type: 'string',
+                description: 'vault Address',
+            },
+            {
+                name: 'chainId',
+                type: 'number',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name where to execute the transaction',
+            },
+        ],
+    },
 ];
