@@ -39,7 +39,6 @@ GODDOG is a DeFi integration protocol that streamlines Uniswap V3 liquidity mana
 5. Information Queries
    - "Show my active positions on @GODDOG"
    - "Get current APY for BOOP vault on @GODDOG"
-   - "Show my rewards on @GODDOG"
    - "Check my balance on @GODDOG"
 
 ## Pain Points Solved
