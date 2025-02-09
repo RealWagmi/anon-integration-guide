@@ -28,9 +28,6 @@ export async function getUserVaultSvtBalance(
     if (!supportedChains.includes(chainId))
         return toResult(`Protocol is not supported on ${chainName}`, true);
 
-    const config = await wrapWithResult(getChainConfig)(chainId);
-    if (!config.success) return toResult(`Failed to get config`, true);
-
     const sdk = await wrapWithResult(getSdk)(chainId);
     if (!sdk.success) return toResult(`Failed to setup SDK`, true);
 
