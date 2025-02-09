@@ -36,8 +36,10 @@ GODDOG is a DeFi integration protocol that streamlines Uniswap V3 liquidity mana
    - "Withdraw 50% of my $GOGLZ position from @GODDOG"
    - "Withdraw 100% of my $WAGMI position from @GODDOG"
 
-4. Reabalance
-   - "Reabalance on 0xabc...def Vault from @GODDOG"
+5. Rebalance
+   - "Rebalance $BOOP Vault on @GODDOG"
+   - "Rebalance $GOGLZ Vault on @GODDOG"
+   - "Rebalance $WAGMI Vault on @GODDOG"
 
 ## Pain Points Solved
 
