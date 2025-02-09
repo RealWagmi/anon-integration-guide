@@ -1,7 +1,7 @@
-# GODDOG Protocol
+# GOODOG Protocol
 
 ## Introduction
-GODDOG is a DeFi integration protocol that streamlines Uniswap V3 liquidity management and vault operations via Charm Finance on Arbitrum.
+GOODOG is a DeFi integration protocol that streamlines Uniswap V3 liquidity management and vault operations via Charm Finance on Arbitrum.
 
 ### Main Features
 - One-sided liquidity provision to Uniswap V3 pools
@@ -19,12 +19,10 @@ GODDOG is a DeFi integration protocol that streamlines Uniswap V3 liquidity mana
    - "Add 69420 $GOGLZ on @GODDOG"
    - "Add 100000 $WAGMI on @GODDOG"
 
-
 2. Create Vault   
    - "Create vault for $BOOP on @GODDOG"
    - "Create vault for $GOGLZ on @GODDOG"
    - "Create vault for $WAGMI on @GODDOG"
-
 
 3. Deposit
    - "Deposit 1000 $BOOP on @GODDOG"
@@ -36,8 +34,10 @@ GODDOG is a DeFi integration protocol that streamlines Uniswap V3 liquidity mana
    - "Withdraw 50% of my $GOGLZ position from @GODDOG"
    - "Withdraw 100% of my $WAGMI position from @GODDOG"
 
-4. Reabalance
-   - "Reabalance on 0xabc...def Vault from @GODDOG"
+5. Rebalance
+   - "Rebalance $BOOP Vault on @GODDOG"
+   - "Rebalance $GOGLZ Vault on @GODDOG"
+   - "Rebalance $WAGMI Vault on @GODDOG"
 
 ## Pain Points Solved
 
@@ -58,38 +58,3 @@ GODDOG is a DeFi integration protocol that streamlines Uniswap V3 liquidity mana
    - Built-in slippage protection
    - Automated risk assessment
    - Impermanent loss warnings
-
-4. Gas Optimization
-   - Batched transactions
-   - Efficient contract interactions
-   - Smart timing for rebalancing
-   - Optimized approval process
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
