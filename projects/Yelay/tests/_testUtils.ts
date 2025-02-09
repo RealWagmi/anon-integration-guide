@@ -63,7 +63,7 @@ export async function transferUSDC(recipient: string, amount: string): Promise<v
     const whale = '0xCB66f5e69427b3947C62408aD8081A5047b6B3FD'; // USDC-rich account
     const amountInDecimals = parseUnits('1000', 6); // USDC has 6 decimals
 
-    await setBalance(whale, 100n ** 18n);
+    await fundAddressWithEth(whale);
 
     await impersonateAccount(whale);
 
@@ -77,4 +77,8 @@ export async function transferUSDC(recipient: string, amount: string): Promise<v
     await stopImpersonatingAccount(whale);
 
     console.log(`Transferred ${amount} USDC to ${recipient}`);
+}
+
+export async function fundAddressWithEth(address: string): Promise<void> {
+    await setBalance(address, 100n ** 18n);
 }
