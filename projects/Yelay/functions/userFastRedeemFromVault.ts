@@ -47,7 +47,7 @@ export async function userFastRedeemFromVault(
     if (!config.success) return toResult(`Failed to get config`, true);
 
     // Validate vault
-    if (!config.result.functions.deposit.allowedVaults.includes(vaultAddress)) {
+    if (!config.result.functions.fastRedeem.allowedVaults.includes(vaultAddress)) {
         return toResult(`This vault it not supported`, true);
     }
     const vaultAddressValidation = await wrapWithResult(validateAddress)(vaultAddress);
@@ -90,7 +90,10 @@ export async function userFastRedeemFromVault(
     }
 
     // Fast Redeem
-    const latestBlock = await wrapWithResult(ethersProvider.result.getBlockNumber)();
+    const network = await ethersProvider.result.getBlockNumber();
+    const latestBlock = await wrapWithResult(
+        ethersProvider.result.getBlockNumber.bind(ethersProvider.result),
+    )();
     if (!latestBlock.success) {
         return toResult(`Failed fast redeem: failed to get latest block`, true);
     }
@@ -137,6 +140,14 @@ async function redeemFast(
     receiver: string,
     latestBlock: number,
 ): Promise<string> {
+    const chainIdNamesMap = new Map<string, string>();
+    chainIdNamesMap.set('1', 'mainnet');
+    chainIdNamesMap.set('42161', 'arbitrum');
+    chainIdNamesMap.set('11155111', 'sepolia');
+
+    const chaiName = chainIdNamesMap.get(chainId.toString());
+    if (!chaiName) throw new Error(`Unsupported chain id ${chainId.toString()}`);
+
     let nftInfoPaths = '';
 
     if (redeem.nftIds.length && redeem.nftAmounts.length) {
@@ -144,12 +155,17 @@ async function redeemFast(
     }
     const response = await fetch(
         new URL(
-            `/${chainId}/${receiver}/${redeem.smartVault}/${redeem.shares.toString()}/${latestBlock}/${nftInfoPaths}`,
+            `/${chaiName}/${receiver}/${redeem.smartVault}/${redeem.shares.toString()}/${latestBlock}/${nftInfoPaths}`,
             fastRedeemApiUrl,
         ).toString(),
     );
     if (!response.ok) {
-        throw new Error(`API request failed with status: ${response.status}`);
+        const errorMessage = {
+            responseMessage: await response.text(),
+            arguments: JSON.stringify(arguments),
+        };
+        console.error(errorMessage);
+        throw new Error(`API request failed with status: ${errorMessage.responseMessage}`);
     }
     return await response.text();
 }

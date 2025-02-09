@@ -12,6 +12,7 @@ export type ChainConfig = {
         };
         fastRedeem: {
             apiUrl: string;
+            allowedVaults: Array<string>;
         };
     };
     deployments: {
@@ -31,6 +32,7 @@ export const config: Partial<Record<ChainId, ChainConfig>> = {
             },
             fastRedeem: {
                 apiUrl: 'https://fastwithdraw.v2.spool.fi/',
+                allowedVaults: ['0xf07ac7f7dac4eaab2e4c6fc78230d8256df33cc8'],
             },
         },
         deployments: {
