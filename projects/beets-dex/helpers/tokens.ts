@@ -1,9 +1,9 @@
-import { Address } from 'viem';
+import { Address, formatUnits } from 'viem';
 import { GqlToken } from './beets/types';
-import { Token as BalancerToken } from '@balancer/sdk';
+import { Token as BalancerToken, TokenAmount } from '@balancer/sdk';
 import { BeetsClient } from './beets/client';
 import { anonChainNameToGqlChain } from './chains';
-import { TOKEN_SYNONYMS } from '../constants';
+import { DEFAULT_PRECISION, TOKEN_SYNONYMS } from '../constants';
 import { getChainFromName } from '@heyanon/sdk';
 
 /**
@@ -69,4 +69,33 @@ export async function getBalancerTokenByAddress(chainName: string, address: Addr
     const gqlToken = await getGqlTokenByAddress(chainName, address);
     if (!gqlToken) return null;
     return gqlTokenToBalancerToken(gqlToken);
+}
+
+/**
+ * Convert a token amount to a human-readable string, with a
+ * specified number of significant digits.
+ *
+ * Please note that Balancer SDK's TokenAmount.toSignificant
+ * yields a different result, as it uses a fixed number of
+ * DECIMAL digits, while this function really does significant
+ * digits (just like %g formatter in printf).
+ */
+export function toHumanReadableAmount(
+    amountInWei: bigint,
+    decimals: number,
+    minSignificantDigits = 2,
+    maxSignificantDigits = DEFAULT_PRECISION,
+    useThousandsSeparator = true,
+): string {
+    const stringWithFullPrecision = formatUnits(amountInWei, decimals);
+    return toSignificant(Number(stringWithFullPrecision), minSignificantDigits, maxSignificantDigits, useThousandsSeparator);
+}
+
+export function toSignificant(num: number, minSignificantDigits = 2, maxSignificantDigits = DEFAULT_PRECISION, useThousandsSeparator = true): string {
+    return num.toLocaleString('en', {
+        minimumSignificantDigits: minSignificantDigits,
+        maximumSignificantDigits: maxSignificantDigits,
+        useGrouping: useThousandsSeparator,
+        notation: 'standard', // Ensures we don't get scientific notation
+    });
 }

@@ -1,9 +1,9 @@
-import { DECIMAL_SCALES, ExactInQueryOutput, ExactOutQueryOutput, SwapKind, Token } from '@balancer/sdk';
+import { DECIMAL_SCALES, ExactInQueryOutput, ExactOutQueryOutput, SwapKind, Token, WAD } from '@balancer/sdk';
 import { Address } from 'viem';
 import { FunctionOptions, getChainFromName } from '@heyanon/sdk';
 import { anonChainNameToBalancerChainId, getDefaultRpcUrl } from '../helpers/chains';
 import { BalancerApi, Swap, TokenAmount } from '@balancer/sdk';
-import { getBalancerTokenByAddress } from '../helpers/tokens';
+import { getBalancerTokenByAddress, toHumanReadableAmount, toSignificant } from '../helpers/tokens';
 import { DEFAULT_PRECISION } from '../constants';
 import { Slippage, SwapBuildCallInput, SwapBuildOutputExactIn, SwapBuildOutputExactOut } from '@balancer/sdk';
 import { TransactionParams } from '@heyanon/sdk';
@@ -23,6 +23,21 @@ export interface GetQuoteResult {
     tokenIn: Token;
     tokenOut: Token;
     swapKind: SwapKind;
+}
+
+interface BuildSwapTransactionProps {
+    account: Address;
+    quote: GetQuoteResult;
+    slippageAsPercentage: `${number}`;
+    deadline: bigint;
+}
+
+interface BuildSwapTransactionResult {
+    transaction: TransactionParams;
+    minAmountOutOrMaxAmountIn: TokenAmount;
+    expectedAmount: TokenAmount;
+    tokenIn: Token;
+    tokenOut: Token;
 }
 
 /**
@@ -107,25 +122,26 @@ export function formatSwapQuote(quote: GetQuoteResult, significatDigits = DEFAUL
 
     const parts = [];
 
-    // Add basic swap information
-    if (q.swapKind === SwapKind.GivenIn) {
-        parts.push(`Swap ${q.amountIn.toSignificant(significatDigits)} ${tokenIn.symbol}`);
-        parts.push(`For ${q.expectedAmountOut.toSignificant(significatDigits)} ${tokenOut.symbol}`);
-    } else {
-        parts.push(`Swap ${q.expectedAmountIn.toSignificant(significatDigits)} ${tokenIn.symbol}`);
-        parts.push(`For ${q.amountOut.toSignificant(significatDigits)} ${tokenOut.symbol}`);
-    }
-
-    // Add price information
     let price = 0;
     const PRECISION_FACTOR = DECIMAL_SCALES[significatDigits as keyof typeof DECIMAL_SCALES];
     if (q.swapKind === SwapKind.GivenIn) {
-        // Use BigInt division with scaling factor for precision
-        price = Number((q.amountIn.scale18 * PRECISION_FACTOR) / q.expectedAmountOut.scale18) / Number(PRECISION_FACTOR);
-        parts.push(`Price: ${price.toFixed(significatDigits)} ${tokenIn.symbol} per ${tokenOut.symbol}`);
+        // Add basic swap information
+        const humanReadableAmountIn = toHumanReadableAmount(q.amountIn.amount, tokenIn.decimals, significatDigits);
+        parts.push(`Swap ${humanReadableAmountIn} ${tokenIn.symbol}`);
+        const humanReadableExpectedAmountOut = toHumanReadableAmount(q.expectedAmountOut.amount, tokenOut.decimals, significatDigits);
+        parts.push(`For ${humanReadableExpectedAmountOut} ${tokenOut.symbol}`);
+        // Add price information
+        const fullPrecisionPrice = Number((q.amountIn.scale18 * WAD) / q.expectedAmountOut.scale18) / Number(WAD);
+        parts.push(`Price: ${toSignificant(fullPrecisionPrice, 2, significatDigits)} ${tokenIn.symbol} per ${tokenOut.symbol}`);
     } else {
-        price = Number((q.expectedAmountIn.scale18 * PRECISION_FACTOR) / q.amountOut.scale18) / Number(PRECISION_FACTOR);
-        parts.push(`Price: ${price.toFixed(significatDigits)} ${tokenIn.symbol} per ${tokenOut.symbol}`);
+        // Add basic swap information
+        const humanReadableExpectedAmountIn = toHumanReadableAmount(q.expectedAmountIn.amount, tokenIn.decimals, significatDigits);
+        parts.push(`Swap ${humanReadableExpectedAmountIn} ${tokenIn.symbol}`);
+        const humanReadableAmountOut = toHumanReadableAmount(q.amountOut.amount, tokenOut.decimals, significatDigits);
+        parts.push(`For ${humanReadableAmountOut} ${tokenOut.symbol}`);
+        // Add price information
+        const fullPrecisionPrice = Number((q.expectedAmountIn.scale18 * WAD) / q.amountOut.scale18) / Number(WAD);
+        parts.push(`Price: ${toSignificant(fullPrecisionPrice, 2, significatDigits)} ${tokenIn.symbol} per ${tokenOut.symbol}`);
     }
 
     // Add reverse price information
@@ -148,21 +164,6 @@ export function formatSwapQuote(quote: GetQuoteResult, significatDigits = DEFAUL
     // }
 
     return parts.join('\n');
-}
-
-interface BuildSwapTransactionProps {
-    account: Address;
-    quote: GetQuoteResult;
-    slippageAsPercentage: `${number}`;
-    deadline: bigint;
-}
-
-interface BuildSwapTransactionResult {
-    transactions: TransactionParams[];
-    minAmountOutOrMaxAmountIn: number;
-    expectedAmount: string;
-    tokenIn: Token;
-    tokenOut: Token;
 }
 
 /**
@@ -199,31 +200,15 @@ export function buildSwapTransaction({ account, quote, slippageAsPercentage, dea
     }
 
     const callData = swap.buildCall(buildInput);
-    const transactions: TransactionParams[] = [
-        {
-            target: callData.to,
-            data: callData.callData,
-        },
-    ];
-
-    // Handle amounts based on swap type
-    let minAmountOutOrMaxAmountIn: number;
-    let expectedAmount: string;
-
-    if (swapKind === SwapKind.GivenIn) {
-        const exactInCallData = callData as SwapBuildOutputExactIn;
-        minAmountOutOrMaxAmountIn = Number(formatUnits(exactInCallData.minAmountOut.amount, tokenOut.decimals));
-        expectedAmount = (q as ExactInQueryOutput).expectedAmountOut.toSignificant(DEFAULT_PRECISION);
-    } else {
-        const exactOutCallData = callData as SwapBuildOutputExactOut;
-        minAmountOutOrMaxAmountIn = Number(formatUnits(exactOutCallData.maxAmountIn.amount, tokenIn.decimals));
-        expectedAmount = (q as ExactOutQueryOutput).expectedAmountIn.toSignificant(DEFAULT_PRECISION);
-    }
+    const transaction: TransactionParams = {
+        target: callData.to,
+        data: callData.callData,
+    };
 
     return {
-        transactions,
-        minAmountOutOrMaxAmountIn,
-        expectedAmount,
+        transaction,
+        minAmountOutOrMaxAmountIn: swapKind === SwapKind.GivenIn ? (callData as SwapBuildOutputExactIn).minAmountOut : (callData as SwapBuildOutputExactOut).maxAmountIn,
+        expectedAmount: swapKind === SwapKind.GivenIn ? (q as ExactInQueryOutput).expectedAmountOut : (q as ExactOutQueryOutput).expectedAmountIn,
         tokenIn,
         tokenOut,
     };

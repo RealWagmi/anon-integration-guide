@@ -1,8 +1,8 @@
-import { Address, formatUnits } from 'viem';
-import { FunctionReturn, FunctionOptions, getChainFromName, toResult, TransactionParams } from '@heyanon/sdk';
-import { ExactOutQueryOutput, Slippage, SwapBuildCallInput, SwapBuildOutputExactOut, SwapKind } from '@balancer/sdk';
+import { Address, formatUnits, parseUnits, erc20Abi } from 'viem';
+import { FunctionReturn, FunctionOptions, getChainFromName, toResult, checkToApprove, TransactionParams } from '@heyanon/sdk';
+import { SwapKind } from '@balancer/sdk';
 import { GetQuoteResult, getSwapQuote, buildSwapTransaction } from '../helpers/swaps';
-import { DEFAULT_DEADLINE_FROM_NOW, DEFAULT_PRECISION, DEFAULT_SLIPPAGE_AS_PERCENTAGE, supportedChains } from '../constants';
+import { DEFAULT_DEADLINE_FROM_NOW, DEFAULT_SLIPPAGE_AS_PERCENTAGE, supportedChains } from '../constants';
 import { validateSlippageAsPercentage, validateTokenPositiveDecimalAmount } from '../helpers/validation';
 
 interface Props {
@@ -44,23 +44,59 @@ export async function executeSwapExactOut(
     } catch (error) {
         return toResult(`Error getting quote: ${error}`, true);
     }
+    const tokenIn = quote.tokenIn;
+    const tokenOut = quote.tokenOut;
 
     // Build the swap transaction
-    const { transactions, minAmountOutOrMaxAmountIn, expectedAmount, tokenIn, tokenOut } = buildSwapTransaction({
+    const { minAmountOutOrMaxAmountIn } = buildSwapTransaction({
         account,
         quote,
         slippageAsPercentage,
         deadline,
     });
 
+    // Check token balance against max amount in (including slippage)
+    const maxAmountInInWei = minAmountOutOrMaxAmountIn.amount;
+    const provider = options.getProvider(chainId);
+    const balance = await provider.readContract({
+        address: tokenInAddress,
+        abi: erc20Abi,
+        functionName: 'balanceOf',
+        args: [account],
+    });
+    if (balance < maxAmountInInWei) {
+        return toResult(`Not enough tokens: has ${formatUnits(balance, tokenIn.decimals)} ${tokenIn.symbol}, needs ${minAmountOutOrMaxAmountIn} ${tokenIn.symbol}`);
+    }
+
+    const transactions: TransactionParams[] = [];
+
+    // Should we approve the token spend?
+    await checkToApprove({
+        args: { account, target: tokenInAddress, spender: quote.quote.to, amount: maxAmountInInWei },
+        provider,
+        transactions,
+    });
+    if (transactions.length > 0) {
+        await options.notify(`Will need to approve the token spend of ${minAmountOutOrMaxAmountIn} ${tokenIn.symbol} on ${chainName}`);
+    }
+
+    // Build the swap transaction
+    const { transaction, expectedAmount } = buildSwapTransaction({
+        account,
+        quote,
+        slippageAsPercentage,
+        deadline,
+    });
+    transactions.push(transaction);
+
     await options.notify(
-        `You are about to swap approximately ${expectedAmount} ${tokenIn.symbol} on ${chainName}` +
+        `You are about to swap approximately ${formatUnits(expectedAmount.amount, expectedAmount.token.decimals)} ${tokenIn.symbol} on ${chainName}` +
             ` for exactly ${humanReadableAmountOut} ${tokenOut.symbol}` +
             ` with a slippage tolerance of ${slippageAsPercentage}%` +
-            ` meaning you'll pay maximum ${minAmountOutOrMaxAmountIn} ${tokenIn.symbol}`,
+            ` meaning you'll spend at most ${formatUnits(minAmountOutOrMaxAmountIn.amount, minAmountOutOrMaxAmountIn.token.decimals)} ${tokenIn.symbol}`,
     );
 
-    await options.notify('Sending transaction...');
+    await options.notify(transactions.length > 1 ? `Sending approve & swap transactions...` : 'Sending swap transaction...');
     const result = await options.sendTransactions({ chainId: getChainFromName(chainName)!, account, transactions });
     const message = result.data[result.data.length - 1].message;
     return toResult(result.isMultisig ? message : `Successfully performed swap. ${message}`);
