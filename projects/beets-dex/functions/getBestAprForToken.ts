@@ -6,6 +6,7 @@ import { GqlChain, GqlPoolOrderBy, GqlPoolOrderDirection } from '../helpers/beet
 import { formatPoolMinimal } from '../helpers/pools';
 import { simplifyPool, poolContainsToken } from '../helpers/pools';
 import { anonChainNameToGqlChain } from '../helpers/chains';
+import { getBalancerTokenByAddress, getEquivalentTokenAddresses } from '../helpers/tokens';
 
 interface Props {
     chainName: string;
@@ -16,6 +17,8 @@ export async function getBestAprForToken({ chainName, tokenAddress }: Props, { n
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
+    const token = await getBalancerTokenByAddress(chainName, tokenAddress);
+    if (!token) return toResult(`Could not find token information`, true);
 
     const client = new BeetsClient();
 
@@ -31,8 +34,13 @@ export async function getBestAprForToken({ chainName, tokenAddress }: Props, { n
 
     notify(`Found ${pools.length} pools, filtering...`);
 
+    // Get equivalent token addresses
+    const equivalentTokenAddresses = await getEquivalentTokenAddresses(chainName, token);
+
     // Filter pools containing the token (including nested and underlying)
-    const matchingPools = pools.filter((pool) => poolContainsToken(pool, tokenAddress)).slice(0, MAX_FETCH_POOLS);
+    const matchingPools = pools
+        .filter((pool) => poolContainsToken(pool, tokenAddress) || equivalentTokenAddresses.some((addr) => poolContainsToken(pool, addr)))
+        .slice(0, MAX_FETCH_POOLS);
 
     if (matchingPools.length === 0) {
         return toResult(`No pools found containing token ${tokenAddress} with minimum TVL of $${MIN_TVL}`);

@@ -1,6 +1,6 @@
 import { FunctionReturn, toResult, FunctionOptions, getChainFromName } from '@heyanon/sdk';
 import { ALLOW_TOKEN_SYNONYMS, supportedChains } from '../constants';
-import { getTokenBySymbol } from '../helpers/tokens';
+import { getGqlTokenBySymbol } from '../helpers/tokens';
 
 interface Props {
     chainName: string;
@@ -13,7 +13,7 @@ export async function getTokenAddressFromSymbol({ chainName, symbol }: Props, { 
     if (!supportedChains.includes(chainId)) return toResult(`Chain ${chainName} is not supported`, true);
 
     // Look for the token with the exact symbol, or a synonym
-    const token = await getTokenBySymbol(chainName, symbol, true);
+    const token = await getGqlTokenBySymbol(chainName, symbol, true);
     if (!token) return toResult(`Token ${symbol} not found on ${chainName}`, true);
     if (symbol.toLowerCase() !== token?.symbol?.toLowerCase()) {
         if (!ALLOW_TOKEN_SYNONYMS) {

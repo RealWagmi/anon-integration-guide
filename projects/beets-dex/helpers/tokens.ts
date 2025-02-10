@@ -1,9 +1,9 @@
 import { Address, formatUnits } from 'viem';
 import { GqlToken } from './beets/types';
-import { Token as BalancerToken, TokenAmount } from '@balancer/sdk';
+import { Token as BalancerToken } from '@balancer/sdk';
 import { BeetsClient } from './beets/client';
 import { anonChainNameToGqlChain } from './chains';
-import { DEFAULT_PRECISION, TOKEN_SYNONYMS } from '../constants';
+import { DEFAULT_PRECISION, EQUIVALENT_TOKENS, TOKEN_SYNONYMS } from '../constants';
 import { getChainFromName } from '@heyanon/sdk';
 
 /**
@@ -21,7 +21,7 @@ export function gqlTokenToBalancerToken(token: GqlToken): BalancerToken {
  * If acceptSynonyms is true, the function will also accept
  * synonyms of the token symbol, and not just the exact symbol.
  */
-export async function getTokenBySymbol(chainName: string, symbol: string, acceptSynonyms = false): Promise<GqlToken | null> {
+export async function getGqlTokenBySymbol(chainName: string, symbol: string, acceptSynonyms = false): Promise<GqlToken | null> {
     const client = new BeetsClient();
     const gqlChain = anonChainNameToGqlChain(chainName);
     if (!gqlChain) {
@@ -72,6 +72,16 @@ export async function getBalancerTokenByAddress(chainName: string, address: Addr
 }
 
 /**
+ * Get a Balancer SDK Token by its case-insensitive symbol, returning null
+ * if the token is not found
+ */
+export async function getBalancerTokenBySymbol(chainName: string, symbol: string): Promise<BalancerToken | null> {
+    const gqlToken = await getGqlTokenBySymbol(chainName, symbol);
+    if (!gqlToken) return null;
+    return gqlTokenToBalancerToken(gqlToken);
+}
+
+/**
  * Convert a token amount to a human-readable string, with a
  * specified number of significant digits.
  *
@@ -98,4 +108,26 @@ export function toSignificant(num: number, minSignificantDigits = 2, maxSignific
         useGrouping: useThousandsSeparator,
         notation: 'standard', // Ensures we don't get scientific notation
     });
+}
+
+/**
+ * Get addresses of tokens that are considered equivalent to a given token.
+ * For example, if the input token is ETH, this might return addresses for
+ * WETH and stETH depending on the chain configuration.
+ */
+export async function getEquivalentTokenAddresses(chainName: string, token: BalancerToken): Promise<Address[]> {
+    const chainId = getChainFromName(chainName);
+    if (!chainId) return [];
+
+    const equivalentTokens = EQUIVALENT_TOKENS[chainId as keyof typeof EQUIVALENT_TOKENS];
+    const equivalentSymbols = equivalentTokens?.[(token.symbol as string).toUpperCase() as keyof typeof equivalentTokens] || [];
+
+    const addresses = await Promise.all(
+        equivalentSymbols.map(async (symbol) => {
+            const token = await getBalancerTokenBySymbol(chainName, symbol);
+            return token?.address;
+        }),
+    );
+
+    return addresses.filter((addr): addr is Address => !!addr);
 }

@@ -37,6 +37,28 @@ export const TOKEN_SYNONYMS = {
 };
 
 /**
+ * Tokens that are equivalent or neary equivalent for the purpose
+ * of APR yields.  For example, if the user asks for "yield
+ * opportunities on ETH", search results will include all pools
+ * containing wETH, stETH and other staking products.
+ *
+ * The opposite does not hold true: if the user asks for "yield
+ * opportunities on stETH", only pools containing stETH will be
+ * considered, not wETH.
+ *
+ * Always use upper-case symbols as keys.
+ */
+export const EQUIVALENT_TOKENS = {
+    [ChainId.SONIC]: {
+        ETH: ['WETH', 'STETH'],
+        WETH: ['WETH', 'STETH'],
+        S: ['WS', 'STS'],
+        WS: ['WS', 'STS'],
+        'USDC.e': ['SCUSD'],
+    },
+};
+
+/**
  * Whether to allow the LLM to replace token tickers with
  * their synonyms, e.g. "ETH" -> "WETH" or "USDC" -> "USDC.e".
  */
