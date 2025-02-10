@@ -25,8 +25,9 @@ Beets DEX allows you to swap instantly hundreds of tokens, leveraging Sonic Chai
     - Withdraw half of my USDC-ETH liquidity on @beets-dex
     - Withdraw half of my USDC-ETH liquidity and swap all ETH for USDC on @beets-dex
 - **Yield**
-    - Best yield I can get for USDC.e on @beets-dex
-    - Show APR of USDC-ETH pool on @beets-dex
+    - Best yield I can get for USDC on @beets-dex
+    - Best yield I can get for USDC-ETH on @beets-dex
+    - Show APR of USDC-ETH pools on @beets-dex
     - Show APR of all my positions on @beets-dex
 - **Portfolio**
     - My TVL on @beets-dex

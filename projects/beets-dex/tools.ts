@@ -179,6 +179,29 @@ export const tools: AiTool[] = [
         ],
     },
     {
+        name: 'getBestAprForTokenPair',
+        description: 'Show the top pools containing both specified tokens, sorted by APR. Only includes pools with TVL > $200,000.',
+        required: ['chainName', 'token0Address', 'token1Address'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name',
+            },
+            {
+                name: 'token0Address',
+                type: 'string',
+                description: 'Address of the first token to search for',
+            },
+            {
+                name: 'token1Address',
+                type: 'string',
+                description: 'Address of the second token to search for',
+            },
+        ],
+    },
+    {
         name: 'getTokenAddressFromSymbol',
         description: 'Get the address of a token from its symbol on a specific chain',
         required: ['chainName', 'symbol'],
