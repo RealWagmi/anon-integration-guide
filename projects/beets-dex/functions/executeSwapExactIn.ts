@@ -65,7 +65,7 @@ export async function executeSwapExactIn(
         });
     }
     if (balance < amountInInWei) {
-        return toResult(`Not enough tokens: has ${toHumanReadableAmount(balance, tokenIn.decimals)} ${tokenIn.symbol}, needs ${humanReadableAmountIn} ${tokenIn.symbol}`);
+        return toResult(`Not enough tokens: you have ${toHumanReadableAmount(balance, tokenIn.decimals)} ${tokenIn.symbol}, you need ${humanReadableAmountIn} ${tokenIn.symbol}`);
     }
 
     const transactions: TransactionParams[] = [];
@@ -99,7 +99,7 @@ export async function executeSwapExactIn(
     );
 
     await options.notify(transactions.length > 1 ? `Sending approve & swap transactions...` : 'Sending swap transaction...');
-    const result = await options.sendTransactions({ chainId: getChainFromName(chainName)!, account, transactions });
+    const result = await options.sendTransactions({ chainId, account, transactions });
     const message = result.data[result.data.length - 1].message;
-    return toResult(result.isMultisig ? message : `Successfully performed swap. ${message}`);
+    return toResult(`Successfully performed swap. ${message}`);
 }

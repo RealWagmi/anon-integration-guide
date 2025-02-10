@@ -3,6 +3,56 @@ import { supportedChains } from './constants';
 
 export const tools: AiTool[] = [
     {
+        name: 'addLiquidityUnbalanced',
+        description:
+            'Add liquidity to a pool.  Tokens do not need to be proportional.  If they are not, the protocol will automatically zap them for the correct proportions.  If you provide one token amount, it will be zapped in the pool alone.',
+        required: ['chainName', 'account', 'poolId', 'token0Address', 'token0Amount', 'token1Address', 'token1Amount', 'slippageAsPercentage'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Account address adding the liquidity',
+            },
+            {
+                name: 'poolId',
+                type: 'string',
+                description: 'ID of the pool to add liquidity to',
+            },
+            {
+                name: 'token0Address',
+                type: 'string',
+                description: 'Address of the first token to add',
+            },
+            {
+                name: 'token0Amount',
+                type: 'string',
+                description: 'Amount of the first token to add, in decimal form (e.g. "1.5 ETH" instead of 1.5e18)',
+            },
+            {
+                name: 'token1Address',
+                type: ['string', 'null'],
+                description: 'Optional: Address of the second token to add.  If not provided, the first token will be zapped alone in the pool.',
+            },
+            {
+                name: 'token1Amount',
+                type: ['string', 'null'],
+                description: 'Optional: Amount of the second token to add, in decimal form (e.g. "5,000 USDC" instead of 5000e6)',
+            },
+            {
+                name: 'slippageAsPercentage',
+                type: ['string', 'null'],
+                description:
+                    'The maximum slippage you are willing to tolerate, expressed as a percentage (e.g. 10 for 10%). If null, the default slippage for the chain will be used.',
+            },
+        ],
+    },
+    {
         name: 'executeSwapExactIn',
         description:
             'Get a quote for and then execute a swap where you specify the EXACT AMOUNT YOU WANT TO SEND in order to buy a token. For example: "Swap 1 ETH for USDC", "Sell 1 ETH for USDC", "Buy USDC with 1 ETH".',

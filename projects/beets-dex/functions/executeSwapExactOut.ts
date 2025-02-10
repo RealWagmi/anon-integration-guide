@@ -77,7 +77,9 @@ export async function executeSwapExactOut(
         });
     }
     if (balance < maxAmountInInWei) {
-        return toResult(`Not enough tokens: has ${toHumanReadableAmount(balance, tokenIn.decimals)} ${tokenIn.symbol}, needs ${minAmountOutOrMaxAmountIn} ${tokenIn.symbol}`);
+        return toResult(
+            `Not enough tokens: you have ${toHumanReadableAmount(balance, tokenIn.decimals)} ${tokenIn.symbol}, you need ${minAmountOutOrMaxAmountIn} ${tokenIn.symbol}`,
+        );
     }
 
     const transactions: TransactionParams[] = [];

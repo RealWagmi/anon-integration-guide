@@ -1,3 +1,4 @@
+export { addLiquidityUnbalanced } from './addLiquidityUnbalanced';
 export { executeSwapExactIn } from './executeSwapExactIn';
 export { executeSwapExactOut } from './executeSwapExactOut';
 export { getQuoteForSwapExactIn } from './getQuoteForSwapExactIn';

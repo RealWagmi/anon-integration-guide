@@ -7,7 +7,6 @@ import { getBalancerTokenByAddress, toHumanReadableAmount, toSignificant } from 
 import { DEFAULT_PRECISION, NATIVE_TOKEN_ADDRESS } from '../constants';
 import { Slippage, SwapBuildCallInput, SwapBuildOutputExactIn, SwapBuildOutputExactOut } from '@balancer/sdk';
 import { TransactionParams } from '@heyanon/sdk';
-import { formatUnits } from 'viem';
 
 export interface GetQuoteProps {
     chainName: string;
