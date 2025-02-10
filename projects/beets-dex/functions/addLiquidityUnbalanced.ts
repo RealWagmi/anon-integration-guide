@@ -4,7 +4,6 @@ import { AddLiquidityInput, AddLiquidityKind, AddLiquidity, InputAmount, AddLiqu
 import { DEFAULT_SLIPPAGE_AS_PERCENTAGE, NATIVE_TOKEN_ADDRESS, supportedChains } from '../constants';
 import { validateSlippageAsPercentage, validateTokenPositiveDecimalAmount } from '../helpers/validation';
 import { toHumanReadableAmount, getBalancerTokenByAddress } from '../helpers/tokens';
-import util from 'util';
 import { BalancerApi, AddLiquidityBuildCallOutput } from '@balancer/sdk';
 import { Slippage } from '@balancer/sdk';
 import { anonChainNameToBalancerChainId, getDefaultRpcUrl } from '../helpers/chains';
@@ -158,8 +157,6 @@ export async function addLiquidityUnbalanced(
         return toResult(`Error querying liquidity: ${error}`, true);
     }
 
-    console.log(util.inspect(queryOutput, { depth: null, colors: true }));
-
     // Build the call with slippage
     // In v2 the sender/recipient can be set, in v3 it is always the msg.sender
     const slippage = Slippage.fromPercentage(slippageAsPercentage);
@@ -181,8 +178,6 @@ export async function addLiquidityUnbalanced(
             wethIsEth: false,
         });
     }
-
-    console.log(util.inspect(buildInput, { depth: null, colors: true }));
 
     const transactions: TransactionParams[] = [];
 

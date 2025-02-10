@@ -9,9 +9,15 @@ import util from 'util';
 import chalk from 'chalk';
 import { fromHeyAnonToolsToOpenAiTools } from '../helpers/openai';
 
+// AI configuration
 const OPENAI_MODEL = 'gpt-4o';
 const DEEPSEEK_MODEL = 'deepseek-reasoner';
 const PROMPT_TYPE: 'minimal' | 'extended' = 'minimal';
+
+// Protocol & chain configuration
+const CHAIN_NAME = 'sonic';
+const CHAIN_VIEM = sonic;
+const PROTOCOL_NAME = 'Beets';
 
 interface AskBeetsOptions {
     verbose?: boolean;
@@ -34,8 +40,9 @@ function getSystemPrompt(options: AskBeetsOptions | undefined, chainName: string
         return getSystemPromptExtended(options, chainName, account);
     }
 }
+
 function getSystemPromptMinimal(options: AskBeetsOptions | undefined, chainName: string, account: string) {
-    const basePrompt = `You will interact with the Beets protocol via your tools. Given a request, you will need to determine which tools to call.`;
+    const basePrompt = `You will interact with the ${PROTOCOL_NAME} protocol via your tools. Given a request, you will need to determine which tools to call.`;
 
     const toolConfigPrompt = `\nAll tools that require the chainName and account arguments will need the following default values: chainName: "${chainName}", account: "${account}".`;
 
@@ -43,7 +50,7 @@ function getSystemPromptMinimal(options: AskBeetsOptions | undefined, chainName:
 }
 
 function getSystemPromptExtended(options: AskBeetsOptions | undefined, chainName: string, account: string) {
-    const basePrompt = `You will interact with the Beets protocol via your tools. Given a request, you will need to determine which tools to call.
+    const basePrompt = `You will interact with the ${PROTOCOL_NAME} protocol via your tools. Given a request, you will need to determine which tools to call.
 
 For operations that require multiple steps (like "withdraw all"), you should first get required information before executing actions.
 For example, to withdraw all liquidity positions:
@@ -84,6 +91,7 @@ function getLlmModel() {
         return OPENAI_MODEL;
     }
 }
+
 /**
  * The askBeets agent.
  *
@@ -105,7 +113,7 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
 
     const signer = privateKeyToAccount(`0x${privateKey}`);
     const provider = createPublicClient({
-        chain: sonic,
+        chain: CHAIN_VIEM,
         transport: http(),
     });
 
@@ -149,7 +157,7 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
     const messages: ConversationMessage[] = [
         {
             role: 'system',
-            content: getSystemPrompt(options, 'sonic', signer.address),
+            content: getSystemPrompt(options, CHAIN_NAME, signer.address),
         },
         { role: 'user', content: question },
     ];
@@ -202,7 +210,7 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
             }
 
             // Replace chain & address for good measure
-            functionArgs.chainName = 'sonic';
+            functionArgs.chainName = CHAIN_NAME;
             functionArgs.account = signer.address;
 
             // Call the tool and add the result to the conversation
