@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "scripts": {
         "yarn": "yarn install",
-        "ask": "ts-node examples/run.ts"
+        "ask": "ts-node ask_beets/run.ts"
     },
     "dependencies": {
         "@balancer/sdk": "^2.1.0",
