@@ -300,6 +300,7 @@ export class BeetsClient {
     /**
      * Get all tokens on the given chains
      */
+    @staticMemoize((chains: GqlChain[]) => [...chains].sort().join(','))
     async getTokens(chains: GqlChain[]): Promise<GqlToken[]> {
         const query = `
             query GetTokens($chains: [GqlChain!]) {
@@ -471,4 +472,41 @@ export class BeetsClient {
             }
         `;
     }
+}
+
+/**
+ * A decorator for memoizing asynchronous methods.
+ *
+ * Potential pitfalls, not relevant for our use case:
+ * 1. Pending Promise Race Condition: If the decorated method is called concurrently with the same arguments,
+ *    the original function is not cached until it finishes executing, potentially triggering duplicate API calls.
+ * 2. Shared Cache Across Instances: The cache is defined in the decorator closure and is shared across all instances,
+ *    which can lead to unintended behavior if different instances (e.g. differing by baseUrl) should have separate
+ *    cache entries.
+ */
+function staticMemoize(cacheKeyFn?: (...args: any[]) => string) {
+    const cache = new Map<string, any>();
+
+    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+        const originalMethod = descriptor.value;
+
+        descriptor.value = async function (...args: any[]) {
+            const key = cacheKeyFn ? cacheKeyFn(...args) : JSON.stringify(args);
+
+            if (cache.has(key)) {
+                return cache.get(key);
+            }
+
+            const result = await originalMethod.apply(this, args);
+            cache.set(key, result);
+            return result;
+        };
+
+        // Add static method to clear cache
+        target.constructor[`clear${propertyKey}Cache`] = () => {
+            cache.clear();
+        };
+
+        return descriptor;
+    };
 }
