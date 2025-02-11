@@ -46,23 +46,6 @@ export async function mintToken(
     try {
         await notify("Preparing to mint Token...");
         const transactions: TransactionParams[] = [];
-        const underlyingAssetAddress = await provider.readContract({
-            abi: vTokenAbi,
-            address: tokenDetails.data.tokenAddress,
-            functionName: 'underlying',
-            args: [],
-        });
-        console.log(underlyingAssetAddress)
-        await checkToApprove({
-            args: {
-                account,
-                target: underlyingAssetAddress,
-                spender: tokenDetails.data.tokenAddress,
-                amount: parseUnits(amount, tokenDetails.data.tokenDecimals),
-            },
-            provider,
-            transactions
-        });
         // Prepare mint transaction
         if (tokenDetails.data.isChainBased) {
             const mintTx: TransactionParams = {
@@ -76,6 +59,23 @@ export async function mintToken(
             };
             transactions.push(mintTx);
         } else {
+            const underlyingAssetAddress = await provider.readContract({
+                abi: vTokenAbi,
+                address: tokenDetails.data.tokenAddress,
+                functionName: 'underlying',
+                args: [],
+            });
+            console.log(underlyingAssetAddress)
+            await checkToApprove({
+                args: {
+                    account,
+                    target: underlyingAssetAddress,
+                    spender: tokenDetails.data.tokenAddress,
+                    amount: parseUnits(amount, tokenDetails.data.tokenDecimals),
+                },
+                provider,
+                transactions
+            });
             const mintTx: TransactionParams = {
                 target: tokenDetails.data.tokenAddress,
                 data: encodeFunctionData({
