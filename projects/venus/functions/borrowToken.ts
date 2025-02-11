@@ -51,13 +51,19 @@ export async function borrowToken({ chainName, account, amount, tokenSymbol, poo
         if (borrowLimitInUSD <= 0) {
             return toResult('No available liquidity to borrow. Please supply a collateral', true);
         }
-        const underlyingAssetAddress = await provider.readContract({
-            abi: vTokenAbi,
-            address: tokenDetails.data.tokenAddress,
-            functionName: 'underlying',
-            args: [],
-        });
 
+        // Handling of chain based tokens.
+        let underlyingAssetAddress;
+        if (tokenDetails.data.isChainBased) {
+            underlyingAssetAddress = tokenDetails.data.tokenAddress;
+        } else {
+            underlyingAssetAddress = await provider.readContract({
+                abi: vTokenAbi,
+                address: tokenDetails.data.tokenAddress,
+                functionName: 'underlying',
+                args: [],
+            });
+        }
         const tokenPriceInUSD = await provider.readContract({
             abi: vOrcaleABI,
             address: ORACLE_ADDRESS,
