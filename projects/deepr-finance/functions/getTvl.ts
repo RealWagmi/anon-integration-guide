@@ -12,7 +12,7 @@ interface ApiResponse {
  * @param props - The request parameters. 
  * @returns TVL.
  */
-export async function getTotalTvl(): Promise<FunctionReturn> {
+export async function getTvl(): Promise<FunctionReturn> {
     const response = await axios.get<ApiResponse>(`https://api.llama.fi/protocol/deepr-finance`);
 
     if (!response.data || !response.data.currentChainTvls) {

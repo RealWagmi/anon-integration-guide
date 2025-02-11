@@ -7,7 +7,7 @@ export * from './getCloseFactor';
 export * from './getMarketBorrowRate';
 export * from './getMarketSupplyRate';
 export * from './getStakeDeeprApr';
-export * from './getTotalTvl';
+export * from './getTvl';
 export * from './getUsersHealthFactor';
 export * from './lendAsset';
 export * from './repayAsset';

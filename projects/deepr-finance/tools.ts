@@ -289,7 +289,7 @@ export const tools: AiTool[] = [
     {
         name: 'getStakeDeeprApr',
         description: 'Fetches current staking APR for the protocol token DEEPR',
-        required: ['chainName', 'asset'],
+        required: ['chainName'],
         props: [
             {
                 name: 'chainName',
@@ -300,7 +300,7 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'getTotalTvl',
+        name: 'getTvl',
         description: 'Fetches current TVL (total value locked) in the protocol',
         required: [],
         props: [],

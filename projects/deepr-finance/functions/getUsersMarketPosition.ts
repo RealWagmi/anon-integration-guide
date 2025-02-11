@@ -1,13 +1,12 @@
-import { Address, erc20Abi, formatUnits, parseUnits } from 'viem';
+import { Address, erc20Abi, formatUnits } from 'viem';
 import {
 	FunctionReturn,
 	FunctionOptions,
-	TransactionParams,
 	toResult,
 	getChainFromName,
 } from '@heyanon/sdk';
 import { supportedChains, ADDRESS } from '../constants';
-import { dtokenAbi, oracleAbi } from '../abis';
+import { dtokenAbi } from '../abis';
 
 interface Props {
 	chainName: string;
@@ -23,7 +22,7 @@ interface Props {
  */
 export async function getUsersMarketPosition(
 	{ chainName, account, asset }: Props,
-	{ sendTransactions, notify, getProvider }: FunctionOptions
+	{ notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
 	// Check wallet connection
 	if (!account) return toResult('Wallet not connected', true);
