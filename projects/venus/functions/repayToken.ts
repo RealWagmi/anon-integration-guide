@@ -49,24 +49,9 @@ export async function repayToken(
     }
     const provider = getProvider(tokenDetails.data.chainId);
     try {
-        const underlyingAssetAddress = await provider.readContract({
-            abi: vTokenAbi,
-            address: tokenDetails.data.tokenAddress,
-            functionName: 'underlying',
-            args: [],
-        });
+        
         const transactions: TransactionParams[] = [];
-        await checkToApprove({
-            args: {
-                account,
-                target: underlyingAssetAddress,
-                spender: tokenDetails.data.tokenAddress,
-                amount: parseUnits(amount, tokenDetails.data.tokenDecimals),
-            },
-            provider,
-            transactions
-        });
-
+        
         await notify("Preparing to repay Token...");
         // Prepare repay borrowed transaction
         if (tokenDetails.data.isChainBased) {
@@ -81,6 +66,22 @@ export async function repayToken(
             };
             transactions.push(repayTx);
         } else {
+            const underlyingAssetAddress = await provider.readContract({
+                abi: vTokenAbi,
+                address: tokenDetails.data.tokenAddress,
+                functionName: 'underlying',
+                args: [],
+            });
+            await checkToApprove({
+                args: {
+                    account,
+                    target: underlyingAssetAddress,
+                    spender: tokenDetails.data.tokenAddress,
+                    amount: parseUnits(amount, tokenDetails.data.tokenDecimals),
+                },
+                provider,
+                transactions
+            });
             const repayTx: TransactionParams = {
                 target: tokenDetails.data.tokenAddress,
                 data: encodeFunctionData({
