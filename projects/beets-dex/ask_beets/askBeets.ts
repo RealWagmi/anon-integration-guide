@@ -151,6 +151,10 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
                 data: txsReturns,
             };
         },
+        signTypedDatas: async (typedDatas) => {
+            const signatures = await Promise.all(typedDatas.map((typedData) => signer.signTypedData(typedData)));
+            return signatures;
+        },
         notify,
     };
 

@@ -1,6 +1,15 @@
-import { Address, erc20Abi, parseUnits } from 'viem';
+import { Address, erc20Abi, parseUnits, SignTypedDataParameters } from 'viem';
 import { FunctionReturn, FunctionOptions, getChainFromName, toResult, checkToApprove, TransactionParams } from '@heyanon/sdk';
-import { AddLiquidityInput, AddLiquidityKind, AddLiquidity, InputAmount, AddLiquidityQueryOutput } from '@balancer/sdk';
+import {
+    AddLiquidityInput,
+    AddLiquidityKind,
+    AddLiquidity,
+    InputAmount,
+    AddLiquidityQueryOutput,
+    Permit2Helper,
+    AddLiquidityBuildCallInput,
+    PublicWalletClient,
+} from '@balancer/sdk';
 import { DEFAULT_SLIPPAGE_AS_PERCENTAGE, NATIVE_TOKEN_ADDRESS, supportedChains } from '../constants';
 import { validateSlippageAsPercentage, validateTokenPositiveDecimalAmount } from '../helpers/validation';
 import { toHumanReadableAmount, getBalancerTokenByAddress } from '../helpers/tokens';
@@ -21,10 +30,12 @@ interface Props {
 
 /**
  * TODO:
+ * - fix boosted pools add liquidity (https://github.com/balancer/docs-v3/pull/232#pullrequestreview-2610451961)
+ * - support for underlying tokens, e.g. add USDC.e to Boosted Stable Rings pool (same as above?)
+ * - fix V3 pools add liquidity (https://github.com/balancer/b-sdk/blob/516070ac7b2b16127e8c78be20354874c52548bf/examples/addLiquidity/addLiquidityWithPermit2Signature.ts#L146-L157)
  * - getPool GraphQL endpoint, so that we can show the name of the pool
+ * - test wethIsEth=true
  * - getTokenAddressFromSymbol getter, so that the user can add to a pool by its name
- * - understand why we cannot add liquidity to V3 pools
- * - support for underlying tokens, e.g. add USDC.e to Boosted Stable Rings pool
  * - make swap notify message multi-line like for add liquidity
  */
 export async function addLiquidityUnbalanced(
@@ -86,12 +97,12 @@ export async function addLiquidityUnbalanced(
     const amount1InWei = token1Amount && token1 ? parseUnits(token1Amount, token1.decimals) : null;
 
     // Check balances
-    const provider = options.getProvider(chainId);
+    const publicClient = options.getProvider(chainId);
     let balance0: bigint;
     if (token0Address === NATIVE_TOKEN_ADDRESS) {
-        balance0 = await provider.getBalance({ address: account });
+        balance0 = await publicClient.getBalance({ address: account });
     } else {
-        balance0 = await provider.readContract({
+        balance0 = await publicClient.readContract({
             address: token0Address,
             abi: erc20Abi,
             functionName: 'balanceOf',
@@ -105,9 +116,9 @@ export async function addLiquidityUnbalanced(
     if (token1Address && amount1InWei) {
         let balance1: bigint;
         if (token1Address === NATIVE_TOKEN_ADDRESS) {
-            balance1 = await provider.getBalance({ address: account });
+            balance1 = await publicClient.getBalance({ address: account });
         } else {
-            balance1 = await provider.readContract({
+            balance1 = await publicClient.readContract({
                 address: token1Address,
                 abi: erc20Abi,
                 functionName: 'balanceOf',
@@ -137,7 +148,7 @@ export async function addLiquidityUnbalanced(
     }
 
     // Construct the AddLiquidityInput
-    const rpcUrl = getDefaultRpcUrl(provider);
+    const rpcUrl = getDefaultRpcUrl(publicClient);
     if (!rpcUrl) throw new Error(`Chain ${chainName} not supported by viem`);
     const addLiquidityInput: AddLiquidityInput = {
         amountsIn,
@@ -158,25 +169,37 @@ export async function addLiquidityUnbalanced(
     }
 
     // Build the call with slippage
-    // In v2 the sender/recipient can be set, in v3 it is always the msg.sender
     const slippage = Slippage.fromPercentage(slippageAsPercentage);
-    let buildInput: AddLiquidityBuildCallOutput;
+    const buildInput = { ...queryOutput, slippage, chainId, wethIsEth: false } as AddLiquidityBuildCallInput;
+    let buildOutput: AddLiquidityBuildCallOutput;
+    // In v2 the sender/recipient can be set, in v3 it is always the msg.sender
     if (queryOutput.protocolVersion === 2) {
-        buildInput = addLiquidity.buildCall({
-            ...queryOutput,
-            slippage,
-            chainId,
-            wethIsEth: false,
+        buildOutput = addLiquidity.buildCall({
+            ...buildInput,
             sender: account as `0x${string}`,
             recipient: account as `0x${string}`,
         });
     } else {
-        buildInput = addLiquidity.buildCall({
-            ...queryOutput,
-            slippage,
-            chainId,
-            wethIsEth: false,
+        // Sign permit2 approvals
+        // Create a PublicWalletClient by extending the PublicClient with signTypedData
+        const publicWalletClient = publicClient.extend((client) => ({
+            signTypedData: async (typedData: SignTypedDataParameters) => {
+                if (!options.signTypedDatas) {
+                    throw new Error('signTypedDatas not provided in options');
+                }
+                const signatures = await options.signTypedDatas([typedData]);
+                return signatures[0];
+            },
+        })) as unknown as PublicWalletClient;
+
+        const permit2 = await Permit2Helper.signAddLiquidityApproval({
+            ...buildInput,
+            client: publicWalletClient,
+            owner: account,
         });
+
+        // Build call with permit2 approvals
+        buildOutput = addLiquidity.buildCallWithPermit2(buildInput, permit2);
     }
 
     const transactions: TransactionParams[] = [];
@@ -184,25 +207,25 @@ export async function addLiquidityUnbalanced(
     // Handle approvals
     if (token0Address !== NATIVE_TOKEN_ADDRESS) {
         await checkToApprove({
-            args: { account, target: token0Address, spender: buildInput.to, amount: amount0InWei },
-            provider,
+            args: { account, target: token0Address, spender: buildOutput.to, amount: amount0InWei },
+            provider: publicClient,
             transactions,
         });
     }
 
     if (token1Address && amount1InWei && token1Address !== NATIVE_TOKEN_ADDRESS) {
         await checkToApprove({
-            args: { account, target: token1Address, spender: buildInput.to, amount: amount1InWei },
-            provider,
+            args: { account, target: token1Address, spender: buildOutput.to, amount: amount1InWei },
+            provider: publicClient,
             transactions,
         });
     }
 
     // Add the join transaction
     transactions.push({
-        target: buildInput.to as Address,
-        data: buildInput.callData,
-        value: buildInput.value,
+        target: buildOutput.to as Address,
+        data: buildOutput.callData,
+        value: buildOutput.value,
     });
 
     // Notify user
@@ -211,7 +234,7 @@ export async function addLiquidityUnbalanced(
             `- ${token0Amount} ${token0.symbol}\n` +
             (token1 ? `- ${token1Amount} ${token1.symbol}\n` : '') +
             `Expected BPT Out: ${toHumanReadableAmount(queryOutput.bptOut.amount, 18)}\n` +
-            `Min BPT Out: ${toHumanReadableAmount(buildInput.minBptOut.amount, 18)}`,
+            `Min BPT Out: ${toHumanReadableAmount(buildOutput.minBptOut.amount, 18)}`,
     );
 
     // Send transactions
