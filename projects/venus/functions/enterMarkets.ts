@@ -48,7 +48,7 @@ export async function enterMarkets(
             data: encodeFunctionData({
                 abi: vComptrollerAbi,
                 functionName: "enterMarkets",
-                args: [[tokenDetails.data.tokenAddress]]
+                args: [[tokenDetails.data.vTokenAddress]]
             }),
         };
         // Send transactions

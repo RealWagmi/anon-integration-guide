@@ -55,11 +55,11 @@ export async function borrowToken({ chainName, account, amount, tokenSymbol, poo
         // Handling of chain based tokens.
         let underlyingAssetAddress;
         if (tokenDetails.data.isChainBased) {
-            underlyingAssetAddress = tokenDetails.data.tokenAddress;
+            underlyingAssetAddress = tokenDetails.data.vTokenAddress;
         } else {
             underlyingAssetAddress = await provider.readContract({
                 abi: vTokenAbi,
-                address: tokenDetails.data.tokenAddress,
+                address: tokenDetails.data.vTokenAddress,
                 functionName: 'underlying',
                 args: [],
             });
@@ -77,7 +77,7 @@ export async function borrowToken({ chainName, account, amount, tokenSymbol, poo
         await notify('Preparing to borrow Token...');
         // Prepare borrow transaction
         const borrowTx: TransactionParams = {
-            target: tokenDetails.data.tokenAddress,
+            target: tokenDetails.data.vTokenAddress,
             data: encodeFunctionData({
                 abi: vBNBAbi,
                 functionName: 'borrow',

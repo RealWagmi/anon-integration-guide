@@ -46,12 +46,13 @@ export async function getVenusBalance({chainName, account, tokenSymbol, pool}: P
         await notify('Checking Balance of token...');
         const balanceOf = await provider.readContract({
             abi: vBNBAbi,
-            address: tokenDetails.data.tokenAddress,
+            address: tokenDetails.data.vTokenAddress,
             functionName: 'balanceOf',
             args: [account],
         }) as bigint;
         //All vTokens are 8 decimals
-        return toResult(`Balance of ${tokenSymbol}: ${formatUnits(balanceOf, 8)}`);
+        const decimal = tokenDetails.data.vTokenDecimals
+        return toResult(`Balance of ${tokenSymbol}: ${formatUnits(balanceOf, decimal)}`);
     } catch (error) {
         return toResult(
             `Failed to Get Balance: ${error instanceof Error ? error.message : "Unknown error"}`,

@@ -48,7 +48,7 @@ export async function redeemUnderlying(
         await notify("Preparing to redeem Token...");
         // Prepare redeem deposited transaction
         const redeemTx: TransactionParams = {
-            target: tokenDetails.data.tokenAddress,
+            target: tokenDetails.data.vTokenAddress,
             data: encodeFunctionData({
                 abi: vBNBAbi,
                 functionName: "redeemUnderlying",

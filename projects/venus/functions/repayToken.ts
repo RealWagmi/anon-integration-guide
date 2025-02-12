@@ -56,7 +56,7 @@ export async function repayToken(
         // Prepare repay borrowed transaction
         if (tokenDetails.data.isChainBased) {
             const repayTx: TransactionParams = {
-                target: tokenDetails.data.tokenAddress,
+                target: tokenDetails.data.vTokenAddress,
                 data: encodeFunctionData({
                     abi: vBNBAbi,
                     functionName: "repayBorrow",
@@ -68,7 +68,7 @@ export async function repayToken(
         } else {
             const underlyingAssetAddress = await provider.readContract({
                 abi: vTokenAbi,
-                address: tokenDetails.data.tokenAddress,
+                address: tokenDetails.data.vTokenAddress,
                 functionName: 'underlying',
                 args: [],
             });
@@ -76,14 +76,14 @@ export async function repayToken(
                 args: {
                     account,
                     target: underlyingAssetAddress,
-                    spender: tokenDetails.data.tokenAddress,
+                    spender: tokenDetails.data.vTokenAddress,
                     amount: parseUnits(amount, tokenDetails.data.tokenDecimals),
                 },
                 provider,
                 transactions
             });
             const repayTx: TransactionParams = {
-                target: tokenDetails.data.tokenAddress,
+                target: tokenDetails.data.vTokenAddress,
                 data: encodeFunctionData({
                     abi: vTokenAbi,
                     functionName: "repayBorrow",

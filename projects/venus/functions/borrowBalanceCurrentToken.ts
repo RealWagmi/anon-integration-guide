@@ -35,7 +35,7 @@ export async function borrowBalanceCurrentToken(
     try {
         await notify('Preparing transaction...');
         const borrowBalanceCurrent: TransactionParams = {
-            target: tokenDetails.data.tokenAddress,
+            target: tokenDetails.data.vTokenAddress,
             data: encodeFunctionData({
                 abi: vBNBAbi,
                 functionName: 'borrowBalanceCurrent',
@@ -51,7 +51,7 @@ export async function borrowBalanceCurrentToken(
 
         const borrowBalanceStored = await provider.readContract({
             abi: vTokenAbi,
-            address: tokenDetails.data.tokenAddress,
+            address: tokenDetails.data.vTokenAddress,
             functionName: 'borrowBalanceStored',
             args: [account],
         });

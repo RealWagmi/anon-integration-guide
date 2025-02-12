@@ -40,7 +40,7 @@ export async function getSupplyAPR({chainName, tokenSymbol, pool}: Props,
         await notify('Getting Current Supply APR...');
         const supplyRatePerBlock = await provider.readContract({
             abi: vBNBAbi,
-            address: tokenDetails.data.tokenAddress,
+            address: tokenDetails.data.vTokenAddress,
             functionName: 'supplyRatePerBlock',
             args: [],
         });

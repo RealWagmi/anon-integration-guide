@@ -40,7 +40,7 @@ export async function getBorrowAPR({chainName, tokenSymbol, pool}: Props,
         await notify('Getting current Borrow APY');
         const borrowRatePerBlock = await provider.readContract({
             abi: vBNBAbi,
-            address: tokenDetails.data.tokenAddress,
+            address: tokenDetails.data.vTokenAddress,
             functionName: 'borrowRatePerBlock',
             args: [],
         });

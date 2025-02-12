@@ -33,10 +33,11 @@ export const validateAndGetTokenDetails = <Props extends { chainName: string; po
 ({chainName, pool, tokenSymbol}: Props): Result<{
     chainId: ChainId;
     poolAddress: Address,
-    tokenAddress: Address,
+    vTokenAddress: Address,
+    vTokenDecimals: number,
     tokenDecimals: number,
-    isChainBased?: boolean
-    blocksPerYear: number
+    isChainBased?: boolean,
+    blocksPerYear: bigint
 }> => {
     pool = validateOrDefaultPool(pool.toUpperCase(), supportedPools);
     const poolDetails = POOLS[pool];
@@ -47,7 +48,8 @@ export const validateAndGetTokenDetails = <Props extends { chainName: string; po
     const tokenDetails = poolDetails.poolTokens[chainId][tokenSymbol.toUpperCase()];
     if (!tokenDetails) return {success: false, errorMessage: `Token ${tokenSymbol} not found on chain ${chainName}`};
     const poolAddress = poolDetails.poolAddress;
-    const tokenAddress = tokenDetails.address;
+    const vTokenAddress = tokenDetails.vTokenAddress;
+    const vTokenDecimals = tokenDetails.vTokenDecimals;
     const tokenDecimals = tokenDetails.decimals;
     const isChainBased = tokenDetails.chainBased;
     const blocksPerYear = BLOCKS_PER_YEAR[chainId];
@@ -56,10 +58,11 @@ export const validateAndGetTokenDetails = <Props extends { chainName: string; po
         data: {
             chainId,
             poolAddress,
-            tokenAddress,
+            vTokenAddress,
+            vTokenDecimals,
             tokenDecimals,
             isChainBased,
-            blocksPerYear,
+            blocksPerYear
         },
     };
 }

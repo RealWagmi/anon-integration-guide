@@ -49,7 +49,7 @@ export async function mintToken(
         // Prepare mint transaction
         if (tokenDetails.data.isChainBased) {
             const mintTx: TransactionParams = {
-                target: tokenDetails.data.tokenAddress,
+                target: tokenDetails.data.vTokenAddress,
                 data: encodeFunctionData({
                     abi: vBNBAbi,
                     functionName: "mint",
@@ -61,7 +61,7 @@ export async function mintToken(
         } else {
             const underlyingAssetAddress = await provider.readContract({
                 abi: vTokenAbi,
-                address: tokenDetails.data.tokenAddress,
+                address: tokenDetails.data.vTokenAddress,
                 functionName: 'underlying',
                 args: [],
             });
@@ -70,14 +70,14 @@ export async function mintToken(
                 args: {
                     account,
                     target: underlyingAssetAddress,
-                    spender: tokenDetails.data.tokenAddress,
+                    spender: tokenDetails.data.vTokenAddress,
                     amount: parseUnits(amount, tokenDetails.data.tokenDecimals),
                 },
                 provider,
                 transactions
             });
             const mintTx: TransactionParams = {
-                target: tokenDetails.data.tokenAddress,
+                target: tokenDetails.data.vTokenAddress,
                 data: encodeFunctionData({
                     abi: vTokenAbi,
                     functionName: "mint",

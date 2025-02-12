@@ -49,7 +49,7 @@ export async function exitMarket(
             data: encodeFunctionData({
                 abi: vComptrollerAbi,
                 functionName: "exitMarket",
-                args: [tokenDetails.data.tokenAddress]
+                args: [tokenDetails.data.vTokenAddress]
             }),
         };
         // Send transactions
