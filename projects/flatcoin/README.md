@@ -27,28 +27,31 @@ Integration with Flatcoin - ETH-backed stablecoin protocol
 
 ## Common Tasks
 
-1. Basic Operations
-   - "Execute example operation with 100 USDT in @flatcoin on Ethereum network"
-   - "Run example transaction with 50 USDC in @flatcoin"
-   - "Perform example action with 1000 tokens in @flatcoin"
+1. UNIT Token Operations
+   - "Mint UNIT tokens with 1 rETH in @flatcoin on Base"
+   - "Deposit 0.5 rETH to get UNIT in @flatcoin with 0.1% slippage"
+   - "Redeem 100 UNIT tokens for rETH in @flatcoin"
 
-2. Information Queries
-   - "Show my current status in @flatcoin"
-   - "Check my balance in @flatcoin"
-   - "Get example statistics from @flatcoin"
-   - "Calculate expected results for my position in @flatcoin"
-
+2. Leverage Trading
+   - "Open a 5x leveraged position with 2 rETH in @flatcoin"
+   - "Add 0.5 rETH collateral to position #123 in @flatcoin"
+   - "Close position #456 in @flatcoin"
 
 ## Available Functions
 
 1. UNIT Operations
    - `mintUnit`: Deposit rETH to mint UNIT tokens
+     - Parameters: chainName, rethAmount, slippageTolerance (optional)
    - `redeemUnit`: Redeem UNIT for underlying rETH
+     - Parameters: chainName, unitAmount, minAmountOut
 
 2. Leverage Trading
    - `openLongPosition`: Open leveraged rETH position
+     - Parameters: chainName, marginAmount, leverage (2x-25x)
+   - `addCollateral`: Add margin to existing position
+     - Parameters: chainName, positionId, additionalCollateral
    - `closePosition`: Close existing position
-   - `addCollateral`: Add margin to position
+     - Parameters: chainName, positionId, minFillPrice
 
 ## Installation
 
@@ -56,54 +59,59 @@ Integration with Flatcoin - ETH-backed stablecoin protocol
 yarn add @heyanon/flatcoin
 ```
 
-## Usage
+## Usage Examples
 
-1. UNIT LP Operations
-   - "Deposit 1 rETH to mint UNIT tokens on Base"
-   - "Mint UNIT with 0.5 rETH at 0.25% slippage"
-   - "Redeem 100 UNIT tokens for rETH"
-   - "Check my current UNIT balance"
-   - "View my earnings from trading fees and staking"
+1. Mint UNIT Tokens
+```typescript
+const result = await mintUnit({
+    chainName: 'BASE',
+    rethAmount: '1.0',
+    slippageTolerance: '0.25'
+});
+```
+
+2. Open Leveraged Position
+```typescript
+const result = await openLongPosition({
+    chainName: 'BASE',
+    marginAmount: '0.5',
+    leverage: '10'
+});
+```
+
+3. Add Collateral to Position
+```typescript
+const result = await addCollateral({
+    chainName: 'BASE',
+    positionId: '123',
+    additionalCollateral: '0.2'
+});
+```
+
+4. Close Position
+```typescript
+const result = await closePosition({
+    chainName: 'BASE',
+    positionId: '456',
+    minFillPrice: '1800.0'
+});
+```
+
+## Features
+
+1. UNIT Token Management
+   - Mint UNIT tokens with rETH collateral
+   - Redeem UNIT tokens back to rETH
+   - Slippage protection for trades
 
 2. Leverage Trading
-   - "Open a 10x leveraged long position with 0.5 rETH as collateral"
-   - "Add 0.2 rETH collateral to position #123"
-   - "Close my leveraged position #456"
-   - "Check liquidation price for my position"
-   - "View all my open positions"
+   - Multiple leverage options (2x to 25x)
+   - Flexible position management
+   - Collateral addition support
+   - Protected position closure
 
-3. Market Information
-   - "Show current borrow rate"
-   - "Get UNIT price in USD"
-   - "Check total rETH in liquidity pool"
-   - "Display current market skew"
-   - "Calculate expected returns at current rates"
-
-4. Portfolio Management
-   - "Show my total value locked in Flatcoin"
-   - "Display my position health"
-   - "Calculate my current profit/loss"
-   - "View my transaction history"
-   - "Check my accumulated fees and rewards"
-
-## Pain Points Solved
-
-1. Complex Delta-Neutral Strategy Automation
-   - Automatically maintains delta-neutral positions
-   - Handles rebalancing without user intervention
-   - Manages fee collection and distribution
-
-2. Simplified Leverage Trading
-   - One-click position opening
-   - Automatic collateral management
-   - Clear liquidation indicators
-
-3. Yield Optimization
-   - Combines multiple yield sources
-   - Automates fee collection
-   - Optimizes staking returns
-
-4. Risk Management
-   - Real-time position monitoring
-   - Automated liquidation protection
-   - Clear risk metrics
+3. Safety Features
+   - Slippage tolerance settings
+   - Minimum output validation
+   - Transaction validation
+   - Network verification

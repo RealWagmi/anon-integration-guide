@@ -28,6 +28,29 @@ export const tools = [
         ],
         required: ["chainName", "rethAmount"]
     },
+    {
+        name: "redeemUnit",
+        description: "Redeem UNIT tokens back to rETH",
+        props: [
+            {
+                name: "chainName",
+                type: "string",
+                enum: supportedChains.map(getChainName),
+                description: "Name of the blockchain network (BASE)"
+            },
+            {
+                name: "unitAmount",
+                type: "string",
+                description: "Amount of UNIT tokens to redeem"
+            },
+            {
+                name: "minAmountOut",
+                type: "string",
+                description: "Minimum amount of rETH to receive"
+            }
+        ],
+        required: ["chainName", "unitAmount", "minAmountOut"]
+    },
     // Leverage Trading Functions
     {
         name: "openLongPosition",
@@ -40,7 +63,7 @@ export const tools = [
                 description: "Name of the blockchain network (BASE)"
             },
             {
-                name: "collateralAmount",
+                name: "marginAmount",
                 type: "string",
                 description: "Amount of rETH to deposit as margin collateral"
             },
@@ -51,6 +74,52 @@ export const tools = [
                 description: "Leverage multiplier (2x, 5x, 10x, 15x, or 25x)"
             }
         ],
-        required: ["chainName", "collateralAmount", "leverage"]
+        required: ["chainName", "marginAmount", "leverage"]
+    },
+    {
+        name: "addCollateral",
+        description: "Add more collateral to an existing leveraged position",
+        props: [
+            {
+                name: "chainName",
+                type: "string",
+                enum: supportedChains.map(getChainName),
+                description: "Name of the blockchain network (BASE)"
+            },
+            {
+                name: "positionId",
+                type: "string",
+                description: "ID of the position to add collateral to"
+            },
+            {
+                name: "additionalCollateral",
+                type: "string",
+                description: "Amount of additional rETH collateral to add"
+            }
+        ],
+        required: ["chainName", "positionId", "additionalCollateral"]
+    },
+    {
+        name: "closePosition",
+        description: "Close an existing leveraged position",
+        props: [
+            {
+                name: "chainName",
+                type: "string",
+                enum: supportedChains.map(getChainName),
+                description: "Name of the blockchain network (BASE)"
+            },
+            {
+                name: "positionId",
+                type: "string",
+                description: "ID of the position to close"
+            },
+            {
+                name: "minFillPrice",
+                type: "string",
+                description: "Minimum acceptable price for closing the position"
+            }
+        ],
+        required: ["chainName", "positionId", "minFillPrice"]
     }
 ];
