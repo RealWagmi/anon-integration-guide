@@ -103,5 +103,9 @@ export async function unstakeAsset(
 	const result = await sendTransactions({ chainId, account, transactions });
 	const unstakeMessage = result.data[result.data.length - 1];
 
-	return toResult(result.isMultisig ? unstakeMessage.message : `Successfully requested unstake for scETH. scETH will be deposited in 5 days.`);
+	return toResult(
+		result.isMultisig ? 
+		unstakeMessage.message : 
+		`Successfully requested unstake for sc${baseAsset}. sc${baseAsset} will be deposited in 5 days. You can cancel the unstake during that period.`
+	);
 }

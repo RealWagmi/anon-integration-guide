@@ -298,7 +298,7 @@ export const tools: AiTool[] = [
     {
         name: 'unlockAsset',
         description: 'Unlock staked asset (stkscETH, stkscUSD) from the Rings protocol',
-        required: ['chainName', 'account'],
+        required: ['chainName', 'account', 'asset'],
         props: [
             {
                 name: 'chainName',

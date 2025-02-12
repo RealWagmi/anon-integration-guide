@@ -100,5 +100,9 @@ export async function redeemAsset(
 	const result = await sendTransactions({ chainId, account, transactions });
 	const redeemMessage = result.data[result.data.length - 1];
 
-	return toResult(result.isMultisig ? redeemMessage.message : `Successfully requested redeem for ${asset}. ${asset} will be deposited in 5 days.`);
+	return toResult(
+		result.isMultisig ? 
+		redeemMessage.message : 
+		`Successfully requested redeem for ${asset}. ${asset} will be deposited in 5 days. You can cancel the redeem during that period.`
+	);
 }

@@ -8,7 +8,7 @@ interface ApiResponse {
 }
 
 /**
- * Fetches current TVL.
+ * Fetches current TVL on Sonic.
  * @param props - The request parameters. 
  * @returns TVL.
  */
