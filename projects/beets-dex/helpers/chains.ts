@@ -1,4 +1,4 @@
-import { PublicClient, createPublicClient, http, createWalletClient } from 'viem';
+import { PublicClient } from 'viem';
 import { ChainId as BalancerChainId } from '@balancer/sdk';
 import { GqlChain } from './beets/types';
 

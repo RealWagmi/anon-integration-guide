@@ -9,13 +9,17 @@ import {
     Permit2Helper,
     AddLiquidityBuildCallInput,
     PublicWalletClient,
+    PoolType,
+    PERMIT2,
 } from '@balancer/sdk';
 import { DEFAULT_SLIPPAGE_AS_PERCENTAGE, NATIVE_TOKEN_ADDRESS, supportedChains } from '../constants';
 import { validateSlippageAsPercentage, validateTokenPositiveDecimalAmount } from '../helpers/validation';
 import { toHumanReadableAmount, getBalancerTokenByAddress } from '../helpers/tokens';
 import { BalancerApi, AddLiquidityBuildCallOutput } from '@balancer/sdk';
 import { Slippage } from '@balancer/sdk';
-import { anonChainNameToBalancerChainId, getDefaultRpcUrl } from '../helpers/chains';
+import { anonChainNameToBalancerChainId, anonChainNameToGqlChain, getDefaultRpcUrl } from '../helpers/chains';
+import { BeetsClient } from '../helpers/beets/client';
+import { GqlChain } from '../helpers/beets/types';
 
 interface Props {
     chainName: string;
@@ -32,11 +36,15 @@ interface Props {
  * TODO:
  * - fix boosted pools add liquidity (https://github.com/balancer/docs-v3/pull/232#pullrequestreview-2610451961)
  * - support for underlying tokens, e.g. add USDC.e to Boosted Stable Rings pool (same as above?)
- * - fix V3 pools add liquidity (https://github.com/balancer/b-sdk/blob/516070ac7b2b16127e8c78be20354874c52548bf/examples/addLiquidity/addLiquidityWithPermit2Signature.ts#L146-L157)
- * - getPool GraphQL endpoint, so that we can show the name of the pool
+ * - getPoolFromName getter, so that the user can add to a pool by its name
  * - test wethIsEth=true
- * - getTokenAddressFromSymbol getter, so that the user can add to a pool by its name
  * - make swap notify message multi-line like for add liquidity
+ * - Once you implement boosted pools, decide whether to leave the implementation here (and rename the tool to
+ *   addLiquidity) or move it to a new addLiquidityBoosted tool
+ *
+ * DONE:
+ * - getPool GraphQL endpoint, so that we can show the name of the pool
+ * - fix V3 pools add liquidity (https://github.com/balancer/b-sdk/blob/516070ac7b2b16127e8c78be20354874c52548bf/examples/addLiquidity/addLiquidityWithPermit2Signature.ts#L146-L157)
  */
 export async function addLiquidityUnbalanced(
     { chainName, account, poolId, token0Address, token0Amount, token1Address, token1Amount, slippageAsPercentage }: Props,
@@ -56,6 +64,7 @@ export async function addLiquidityUnbalanced(
     // Parse and validate slippage
     slippageAsPercentage = slippageAsPercentage ?? `${DEFAULT_SLIPPAGE_AS_PERCENTAGE}`;
     if (!validateSlippageAsPercentage(slippageAsPercentage)) return toResult(`Invalid slippage: ${slippageAsPercentage}`, true);
+    const slippage = Slippage.fromPercentage(slippageAsPercentage);
 
     // Get token information
     const token0 = await getBalancerTokenByAddress(chainName, token0Address);
@@ -67,18 +76,19 @@ export async function addLiquidityUnbalanced(
     const balancerChainId = anonChainNameToBalancerChainId(chainName);
     if (!balancerChainId) return toResult(`Chain ${chainName} not supported by SDK`, true);
 
-    // Get pool state from Balancer API
+    // Get pool from Balancer API
+    await options.notify(`Fetching data from liquidity pool...`);
     const balancerClient = new BalancerApi('https://backend-v3.beets-ftm-node.com/', balancerChainId);
     const poolState = await balancerClient.pools.fetchPoolState(poolId);
-    if (!poolState) {
-        return toResult(`Could not find pool with ID ${poolId}`, true);
-    }
+    const pool = await new BeetsClient().getPool(poolId, anonChainNameToGqlChain(chainName) as GqlChain);
+    if (!pool) return toResult(`Could not find pool with ID ${poolId}`, true);
+    options.notify(`Pool: "${pool.name}" of type ${pool.type}/${poolState.type}`);
 
     // Verify tokens are in pool
     try {
         const poolTokens = await Promise.all(
-            poolState.tokens.map(async (t, i) => {
-                const tokenInfo = await getBalancerTokenByAddress(chainName, t.address);
+            pool.poolTokens.map(async (t, i) => {
+                const tokenInfo = await getBalancerTokenByAddress(chainName, t.address as Address);
                 if (!tokenInfo) throw new Error(`Could not find info on token ${i + 1} (${t.address})`);
                 return tokenInfo;
             }),
@@ -157,65 +167,75 @@ export async function addLiquidityUnbalanced(
         kind: AddLiquidityKind.Unbalanced,
     };
 
-    await options.notify(`Fetching data from liquidity pool...`);
-
-    let queryOutput: AddLiquidityQueryOutput;
-    const addLiquidity = new AddLiquidity();
-    try {
-        // Query addLiquidity to get expected BPT out
-        queryOutput = await addLiquidity.query(addLiquidityInput, poolState);
-    } catch (error) {
-        return toResult(`Error querying liquidity: ${error}`, true);
-    }
-
-    // Build the call with slippage
-    const slippage = Slippage.fromPercentage(slippageAsPercentage);
-    const buildInput = { ...queryOutput, slippage, chainId, wethIsEth: false } as AddLiquidityBuildCallInput;
+    // BUILD ADD LIQUIDITY TRANSACTION
     let buildOutput: AddLiquidityBuildCallOutput;
-    // In v2 the sender/recipient can be set, in v3 it is always the msg.sender
-    if (queryOutput.protocolVersion === 2) {
-        buildOutput = addLiquidity.buildCall({
-            ...buildInput,
-            sender: account as `0x${string}`,
-            recipient: account as `0x${string}`,
-        });
+    const transactions: TransactionParams[] = [];
+    let addressToApprove: Address;
+    let bptOut: bigint;
+
+    if (poolState.type === PoolType.Boosted) {
+        // TODO: implement boosted pools
+        return toResult(`Boosted pools are not supported yet`, true);
     } else {
-        // Sign permit2 approvals
-        // Create a PublicWalletClient by extending the PublicClient with signTypedData
-        const publicWalletClient = publicClient.extend((client) => ({
-            signTypedData: async (typedData: SignTypedDataParameters) => {
-                if (!options.signTypedDatas) {
-                    throw new Error('signTypedDatas not provided in options');
-                }
-                const signatures = await options.signTypedDatas([typedData]);
-                return signatures[0];
-            },
-        })) as unknown as PublicWalletClient;
+        let queryOutput: AddLiquidityQueryOutput;
+        const addLiquidity = new AddLiquidity();
+        try {
+            // Query addLiquidity to get expected BPT out
+            queryOutput = await addLiquidity.query(addLiquidityInput, poolState);
+        } catch (error) {
+            return toResult(`Error querying liquidity: ${error}`, true);
+        }
 
-        const permit2 = await Permit2Helper.signAddLiquidityApproval({
-            ...buildInput,
-            client: publicWalletClient,
-            owner: account,
-        });
+        const buildInput = { ...queryOutput, slippage, chainId, wethIsEth: false } as AddLiquidityBuildCallInput;
+        // In v2 the sender/recipient can be set, in v3 it is always the msg.sender
+        if (queryOutput.protocolVersion === 2) {
+            buildOutput = addLiquidity.buildCall({
+                ...buildInput,
+                sender: account as `0x${string}`,
+                recipient: account as `0x${string}`,
+            });
+            // The address to approve is the balancer vault
+            addressToApprove = buildOutput.to;
+        } else {
+            // The address to approve is permit2
+            addressToApprove = PERMIT2[balancerChainId];
 
-        // Build call with permit2 approvals
-        buildOutput = addLiquidity.buildCallWithPermit2(buildInput, permit2);
+            // Create a PublicWalletClient that is able to sign typed data
+            // using the SDK's signTypedDatas function
+            const publicWalletClient = publicClient.extend((client) => ({
+                signTypedData: async (typedData: SignTypedDataParameters) => {
+                    if (!options.signTypedDatas) {
+                        throw new Error('signTypedDatas not provided in options');
+                    }
+                    const signatures = await options.signTypedDatas([typedData]);
+                    return signatures[0];
+                },
+            })) as unknown as PublicWalletClient;
+
+            // Sign the permit2 approvals
+            const permit2 = await Permit2Helper.signAddLiquidityApproval({
+                ...buildInput,
+                client: publicWalletClient,
+                owner: account,
+            });
+
+            // Build add-liquidity call, including permit2 approvals
+            buildOutput = addLiquidity.buildCallWithPermit2(buildInput, permit2);
+        }
+        bptOut = queryOutput.bptOut.amount;
     }
 
-    const transactions: TransactionParams[] = [];
-
-    // Handle approvals
+    // Build approval transactions (if needed)
     if (token0Address !== NATIVE_TOKEN_ADDRESS) {
         await checkToApprove({
-            args: { account, target: token0Address, spender: buildOutput.to, amount: amount0InWei },
+            args: { account, target: token0Address, spender: addressToApprove, amount: amount0InWei },
             provider: publicClient,
             transactions,
         });
     }
-
     if (token1Address && amount1InWei && token1Address !== NATIVE_TOKEN_ADDRESS) {
         await checkToApprove({
-            args: { account, target: token1Address, spender: buildOutput.to, amount: amount1InWei },
+            args: { account, target: token1Address, spender: addressToApprove, amount: amount1InWei },
             provider: publicClient,
             transactions,
         });
@@ -233,7 +253,7 @@ export async function addLiquidityUnbalanced(
         `Adding liquidity to pool ${poolId}:\n` +
             `- ${token0Amount} ${token0.symbol}\n` +
             (token1 ? `- ${token1Amount} ${token1.symbol}\n` : '') +
-            `Expected BPT Out: ${toHumanReadableAmount(queryOutput.bptOut.amount, 18)}\n` +
+            `Expected BPT Out: ${toHumanReadableAmount(bptOut, 18)}\n` +
             `Min BPT Out: ${toHumanReadableAmount(buildOutput.minBptOut.amount, 18)}`,
     );
 
