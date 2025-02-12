@@ -19,6 +19,9 @@ export async function getPointsForAsset({ chainName, token }: Props, { getProvid
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Kernel is not supported on ${chainName}`, true);
 
+    // Normalize input token
+    token = token.toUpperCase();
+
     // Searching through array for a given asset
     const provider = getProvider(chainId);
 
@@ -35,7 +38,7 @@ export async function getPointsForAsset({ chainName, token }: Props, { getProvid
             abi: erc20Abi,
             functionName: 'symbol',
         });
-        if (assetSymbol.toUpperCase() === token.toUpperCase()) {
+        if (assetSymbol.toUpperCase() === token) {
             assetAddress = asset;
             break;
         }
@@ -43,11 +46,11 @@ export async function getPointsForAsset({ chainName, token }: Props, { getProvid
     if (assetAddress === zeroAddress) return toResult('The asset is not supported', true);
 
     let points = 0;
-    if (token.toUpperCase() === "BNBX" || token.toUpperCase() === "SLISBNB") {
+    if (token === "BNBX" || token === "SLISBNB") {
         points = 2.6;
-    } else if (token.toUpperCase().includes("BTC")) {
+    } else if (token.includes("BTC")) {
         points = 260;
-    } else if (token.toUpperCase().includes("BNB")) {
+    } else if (token.includes("BNB")) {
         points = 2;
     }
     return toResult(`Daily points per 1 ${token}: ${points}`);

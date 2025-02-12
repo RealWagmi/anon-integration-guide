@@ -22,18 +22,35 @@ Key functions of KernelDAO:
 ## Common Tasks
 
 1. Basic Operations
-   - "Stake 5 BNB in Kernel"
-   - "Stake 0.1 0xf6718b2701D4a6498eF77D7c152b2137Ab28b8A3 tokens in Kernel"
-   - "Stake 0.034 pumpBTC in Kernel"
-   - "Unstake 1 BNB from Kernel"
-   - "Unstake 0.02 0x1bdd3Cf7F79cfB8EdbB955f20ad99211551BA275 tokens from Kernel"
-   - "Unstake 35 slisBNB from Kernel"
+   - stakeAssetByAddress
+      - "Stake 0.1 0xf6718b2701D4a6498eF77D7c152b2137Ab28b8A3 token in @kernel"
+      - "Deposit all 0xf6718b2701D4a6498eF77D7c152b2137Ab28b8A3 token in @kernel"
+   - stakeAssetBySymbol
+      - "Stake 0.034 pumpBTC in @kernel"
+      - "Deposit all bnbx in @kernel"
+   - stakeBNB
+      - "Stake 5 BNB in @kernel"
+      - "Deposit all BNB in @kernel"
+   - unstakeAssetByAddress
+      - "Unstake 0.02 0x1bdd3Cf7F79cfB8EdbB955f20ad99211551BA275 tokens from @kernel"
+      - "Withdraw all 0x1bdd3Cf7F79cfB8EdbB955f20ad99211551BA275 tokens from @kernel"
+   - unstakeAssetBySymbol
+      - "Withdraw all LBTC from @kernel"
+      - "Unstake 35 slisBNB from @kernel"
+   - unstakeBNB
+      - "Unstake 1 BNB from @kernel"
+      - "Withdraw all BNB from @kernel"
 
 2. Information Queries
-   - "Show current points for BNBX in Kernel"
-   - "Check my points in Kernel"
-   - "Check 0xffdd45f075e5f757e86bb83fca7114bed9914166 points in Kernel"
-   - "Show current TVL"
+   - getPointsForAsset
+      - "Show current points for BNBX in @kernel"
+      - "Check pumpBTC points in @kernel"
+   - getTvl
+      - "Show current TVL in @kernel"
+      - "Check total value locked in @kernel"
+   - getUserPoints
+      - "Check my points in @kernel"
+      - "Show 0xffdd45f075e5f757e86bb83fca7114bed9914166 points in @kernel"
 
 
 ## Addressing Pain Points

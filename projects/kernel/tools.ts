@@ -153,14 +153,8 @@ export const tools: AiTool[] = [
     {
         name: 'getUserPoints',
         description: 'Get user total accumulated points in the protocol',
-        required: ['chainName', 'account'],
+        required: ['account'],
         props: [
-            {
-                name: 'chainName',
-                type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Chain name',
-            },
             {
                 name: 'account',
                 type: 'string',
@@ -170,7 +164,7 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getTvl',
-        description: 'Get current TVL (total value locked)',
+        description: 'Get current TVL (total value locked) in the protocol',
         required: [],
         props: [],
     },
