@@ -252,6 +252,29 @@ export const tools: AiTool[] = [
         ],
     },
     {
+        name: 'getPoolInfo',
+        description: 'Get information about a specific pool, including the APR yield, the TVL, and any positions in the pool belonging to the user.',
+        required: ['chainName', 'account', 'poolId'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name',
+            },
+            {
+                name: 'account',
+                type: ['string', 'null'],
+                description: 'Address of the user (optional).  If provided, the pool info will include info on any user positions in the pool.',
+            },
+            {
+                name: 'poolId',
+                type: 'string',
+                description: 'ID of the pool to get information about',
+            },
+        ],
+    },
+    {
         name: 'getTokenAddressFromSymbol',
         description: 'Get the address of a token from its symbol on a specific chain',
         required: ['chainName', 'symbol'],

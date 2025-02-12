@@ -1,4 +1,4 @@
-import { GqlPoolAprItemType, GqlPoolBase, GqlPoolMinimal } from "./beets/types";
+import { GqlPoolAprItemType, GqlPoolBase, GqlPoolMinimal } from './beets/types';
 
 /**
  * Types of APR items returned by the API that we should consider
@@ -72,7 +72,7 @@ export function simplifyPool(pool: GqlPoolMinimal): SimplifiedPool {
 
 /**
  * Given a pool from the API, compute the total APR yield of the pool.
- * 
+ *
  * This is expressed as a range, since the APR can be increased by
  * staking the protocol token.
  */
@@ -102,8 +102,8 @@ export function getPoolStakingBoostApr(pool: GqlPoolMinimal | GqlPoolBase): numb
 export function poolContainsToken(pool: GqlPoolMinimal | GqlPoolBase, tokenAddress: string): boolean {
     // Normalize addresses for comparison
     const normalizedSearchAddress = tokenAddress.toLowerCase();
-    
-    return pool.poolTokens.some(token => {
+
+    return pool.poolTokens.some((token) => {
         // Check direct token address
         if (token.address.toLowerCase() === normalizedSearchAddress) return true;
 
@@ -112,9 +112,8 @@ export function poolContainsToken(pool: GqlPoolMinimal | GqlPoolBase, tokenAddre
 
         // Check nested pool tokens if they exist
         if (token.nestedPool?.tokens) {
-            return token.nestedPool.tokens.some(nestedToken => 
-                nestedToken.address.toLowerCase() === normalizedSearchAddress ||
-                nestedToken.underlyingToken?.address.toLowerCase() === normalizedSearchAddress
+            return token.nestedPool.tokens.some(
+                (nestedToken) => nestedToken.address.toLowerCase() === normalizedSearchAddress || nestedToken.underlyingToken?.address.toLowerCase() === normalizedSearchAddress,
             );
         }
 
@@ -135,26 +134,26 @@ export function formatPoolMinimal(pool: SimplifiedPool, titlePrefix: string = ''
             return `${token.symbol}${weight}`;
         })
         .join('-');
-    
+
     let parts = [];
     parts.push(`${titlePrefix}${pool.name} [${tokens}]:`);
     const offset = '   ';
     if (pool.userBalanceUsd) {
-        parts.push(`${offset}- Value $${pool.userBalanceUsd.toFixed(2)}`);
+        parts.push(`${offset}- User position $${pool.userBalanceUsd.toFixed(2)}`);
     }
     if (pool.userStakedBalanceUsd) {
-        parts.push(`${offset}- Staked $${pool.userStakedBalanceUsd.toFixed(2)}`);
+        parts.push(`${offset}- User staked position $${pool.userStakedBalanceUsd.toFixed(2)}`);
     }
     parts.push(`${offset}- APR: ${(pool.apr * 100).toFixed(2)}%`);
     if (pool.aprBoost) {
-        parts.push(`${offset}- Max APR: ${(((pool.apr+pool.aprBoost) * 100).toFixed(2))}% when max staked`);
+        parts.push(`${offset}- APR with max staking: ${((pool.apr + pool.aprBoost) * 100).toFixed(2)}%`);
     }
     parts.push(`${offset}- TVL: $${pool.tvlUsd.toFixed(0)}`);
     parts.push(`${offset}- Pool ID: ${pool.id}`);
     parts.push(`${offset}- Pool type: ${formatPoolType(pool.type)}`);
 
     return parts.join('\n');
-} 
+}
 
 /**
  * Given a pool type, format it into a human-readable string
@@ -163,6 +162,6 @@ export function formatPoolType(type: string): string {
     return type
         .toLowerCase()
         .split('_')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
 }

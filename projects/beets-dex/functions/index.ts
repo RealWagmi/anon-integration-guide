@@ -6,4 +6,5 @@ export { getQuoteForSwapExactOut } from './getQuoteForSwapExactOut';
 export { getMyPositionsPortfolio } from './getMyPositionsPortfolio';
 export { getBestAprForToken } from './getBestAprForToken';
 export { getBestAprForTokenPair } from './getBestAprForTokenPair';
+export { getPoolInfo } from './getPoolInfo';
 export { getTokenAddressFromSymbol } from './getTokenAddressFromSymbol';

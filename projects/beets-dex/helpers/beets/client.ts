@@ -219,6 +219,218 @@ export class BeetsClient {
         return response.poolGetPools;
     }
 
+    /**
+     * Get a specific pool based on the provided id, chain and optionally a user address
+     *
+     * Same query as https://beets.fi/pools/sonic/v3/0x43026d483f42fb35efe03c20b251142d022783f2
+     */
+    async getPool(id: string, chain: GqlChain, userAddress: string = ''): Promise<GqlPoolMinimal> {
+        const fragments = [this.getHookFragment(), this.getUnderlyingTokenFragment(), this.getErc4626ReviewDataFragment(), this.getPoolTokensFragment()];
+
+        const query = `
+            query GetPool($id: String!, $chain: GqlChain!, $userAddress: String) {
+              pool: poolGetPool(id: $id, chain: $chain, userAddress: $userAddress) {
+                id
+                address
+                name
+                version
+                owner
+                swapFeeManager
+                pauseManager
+                poolCreator
+                decimals
+                factory
+                symbol
+                createTime
+                type
+                chain
+                protocolVersion
+                tags
+                hasErc4626
+                hasNestedErc4626
+                hasAnyAllowedBuffer
+                liquidityManagement {
+                  disableUnbalancedLiquidity
+                }
+                hook {
+                  ...Hook
+                }
+                dynamicData {
+                  poolId
+                  swapEnabled
+                  totalLiquidity
+                  totalShares
+                  fees24h
+                  surplus24h
+                  swapFee
+                  volume24h
+                  holdersCount
+                  isInRecoveryMode
+                  isPaused
+                  aprItems {
+                    id
+                    title
+                    apr
+                    type
+                    rewardTokenSymbol
+                    rewardTokenAddress
+                  }
+                }
+                allTokens {
+                  id
+                  address
+                  name
+                  symbol
+                  decimals
+                  isNested
+                  isPhantomBpt
+                  isMainToken
+                }
+                staking {
+                  id
+                  type
+                  chain
+                  address
+                  gauge {
+                    id
+                    gaugeAddress
+                    version
+                    status
+                    workingSupply
+                    otherGauges {
+                      gaugeAddress
+                      version
+                      status
+                      id
+                      rewards {
+                        id
+                        tokenAddress
+                        rewardPerSecond
+                      }
+                    }
+                    rewards {
+                      id
+                      rewardPerSecond
+                      tokenAddress
+                    }
+                  }
+                  aura {
+                    id
+                    apr
+                    auraPoolAddress
+                    auraPoolId
+                    isShutdown
+                  }
+                }
+                userBalance {
+                  totalBalance
+                  totalBalanceUsd
+                  walletBalance
+                  walletBalanceUsd
+                  stakedBalances {
+                    balance
+                    balanceUsd
+                    stakingType
+                    stakingId
+                  }
+                }
+                ... on GqlPoolWeighted {
+                  nestingType
+                  poolTokens {
+                    ...PoolTokens
+                  }
+                }
+                ... on GqlPoolStable {
+                  amp
+                  poolTokens {
+                    ...PoolTokens
+                  }
+                }
+                ... on GqlPoolMetaStable {
+                  amp
+                  poolTokens {
+                    ...PoolTokens
+                  }
+                }
+                ... on GqlPoolElement {
+                  unitSeconds
+                  principalToken
+                  baseToken
+                  poolTokens {
+                    ...PoolTokens
+                  }
+                }
+                ... on GqlPoolComposableStable {
+                  amp
+                  nestingType
+                  bptPriceRate
+                  poolTokens {
+                    ...PoolTokens
+                  }
+                }
+                ... on GqlPoolLiquidityBootstrapping {
+                  name
+                  nestingType
+                  poolTokens {
+                    ...PoolTokens
+                  }
+                }
+                ... on GqlPoolGyro {
+                  alpha
+                  beta
+                  type
+                  c
+                  dSq
+                  lambda
+                  root3Alpha
+                  s
+                  sqrtAlpha
+                  sqrtBeta
+                  tauAlphaX
+                  tauAlphaY
+                  tauBetaX
+                  tauBetaY
+                  u
+                  v
+                  w
+                  z
+                  nestingType
+                  poolTokens {
+                    ...PoolTokens
+                  }
+                }
+                ... on GqlPoolFx {
+                  alpha
+                  beta
+                  delta
+                  epsilon
+                  lambda
+                  poolTokens {
+                    ...PoolTokens
+                  }
+                }
+              }
+            }
+        `;
+
+        const response = await this.executeQueryWithRetry<{
+            pool: GqlPoolMinimal;
+        }>(
+            query,
+            {
+                id,
+                chain,
+                userAddress,
+            },
+            fragments,
+        );
+
+        return response.pool;
+    }
+
+    /**
+     * Get SOR swaps; same query as done by the swap widget
+     */
     async getSorSwap(tokenIn: string, tokenOut: string, swapType: GqlSorSwapType, swapAmount: string, chain: GqlChain): Promise<GqlSorGetSwapsResponse> {
         const query = `
             query GetSorSwaps($tokenIn: String!, $tokenOut: String!, $swapType: GqlSorSwapType!, $swapAmount: AmountHumanReadable!, $chain: GqlChain!, $poolIds: [String!]) {

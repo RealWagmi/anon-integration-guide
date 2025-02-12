@@ -29,7 +29,6 @@ export const MIN_TVL = 200_000;
 export const TOKEN_SYNONYMS = {
     [ChainId.SONIC]: {
         SONIC: 'S',
-        WSONIC: 'wS',
         USDC: 'USDC.e',
         ETH: 'WETH',
         ETHER: 'WETH',
