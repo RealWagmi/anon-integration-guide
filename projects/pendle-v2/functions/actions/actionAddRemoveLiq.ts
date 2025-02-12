@@ -9,6 +9,7 @@ export interface TokenInput {
     netTokenIn: string;
     tokenMintSy: Address;
     bulk: boolean;
+    chainId?: number;
 }
 
 export interface ApproxParams {
@@ -44,7 +45,7 @@ export async function addLiquidityDualTokenAndPt(
         validateAddress(input.tokenIn);
         validateAddress(input.tokenMintSy);
 
-        const provider = getProvider();
+        const provider = getProvider(input.chainId);
         const params = {
             abi: actionAddRemoveLiqV3Abi,
             functionName: 'addLiquidityDualTokenAndPt',
@@ -161,7 +162,7 @@ export async function addLiquiditySingleToken(
         validateAddress(input.tokenIn);
         validateAddress(input.tokenMintSy);
 
-        const provider = getProvider();
+        const provider = getProvider(input.chainId);
         const params = {
             abi: actionAddRemoveLiqV3Abi,
             functionName: 'addLiquiditySingleToken',

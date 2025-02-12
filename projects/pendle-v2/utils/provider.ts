@@ -156,7 +156,10 @@ export const provider = {
     }
 };
 
-export const getProvider = () => provider;
+export const getProvider = (chainId?: number) => {
+    console.log(`Getting provider for chain: ${chainId || 'default'}`);
+    return provider;
+};
 
 export const sendTransactions = async (params: any) => {
     console.log('Transaction params:', params);
