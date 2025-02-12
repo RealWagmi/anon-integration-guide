@@ -1,6 +1,6 @@
 import { getChainFromName } from '@heyanon/sdk';
-import { Address, isAddress } from 'viem';
-import { supportedChains } from '../constants';
+import { Address, isAddress, parseUnits } from 'viem';
+import { FeeAmount, supportedChains } from '../constants';
 
 type Result<Data> =
     | {
@@ -26,6 +26,38 @@ export const parseWallet = <Props extends { account: string; chainName: string }
         data: {
             account,
             chainId,
+        },
+    };
+};
+
+export const parseAmount = <Props extends { amount: string; decimals: number }>({ amount, decimals }: Props): Result<bigint> => {
+    if (!amount || typeof amount !== 'string') return { success: false, errorMessage: 'Amount must be a string' };
+
+    const parsedAmount = parseUnits(amount, decimals);
+    if (parsedAmount === 0n) return { success: false, errorMessage: 'Amount must be greater than 0' };
+
+    return {
+        success: true,
+        data: parsedAmount,
+    };
+};
+
+export const parseTokensAndFees = <Props extends { tokens: Address[]; fees: FeeAmount[] }>({ tokens, fees }: Props): Result<{ tokens: Address[]; fees: FeeAmount[] }> => {
+    if (!Array.isArray(tokens)) return { success: false, errorMessage: 'Expected tokens to be an array' };
+
+    if (!Array.isArray(fees)) return { success: false, errorMessage: 'Expected fees to be an array' };
+
+    if (tokens.length < 2) return { success: false, errorMessage: 'Expected at least two tokens' };
+
+    if (fees.length < 1) return { success: false, errorMessage: 'Expected at least one fee' };
+
+    if (tokens.length !== fees.length + 1) return { success: false, errorMessage: 'Incorrect amount of fees in relation to tokens' };
+
+    return {
+        success: true,
+        data: {
+            tokens,
+            fees,
         },
     };
 };
