@@ -1,4 +1,4 @@
-import { Address, encodeFunctionData, parseUnits } from 'viem';
+import { Address, encodeFunctionData, isAddress, parseUnits } from 'viem';
 import {
   	FunctionReturn,
   	FunctionOptions,
@@ -39,10 +39,10 @@ export async function buyToken(
 	if (!supportedChains.includes(chainId)) return toResult(`Gu is not supported on ${chainName}`, true);
 
 	// If token is a string, resolve it to an address
-    if (typeof token === 'string') {
-        const resolvedToken = await getTokenAddress({ input: token });
+    if (!isAddress(token)) {
+        const resolvedToken = await getTokenAddress({ symbol: token });
         if (!resolvedToken.success) return toResult(`Couldn't find token address for "${token}". Try again.`, true);
-        token = resolvedToken.data.slice(2);
+        token = resolvedToken.data;
     }
 
 	// Validate token
@@ -54,7 +54,7 @@ export async function buyToken(
         args: [token],
     }) as boolean;
 	const isLPd = await publicClient.readContract({
-        address: `0x${token}`,
+        address: token as Address,
         abi: guCoinAbi,
         functionName: 'isLPd',
     }) as boolean;
@@ -73,7 +73,7 @@ export async function buyToken(
 	if (!slippage) {
 		slippage = 5; //default value
 	} else if (!Number.isInteger(slippage) || slippage < 0 || slippage > 50) {
-		return toResult('Slippage must be in the range of 0 to 50%', true);
+		return toResult('Slippage must be an integer in the range of 0% to 50%', true);
 	}
 
 	await notify('Fetching the price...');
