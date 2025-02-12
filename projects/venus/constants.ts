@@ -142,11 +142,6 @@ export const CORE_POOL_MARKET_TOKENS: TokenConfig = {
             vTokenDecimals: 8,
             decimals: 18,
         },
-        ETH: {
-            vTokenAddress: "0xf508fCD89b8bd15579dc79A6827cB4686A3592c8",
-            vTokenDecimals: 8,
-            decimals: 18,
-        },
         FDUSD: {
             vTokenAddress: "0xC4eF4229FEc74Ccfe17B2bdeF7715fAC740BA0ba",
             vTokenDecimals: 8,
@@ -172,11 +167,6 @@ export const CORE_POOL_MARKET_TOKENS: TokenConfig = {
             vTokenDecimals: 8,
             decimals: 6,
         },
-        MATIC: {
-            vTokenAddress: "0x5c9476FcD6a4F9a3654139721c949c2233bBbBc8",
-            vTokenDecimals: 8,
-            decimals: 18,
-        },
         SXP: {
             vTokenAddress: "0x2fF3d0F6990a40261c66E1ff2017aCBc282EB6d0",
             vTokenDecimals: 8,
@@ -192,18 +182,8 @@ export const CORE_POOL_MARKET_TOKENS: TokenConfig = {
             vTokenDecimals: 8,
             decimals: 6,
         },
-        TRXOLD: {
-            vTokenAddress: "0x61eDcFe8Dd6bA3c891CB9bEc2dc7657B3B422E93",
-            vTokenDecimals: 8,
-            decimals: 18,
-        },
         TUSD: {
             vTokenAddress: "0xBf762cd5991cA1DCdDaC9ae5C638F5B5Dc3Bee6E",
-            vTokenDecimals: 8,
-            decimals: 18,
-        },
-        TUSDOLD: {
-            vTokenAddress: "0x08CEB3F4a7ed3500cA0982bcd0FC7816688084c3",
             vTokenDecimals: 8,
             decimals: 18,
         },
@@ -227,11 +207,6 @@ export const CORE_POOL_MARKET_TOKENS: TokenConfig = {
             vTokenDecimals: 8,
             decimals: 18,
         },
-        UST: {
-            vTokenAddress: "0x78366446547D062f45b4C0f320cDaa6d710D87bb",
-            vTokenDecimals: 8,
-            decimals: 6,
-        },
         WBETH: {
             vTokenAddress: "0x6CFdEc747f37DAf3b87a35a1D9c8AD3063A1A8A0",
             vTokenDecimals: 8,
@@ -247,16 +222,44 @@ export const CORE_POOL_MARKET_TOKENS: TokenConfig = {
             vTokenDecimals: 8,
             decimals: 18,
         },
-        SOL: {
-            vTokenAddress: "0xBf515bA4D1b52FFdCeaBF20d31D705Ce789F2cEC",
-            vTokenDecimals: 8,
-            decimals: 18,
-        },
         THE: {
             vTokenAddress: "0x86e06EAfa6A1eA631Eab51DE500E3D474933739f",
             vTokenDecimals: 8,
             decimals: 18,
         },
+
+        // Removed these token for now, will figure out token list concerns first.
+        // ETH: {
+        //     vTokenAddress: "0xf508fCD89b8bd15579dc79A6827cB4686A3592c8",
+        //     vTokenDecimals: 8,
+        //     decimals: 18,
+        // },
+        // MATIC: {
+        //     vTokenAddress: "0x5c9476FcD6a4F9a3654139721c949c2233bBbBc8",
+        //     vTokenDecimals: 8,
+        //     decimals: 18,
+        // },
+        // SOL: {
+        //     vTokenAddress: "0xBf515bA4D1b52FFdCeaBF20d31D705Ce789F2cEC",
+        //     vTokenDecimals: 8,
+        //     decimals: 18,
+        // },
+        // UST: {
+        //     vTokenAddress: "0x78366446547D062f45b4C0f320cDaa6d710D87bb",
+        //     vTokenDecimals: 8,
+        //     decimals: 6,
+        // },
+        // TRXOLD: {
+        //     vTokenAddress: "0x61eDcFe8Dd6bA3c891CB9bEc2dc7657B3B422E93",
+        //     vTokenDecimals: 8,
+        //     decimals: 18,
+        // },
+        // TUSDOLD: {
+        //     vTokenAddress: "0x08CEB3F4a7ed3500cA0982bcd0FC7816688084c3",
+        //     vTokenDecimals: 8,
+        //     decimals: 18,
+        // },
+
         // Adding extra underlaying tokens and their details, wont be used
         // VAI: {
         //     vTokenAddress: "",
