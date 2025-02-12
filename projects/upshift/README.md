@@ -27,18 +27,38 @@ Key functions of Upshift:
 ## Common Tasks
 
 1. Basic Operations
-   - "Deposit 800 LBTC"
-   - "Redeem 50 wstETH"
-   - "Claim 10 sUSDe"
-   - "Stake 100 upAVAX"
-   - "Unstake 333 upAUSD"
-   - "Redeem upAVAX rewards"
+   - depositAsset
+      - "Deposit 800 LBTC in Base in @upshift"
+      - "Put all AVAX in Avalanche in @upshift"
+   - requestRedeemAsset
+      - "Redeem 50 wstETH in Ethereum from @upshift"
+      - "Withdraw all sUSDe in Ethereum from @upshift"
+   - claimAsset
+      - "Claim all sUSDe in Ethereum from @upshift"
+      - "Claim 100 ausd in Avalanche from @upshift"
+   - stakeOnAvalanche
+      - "Stake 100 upAVAX in @upshift"
+      - "Stake all upausd in @upshift"
+   - unstakeOnAvalanche
+      - "Unstake 333 upAUSD from @upshift"
+      - "Unstake all upAVAX from @upshift"
+   - redeemRewardOnAvalanche
+      - "Redeem upAVAX rewards from @upshift"
+      - "Claim rewards from upAUSD from @upshift"
 
 2. Information Queries
-   - "Show current APY for LBTC on Base in Upshift"
-   - "Check wstETH TVL in Upshift"
-   - "Show rewards in AVAX vault in Upshift"
-   - "Check current total TVL in Upshift"
+   - getTvl
+      - "Check current TVL in @upshift"
+      - "Show total value locked in @upshift"
+   - getVaultApy
+      - "Show current APY for LBTC on Base in @upshift"
+      - "Check interest for wstETH on Ethereum in @upshift"
+   - getVaultTvl
+      - "Check avax TVL on Avalanche in @upshift"
+      - "Show value locked in LBTC vault on Ethereum in @upshift"
+   - getVaultRewards
+      - "Show rewards in AVAX vault on Avalanche in @upshift"
+      - "Check susde rewards on Ethereum in @upshift" 
 
 
 ## Addressing Pain Points

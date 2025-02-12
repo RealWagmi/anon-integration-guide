@@ -139,7 +139,7 @@ export const tools: AiTool[] = [
     },
     {
         name: 'redeemRewardOnAvalanche',
-        description: 'Redeems rewards from Upshift LP on Avalanche network',
+        description: 'Redeems rewards from Upshift LP (liquidity pool) on Avalanche network',
         required: ['chainName', 'account', 'token'],
         props: [
             {
@@ -162,7 +162,7 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getVaultApy',
-        description: 'Fetchs APY (annual percentage yield) for a given vault',
+        description: 'Fetches APY (annual percentage yield) for a given vault',
         required: ['chainName', 'token'],
         props: [
             {
@@ -180,7 +180,7 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getVaultRewards',
-        description: 'Fetchs additional rewards (points) for a given vault',
+        description: 'Fetches additional rewards (points) for a given vault',
         required: ['chainName', 'token'],
         props: [
             {
@@ -198,7 +198,7 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getVaultTvl',
-        description: 'Fetchs TLV (total value locked) for a given vault',
+        description: 'Fetches TLV (total value locked) for a given vault',
         required: ['chainName', 'token'],
         props: [
             {
@@ -215,8 +215,8 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'getTotalTvl',
-        description: 'Fetchs whole protocol TLV (total value locked)',
+        name: 'getTvl',
+        description: 'Fetches TVL (total value locked) in the protocol',
         required: [],
         props: [],
     },

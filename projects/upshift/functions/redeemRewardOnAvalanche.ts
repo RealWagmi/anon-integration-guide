@@ -1,12 +1,13 @@
-import { Address, encodeFunctionData, erc20Abi, parseUnits } from 'viem';
+import { Address, encodeFunctionData } from 'viem';
 import {
 	FunctionReturn,
 	FunctionOptions,
 	TransactionParams,
 	toResult,
 	getChainFromName,
+	ChainId,
 } from '@heyanon/sdk';
-import { supportedChains, TOKEN, TokenConfig } from '../constants';
+import { TOKEN, TokenConfig } from '../constants';
 import { stakeAbi } from '../abis';
 
 interface Props {
@@ -33,7 +34,7 @@ export async function redeemRewardOnAvalanche(
 	// Validate chain
 	const chainId = getChainFromName(chainName);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
-	if (!supportedChains.includes(chainId)) return toResult(`Upshift is not supported on ${chainName}`, true);
+	if (chainId !== ChainId.AVALANCHE) return toResult(`Staking LP tokens is not supported on ${chainName}`, true);
 
     // Validate token
     const tokenConfig = Object.values((TOKEN as Record<number, Record<string, TokenConfig>>)[chainId]).find(

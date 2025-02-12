@@ -5,8 +5,9 @@ import {
 	TransactionParams,
 	toResult,
 	getChainFromName,
+    ChainId,
 } from '@heyanon/sdk';
-import { supportedChains, TOKEN, TokenConfig } from '../constants';
+import { TOKEN, TokenConfig } from '../constants';
 import { stakeAbi } from '../abis';
 
 interface Props {
@@ -17,7 +18,7 @@ interface Props {
 }
 
 /**
- * Unstakes Upshift LP on Avalakche from the vault.
+ * Unstakes Upshift LP on Avalanche from the vault.
  * @param props - The unstake parameters.
  * @param tools - System tools for blockchain interactions.
  * @returns Success message.
@@ -34,7 +35,7 @@ export async function unstakeOnAvalanche(
 	// Validate chain
 	const chainId = getChainFromName(chainName);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
-	if (!supportedChains.includes(chainId)) return toResult(`Upshift is not supported on ${chainName}`, true);
+	if (chainId !== ChainId.AVALANCHE) return toResult(`Staking LP tokens is not supported on ${chainName}`, true);
 
     // Validate token
     const tokenConfig = Object.values((TOKEN as Record<number, Record<string, TokenConfig>>)[chainId]).find(
