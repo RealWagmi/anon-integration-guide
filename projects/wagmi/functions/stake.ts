@@ -92,8 +92,8 @@ export async function stake({ chainName, account, amount }: StakeProps, tools: F
 
     const stakeEvent = transferEvents.find((log) => log.args.from === zeroAddress);
     if (!stakeEvent?.args?.value) {
-        return toResult(`Staked ${formatEther(amountInWei)} WAGMI to sWAGMI on ${chainName}, but couldn't verify received sWAGMI amount. ${stakeData.message}`);
+        return toResult(`Staked ${formatEther(amountInWei)} WAGMI to sWAGMI on ${chainName}, but couldn't verify received sWAGMI amount. ${JSON.stringify(stakeData)}`);
     }
     const stakedAmount = formatEther(stakeEvent.args.value);
-    return toResult(`Staked ${formatEther(amountInWei)} WAGMI and received ${stakedAmount} sWAGMI on ${chainName}. ${stakeData.message}`);
+    return toResult(`Staked ${formatEther(amountInWei)} WAGMI and received ${stakedAmount} sWAGMI on ${chainName}. ${JSON.stringify(stakeData)}`);
 }
