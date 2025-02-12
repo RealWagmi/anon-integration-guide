@@ -43,8 +43,7 @@ export const tools: AiTool[] = [
     {
         name: 'buyToken',
         description: 'Buy (purchase) any coin that was launched on Gu Trade with given ETH amount',
-        required: ['chainName', 'account', 'token', 'amount'],
-        additionalProperties: true,
+        required: ['chainName', 'account', 'token', 'amount', 'slippage'],
         props: [
             {
                 name: 'chainName',
@@ -69,17 +68,15 @@ export const tools: AiTool[] = [
             },
             {
                 name: 'slippage',
-                type: 'bigint',
+                type: ['number', 'null'],
                 description: 'Slippage tolerance (percentage). Default is 5%',
-                optional: true,
             },
         ],
     },
     {
         name: 'sellToken',
         description: 'Sell the coin that was launched on Gu Trade in case you had it previously',
-        required: ['chainName', 'account', 'token', 'amount'],
-        additionalProperties: true,
+        required: ['chainName', 'account', 'token', 'amount', 'slippage'],
         props: [
             {
                 name: 'chainName',
@@ -104,29 +101,20 @@ export const tools: AiTool[] = [
             },
             {
                 name: 'slippage',
-                type: 'bigint',
+                type: ['number', 'null'],
                 description: 'Slippage tolerance (percentage). Default is 5%',
-                optional: true,
             },
         ],
     },
     {
-        name: 'getLastCreatedToken',
-        description: 'Fetch information about the token that was created the last one',
-        required: [],
-        props: [],
-    },
-    {
         name: 'getTokenAddress',
-        description: 'Search for a token with given name or symbol',
-        required: [],
-        additionalProperties: true,
+        description: 'Search for a token with a given symbol',
+        required: ['symbol'],
         props: [
             {
-                name: 'input',
+                name: 'symbol',
                 type: 'string',
-                description: 'Name or symbol of the searched token',
-                optional: true,
+                description: 'Symbol of the searched token',
             },
         ],
     },

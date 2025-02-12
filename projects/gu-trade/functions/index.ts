@@ -1,6 +1,5 @@
 export * from './buyToken';
 export * from './deployToken';
-export * from './getLastCreatedToken';
 export * from './getTokenAddress';
 export * from './getTokenMarketCap';
 export * from './getTokenMarketCapInUsd';

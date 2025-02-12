@@ -1,4 +1,4 @@
-import { Address, formatUnits } from 'viem';
+import { Address, formatUnits, isAddress } from 'viem';
 import { FunctionReturn, toResult, getChainFromName, FunctionOptions } from '@heyanon/sdk';
 import { ETH_USD_ORACLE_ADDRESS, supportedChains } from '../constants';
 import { ethOracleAbi, guCoinAbi } from '../abis';
@@ -6,7 +6,6 @@ import { getTokenAddress } from './getTokenAddress';
 
 interface Props {
     chainName: string;
-    account: Address;
     token: Address | string;
 }
 
@@ -23,16 +22,16 @@ export async function getTokenPriceInUsd({ chainName, token }: Props, { getProvi
     if (!supportedChains.includes(chainId)) return toResult(`Gu is not supported on ${chainName}`, true);
 
     // If token is a string, resolve it to an address
-    if (typeof token === 'string') {
-        const resolvedToken = await getTokenAddress({ input: token });
+    if (!isAddress(token)) {
+        const resolvedToken = await getTokenAddress({ symbol: token });
         if (!resolvedToken.success) return toResult(`Couldn't find token address for "${token}". Try again.`, true);
-        token = resolvedToken.data as Address;
+        token = resolvedToken.data;
     }
 
     const publicClient = getProvider(chainId);
 
     const tokenPrice = await publicClient.readContract({
-        address: `0x${token}`,
+        address: token as Address,
         abi: guCoinAbi,
         functionName: 'price',
     }) as bigint;
@@ -49,5 +48,5 @@ export async function getTokenPriceInUsd({ chainName, token }: Props, { getProvi
 
     const tokenPriceInUsd = tokenPriceInEth * ethPriceInUsd;
 
-    return toResult(`Current price: $${tokenPriceInUsd.toFixed(6)} USD`);
+    return toResult(`Current price: $${tokenPriceInUsd.toFixed(0)} USD`);
 }

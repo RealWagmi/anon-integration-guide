@@ -15,7 +15,7 @@ interface Props {
   	account: Address;
   	token: Address | string;
 	amount: string;
-  	slippage?: bigint;
+  	slippage: number | null;
 }
 
 /**
@@ -25,7 +25,7 @@ interface Props {
  * @returns Tokens acquired.
  */
 export async function buyToken(
-    { chainName, account, token, amount, slippage = 5n} : Props,
+    { chainName, account, token, amount, slippage } : Props,
     { sendTransactions, notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
     // Check wallet connection
@@ -70,7 +70,11 @@ export async function buyToken(
 
 
 	// Validate slippage
-	if (slippage > 30) return toResult('Slippage too high', true);
+	if (!slippage) {
+		slippage = 5; //default value
+	} else if (!Number.isInteger(slippage) || slippage < 0 || slippage > 50) {
+		return toResult('Slippage must be in the range of 0 to 50%', true);
+	}
 
 	await notify('Fetching the price...');
 
@@ -88,7 +92,7 @@ export async function buyToken(
         args: [token, amountInWei],
     }) as bigint;
 
-	const getMinAmountToReceive = getAmountToReceive * (100n - slippage) / 100n;
+	const getMinAmountToReceive = getAmountToReceive * (100n - BigInt(slippage)) / 100n;
 
 	await notify('Initializing buy...');
 

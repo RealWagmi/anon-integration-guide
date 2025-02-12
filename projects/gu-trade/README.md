@@ -26,15 +26,33 @@ Key functions of Gu Trade:
 ## Common Tasks
 
 1. Basic Operations
-   - "Launch a token called "HeyAnon" with ticker $ANON, leave description blank and use "https://someurl.com" for the image"
-   - "Buy $ANON token for 0.5 ETH"
-   - "Sell all the 0x3a906dcFdC8353B1bBde6a5ce7F79f02D589d3A1 tokens"
+   - deployToken
+      - "Launch a token called "HeyAnon" with ticker ANON, leave description blank and use "https://someurl.com" for the image with @gu"
+      - "Deploy a meme called "Ether" with parameters: ETH, "Vitalik help", "https://someurl.com" with @gu"
+   - buyToken
+      - "Buy ANON token for 0.5 ETH on @gu"
+      - "Buy ETH for all available ETH with 10% slippage on @gu"
+   - sellToken
+      - "Sell all the 0x3a906dcFdC8353B1bBde6a5ce7F79f02D589d3A1 tokens on @gu"
+      - "Sell half of ETH on @gu"
 
 2. Information Queries
-   - "Show me the last token created on Gu Trade"
-   - "Check the price of $ANON on Gu Trade. Now check it in USD"
-   - "Get the market cap of $ORLY in USD"
-   - "What's the token address for $GU?"
+   - getTokenAddress
+      - "Show the token address for GU on @gu"
+      - "Get the token address of ANON on @gu"
+   - getTokenPrice
+      - "Check the price of ANON on @gu"
+      - "Show the ANON price on @gu"
+   - getTokenMarketCap
+      - "Get the market cap of ORLY on @gu"
+      - "Fetch ORLY the market cap on @gu"
+   - getTokenPriceInUsd
+      - "Check the price of ANON in USD on @gu"
+      - "Show the ANON price in dollars on @gu"
+   - getTokenMarketCapInUsd
+      - "Get the market cap of ORLY in USD on @gu"
+      - "Fetch ORLY the market cap in dollars on @gu"
+   
 
 ## Addressing Pain Points
 

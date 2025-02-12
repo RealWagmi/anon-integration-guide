@@ -6,6 +6,34 @@ interface TokenData {
     name: string;
     symbol: string;
     createdTimestamp: number;
+    creator: string;
+    factory: string;
+    lp: string;
+    description: string;
+    image: string;
+    initialSupply: string;
+    maxSupply: string;
+    initialETHReserves: string;
+    initialPrice: string;
+    initialMarketCap: string;
+    targetETH: string;
+    id: string;
+    totalSupply: string;
+    isLPd: boolean;
+    curveAllocation: string;
+    events: {
+        id: string;
+        user: string;
+        token: string;
+        amount: string;
+        totalSupply: string;
+        amountOut: string;
+        marketCap: string;
+        price: string;
+        reserveBalance: string;
+        timestamp: number;
+        event: string;
+    }[];
 }
 
 interface ApiResponse {
@@ -13,7 +41,7 @@ interface ApiResponse {
 }
 
 interface Props {
-    input: string;
+    symbol: string;
 }
 
 /**
@@ -21,32 +49,30 @@ interface Props {
  * @param props - The search parameters. 
  * @returns Token address.
  */
-export async function getTokenAddress({ input }: Props ): Promise<FunctionReturn> {
-    if (!input || input.trim().length === 0) {
-        return toResult('Provide a valid name or symbol.', true);
+export async function getTokenAddress({ symbol }: Props ): Promise<FunctionReturn> {
+    if (!symbol || symbol.trim().length === 0) {
+        return toResult('Provide a valid symbol.', true);
     }
 
-    // Check if symbol
-    const isSymbol = input.startsWith('$');
-    const searchInput = isSymbol ? input.slice(1).trim() : input.trim();
+    const searchInput = symbol.trim().toLowerCase();
 
-    const response = await axios.get<ApiResponse>('https://api.gu.exchange/historical');
+    const response = await axios.get('https://api.gu.exchange/historical', {
+        responseType: 'text',
+    });
+
+    const data: ApiResponse = JSON.parse(response.data);
 
     // In case API fails
-    if (!response.data.data || response.data.data.length === 0) {
-        return toResult(`API didn't respond`, true);
+    if (!data.data || data.data.length === 0) {
+        return toResult(`API didn't respond with valid data.`, true);
     }
 
-    let tokens = isSymbol
-        ? response.data.data.filter((tokenData) => tokenData.symbol.toLowerCase() === searchInput.toLowerCase())
-        : response.data.data.filter((tokenData) => tokenData.name.toLowerCase() === searchInput.toLowerCase());
-
-    if (tokens.length === 0 && !isSymbol) {
-        tokens = response.data.data.filter((tokenData) => tokenData.symbol.toLowerCase() === searchInput.toLowerCase());
-    }
+    const tokens = data.data.filter((tokenData) => 
+        tokenData.symbol.toLowerCase() === searchInput
+    );
 
     if (tokens.length === 0) {
-        return toResult(`Couldn't find token address for "${input}". Try again.`, true);
+        return toResult(`Couldn't find token address for "${symbol}". Try again.`, true);
     }
 
     // Sort by timestamp and choose the oldest

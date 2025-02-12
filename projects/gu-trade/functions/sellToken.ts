@@ -15,7 +15,7 @@ interface Props {
   	account: Address;
   	token: Address | string;
 	amount: string;
-  	slippage?: bigint;
+  	slippage: number | null;
 }
 
 /**
@@ -25,7 +25,7 @@ interface Props {
  * @returns Amount of ETH received.
  */
 export async function sellToken(
-    { chainName, account, token, amount, slippage = 5n} : Props,
+    { chainName, account, token, amount, slippage } : Props,
     { sendTransactions, notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
     // Check wallet connection
@@ -72,7 +72,11 @@ export async function sellToken(
 	if (balance < amountWithDecimals) return toResult('Amount exeeds your balance', true);
 
 	// Validate slippage
-	if (slippage > 30) return toResult('Slippage too high', true);
+	if (!slippage) {
+		slippage = 5; //default value
+	} else if (!Number.isInteger(slippage) || slippage < 0 || slippage > 50) {
+		return toResult('Slippage must be in the range of 0 to 50%', true);
+	}
 
 	await notify('Fetching the price...');
 
@@ -90,9 +94,9 @@ export async function sellToken(
         args: [token, amountWithDecimals],
     }) as bigint;
 
-	const getMinAmountToReceive = getAmountToReceive * (100n - slippage) / 100n;
+	const getMinAmountToReceive = getAmountToReceive * (100n - BigInt(slippage)) / 100n;
 
-	await notify('Initializing buy...');
+	await notify('Initializing sell...');
 
 	const tx: TransactionParams = {
         target: bondingCurveAddress,
