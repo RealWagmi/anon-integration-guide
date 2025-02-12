@@ -47,14 +47,14 @@ function decodePath(path: string): [string[], number[]] {
 describe('encodePath', () => {
     it("should throw error if fees count doesn't match address count", () => {
         const tokens: Address[] = ['0x0000000000000000000000000000000000000001', '0x0000000000000000000000000000000000000002', '0x0000000000000000000000000000000000000003'];
-        const fees: FeeAmount[] = ['MEDIUM'];
+        const fees: FeeAmount[] = ['V3_MEDIUM'];
 
         expect(() => encodePath(tokens, fees)).toThrow();
     });
 
     it('should encode a path with fees', () => {
         const tokensIn: Address[] = ['0x0000000000000000000000000000000000000001', '0x0000000000000000000000000000000000000002', '0x0000000000000000000000000000000000000003'];
-        const feesIn: FeeAmount[] = ['MEDIUM', 'HIGH'];
+        const feesIn: FeeAmount[] = ['V3_MEDIUM', 'V3_HIGH'];
 
         const path = encodePath(tokensIn, feesIn);
         console.log(path);

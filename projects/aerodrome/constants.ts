@@ -8,10 +8,12 @@ export const UNIVERSAL_ROUTER_ADDRESS = '0x6cb442acf35158d5eda88fe602221b67b400b
 
 export const FEE_SIZE = 3;
 
-export type FeeAmount = 'LOW' | 'MEDIUM' | 'HIGH';
-
 export const feeAmounts = {
-    LOW: 500,
-    MEDIUM: 3000,
-    HIGH: 10000,
+    V3_LOW: 500,
+    V3_MEDIUM: 3000,
+    V3_HIGH: 10000,
+    V2_VOLATILE: 4194304,
+    V2_STABLE: 2097152,
 } as const;
+
+export type FeeAmount = keyof typeof feeAmounts;
