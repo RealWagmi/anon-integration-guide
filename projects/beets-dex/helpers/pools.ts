@@ -1,3 +1,4 @@
+import { Address, Hex, mapPoolType, PoolStateWithUnderlyings, PoolTokenWithUnderlying } from '@balancer/sdk';
 import { GqlPoolAprItemType, GqlPoolBase, GqlPoolMinimal } from './beets/types';
 
 /**
@@ -118,6 +119,48 @@ export function poolContainsToken(pool: GqlPoolMinimal | GqlPoolBase, tokenAddre
         }
 
         return false;
+    });
+}
+
+/**
+ * Convert a GqlPoolMinimal object into a PoolStateWithUnderlyings object
+ * from the Balancer SDK.
+ */
+export async function fromGqlPoolMinimalToBalancerPoolStateWithUnderlyings(pool: GqlPoolMinimal): Promise<PoolStateWithUnderlyings> {
+    return {
+        id: pool.id as Hex,
+        address: pool.address as Address,
+        type: mapPoolType(pool.type),
+        protocolVersion: pool.protocolVersion as 1 | 2 | 3,
+        tokens: pool.poolTokens.map(
+            (token): PoolTokenWithUnderlying => ({
+                address: token.address as Address,
+                decimals: token.decimals,
+                index: token.index,
+                underlyingToken: token.underlyingToken
+                    ? {
+                          address: token.underlyingToken.address as Address,
+                          decimals: token.underlyingToken.decimals,
+                          index: token.index,
+                      }
+                    : null,
+            }),
+        ),
+    };
+}
+
+/**
+ * Return true if the given GqlPoolMinimal is a boosted pool with respect
+ * to the given underlying token address, false otherwise.
+ *
+ * A pool is boosted if the user wants to provide liquidity to a token
+ * that is the underlying token of the pool.  For example, if the pool
+ * is a Boosted Stable Rings pool, and the user wants to add USDC.e,
+ * then this will be true.
+ */
+export function isBoostedPoolToken(pool: GqlPoolMinimal, underlyingTokenAddress: string): boolean {
+    return pool.poolTokens.some((token) => {
+        return token.underlyingToken?.address.toLowerCase() === underlyingTokenAddress.toLowerCase();
     });
 }
 

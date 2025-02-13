@@ -1,25 +1,30 @@
-import { Address, erc20Abi, parseUnits, SignTypedDataParameters } from 'viem';
+import { Address, parseUnits } from 'viem';
 import { FunctionReturn, FunctionOptions, getChainFromName, toResult, checkToApprove, TransactionParams } from '@heyanon/sdk';
 import {
-    AddLiquidityInput,
     AddLiquidityKind,
     AddLiquidity,
     InputAmount,
-    AddLiquidityQueryOutput,
     Permit2Helper,
     AddLiquidityBuildCallInput,
-    PublicWalletClient,
-    PoolType,
     PERMIT2,
+    AddLiquidityBoostedV3,
+    AddLiquidityBoostedBuildCallInput,
+    AddLiquidityQueryOutput,
+    AddLiquidityBoostedQueryOutput,
+    AddLiquidityUnbalancedInput,
+    AddLiquidityBoostedUnbalancedInput,
 } from '@balancer/sdk';
 import { DEFAULT_SLIPPAGE_AS_PERCENTAGE, NATIVE_TOKEN_ADDRESS, supportedChains } from '../constants';
-import { validateSlippageAsPercentage, validateTokenPositiveDecimalAmount } from '../helpers/validation';
+import { validateSlippageAsPercentage, validateTokenPositiveDecimalAmount, validateTokenBalances, validateTokenPairInPool } from '../helpers/validation';
 import { toHumanReadableAmount, getBalancerTokenByAddress } from '../helpers/tokens';
-import { BalancerApi, AddLiquidityBuildCallOutput } from '@balancer/sdk';
+import { AddLiquidityBuildCallOutput } from '@balancer/sdk';
 import { Slippage } from '@balancer/sdk';
 import { anonChainNameToBalancerChainId, anonChainNameToGqlChain, getDefaultRpcUrl } from '../helpers/chains';
 import { BeetsClient } from '../helpers/beets/client';
 import { GqlChain } from '../helpers/beets/types';
+import { formatPoolType, fromGqlPoolMinimalToBalancerPoolStateWithUnderlyings, isBoostedPoolToken } from '../helpers/pools';
+import { getMockPublicWalletClient } from '../helpers/viem';
+import { dump } from '../helpers/debug';
 
 interface Props {
     chainName: string;
@@ -41,6 +46,7 @@ interface Props {
  * - make swap notify message multi-line like for add liquidity
  * - Once you implement boosted pools, decide whether to leave the implementation here (and rename the tool to
  *   addLiquidity) or move it to a new addLiquidityBoosted tool
+ * - Implement check on minimum amount that can be added to a boosted pool
  *
  * DONE:
  * - getPool GraphQL endpoint, so that we can show the name of the pool
@@ -78,89 +84,34 @@ export async function addLiquidityUnbalanced(
 
     // Get pool from Balancer API
     await options.notify(`Fetching data from liquidity pool...`);
-    const balancerClient = new BalancerApi('https://backend-v3.beets-ftm-node.com/', balancerChainId);
-    const poolState = await balancerClient.pools.fetchPoolState(poolId);
     const pool = await new BeetsClient().getPool(poolId, anonChainNameToGqlChain(chainName) as GqlChain);
     if (!pool) return toResult(`Could not find pool with ID ${poolId}`, true);
-    options.notify(`Pool: "${pool.name}" of type ${pool.type}/${poolState.type}`);
+    options.notify(`Pool: "${pool.name}" of type ${formatPoolType(pool.type)}`);
+    const poolState = await fromGqlPoolMinimalToBalancerPoolStateWithUnderlyings(pool);
 
-    // Verify tokens are in pool
-    try {
-        const poolTokens = await Promise.all(
-            pool.poolTokens.map(async (t, i) => {
-                const tokenInfo = await getBalancerTokenByAddress(chainName, t.address as Address);
-                if (!tokenInfo) throw new Error(`Could not find info on token ${i + 1} (${t.address})`);
-                return tokenInfo;
-            }),
-        );
-        const poolTokensAddresses = poolTokens.map((t) => t.address);
-        if (!poolTokensAddresses.includes(token0Address))
-            return toResult(`Token ${token0.symbol} is not among the pool's tokens: ${poolTokens.map((t) => t.symbol).join(', ')}`, true);
-        if (token1Address && !poolTokensAddresses.includes(token1Address))
-            return toResult(`Token ${token1?.symbol} is not among the pool's tokens: ${poolTokens.map((t) => t.symbol).join(', ')}`, true);
-    } catch (error) {
-        return toResult(`Error verifying tokens are in pool: ${error}`, true);
-    }
-
-    // Parse amounts to wei
-    const amount0InWei = parseUnits(token0Amount, token0.decimals);
-    const amount1InWei = token1Amount && token1 ? parseUnits(token1Amount, token1.decimals) : null;
+    // Validate that the tokens are in the pool
+    const [tokensValid, tokensError] = await validateTokenPairInPool(chainName, pool, token0Address, token1Address);
+    if (!tokensValid) return toResult(tokensError!, true);
 
     // Check balances
     const publicClient = options.getProvider(chainId);
-    let balance0: bigint;
-    if (token0Address === NATIVE_TOKEN_ADDRESS) {
-        balance0 = await publicClient.getBalance({ address: account });
-    } else {
-        balance0 = await publicClient.readContract({
-            address: token0Address,
-            abi: erc20Abi,
-            functionName: 'balanceOf',
-            args: [account],
-        });
-    }
-    if (balance0 < amount0InWei) {
-        return toResult(`Not enough tokens: you have ${toHumanReadableAmount(balance0, token0.decimals)} ${token0.symbol}, need ${token0Amount} ${token0.symbol}`);
-    }
+    const tokensToCheck = [{ address: token0Address, amount: token0Amount }];
+    if (token1Address && token1Amount) tokensToCheck.push({ address: token1Address, amount: token1Amount });
+    const [hasBalance, balanceError] = await validateTokenBalances(publicClient, account, tokensToCheck);
+    if (!hasBalance) return toResult(balanceError!, true);
 
-    if (token1Address && amount1InWei) {
-        let balance1: bigint;
-        if (token1Address === NATIVE_TOKEN_ADDRESS) {
-            balance1 = await publicClient.getBalance({ address: account });
-        } else {
-            balance1 = await publicClient.readContract({
-                address: token1Address,
-                abi: erc20Abi,
-                functionName: 'balanceOf',
-                args: [account],
-            });
-        }
-        if (balance1 < amount1InWei) {
-            return toResult(`Not enough tokens: you ${toHumanReadableAmount(balance1, token1!.decimals)} ${token1!.symbol}, you need ${token1Amount} ${token1!.symbol}`);
-        }
-    }
+    // Parse amounts to wei (now that we know the amounts are valid)
+    const amount0InWei = parseUnits(token0Amount, token0.decimals);
+    const amount1InWei = token1Amount && token1 ? parseUnits(token1Amount, token1.decimals) : null;
 
     // Prepare input amounts for SDK
-    const amountsIn: InputAmount[] = [
-        {
-            address: token0Address,
-            decimals: token0.decimals,
-            rawAmount: amount0InWei,
-        },
-    ];
-
-    if (token1Address && amount1InWei && token1) {
-        amountsIn.push({
-            address: token1Address,
-            decimals: token1.decimals,
-            rawAmount: amount1InWei,
-        });
-    }
+    const amountsIn: InputAmount[] = [{ address: token0Address, decimals: token0.decimals, rawAmount: amount0InWei }];
+    if (token1Address && amount1InWei && token1) amountsIn.push({ address: token1Address, decimals: token1.decimals, rawAmount: amount1InWei });
 
     // Construct the AddLiquidityInput
     const rpcUrl = getDefaultRpcUrl(publicClient);
     if (!rpcUrl) throw new Error(`Chain ${chainName} not supported by viem`);
-    const addLiquidityInput: AddLiquidityInput = {
+    const addLiquidityInput: AddLiquidityUnbalancedInput | AddLiquidityBoostedUnbalancedInput = {
         amountsIn,
         chainId,
         rpcUrl,
@@ -172,21 +123,34 @@ export async function addLiquidityUnbalanced(
     const transactions: TransactionParams[] = [];
     let addressToApprove: Address;
     let bptOut: bigint;
+    let queryOutput: AddLiquidityQueryOutput | AddLiquidityBoostedQueryOutput;
+    const wethIsEth = false; // TODO: add support for wethIsEth
 
-    if (poolState.type === PoolType.Boosted) {
-        // TODO: implement boosted pools
+    // Handle special case: the user wants to add liquidity to a boosted token.
+    // Tokens in a boosted pool have an underlying token, which is usually
+    // the token the user wants to add to the pool.  For example, the
+    // Boosted Stable Rings pool has BeefyUSDC.e as the actual token, while
+    // the underlying token is USDC.e.  To provide liquidity in the underlying
+    // we need a special flow.  For reference, see:
+    // https://github.com/balancer/b-sdk/blob/516070ac7b2b16127e8c78be20354874c52548bf/test/v3/addLiquidityBoosted/addLiquidityBoosted.integration.test.ts#L477-L505
+    if (isBoostedPoolToken(pool, token0Address) || (token1Address && isBoostedPoolToken(pool, token1Address))) {
+        options.notify(`Boosted pool token detected`);
+        addressToApprove = PERMIT2[balancerChainId];
+        const addLiquidityBoosted = new AddLiquidityBoostedV3();
+        dump(poolState);
+        queryOutput = await addLiquidityBoosted.query(addLiquidityInput, poolState);
+        const buildInput = { ...queryOutput, slippage, wethIsEth } as AddLiquidityBoostedBuildCallInput;
+        // Sign the permit2 approvals
+        const permit2 = await Permit2Helper.signAddLiquidityBoostedApproval({ ...buildInput, client: getMockPublicWalletClient(publicClient, options), owner: account });
+        // Build add-liquidity call, including permit2 approvals
+        buildOutput = addLiquidityBoosted.buildCallWithPermit2(buildInput, permit2);
         return toResult(`Boosted pools are not supported yet`, true);
     } else {
-        let queryOutput: AddLiquidityQueryOutput;
+        // Query addLiquidity to get expected BPT out
         const addLiquidity = new AddLiquidity();
-        try {
-            // Query addLiquidity to get expected BPT out
-            queryOutput = await addLiquidity.query(addLiquidityInput, poolState);
-        } catch (error) {
-            return toResult(`Error querying liquidity: ${error}`, true);
-        }
+        queryOutput = await addLiquidity.query(addLiquidityInput, poolState);
 
-        const buildInput = { ...queryOutput, slippage, chainId, wethIsEth: false } as AddLiquidityBuildCallInput;
+        const buildInput = { ...queryOutput, slippage, wethIsEth } as AddLiquidityBuildCallInput;
         // In v2 the sender/recipient can be set, in v3 it is always the msg.sender
         if (queryOutput.protocolVersion === 2) {
             buildOutput = addLiquidity.buildCall({
@@ -197,33 +161,14 @@ export async function addLiquidityUnbalanced(
             // The address to approve is the balancer vault
             addressToApprove = buildOutput.to;
         } else {
-            // The address to approve is permit2
             addressToApprove = PERMIT2[balancerChainId];
-
-            // Create a PublicWalletClient that is able to sign typed data
-            // using the SDK's signTypedDatas function
-            const publicWalletClient = publicClient.extend((client) => ({
-                signTypedData: async (typedData: SignTypedDataParameters) => {
-                    if (!options.signTypedDatas) {
-                        throw new Error('signTypedDatas not provided in options');
-                    }
-                    const signatures = await options.signTypedDatas([typedData]);
-                    return signatures[0];
-                },
-            })) as unknown as PublicWalletClient;
-
             // Sign the permit2 approvals
-            const permit2 = await Permit2Helper.signAddLiquidityApproval({
-                ...buildInput,
-                client: publicWalletClient,
-                owner: account,
-            });
-
+            const permit2 = await Permit2Helper.signAddLiquidityApproval({ ...buildInput, client: getMockPublicWalletClient(publicClient, options), owner: account });
             // Build add-liquidity call, including permit2 approvals
             buildOutput = addLiquidity.buildCallWithPermit2(buildInput, permit2);
         }
-        bptOut = queryOutput.bptOut.amount;
     }
+    bptOut = queryOutput.bptOut.amount;
 
     // Build approval transactions (if needed)
     if (token0Address !== NATIVE_TOKEN_ADDRESS) {

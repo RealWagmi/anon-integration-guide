@@ -1,3 +1,10 @@
+import { Address } from '@balancer/sdk';
+import { getBalancerTokenByAddress } from './tokens';
+import { GqlPoolMinimal, GqlPoolTokenDetail, GqlToken } from './beets/types';
+import { PublicClient, erc20Abi, parseUnits } from 'viem';
+import { NATIVE_TOKEN_ADDRESS } from '../constants';
+import { toHumanReadableAmount } from './tokens';
+
 /**
  * Validate an amount of tokens, in decimal form, expressed as a string.
  *
@@ -16,4 +23,81 @@ export function validateTokenPositiveDecimalAmount(amount: string): boolean {
 export function validateSlippageAsPercentage(slippage: string): boolean {
     const number = Number(slippage);
     return !isNaN(number) && number >= 0 && number <= 100;
+}
+
+/**
+ * Verifies if the provided token pair is present in the given Gql pool,
+ * accounting also for underlying tokens.
+ *
+ * Returns an array of [isValid: boolean, errorMessage: string | null]
+ */
+export async function validateTokenPairInPool(chainName: string, pool: GqlPoolMinimal, token0Address: Address, token1Address: Address | null): Promise<[boolean, string | null]> {
+    // Get addresses of pool tokens, including any underlying tokens
+    const poolTokens: (GqlPoolTokenDetail | GqlToken)[] = [];
+    for (const token of pool.poolTokens) {
+        poolTokens.push(token);
+        if (token.underlyingToken) {
+            poolTokens.push(token.underlyingToken);
+        }
+    }
+
+    if (!poolTokens.map((t) => t.address).includes(token0Address)) {
+        const token0Info = await getBalancerTokenByAddress(chainName, token0Address);
+        if (!token0Info) return [false, `Could not find info for token ${token0Address}`];
+        return [false, `Token ${token0Info?.symbol} is not among the pool's tokens (${poolTokens.map((t) => t.symbol).join(', ')})`];
+    }
+
+    if (token1Address && !poolTokens.map((t) => t.address).includes(token1Address)) {
+        const token1Info = await getBalancerTokenByAddress(chainName, token1Address);
+        if (!token1Info) return [false, `Could not find info for token ${token1Address}`];
+        return [false, `Token ${token1Info?.symbol} is not among the pool's tokens (${poolTokens.map((t) => t.symbol).join(', ')})`];
+    }
+
+    return [true, null];
+}
+
+/**
+ * Validates if an account has sufficient balance for the specified tokens and amounts.
+ * Returns [hasBalance, errorMessage, balances] where balances contains the human readable amounts
+ */
+export async function validateTokenBalances(
+    publicClient: PublicClient,
+    account: Address,
+    tokens: Array<{
+        address: Address;
+        amount: string;
+    }>,
+): Promise<[boolean, string | null, { [address: string]: string }]> {
+    const balances: { [address: string]: string } = {};
+
+    for (const token of tokens) {
+        // Get token info
+        const tokenInfo = await getBalancerTokenByAddress(publicClient.chain?.name ?? '', token.address);
+        if (!tokenInfo) {
+            return [false, `Could not find info for token ${token.address}`, {}];
+        }
+
+        const amountWei = parseUnits(token.amount, tokenInfo.decimals);
+
+        let balanceInWei: bigint;
+        if (token.address === NATIVE_TOKEN_ADDRESS) {
+            balanceInWei = await publicClient.getBalance({ address: account });
+        } else {
+            balanceInWei = await publicClient.readContract({
+                address: token.address,
+                abi: erc20Abi,
+                functionName: 'balanceOf',
+                args: [account],
+            });
+        }
+
+        // Store human readable balance
+        balances[token.address] = toHumanReadableAmount(balanceInWei, tokenInfo.decimals);
+
+        if (balanceInWei < amountWei) {
+            return [false, `Not enough ${tokenInfo.symbol}: you have ${balances[token.address]}, need ${token.amount}`, balances];
+        }
+    }
+
+    return [true, null, balances];
 }
