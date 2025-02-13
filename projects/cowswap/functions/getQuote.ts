@@ -21,6 +21,9 @@ export async function getQuote({ chainName, account, sellToken, buyToken, amount
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Protocol is not supported on ${chainName}`, true);
 
+    // When buyToken is the same as sellToken the buyAmount and sellAmount should be the same.
+    if (sellToken == buyToken) return toResult(JSON.stringify({ buyAmount: amount, sellAmount: amount }));
+
     const provider = getProvider(chainId);
 
     const sellTokenInfo = await getTokenInfo(sellToken, provider);
