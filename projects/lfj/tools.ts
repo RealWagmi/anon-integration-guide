@@ -5,7 +5,7 @@ export const tools: AiTool[] = [
     {
         name: 'swapTokens',
         description: 'Swap tokens using lfj.gg',
-        required: ['chainName', 'account', 'amount', 'inputTokenAddress', 'outputTokenAddress'],
+        required: ['chainName', 'account', 'amount', 'inputTokenAddress', 'outputTokenAddress', 'isExactIn', 'recipient', 'slippageTolerance'],
         props: [
             {
                 name: 'isExactIn',
@@ -17,7 +17,7 @@ export const tools: AiTool[] = [
                 name: 'chainName',
                 type: 'string',
                 enum: supportedChains.map(getChainName),
-                description: 'Chain name where to execute the example',
+                description: 'Chain name where to execute the swap',
             },
             {
                 name: 'account',
@@ -31,14 +31,14 @@ export const tools: AiTool[] = [
             },
             {
                 name: 'recipient',
-                type: 'string',
-                description: 'An optional field to specify where the output token is received. This defaults to `account` if not specified.',
+                type: ['string', 'null'],
+                description: 'An optional field to specify where the output token is received. This defaults to `account` set to null.',
             },
             {
-                name: 'maxSlippageInPercentage',
-                type: 'string',
+                name: 'slippageTolerance',
+                type: ['string', 'null'],
                 description:
-                    'An optional field to specify the maximum allowed slippage in swapping the tokens. If not provided this defaults to 0.5. This value should be in percentage (e.g. 0.5 for 0.5%)',
+                    'An optional field to specify the maximum allowed slippage in percentage for swapping the tokens. If set to null this defaults to 0.5. This value should be in percentage (e.g. 0.5 for 0.5%)',
             },
             {
                 name: 'inputTokenAddress',
@@ -49,6 +49,93 @@ export const tools: AiTool[] = [
                 name: 'outputTokenAddress',
                 type: 'string',
                 description: 'An ERC20 address of the token that the user will receive after the swap.',
+            },
+        ],
+    },
+    {
+        name: 'addLiquidity',
+        description: 'Add liquidity to a pair.',
+        required: ['account', 'chainName', 'tokenX', 'tokenY', 'tokenXAmount', 'tokenYAmount', 'distribution', 'binStep', 'allowedSlippageInPercentage'],
+        props: [
+            {
+                name: 'account',
+                type: 'string',
+                description: 'The wallet address of the user providing liquidity.',
+            },
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'The name of the chain where liquidity is being added.',
+            },
+            {
+                name: 'tokenX',
+                type: 'string',
+                description: 'The ERC20 token address of the first asset in the liquidity pair.',
+            },
+            {
+                name: 'tokenY',
+                type: 'string',
+                description: 'The ERC20 token address of the second asset in the liquidity pair.',
+            },
+            {
+                name: 'tokenXAmount',
+                type: 'string',
+                description: 'The amount of `tokenX` in decimal format that the user is adding to liquidity.',
+            },
+            {
+                name: 'tokenYAmount',
+                type: 'string',
+                description: 'The amount of `tokenY` in decimal format that the user is adding to liquidity.',
+            },
+            {
+                name: 'distribution',
+                type: 'string',
+                enum: ['spot', 'curve', 'bidask'],
+                description: 'The distribution type for liquidity: `spot`, `curve`, or `bidask`.',
+            },
+            {
+                name: 'binStep',
+                type: 'number',
+                description: 'Defines the bin step, determining the price increment between bins.',
+            },
+            {
+                name: 'allowedSlippageInPercentage',
+                type: 'string',
+                description: 'The maximum allowed slippage percentage for the liquidity addition (e.g., "0.5" for 0.5%).',
+            },
+        ],
+    },
+    {
+        name: 'removeLiquidity',
+        description: 'Remove liquidity from a liquidity pair.',
+        required: ['chainName', 'tokenX', 'tokenY', 'account', 'binStep'],
+        props: [
+            {
+                name: 'account',
+                type: 'string',
+                description: 'The wallet address of the user removing liquidity.',
+            },
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'The name of the blockchain where liquidity is being removed.',
+            },
+            {
+                name: 'tokenX',
+                type: 'string',
+                description: 'The ERC20 token address of the first asset in the liquidity pair.',
+            },
+            {
+                name: 'tokenY',
+                type: 'string',
+                description: 'The ERC20 token address of the second asset in the liquidity pair.',
+            },
+            {
+                name: 'binStep',
+                type: 'number',
+                description: 'Defines the bin step, determining the price increment between bins.',
             },
         ],
     },

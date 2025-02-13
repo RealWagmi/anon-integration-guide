@@ -12,16 +12,19 @@ interface Props {
     amount: string;
     inputTokenAddress: Address;
     outputTokenAddress: Address;
+    isExactIn: boolean;
 
-    isExactIn?: boolean;
-    recipient?: Address;
-    maxSlippageInPercentage?: string;
+    recipient: Address | null;
+    slippageTolerance: string | null;
 }
 
 export async function swapTokens(
-    { chainName, account, amount, inputTokenAddress, outputTokenAddress, isExactIn = true, maxSlippageInPercentage = '0.5', recipient = account }: Props,
+    { chainName, account, amount, inputTokenAddress, outputTokenAddress, isExactIn, slippageTolerance, recipient = account }: Props,
     { sendTransactions, notify, getProvider }: FunctionOptions,
 ): Promise<FunctionReturn> {
+    if (!recipient) recipient = account;
+    if (!slippageTolerance) slippageTolerance = '0.5';
+
     // Check wallet connection
     if (!account) return toResult('Wallet not connected', true);
 
@@ -32,7 +35,7 @@ export async function swapTokens(
 
     if (inputTokenAddress == outputTokenAddress) return toResult('`inputTokenAddress` cannot be the same as `outputTokenAddress`', true);
 
-    // Make sure that `buyTokenAddress` and `sellTokenAddress` is a valid ERC20 token
+    // Make sure that `inputTokenAddress` and `inputTokenAddress` is a valid ERC20 token
     const provider = getProvider(chainId);
     const inputToken = await getTokenInfo(chainId as number, provider, inputTokenAddress);
     const outputToken = await getTokenInfo(chainId as number, provider, outputTokenAddress);
@@ -58,14 +61,11 @@ export async function swapTokens(
     const trades = await TradeV2.getTradesExactIn(allRoutes, amountIn, outputToken, isNativeIn, isNativeOut, provider, chainId as number);
 
     const bestTrade = TradeV2.chooseBestTrade(trades as TradeV2[], isExactIn);
-    if (!bestTrade) {
-        return toResult('Cannot find a valid route', true);
-    }
+    if (!bestTrade) return toResult('Cannot find a valid route', true);
 
-    const maxSlippageInDecimal = (parseInt(maxSlippageInPercentage) * 100).toString();
-    const userSlippageTolerance = new Percent(maxSlippageInDecimal, '10000');
+    const slippageInDecimal = parseUnits(slippageTolerance, 2).toString();
     const swapOptions: TradeOptions = {
-        allowedSlippage: userSlippageTolerance,
+        allowedSlippage: new Percent(slippageInDecimal, '10000'),
         ttl: 3600,
         recipient,
         feeOnTransfer: false,
