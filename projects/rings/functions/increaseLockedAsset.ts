@@ -50,14 +50,15 @@ export async function increaseLockedAsset(
 		return toResult(`Unsupported asset: ${asset}`, true);
 	}
 	
-	const stakedAsset = (baseAsset === 'ETH' ? TOKEN.ETH.STKSCETH.address : TOKEN.USD.STKSCUSD.address) as Address;
+	const stakedAsset = baseAsset === 'ETH' ? TOKEN.ETH.STKSCETH : TOKEN.USD.STKSCUSD;
 
 	// Validate amount
     const provider = getProvider(chainId);
-    const amountWithDecimals = parseUnits(amount, 18);
+	const decimals = TOKEN[baseAsset][stakedAsset].decimals;
+    const amountWithDecimals = parseUnits(amount, decimals);
     if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);
     const balance = await provider.readContract({
-        address: stakedAsset,
+        address: stakedAsset.address as Address,
         abi: erc20Abi,
         functionName: 'balanceOf',
         args: [account],
@@ -68,14 +69,14 @@ export async function increaseLockedAsset(
 
 	const transactions: TransactionParams[] = [];
 
-	const voteAsset = (baseAsset === 'ETH' ? TOKEN.ETH.VEETH.address : TOKEN.USD.VEUSD.address) as Address;
+	const voteAsset = baseAsset === 'ETH' ? TOKEN.ETH.VEETH : TOKEN.USD.VEUSD;
 
     // Approve the asset beforehand
     await checkToApprove({
         args: {
             account,
-            target: stakedAsset,
-            spender: voteAsset,
+            target: stakedAsset.address as Address,
+            spender: voteAsset.address as Address,
             amount: amountWithDecimals
         },
         transactions,
@@ -84,7 +85,7 @@ export async function increaseLockedAsset(
     
 	// Prepare lock transaction
     const tokenId = await provider.readContract({
-        address: voteAsset,
+        address: voteAsset.address as Address,
         abi: veAbi,
         functionName: 'tokenOfOwnerByIndex',
         args: [account, 0],
@@ -92,7 +93,7 @@ export async function increaseLockedAsset(
     if (tokenId === 0) return toResult(`No locked stksc${baseAsset}`, true);
 
 	const tx: TransactionParams = {
-			target: voteAsset,
+			target: voteAsset.address as Address,
 			data: encodeFunctionData({
 					abi: veAbi,
 					functionName: 'increase_amount',

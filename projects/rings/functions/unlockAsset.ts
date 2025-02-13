@@ -53,12 +53,12 @@ export async function unlockAsset(
 
     await notify(`Unlocking stksc${baseAsset}...`);
 
-	const voteAsset = tokenConfig.address;
+	const voteAssetAddress = tokenConfig.address;
     
 	// Prepare unlock transaction
     const provider = getProvider(chainId);
     const tokenId = await provider.readContract({
-        address: voteAsset,
+        address: voteAssetAddress,
         abi: veAbi,
         functionName: 'tokenOfOwnerByIndex',
         args: [account, 0],
@@ -66,7 +66,7 @@ export async function unlockAsset(
     if (tokenId === 0) return toResult(`No locked stksc${baseAsset}`, true);
 
 	const tx: TransactionParams = {
-			target: voteAsset,
+			target: voteAssetAddress,
 			data: encodeFunctionData({
 					abi: veAbi,
 					functionName: 'withdraw',

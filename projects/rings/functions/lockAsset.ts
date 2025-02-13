@@ -51,14 +51,15 @@ export async function lockAsset(
 		return toResult(`Unsupported asset: ${asset}`, true);
 	}
 
-	const stakedAsset = (baseAsset === 'ETH' ? TOKEN.ETH.STKSCETH.address : TOKEN.USD.STKSCUSD.address) as Address;
+	const stakedAsset = baseAsset === 'ETH' ? TOKEN.ETH.STKSCETH : TOKEN.USD.STKSCUSD;
 
     // Validate amount
     const provider = getProvider(chainId);
-    const amountWithDecimals = parseUnits(amount, 18);
+	const decimals = TOKEN[baseAsset][stakedAsset].decimals;
+    const amountWithDecimals = parseUnits(amount, decimals);
     if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);
     const balance = await provider.readContract({
-        address: stakedAsset,
+        address: stakedAsset.address as Address,
         abi: erc20Abi,
         functionName: 'balanceOf',
         args: [account],
@@ -72,14 +73,14 @@ export async function lockAsset(
 
     const transactions: TransactionParams[] = [];
 
-	const voteAsset = (baseAsset === 'ETH' ? TOKEN.ETH.VEETH.address : TOKEN.USD.VEUSD.address) as Address;
+	const voteAsset = baseAsset === 'ETH' ? TOKEN.ETH.VEETH : TOKEN.USD.VEUSD;
 
     // Approve the asset beforehand
     await checkToApprove({
         args: {
             account,
-            target: stakedAsset,
-            spender: voteAsset,
+            target: stakedAsset.address as Address,
+            spender: voteAsset.address as Address,
             amount: amountWithDecimals
         },
         transactions,
@@ -89,7 +90,7 @@ export async function lockAsset(
 	// Prepare lock transaction
 	const lockDuration = weeks * 7 * 24 * 60 * 60;
 	const tx: TransactionParams = {
-			target: voteAsset,
+			target: voteAsset.address as Address,
 			data: encodeFunctionData({
 					abi: veAbi,
 					functionName: 'create_lock',

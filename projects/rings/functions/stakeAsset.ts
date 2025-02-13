@@ -53,19 +53,15 @@ export async function stakeAsset(
 		return toResult(`Unsupported asset: ${asset}`, true);
 	}
 
-	const lpAsset = tokenConfig.address;
+	const lpAssetAddress = tokenConfig.address;
 
     // Validate amount
     const provider = getProvider(chainId);
-	const decimals = await provider.readContract({
-        address: lpAsset,
-        abi: erc20Abi,
-        functionName: 'decimals',
-    });
+	const decimals = tokenConfig.decimals;
     const amountWithDecimals = parseUnits(amount, decimals);
     if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);
     const balance = await provider.readContract({
-        address: lpAsset,
+        address: lpAssetAddress,
         abi: erc20Abi,
         functionName: 'balanceOf',
         args: [account],
@@ -83,7 +79,7 @@ export async function stakeAsset(
     await checkToApprove({
         args: {
             account,
-            target: lpAsset,
+            target: lpAssetAddress,
             spender: withdrawAddress,
             amount: amountWithDecimals
         },
@@ -97,7 +93,7 @@ export async function stakeAsset(
 			data: encodeFunctionData({
 					abi: stkscTellerAbi,
 					functionName: 'deposit',
-					args: [lpAsset, amountWithDecimals, 0],
+					args: [lpAssetAddress, amountWithDecimals, 0],
 			}),
 	};
 	transactions.push(tx);

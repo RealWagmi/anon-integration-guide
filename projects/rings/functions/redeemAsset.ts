@@ -50,14 +50,15 @@ export async function redeemAsset(
 		return toResult(`Unsupported asset: ${asset}`, true);
 	}
 
-	const lpAsset = (baseAsset === 'ETH' ? TOKEN.ETH.SCETH.address : TOKEN.USD.SCUSD.address) as Address;
+	const lpAsset = baseAsset === 'ETH' ? TOKEN.ETH.SCETH : TOKEN.USD.SCUSD;
 
     // Validate amount
     const provider = getProvider(chainId);
-    const amountWithDecimals = parseUnits(amount, 18);
+	const decimals = TOKEN[baseAsset][lpAsset].decimals;
+    const amountWithDecimals = parseUnits(amount, decimals);
     if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);
     const balance = await provider.readContract({
-        address: lpAsset,
+        address: lpAsset.address as Address,
         abi: erc20Abi,
         functionName: 'balanceOf',
         args: [account],
@@ -75,7 +76,7 @@ export async function redeemAsset(
     await checkToApprove({
         args: {
             account,
-            target: lpAsset,
+            target: lpAsset.address as Address,
             spender: withdrawAddress,
             amount: amountWithDecimals
         },

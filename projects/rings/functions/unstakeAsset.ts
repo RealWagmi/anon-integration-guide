@@ -53,14 +53,15 @@ export async function unstakeAsset(
 		return toResult(`Unsupported asset: ${asset}`, true);
 	}
 
-	const stakedAsset = tokenConfig.address;
+	const stakedAssetAddress = tokenConfig.address;
 
     // Validate amount
     const provider = getProvider(chainId);
-    const amountWithDecimals = parseUnits(amount, 18);
+	const decimals = tokenConfig.decimals;
+    const amountWithDecimals = parseUnits(amount, decimals);
     if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);
     const balance = await provider.readContract({
-        address: stakedAsset,
+        address: stakedAssetAddress,
         abi: erc20Abi,
         functionName: 'balanceOf',
         args: [account],
@@ -72,13 +73,13 @@ export async function unstakeAsset(
     const transactions: TransactionParams[] = [];
 
 	const withdrawAddress = tokenConfig.withdraw;
-	const lpAsset = (baseAsset === 'ETH' ? TOKEN.ETH.SCETH.address : TOKEN.USD.SCUSD.address) as Address;
+	const lpAssetAddress = (baseAsset === 'ETH' ? TOKEN.ETH.SCETH.address : TOKEN.USD.SCUSD.address) as Address;
 
     // Approve the asset beforehand
     await checkToApprove({
         args: {
             account,
-            target: stakedAsset,
+            target: stakedAssetAddress,
             spender: withdrawAddress,
             amount: amountWithDecimals
         },
@@ -94,7 +95,7 @@ export async function unstakeAsset(
 			data: encodeFunctionData({
 					abi: stkscWithdrawQueueAbi,
 					functionName: 'requestOnChainWithdraw',
-					args: [lpAsset, amountWithDecimals, discount, secondsToDeadline],
+					args: [lpAssetAddress, amountWithDecimals, discount, secondsToDeadline],
 			}),
 	};
 	transactions.push(tx);

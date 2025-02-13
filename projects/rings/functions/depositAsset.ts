@@ -61,11 +61,12 @@ export async function depositAsset(
     // Validate amount and wrap ETH
     const provider = getProvider(chainId);
 	let amountWithDecimals;
+	const decimals = tokenConfig.decimals;
 	if (assetUpper === 'ETH') {
 		const ethBalance = await provider.getBalance({
 			address: account
 		});
-        amountWithDecimals = parseUnits(amount, 18);
+        amountWithDecimals = parseUnits(amount, decimals);
         
         if (ethBalance < amountWithDecimals) {
             return toResult('Amount exceeds your ETH balance', true);
@@ -81,11 +82,6 @@ export async function depositAsset(
 	    };
 		transactions.push(wrapTx);
 	} else {
-		const decimals = await provider.readContract({
-			address: assetAddress,
-			abi: erc20Abi,
-			functionName: 'decimals',
-		});
 		amountWithDecimals = parseUnits(amount, decimals);
 		if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);
 
