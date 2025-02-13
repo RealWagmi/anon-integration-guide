@@ -24,7 +24,7 @@ import { BeetsClient } from '../helpers/beets/client';
 import { GqlChain } from '../helpers/beets/types';
 import { formatPoolType, fromGqlPoolMinimalToBalancerPoolStateWithUnderlyings, isBoostedPoolToken } from '../helpers/pools';
 import { getMockPublicWalletClient } from '../helpers/viem';
-import { dump } from '../helpers/debug';
+import { dump, dumpWithLabel } from '../helpers/debug';
 
 interface Props {
     chainName: string;
@@ -62,10 +62,10 @@ export async function addLiquidityUnbalanced(
     if (token0Address === token1Address) return toResult(`Tokens cannot have the same address`, true);
 
     // Validate amounts
-    if (!validateTokenPositiveDecimalAmount(token0Amount)) return toResult(`Invalid amount for token 0: ${token0Amount}`, true);
-    if (token1Amount !== null && !validateTokenPositiveDecimalAmount(token1Amount)) return toResult(`Invalid amount for token 1: ${token1Amount}`, true);
-    if (token1Address && !token1Amount) return toResult(`Token 1 address provided but no amount`, true);
-    if (!token1Address && token1Amount) return toResult(`Token 1 amount provided but no address`, true);
+    if (!validateTokenPositiveDecimalAmount(token0Amount)) return toResult(`Invalid amount for token #0: ${token0Amount}`, true);
+    if (token1Amount !== null && !validateTokenPositiveDecimalAmount(token1Amount)) return toResult(`Invalid amount for token #1: ${token1Amount}`, true);
+    if (token1Address && !token1Amount) return toResult(`Token #1 address provided but no amount`, true);
+    if (!token1Address && token1Amount) return toResult(`Token #1 amount provided but no address`, true);
 
     // Parse and validate slippage
     slippageAsPercentage = slippageAsPercentage ?? `${DEFAULT_SLIPPAGE_AS_PERCENTAGE}`;
@@ -107,6 +107,7 @@ export async function addLiquidityUnbalanced(
     // Prepare input amounts for SDK
     const amountsIn: InputAmount[] = [{ address: token0Address, decimals: token0.decimals, rawAmount: amount0InWei }];
     if (token1Address && amount1InWei && token1) amountsIn.push({ address: token1Address, decimals: token1.decimals, rawAmount: amount1InWei });
+    amountsIn.sort((a, b) => (a.address.toLowerCase() < b.address.toLowerCase() ? -1 : 1));
 
     // Construct the AddLiquidityInput
     const rpcUrl = getDefaultRpcUrl(publicClient);
@@ -137,8 +138,10 @@ export async function addLiquidityUnbalanced(
         options.notify(`Boosted pool token detected`);
         addressToApprove = PERMIT2[balancerChainId];
         const addLiquidityBoosted = new AddLiquidityBoostedV3();
-        dump(poolState);
+        // dumpWithLabel('addLiquidityInput', addLiquidityInput);
+        // dumpWithLabel('poolState', poolState);
         queryOutput = await addLiquidityBoosted.query(addLiquidityInput, poolState);
+        // dumpWithLabel('queryOutput', queryOutput);
         const buildInput = { ...queryOutput, slippage, wethIsEth } as AddLiquidityBoostedBuildCallInput;
         // Sign the permit2 approvals
         const permit2 = await Permit2Helper.signAddLiquidityBoostedApproval({ ...buildInput, client: getMockPublicWalletClient(publicClient, options), owner: account });

@@ -7,10 +7,10 @@
   resolved "https://registry.yarnpkg.com/@adraffy/ens-normalize/-/ens-normalize-1.11.0.tgz#42cc67c5baa407ac25059fcd7d405cc5ecdb0c33"
   integrity sha512-/3DDPKHqqIqxUULp8yP4zODUY1i+2xvVWsv8A79xGWdCAG+8sb0hRh0Rk2QyOJUnnbyPUAZYcpBuRe3nS2OIUg==
 
-"@balancer/sdk@^2.1.0":
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/@balancer/sdk/-/sdk-2.1.0.tgz#b13e4a5aa0292e4ac91f6f2de06b673fc1bf15b5"
-  integrity sha512-VywHD3W1yzP4k2j/PpYvRlQgDm5vfoXXXKAPLcDGcaVDdR0Dn8y+BHSrFPEdcA2O00Gs07Dk4HO9hvizDwNozg==
+"@balancer/sdk@^2.1.2":
+  version "2.1.2"
+  resolved "https://registry.yarnpkg.com/@balancer/sdk/-/sdk-2.1.2.tgz#490900c5ac09d4c171fe8ce4e17f2fdf5a9c5553"
+  integrity sha512-zDEFO0iDMbOUrtWICudsRb9h5tbkK0kco9bBwo/rq8Z5GsmPjfIP7acjCoacNezCM0fIghJ2Sb97JF66rDHgTw==
   dependencies:
     decimal.js-light "^2.5.1"
     lodash.clonedeep "^4.5.0"

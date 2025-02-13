@@ -6,7 +6,7 @@
         "ask": "ts-node ask_beets/run.ts"
     },
     "dependencies": {
-        "@balancer/sdk": "^2.1.0",
+        "@balancer/sdk": "^2.1.2",
         "@heyanon/sdk": "^1.0.4",
         "axios": "^1.7.9",
         "chalk": "4"
