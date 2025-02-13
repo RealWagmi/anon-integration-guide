@@ -11,13 +11,13 @@ import {
     SwapAdvancedSettings,
     TradingSdk,
 } from '@cowprotocol/cow-sdk';
-import { getTokenInfo } from '../utils';
+import { getTokenInfo, slippageToleranceToBips } from '../utils';
 import { cowswapSettlementAbi } from '../abis/cowswap_settlement_abi';
 
 interface Props {
     chainName: string;
     account: Address;
-    slippageInPercentage?: string;
+    slippageTolerance: string | null;
 
     sellToken: Address;
     sellTokenPrice: string;
@@ -27,11 +27,12 @@ interface Props {
 }
 
 export async function postLimitSellOrder(
-    { chainName, account, sellToken, buyToken, buyTokenPrice, sellTokenPrice, sellTokenAmount, slippageInPercentage = '0.5' }: Props,
+    { chainName, account, sellToken, buyToken, buyTokenPrice, sellTokenPrice, sellTokenAmount, slippageTolerance }: Props,
     { signMessages, getProvider, sendTransactions, notify }: FunctionOptions,
 ): Promise<FunctionReturn> {
     // Check wallet connection
     if (!account) return toResult('Wallet not connected', true);
+    if (!slippageTolerance) slippageTolerance = '0.5';
 
     // Validate chain
     const chainId = getChainFromName(chainName);
@@ -46,7 +47,7 @@ export async function postLimitSellOrder(
     const buyTokenInfo = await getTokenInfo(buyToken, provider);
     if (!buyTokenInfo) return toResult('Invalid ERC20 for buyToken', true);
 
-    // We use VoidSigner since settle orders on chain by sending a transaction.
+    // We use VoidSigner since we settle orders on chain by sending a transaction.
     const signer = new VoidSigner(account);
     const sdk = new TradingSdk({
         chainId: chainId as number,
@@ -82,18 +83,22 @@ export async function postLimitSellOrder(
 
     await notify(`Processing limit sell order ...`);
 
+    const slippageToleranceToBipsResult = slippageToleranceToBips(slippageTolerance);
+    if (!slippageToleranceToBipsResult.success) {
+        return toResult(slippageToleranceToBipsResult.message, true);
+    }
+
     const parameters: LimitOrderParameters = {
         kind: OrderKind.SELL,
         sellToken,
-        slippageBps: parseFloat(slippageInPercentage) * 100,
+        slippageBps: slippageToleranceToBipsResult.result,
         sellTokenDecimals: sellTokenInfo.decimals,
         buyToken,
         buyTokenDecimals: buyTokenInfo.decimals,
         sellAmount: sellTokenAmountBN.toString(),
         buyAmount: buyTokenAmountBN.toString(),
         chainId: chainId as number,
-        // the signer isn't actually used because we're using presign to support multisig.
-        signer: new VoidSigner(account),
+        signer,
         appCode: 'HeyAnon',
     };
 
@@ -123,7 +128,7 @@ export async function postLimitSellOrder(
         `
 Successfully posted a limit order to swap ${sellTokenAmount} ${sellTokenInfo.symbol} to ${buyTokenInfo.symbol} when ${sellTokenInfo} is at minimum ${sellTokenPrice}. 
 OrderUid: ${orderUid}
-Slippage: ${slippageInPercentage}
+Slippage: ${slippageTolerance}
 `,
     );
 }
