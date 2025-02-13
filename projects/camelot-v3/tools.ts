@@ -4,8 +4,8 @@ import { AiTool, getChainName } from '@heyanon/sdk';
 export const tools: AiTool[] = [
     {
         name: 'exactInputSingle',
-        description: 'Swap exact amount of X tokens A for token B receiving at least Y tokens B and optionally send them to another recipient',
-        required: ['chainName', 'account', 'tokenIn', 'tokenOut', 'amountIn'],
+        description: 'Swap exact amount of X tokens IN for token OUT receiving at least Y tokens OUT with at most Z slippage tolerance. Optionally send them to another recipient',
+        required: ['chainName', 'account', 'tokenIn', 'tokenOut', 'amountIn', 'recipient', 'slippage'],
         props: [
             {
                 name: 'chainName',
@@ -40,15 +40,20 @@ export const tools: AiTool[] = [
             },
             {
                 name: 'recipient',
-                type: 'string',
+                type: ['string', 'null'],
                 description: 'Recipient address to receive the swapped token out',
+            },
+            {
+                name: 'slippage',
+                type: 'number',
+                description: 'Slippage tolerance in percentage. 10000 is 100%. Default is 0.2%, maximum 3%',
             },
         ],
     },
     {
         name: 'exactOutputSingle',
-        description: 'Swap token A for exact amount of X tokens B while spending at most Y tokens A and optionally send them to another recipient',
-        required: ['chainName', 'account', 'tokenIn', 'tokenOut', 'amountOut'],
+        description: 'Swap token IN for exact amount of X tokens OUT while spending at most Y tokens IN with at most Z slippage tolerance. Optionally send them to another recipient',
+        required: ['chainName', 'account', 'tokenIn', 'tokenOut', 'amountOut', 'amountInMax', 'recipient', 'slippage'],
         props: [
             {
                 name: 'chainName',
@@ -78,21 +83,26 @@ export const tools: AiTool[] = [
             },
             {
                 name: 'amountInMax',
-                type: 'string',
+                type: ['string', 'null'],
                 description: 'Maximum amount of token in to spend in decimal format',
             },
             {
                 name: 'recipient',
-                type: 'string',
+                type: ['string', 'null'],
                 description: 'Recipient address to receive the swapped token out',
+            },
+            {
+                name: 'slippage',
+                type: 'number',
+                description: 'Slippage tolerance in percentage. 10000 is 100%. Default is 0.2%, maximum 3%',
             },
         ],
     },
     {
         name: 'mint',
         description:
-            'Add liquidity to a pool using tokens A and B by specifying the amounts of each token to provide. Optionally, you can define the liquidity range, either as absolute prices or as percentages relative to the current price. You can also choose to send the position NFT to another recipient. In certain cases, this functionality can be leveraged to place a limit order at a specific price or within a defined price range.',
-        required: ['chainName', 'account', 'tokenA', 'tokenB', 'amountA', 'amountB'],
+            'Add liquidity to a pool using tokens A and B by specifying the amounts of each token to provide with at most Z slippage tolerance. Optionally, you can define the liquidity range, either as absolute prices or as percentages relative to the current price. You can also choose to send the position NFT to another recipient. In certain cases, this functionality can be leveraged to place a limit order at a specific price or within a defined price range.',
+        required: ['chainName', 'account', 'tokenA', 'tokenB', 'amountA', 'amountB', 'amountAMin', 'amountBMin', 'lowerPrice', 'upperPrice', 'lowerPricePercentage', 'upperPricePercentage', 'recipient', 'slippage'],
         props: [
             {
                 name: 'chainName',
@@ -127,45 +137,50 @@ export const tools: AiTool[] = [
             },
             {
                 name: 'amountAMin',
-                type: 'string',
+                type: ['string', 'null'],
                 description: 'Minimum amount of token A to add in decimal format',
             },
             {
                 name: 'amountBMin',
-                type: 'string',
+                type: ['string', 'null'],
                 description: 'Minimum amount of token B to add in decimal format',
             },
             {
                 name: 'lowerPrice',
-                type: 'string',
+                type: ['string', 'null'],
                 description: 'Lower price range for adding liquidity (provided as token1 / token0)',
             },
             {
                 name: 'upperPrice',
-                type: 'string',
+                type: ['string', 'null'],
                 description: 'Upper price range for adding liquidity  (provided as token1 / token0)',
             },
             {
                 name: 'lowerPricePercentage',
-                type: 'number',
-                description: 'Lower price percentage (from current pool price) for adding liquidity',
+                type: ['number', 'null'],
+                description: 'Lower price percentage (from current pool price) for adding liquidity. 10000 is 100%',
             },
             {
                 name: 'upperPricePercentage',
-                type: 'number',
-                description: 'Upper price percentage (from current pool price) for adding liquidity',
+                type: ['number', 'null'],
+                description: 'Upper price percentage (from current pool price) for adding liquidity. 10000 is 100%',
             },
             {
                 name: 'recipient',
-                type: 'string',
+                type: ['string', 'null'],
                 description: 'Recipient address to receive the position NFT',
+            },
+            {
+                name: 'slippage',
+                type: 'number',
+                description: 'Slippage tolerance in percentage. 10000 is 100%. Default is 0.2%',
             },
         ],
     },
     {
         name: 'collect',
         description: 'Collect fees from a liquidity position on Camelot V3. If you have multiple positions, ensure you specify the position ID to collect fees from the correct one. You can also optionally define the percentage of fees to collect or set a maximum amount to be collected.',
-        required: ['chainName', 'account', 'tokenA', 'tokenB'],
+        required: ['chainName', 'account', 'tokenA', 'tokenB', 'tokenId', 'collectPercentage', 'amountAMax', 'amountBMax', 'recipient'],
         props: [
             {
                 name: 'chainName',
@@ -190,27 +205,27 @@ export const tools: AiTool[] = [
             },
             {
                 name: 'tokenId',
-                type: 'number',
+                type: ['number', 'null'],
                 description: 'Specific position ID to collect fees from',
             },
             {
                 name: 'collectPercentage',
-                type: 'number',
-                description: 'Percentage of fees to collect',
+                type: ['number', 'null'],
+                description: 'Percentage of fees to collect. 10000 is 100%. Default is 100%',
             },
             {
                 name: 'amountAMax',
-                type: 'string',
+                type: ['string', 'null'],
                 description: 'Maximum amount of token A to collect in decimal format',
             },
             {
                 name: 'amountBMax',
-                type: 'string',
+                type: ['string', 'null'],
                 description: 'Maximum amount of token B to collect in decimal format',
             },
             {
                 name: 'recipient',
-                type: 'string',
+                type: ['string', 'null'],
                 description: 'Recipient address to receive the collected fees',
             },
         ],
@@ -218,7 +233,7 @@ export const tools: AiTool[] = [
     {
         name: 'decreaseLiquidity',
         description: 'Decrease the percentage of liquidity from a position on Camelot V3. If you have multiple positions, ensure you specify the position ID to decrease liquidity from the correct one. You can also optionally define the minimum amounts to receive.',
-        required: ['chainName', 'account', 'tokenA', 'tokenB', 'decreasePercentage'],
+        required: ['chainName', 'account', 'tokenA', 'tokenB', 'decreasePercentage', 'tokenId', 'amountAMin', 'amountBMin'],
         props: [
             {
                 name: 'chainName',
@@ -244,29 +259,29 @@ export const tools: AiTool[] = [
             {
                 name: 'decreasePercentage',
                 type: 'number',
-                description: 'Percentage of liquidity to remove',
+                description: 'Percentage of liquidity to remove. 10000 is 100%',
             },
             {
                 name: 'tokenId',
-                type: 'number',
+                type: ['number', 'null'],
                 description: 'Specific position ID to decrease liquidity from',
             },
             {
                 name: 'amountAMin',
-                type: 'string',
+                type: ['string', 'null'],
                 description: 'Minimum amount of token A to receive in decimal format',
             },
             {
                 name: 'amountBMin',
-                type: 'string',
+                type: ['string', 'null'],
                 description: 'Minimum amount of token B to receive in decimal format',
             },
         ],
     },
     {
         name: 'increaseLiquidity',
-        description: 'Increase liquidity in a position on Camelot V3. If you have multiple positions, ensure you specify the position ID to increase liquidity in the correct one. You can also optionally define the minimum amounts to provide.',
-        required: ['chainName', 'account', 'tokenA', 'tokenB', 'amountA', 'amountB'],
+        description: 'Increase liquidity in a position on Camelot V3 with at most Z slippage tolerance. If you have multiple positions, ensure you specify the position ID to increase liquidity in the correct one. You can also optionally define the minimum amounts to provide.',
+        required: ['chainName', 'account', 'tokenA', 'tokenB', 'amountA', 'amountB', 'tokenId', 'amountAMin', 'amountBMin', 'slippage'],
         props: [
             {
                 name: 'chainName',
@@ -301,25 +316,30 @@ export const tools: AiTool[] = [
             },
             {
                 name: 'tokenId',
-                type: 'number',
+                type: ['number', 'null'],
                 description: 'Specific position ID to increase liquidity for',
             },
             {
                 name: 'amountAMin',
-                type: 'string',
+                type: ['string', 'null'],
                 description: 'Minimum amount of token A to add in decimal format',
             },
             {
                 name: 'amountBMin',
-                type: 'string',
+                type: ['string', 'null'],
                 description: 'Minimum amount of token B to add in decimal format',
+            },
+            {
+                name: 'slippage',
+                type: 'number',
+                description: 'Slippage tolerance in percentage. 10000 is 100%. Default is 0.2%',
             },
         ],
     },
     {
         name: 'getLPPositions',
         description: 'Retrieve LP positions for a given account on Camelot V3. Optionally, filter by tokens.',
-        required: ['chainName', 'account'],
+        required: ['chainName', 'account', 'tokenA', 'tokenB'],
         props: [
             {
                 name: 'chainName',
@@ -334,12 +354,12 @@ export const tools: AiTool[] = [
             },
             {
                 name: 'tokenA',
-                type: 'string',
+                type: ['string', 'null'],
                 description: 'Optional token A address to filter LP positions',
             },
             {
                 name: 'tokenB',
-                type: 'string',
+                type: ['string', 'null'],
                 description: 'Optional token B address to filter LP positions',
             },
         ],
