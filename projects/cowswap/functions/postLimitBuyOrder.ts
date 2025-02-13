@@ -47,7 +47,7 @@ export async function postLimitBuyOrder(
     const buyTokenInfo = await getTokenInfo(buyToken, provider);
     if (!buyTokenInfo) return toResult('Invalid ERC20 for buyToken', true);
 
-    // We use VoidSigner since settle orders on chain by sending a transaction.
+    // We use VoidSigner since we settle orders on chain by sending a transaction.
     const signer = new VoidSigner(account);
     const sdk = new TradingSdk({
         chainId: chainId as number,
