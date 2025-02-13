@@ -87,7 +87,7 @@ export const tools: AiTool[] = [
     {
         name: 'postSwapOrder',
         description: 'Posts the swap order.',
-        required: ['chainName', 'account', 'amount', 'inputToken', 'outputToken'],
+        required: ['chainName', 'account', 'amount', 'inputToken', 'outputToken', 'receiver', 'slippageTolerance'],
         props: [
             {
                 name: 'chainName',
@@ -130,7 +130,7 @@ export const tools: AiTool[] = [
     {
         name: 'postLimitBuyOrder',
         description: 'Posts a limit buy order.',
-        required: ['chainName', 'account', 'sellToken', 'sellTokenPrice', 'buyTokenPrice', 'buyToken', 'buyTokenAmount'],
+        required: ['chainName', 'account', 'sellToken', 'sellTokenPrice', 'buyTokenPrice', 'buyToken', 'buyTokenAmount', 'slippageTolerance'],
         props: [
             {
                 name: 'chainName',
@@ -212,7 +212,7 @@ export const tools: AiTool[] = [
     {
         name: 'postLimitSellOrder',
         description: 'Posts a limit sell order.',
-        required: ['chainName', 'account', 'sellToken', 'sellTokenPrice', 'sellTokenAmount', 'buyTokenPrice', 'buyToken'],
+        required: ['chainName', 'account', 'sellToken', 'sellTokenPrice', 'sellTokenAmount', 'buyTokenPrice', 'buyToken', 'slippageTolerance'],
         props: [
             {
                 name: 'chainName',
