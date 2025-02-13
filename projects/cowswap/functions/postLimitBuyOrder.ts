@@ -11,13 +11,13 @@ import {
     SwapAdvancedSettings,
     TradingSdk,
 } from '@cowprotocol/cow-sdk';
-import { getTokenInfo } from '../utils';
+import { getTokenInfo, slippageToleranceToBips } from '../utils';
 import { cowswapSettlementAbi } from '../abis/cowswap_settlement_abi';
 
 interface Props {
     chainName: string;
     account: Address;
-    slippageInPercentage?: string;
+    slippageTolerance: string | null;
 
     sellToken: Address;
     sellTokenPrice: string;
@@ -27,11 +27,12 @@ interface Props {
 }
 
 export async function postLimitBuyOrder(
-    { chainName, account, sellToken, buyToken, buyTokenPrice, sellTokenPrice, buyTokenAmount, slippageInPercentage = '0.5' }: Props,
+    { chainName, account, sellToken, buyToken, buyTokenPrice, sellTokenPrice, buyTokenAmount, slippageTolerance }: Props,
     { signMessages, getProvider, sendTransactions, notify }: FunctionOptions,
 ): Promise<FunctionReturn> {
     // Check wallet connection
     if (!account) return toResult('Wallet not connected', true);
+    if (!slippageTolerance) slippageTolerance = '0.5';
 
     // Validate chain
     const chainId = getChainFromName(chainName);
@@ -84,9 +85,14 @@ export async function postLimitBuyOrder(
 
     await notify(`Processing limit buy order ...`);
 
+    const slippageToleranceToBipsResult = slippageToleranceToBips(slippageTolerance);
+    if (!slippageToleranceToBipsResult.success) {
+        return toResult(slippageToleranceToBipsResult.message, true);
+    }
+
     const parameters: LimitOrderParameters = {
         kind: OrderKind.BUY,
-        slippageBps: parseFloat(slippageInPercentage) * 100,
+        slippageBps: slippageToleranceToBipsResult.result,
         sellToken,
         sellTokenDecimals: sellTokenInfo.decimals,
         buyToken,
@@ -124,7 +130,7 @@ export async function postLimitBuyOrder(
         `
 Successfully posted a limit order to swap ${sellAmount} ${sellTokenInfo.symbol} to ${buyTokenInfo.symbol} when ${buyTokenInfo.symbol} is at minimum ${buyTokenPrice}. 
 OrderUid: ${orderUid}
-Slippage: ${slippageInPercentage}
+Slippage: ${slippageTolerance}
 `,
     );
 }

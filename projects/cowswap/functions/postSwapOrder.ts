@@ -14,25 +14,26 @@ import {
     SigningScheme,
 } from '@cowprotocol/cow-sdk';
 
-import { getTokenInfo } from '../utils';
+import { getTokenInfo, slippageToleranceToBips } from '../utils';
 
 interface Props {
     chainName: string;
     account: Address;
     amount: string;
-    receiver?: Address;
-    slippageInPercentage?: string;
+    receiver: Address | null;
+    slippageTolerance: string | null;
 
     inputToken: Address;
     outputToken: Address;
 }
 
 export async function postSwapOrder(
-    { chainName, account, amount, inputToken, outputToken, receiver = account, slippageInPercentage = '0.5' }: Props,
+    { chainName, account, amount, inputToken, outputToken, receiver = account, slippageTolerance }: Props,
     { notify, getProvider, sendTransactions }: FunctionOptions,
 ): Promise<FunctionReturn> {
     // Check wallet connection
     if (!account) return toResult('Wallet not connected', true);
+    if (!slippageTolerance) slippageTolerance = '0.5';
 
     // Validate chain
     const chainId = getChainFromName(chainName);
@@ -86,6 +87,11 @@ export async function postSwapOrder(
         appCode: 'HeyAnon',
     });
 
+    const slippageToleranceToBipsResult = slippageToleranceToBips(slippageTolerance);
+    if (!slippageToleranceToBipsResult.success) {
+        return toResult(slippageToleranceToBipsResult.message, true);
+    }
+
     const parameters: TradeParameters = {
         kind: OrderKind.SELL,
         sellToken: inputToken,
@@ -94,7 +100,7 @@ export async function postSwapOrder(
         buyTokenDecimals: outputTokenInfo.decimals,
         amount: amountParsed.toString(),
         receiver,
-        slippageBps: parseFloat(slippageInPercentage) * 100,
+        slippageBps: slippageToleranceToBipsResult.result,
     };
 
     const settings: SwapAdvancedSettings = {

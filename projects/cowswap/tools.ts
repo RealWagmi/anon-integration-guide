@@ -44,6 +44,24 @@ export const tools: AiTool[] = [
         ],
     },
     {
+        name: 'getQuote',
+        description: 'Get a quote for buying',
+        required: ['chainName', 'account'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name where to execute the this function.',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Account address that has the orders.',
+            },
+        ],
+    },
+    {
         name: 'getOrderCompletionStatus',
         description: 'Get the order status of the corresponding orderUids',
         required: ['chainName', 'account', 'orderUids'],
@@ -83,13 +101,13 @@ export const tools: AiTool[] = [
                 description: 'Account address that will execute the swap',
             },
             {
-                name: 'slippageInPercentage',
-                type: 'string',
+                name: 'slippageTolerance',
+                type: ['string', 'null'],
                 description: 'Maximum user slippage percentage when making the swap.',
             },
             {
                 name: 'amount',
-                type: 'string',
+                type: ['string', 'null'],
                 description: 'The amount of `inputToken` that will be used to buy `ouputToken`s',
             },
             {
@@ -126,8 +144,8 @@ export const tools: AiTool[] = [
                 description: 'Account address that will execute the swap',
             },
             {
-                name: 'slippageInPercentage',
-                type: 'string',
+                name: 'slippageTolerance',
+                type: ['string', 'null'],
                 description: 'Maximum user slippage percentage when making the swap.',
             },
             {
@@ -159,6 +177,39 @@ export const tools: AiTool[] = [
         ],
     },
     {
+        name: 'getQuote',
+        description: 'Retrieves the swap details. ',
+        required: ['chainName', 'account', 'amount', 'sellToken', 'buyToken'],
+        props: [
+            {
+                name: 'sellToken',
+                type: 'string',
+                description: 'The ERC-20 token address of the asset the user wants to sell.',
+            },
+            {
+                name: 'buyToken',
+                type: 'string',
+                description: 'The ERC-20 token address of the asset the user wants to buy.',
+            },
+            {
+                name: 'amount',
+                type: 'string',
+                description: 'The amount of the sell token (before applying token decimals) that the user wants to sell.',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Account address that will execute the swap',
+            },
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name where to execute the this function.',
+            },
+        ],
+    },
+    {
         name: 'postLimitSellOrder',
         description: 'Posts a limit sell order.',
         required: ['chainName', 'account', 'sellToken', 'sellTokenPrice', 'sellTokenAmount', 'buyTokenPrice', 'buyToken'],
@@ -175,8 +226,8 @@ export const tools: AiTool[] = [
                 description: 'Account address that will execute the swap',
             },
             {
-                name: 'slippageInPercentage',
-                type: 'string',
+                name: 'slippageTolerance',
+                type: ['string', 'null'],
                 description: 'Maximum user slippage percentage when making the swap.',
             },
             {
