@@ -387,7 +387,7 @@ describe('mint', () => {
             },
         );
 
-        expect(result).toEqual(toResult(`Failed to get decimals for token ${props.tokenA}`, true));
+        expect(result).toEqual(toResult(`Invalid ERC20 token contract at address ${props.tokenA}. Failed to fetch token details`, true));
     });
 
     it('should return an error if lowerPrice < upperPrice', async () => {

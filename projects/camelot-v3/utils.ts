@@ -11,12 +11,13 @@ export async function getDecimals(provider: PublicClient, token: Address): Promi
             args: [],
         });
     } catch (error) {
-        throw new Error(`Failed to get decimals for token ${token}`);
+        throw new Error(`Invalid ERC20 token contract at address ${token}. Failed to fetch token details`);
     }
 }
 
 export async function amountToWei(provider: PublicClient, token: Address, amount: string | undefined): Promise<bigint> {
     if (!amount) return 0n;
+
 
     const decimals = await getDecimals(provider, token);
     return parseUnits(amount, decimals);
@@ -25,28 +26,6 @@ export async function amountToWei(provider: PublicClient, token: Address, amount
 export async function weiToAmount(provider: PublicClient, token: Address, amountInWei: bigint): Promise<string> {
     const decimals = await getDecimals(provider, token);
     return formatUnits(amountInWei, decimals);
-}
-
-export function parseAmountOutFromQuote(data: string, tokenOutDecimals: number): bigint {
-    const regex = /Expecting to receive (\d+\.\d+) /;
-    const match = data.match(regex);
-
-    if (match) {
-        return parseUnits(match[1], tokenOutDecimals);
-    } else {
-        throw new Error('Failed to parse amountOut from quote');
-    }
-}
-
-export function parseAmountInFromQuote(data: string, tokenInDecimals: number): bigint {
-    const regex = /Expecting to pay (\d+\.\d+) /;
-    const match = data.match(regex);
-
-    if (match) {
-        return parseUnits(match[1], tokenInDecimals);
-    } else {
-        throw new Error('Failed to parse amountIn from quote');
-    }
 }
 
 // REFERENCE: https://support.uniswap.org/hc/en-us/articles/21068898875661-How-to-convert-a-price-to-a-tick-that-can-be-initialized

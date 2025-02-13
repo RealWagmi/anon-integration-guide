@@ -135,7 +135,7 @@ describe('exactInputSingle', () => {
         });
 
         const result = await exactInputSingle({ ...props, amountIn: '0' }, { ...functionOptions, getProvider: mockGetProvider });
-        expect(result).toEqual(toResult(`Failed to get decimals for token ${props.tokenIn}`, true));
+        expect(result).toEqual(toResult(`Invalid ERC20 token contract at address ${props.tokenIn}. Failed to fetch token details`, true));
     });
 
     it('should automatically adjust the slippage', async () => {
