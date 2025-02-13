@@ -172,7 +172,8 @@ export const tools: AiTool[] = [
             {
                 name: 'sellTokenPrice',
                 type: 'string',
-                description: 'Current price of the sellToken in US dollars. This must be populated by querying apis.',
+                description:
+                    'Current price of the sellToken in US dollars. This must be populated by invoking getQuote to get the price of buyToken denominated in a stable coin (e.g. USDC, USDT, DAI).',
             },
         ],
     },
@@ -248,7 +249,8 @@ export const tools: AiTool[] = [
             {
                 name: 'buyTokenPrice',
                 type: 'string',
-                description: 'Current price of the buyToken in US dollars. This must be populated by querying apis.',
+                description:
+                    'Current price of the buyToken in US dollars. This must be populated by invoking getQuote to get the price of buyToken denominated in a stable coin (e.g. USDC, USDT, DAI).',
             },
             {
                 name: 'sellTokenPrice',
