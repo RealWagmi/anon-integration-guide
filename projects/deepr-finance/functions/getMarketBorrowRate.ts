@@ -1,11 +1,11 @@
-import { Address, erc20Abi, formatUnits } from 'viem';
+import { formatUnits } from 'viem';
 import {
 	FunctionReturn,
 	FunctionOptions,
 	toResult,
 	getChainFromName,
 } from '@heyanon/sdk';
-import { supportedChains, ADDRESS } from '../constants';
+import { supportedChains, TOKEN } from '../constants';
 import { dtokenAbi } from '../abis';
 
 interface Props {
@@ -32,10 +32,9 @@ export async function getMarketBorrowRate(
 	if (!supportedChains.includes(chainId)) return toResult(`Deepr Finance is not supported on ${chainName}`, true);
 
     // Validate asset
-    const assetConfig = ADDRESS[asset.toUpperCase()];
+    const assetConfig = TOKEN[asset.toUpperCase()];
     if (!assetConfig) return toResult(`Asset is not supported`, true);
-    const marketAddress = assetConfig.MARKET;
-    const assetAddress = assetConfig.CONTRACT;
+    const marketAddress = assetConfig.MARKET.ADDRESS;
 
     // Accrued Interest calculation
     const provider = getProvider(chainId);
@@ -43,11 +42,7 @@ export async function getMarketBorrowRate(
     const secondsPerDay = 86400;
     const daysPerYear = 365;
 
-    const decimals = await provider.readContract({
-        address: assetAddress,
-        abi: erc20Abi,
-        functionName: 'decimals',
-    });
+    const decimals = assetConfig.DECIMALS;
 
     const borrowRatePerSecond = await provider.readContract({
         address: marketAddress,

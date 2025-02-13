@@ -6,7 +6,7 @@ import {
 	toResult,
 	getChainFromName,
 } from '@heyanon/sdk';
-import { supportedChains, ADDRESS } from '../constants';
+import { supportedChains, TOKEN } from '../constants';
 import { rewardpoolAbi } from '../abis';
 
 interface Props {
@@ -37,7 +37,7 @@ export async function requestUnstakeDeepr(
     const provider = getProvider(chainId);
 
 	const timelockSeconds = await provider.readContract({
-        address: ADDRESS.CONTRACT.REWARDPOOL as Address,
+        address: TOKEN.CONTRACT.REWARDPOOL as Address,
         abi: rewardpoolAbi,
         functionName: 'timelockInterval',
     }) as number;
@@ -47,7 +47,7 @@ export async function requestUnstakeDeepr(
 
     // Validate staking
     const [stakedAmount, , , isRequestStarted, ] = await provider.readContract({
-        address: ADDRESS.CONTRACT.REWARDPOOL as Address,
+        address: TOKEN.CONTRACT.REWARDPOOL as Address,
         abi: rewardpoolAbi,
         functionName: 'userInfo',
         args: [account],
@@ -58,7 +58,7 @@ export async function requestUnstakeDeepr(
 
 	// Prepare unstake transaction
 	const tx: TransactionParams = {
-			target: ADDRESS.CONTRACT.REWARDPOOL as Address,
+			target: TOKEN.CONTRACT.REWARDPOOL as Address,
 			data: encodeFunctionData({
 					abi: rewardpoolAbi,
 					functionName: 'withdrawRequestAndHarvest',

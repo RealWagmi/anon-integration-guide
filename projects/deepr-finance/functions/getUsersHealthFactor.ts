@@ -5,7 +5,7 @@ import {
 	toResult,
 	getChainFromName,
 } from '@heyanon/sdk';
-import { supportedChains, ADDRESS } from '../constants';
+import { supportedChains, TOKEN } from '../constants';
 import { dtokenAbi, oracleAbi, unitrollerAbi } from '../abis';
 
 interface Props {
@@ -37,7 +37,7 @@ export async function getUsersHealthFactor(
 
     // Calculating health factor
     const [, liquidity, ] = await provider.readContract({
-        address: ADDRESS.CONTRACT.UNITROLLER as Address,
+        address: TOKEN.CONTRACT.UNITROLLER as Address,
         abi: unitrollerAbi,
         functionName: 'getAccountLiquidity',
         args: [account],
@@ -45,7 +45,7 @@ export async function getUsersHealthFactor(
     const availableLiquidity = liquidity / BigInt(1e18);
 
     const markets = await provider.readContract({
-        address: ADDRESS.CONTRACT.UNITROLLER as Address,
+        address: TOKEN.CONTRACT.UNITROLLER as Address,
         abi: unitrollerAbi,
         functionName: 'getAssetsIn',
         args: [account],
@@ -55,7 +55,7 @@ export async function getUsersHealthFactor(
 
     for (const market of markets) {
         const price = await provider.readContract({
-            address: ADDRESS.CONTRACT.ORACLE as Address,
+            address: TOKEN.CONTRACT.ORACLE as Address,
             abi: oracleAbi,
             functionName: 'getUnderlyingPrice',
             args: [market],

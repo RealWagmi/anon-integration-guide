@@ -1,11 +1,11 @@
-import { Address, erc20Abi, formatUnits } from 'viem';
+import { Address, formatUnits } from 'viem';
 import {
 	FunctionReturn,
 	FunctionOptions,
 	toResult,
 	getChainFromName,
 } from '@heyanon/sdk';
-import { supportedChains, ADDRESS } from '../constants';
+import { supportedChains, TOKEN } from '../constants';
 import { dtokenAbi } from '../abis';
 
 interface Props {
@@ -35,10 +35,9 @@ export async function getUsersMarketPosition(
 	if (!supportedChains.includes(chainId)) return toResult(`Deepr Finance is not supported on ${chainName}`, true);
 
     // Validate asset
-    const assetConfig = ADDRESS[asset.toUpperCase()];
+    const assetConfig = TOKEN[asset.toUpperCase()];
     if (!assetConfig) return toResult(`Asset is not supported`, true);
-    const assetAddress = assetConfig.CONTRACT;
-    const marketAddress = assetConfig.MARKET;
+    const marketAddress = assetConfig.MARKET.ADDRESS;
 
     const provider = getProvider(chainId);
     
@@ -64,12 +63,8 @@ export async function getUsersMarketPosition(
         args: [account],
     }) as bigint;
     
-    const decimals = await provider.readContract({
-        address: assetAddress,
-        abi: erc20Abi,
-        functionName: 'decimals',
-    });
-    const dTokenDecimals = 8;
+    const decimals = assetConfig.DECIMALS;
+    const dTokenDecimals = assetConfig.MARKET.DECIMALS;
     const mantissa = 18 + decimals - dTokenDecimals;
 
     const borrowedValue = BigInt(formatUnits(borrowed, decimals));

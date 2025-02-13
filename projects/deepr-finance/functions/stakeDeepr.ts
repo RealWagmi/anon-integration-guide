@@ -7,7 +7,7 @@ import {
 	getChainFromName,
 	checkToApprove
 } from '@heyanon/sdk';
-import { supportedChains, ADDRESS } from '../constants';
+import { supportedChains, TOKEN } from '../constants';
 import { rewardpoolAbi } from '../abis';
 
 interface Props {
@@ -39,10 +39,11 @@ export async function stakeDeepr(
     const provider = getProvider(chainId);
 
     // Validate amount
-    const amountWithDecimals = parseUnits(amount, 18);
+	const decimals = TOKEN.CONTRACT.DEEPR.DECIMALS;
+    const amountWithDecimals = parseUnits(amount, decimals);
     if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);
     const balance = await provider.readContract({
-        address: ADDRESS.CONTRACT.DEEPR as Address,
+        address: TOKEN.CONTRACT.DEEPR.ADDRESS as Address,
         abi: erc20Abi,
         functionName: 'balanceOf',
         args: [account],
@@ -57,8 +58,8 @@ export async function stakeDeepr(
 	await checkToApprove({
 		args: {
 			account,
-			target: ADDRESS.CONTRACT.DEEPR as Address,
-			spender: ADDRESS.CONTRACT.REWARDPOOL as Address,
+			target: TOKEN.CONTRACT.DEEPR.ADDRESS as Address,
+			spender: TOKEN.CONTRACT.REWARDPOOL as Address,
 			amount: amountWithDecimals
 		},
 		transactions,
@@ -67,7 +68,7 @@ export async function stakeDeepr(
 
 	// Prepare stake transaction
 	const tx: TransactionParams = {
-			target: ADDRESS.CONTRACT.REWARDPOOL as Address,
+			target: TOKEN.CONTRACT.REWARDPOOL as Address,
 			data: encodeFunctionData({
 					abi: rewardpoolAbi,
 					functionName: 'deposit',

@@ -7,7 +7,7 @@ import {
 	getChainFromName,
     checkToApprove
 } from '@heyanon/sdk';
-import { supportedChains, ADDRESS } from '../constants';
+import { supportedChains, TOKEN } from '../constants';
 import { dtokenAbi } from '../abis';
 
 interface Props {
@@ -38,10 +38,10 @@ export async function repayAsset(
 	if (!supportedChains.includes(chainId)) return toResult(`Deepr Finance is not supported on ${chainName}`, true);
 
     // Validate asset
-    const assetConfig = ADDRESS[asset.toUpperCase()];
+    const assetConfig = TOKEN[asset.toUpperCase()];
     if (!assetConfig) return toResult(`Asset is not supported`, true);
-    const assetAddress = assetConfig.CONTRACT;
-    const marketAddress = assetConfig.MARKET;
+    const assetAddress = assetConfig.ADDRESS;
+    const marketAddress = assetConfig.MARKET.ADDRESS;
 
     const provider = getProvider(chainId);
 
@@ -57,11 +57,7 @@ export async function repayAsset(
     const resultBalanceBorrow = await sendTransactions({ chainId, account, transactions: [balanceBorrowTx] });
     const balanceBorrowMessage = resultBalanceBorrow.data[resultBalanceBorrow.data.length - 1];
     const balanceBorrow = BigInt(balanceBorrowMessage.message);
-    const decimals = await provider.readContract({
-        address: assetAddress,
-        abi: erc20Abi,
-        functionName: 'decimals',
-    });
+    const decimals = assetConfig.DECIMALS;
 
     await notify(`You've borrowed ${formatUnits(balanceBorrow, decimals)} ${asset}.`);
 

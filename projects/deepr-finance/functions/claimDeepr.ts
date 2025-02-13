@@ -6,7 +6,7 @@ import {
 	toResult,
 	getChainFromName,
 } from '@heyanon/sdk';
-import { supportedChains, ADDRESS } from '../constants';
+import { supportedChains, TOKEN } from '../constants';
 import { rewardpoolAbi, unitrollerAbi } from '../abis';
 
 interface Props {
@@ -39,13 +39,13 @@ export async function claimDeepr(
 
 	// Check if user has staked tokens
 	const [, , rewardDebt, , ] = await provider.readContract({
-        address: ADDRESS.CONTRACT.REWARDPOOL as Address,
+        address: TOKEN.CONTRACT.REWARDPOOL as Address,
         abi: rewardpoolAbi,
         functionName: 'userInfo',
         args: [account],
     }) as [bigint, bigint, bigint, boolean, bigint];
 	const txHarvest: TransactionParams = {
-		target: ADDRESS.CONTRACT.REWARDPOOL as Address,
+		target: TOKEN.CONTRACT.REWARDPOOL as Address,
 		data: encodeFunctionData({
 				abi: rewardpoolAbi,
 				functionName: 'harvest',
@@ -59,7 +59,7 @@ export async function claimDeepr(
 
 	// Prepare claim transaction
 	const txClaim: TransactionParams = {
-			target: ADDRESS.CONTRACT.UNITROLLER as Address,
+			target: TOKEN.CONTRACT.UNITROLLER as Address,
 			data: encodeFunctionData({
 					abi: unitrollerAbi,
 					functionName: 'claimDeepr',

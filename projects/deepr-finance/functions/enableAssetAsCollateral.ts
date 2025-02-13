@@ -6,7 +6,7 @@ import {
 	toResult,
 	getChainFromName,
 } from '@heyanon/sdk';
-import { supportedChains, ADDRESS } from '../constants';
+import { supportedChains, TOKEN } from '../constants';
 import { unitrollerAbi } from '../abis';
 
 interface Props {
@@ -36,14 +36,14 @@ export async function enableAssetAsCollateral(
 	if (!supportedChains.includes(chainId)) return toResult(`Deepr Finance is not supported on ${chainName}`, true);
 
     // Validate market
-    const marketAddress = ADDRESS[asset.toUpperCase()].MARKET;
+    const marketAddress = TOKEN[asset.toUpperCase()].MARKET;
     if (!marketAddress) return toResult(`Market is not supported`, true);
 
     await notify('Enabling the market as collateral...');
 
 	// Prepare enable transaction
 	const tx: TransactionParams = {
-			target: ADDRESS.CONTRACT.UNITROLLER as Address,
+			target: TOKEN.CONTRACT.UNITROLLER as Address,
 			data: encodeFunctionData({
 					abi: unitrollerAbi,
 					functionName: 'enterMarkets',

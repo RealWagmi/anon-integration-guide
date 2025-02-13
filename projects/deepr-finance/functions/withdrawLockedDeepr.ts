@@ -6,7 +6,7 @@ import {
 	toResult,
 	getChainFromName,
 } from '@heyanon/sdk';
-import { supportedChains, ADDRESS } from '../constants';
+import { supportedChains, TOKEN } from '../constants';
 import { rewardpoolAbi } from '../abis';
 
 interface Props {
@@ -37,14 +37,14 @@ export async function withdrawLockedDeepr(
     const provider = getProvider(chainId);
 
 	const timelockSeconds = await provider.readContract({
-        address: ADDRESS.CONTRACT.REWARDPOOL as Address,
+        address: TOKEN.CONTRACT.REWARDPOOL as Address,
         abi: rewardpoolAbi,
         functionName: 'timelockInterval',
     }) as bigint;
 
     // Validate unstaking request
     const [, , , isRequestStarted, requestTimestamp] = await provider.readContract({
-        address: ADDRESS.CONTRACT.REWARDPOOL as Address,
+        address: TOKEN.CONTRACT.REWARDPOOL as Address,
         abi: rewardpoolAbi,
         functionName: 'userInfo',
         args: [account],
@@ -57,7 +57,7 @@ export async function withdrawLockedDeepr(
 
 	// Prepare withdraw transaction
 	const tx: TransactionParams = {
-			target: ADDRESS.CONTRACT.REWARDPOOL as Address,
+			target: TOKEN.CONTRACT.REWARDPOOL as Address,
 			data: encodeFunctionData({
 					abi: rewardpoolAbi,
 					functionName: 'withdrawLockedTokens',
