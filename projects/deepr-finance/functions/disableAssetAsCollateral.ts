@@ -36,7 +36,7 @@ export async function disableAssetAsCollateral(
 	if (!supportedChains.includes(chainId)) return toResult(`Deepr Finance is not supported on ${chainName}`, true);
 
     // Validate market
-    const marketAddress = TOKEN[asset.toUpperCase()].MARKET;
+    const marketAddress = TOKEN[asset.toUpperCase()].MARKET.ADDRESS;
     if (!marketAddress) return toResult(`Market is not supported`, true);
 
 	await notify('Disabling the market as collateral...');
