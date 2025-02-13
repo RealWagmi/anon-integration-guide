@@ -30,6 +30,11 @@ export async function increaseLiquidity(
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!SUPPORTED_CHAINS.includes(chainId)) return toResult(`Camelot V3 is not supported on ${chainName}`, true);
 
+    // Validate tokenId
+    if(tokenId && (!Number.isInteger(tokenId) || tokenId < 0)) {
+        return toResult(`Invalid token ID: ${tokenId}, please provide a whole non-negative number`, true);
+    }
+
     await notify(`Preparing to increase liquidity on Camelot V3...`);
 
     // Determine position ID
@@ -44,7 +49,7 @@ export async function increaseLiquidity(
 
         positionId = BigInt(positions[0].id);
     } else {
-        positionId = BigInt(tokenId!);
+        positionId = BigInt(tokenId);
     }
 
     const provider = getProvider(chainId);

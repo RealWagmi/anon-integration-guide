@@ -30,6 +30,16 @@ export async function collect(
         if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
         if (!SUPPORTED_CHAINS.includes(chainId)) return toResult(`Camelot V3 is not supported on ${chainName}`, true);
 
+        // Validate tokenId
+        if(tokenId && (!Number.isInteger(tokenId) || tokenId < 0)) {
+            return toResult(`Invalid token ID: ${tokenId}, please provide a whole non-negative number`, true);
+        }
+
+        // Validate collectPercentage
+        if(collectPercentage && (!Number.isInteger(collectPercentage) || collectPercentage < 0)) {
+            return toResult(`Invalid collect percentage: ${collectPercentage}, please provide a whole non-negative number`, true);
+        }
+
         await notify(`Collecting fees on Camelot V3...`);
 
         // Determine position ID
@@ -44,7 +54,7 @@ export async function collect(
 
             positionId = BigInt(positions[0].id);
         } else {
-            positionId = BigInt(tokenId!);
+            positionId = BigInt(tokenId);
         }
 
         const provider = getProvider(chainId);
@@ -99,7 +109,7 @@ export async function prepareCollectTxData(
     token0: Address,
     token1: Address,
     recipient: Address,
-    feePercentage?: number,
+    collectPercentage?: number,
     amountAMax?: string,
     amountBMax?: string,
 ): Promise<TransactionParams> {
@@ -107,13 +117,15 @@ export async function prepareCollectTxData(
     let [amountAMaxWei, amountBMaxWei] = await Promise.all([amountToWei(provider, token0, amountAMax), amountToWei(provider, token1, amountBMax)]);
 
     // Recalculate amounts if fee percentage is provided
-    if (feePercentage) {
-        [amountAMaxWei, amountBMaxWei] = await feePercentageToMaxAmountOut(chainId, provider, positionId, BigInt(feePercentage));
+    if (collectPercentage) {
+        let collectPercentageBigInt = BigInt(collectPercentage);
+
+        [amountAMaxWei, amountBMaxWei] = await collectPercentageToMaxAmountOut(chainId, provider, positionId, collectPercentageBigInt);
     }
 
     // Collect 100% of fees if no percentage and amounts are provided
-    if (!feePercentage && !amountAMax && !amountBMax) {
-        [amountAMaxWei, amountBMaxWei] = await feePercentageToMaxAmountOut(chainId, provider, positionId, PERCENTAGE_BASE);
+    if (!collectPercentage && !amountAMax && !amountBMax) {
+        [amountAMaxWei, amountBMaxWei] = await collectPercentageToMaxAmountOut(chainId, provider, positionId, PERCENTAGE_BASE);
     }
 
     // Validate amounts
@@ -137,7 +149,7 @@ export async function prepareCollectTxData(
     };
 }
 
-async function feePercentageToMaxAmountOut(chainId: number, provider: PublicClient, positionId: bigint, feePercentage: bigint): Promise<bigint[]> {
+async function collectPercentageToMaxAmountOut(chainId: number, provider: PublicClient, positionId: bigint, collectPercentage: bigint): Promise<bigint[]> {
     const collectData = await provider.simulateContract({
         address: ADDRESSES[chainId].NONFUNGIBLE_POSITION_MANAGER_ADDRESS,
         abi: nonFungiblePositionManagerAbi,
@@ -154,5 +166,5 @@ async function feePercentageToMaxAmountOut(chainId: number, provider: PublicClie
 
     const [amount0Max, amount1Max] = collectData.result;
 
-    return [(amount0Max * feePercentage) / PERCENTAGE_BASE, (amount1Max * feePercentage) / PERCENTAGE_BASE];
+    return [(amount0Max * collectPercentage) / PERCENTAGE_BASE, (amount1Max * collectPercentage) / PERCENTAGE_BASE];
 }

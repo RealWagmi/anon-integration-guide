@@ -273,4 +273,32 @@ describe('increaseLiquidity', () => {
 
         expect(result).toEqual(toResult('Amount B MIN must be greater than 0', true));
     });
+
+    it('should return error if tokenId is decimal', async () => {
+        let tokenId = 1.1
+        const result = await increaseLiquidity(
+            { ...props, tokenId: tokenId },
+            {
+                notify: mockNotify,
+                sendTransactions: jest.fn(),
+                getProvider: mockProvider,
+            },
+        );
+
+        expect(result).toEqual(toResult(`Invalid token ID: ${tokenId}, please provide a whole non-negative number`, true));
+    });
+
+    it('should return error if tokenId is negative', async () => {
+        let tokenId = -1;
+        const result = await increaseLiquidity(
+            { ...props, tokenId: -1 },
+            {
+                notify: mockNotify,
+                sendTransactions: jest.fn(),
+                getProvider: mockProvider,
+            },
+        );
+
+        expect(result).toEqual(toResult(`Invalid token ID: ${tokenId}, please provide a whole non-negative number`, true));
+    });
 });

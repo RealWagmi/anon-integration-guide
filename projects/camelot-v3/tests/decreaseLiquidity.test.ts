@@ -254,4 +254,64 @@ describe('decreaseLiquidity', () => {
 
         expect(result).toEqual(toResult('Amount B MIN must be greater than 0', true));
     });
+
+    it('should return error if tokenId is decimal', async () => {
+        const mockPositions = [{ id: `100000`, token0: { id: tokenA }, token1: { id: tokenB }, liquidity: '-1' }];
+        (queryLPPositions as jest.Mock).mockResolvedValue(mockPositions);
+
+        const result = await decreaseLiquidity(
+            { ...props, tokenId: 100000.01 },
+            {
+                notify: mockNotify,
+                sendTransactions: jest.fn(),
+                getProvider: mockProvider,
+            },
+        );
+
+        expect(result).toEqual(toResult('Invalid token ID: 100000.01, please provide a whole non-negative number', true));
+    });
+
+    it('should return error if tokenId is negative', async () => {
+        const mockPositions = [{ id: `100000`, token0: { id: tokenA }, token1: { id: tokenB }, liquidity: '-1' }];
+        (queryLPPositions as jest.Mock).mockResolvedValue(mockPositions);
+
+        const result = await decreaseLiquidity(
+            { ...props, tokenId: -100000 },
+            {
+                notify: mockNotify,
+                sendTransactions: jest.fn(),
+                getProvider: mockProvider,
+            },
+        );
+
+        expect(result).toEqual(toResult('Invalid token ID: -100000, please provide a whole non-negative number', true));
+    });
+
+    it('should return error if decreasePercentage is decimal', async () => {
+        let decreasePercentage = 10.01;
+        const result = await decreaseLiquidity(
+            { ...props, decreasePercentage: decreasePercentage },
+            {
+                notify: mockNotify,
+                sendTransactions: jest.fn(),
+                getProvider: mockProvider,
+            },
+        );
+
+        expect(result).toEqual(toResult(`Invalid decrease percentage: ${decreasePercentage}, please provide a whole non-negative number`, true));
+    });
+
+    it('should return error if decreasePercentage is negative', async () => {
+        let decreasePercentage = -10;
+        const result = await decreaseLiquidity(
+            { ...props, decreasePercentage: decreasePercentage },
+            {
+                notify: mockNotify,
+                sendTransactions: jest.fn(),
+                getProvider: mockProvider,
+            },
+        );
+
+        expect(result).toEqual(toResult(`Invalid decrease percentage: ${decreasePercentage}, please provide a whole non-negative number`, true));
+    });
 });

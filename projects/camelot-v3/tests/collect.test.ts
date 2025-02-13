@@ -247,4 +247,60 @@ describe('collect', () => {
 
         expect(result).toEqual(toResult('Nothing to collect, since both amounts are 0', true));
     });
+
+    it('should return error if tokenId is decimal', async () => {
+        let tokenId = 100001.01;
+        const result = await collect(
+            { ...props, tokenId: tokenId },
+            {
+                notify: mockNotify,
+                sendTransactions: jest.fn(),
+                getProvider: mockProvider,
+            },
+        );
+
+        expect(result).toEqual(toResult(`Invalid token ID: ${tokenId}, please provide a whole non-negative number`, true));
+    });
+
+    it('should return error if tokenId is negative', async () => {
+        let tokenId = -100001;
+        const result = await collect(
+            { ...props, tokenId: tokenId },
+            {
+                notify: mockNotify,
+                sendTransactions: jest.fn(),
+                getProvider: mockProvider,
+            },
+        );
+
+        expect(result).toEqual(toResult(`Invalid token ID: ${tokenId}, please provide a whole non-negative number`, true));
+    });
+
+    it('should return error if collectPercentage is decimal', async () => {
+        let collectPercentage = 10.01;
+        const result = await collect(
+            { ...props, collectPercentage: 10.01 },
+            {
+                notify: mockNotify,
+                sendTransactions: jest.fn(),
+                getProvider: mockProvider,
+            },
+        );
+
+        expect(result).toEqual(toResult(`Invalid collect percentage: ${collectPercentage}, please provide a whole non-negative number`, true));
+    });
+
+    it('should return error if collectPercentage is negative', async () => {
+        let collectPercentage = -10;
+        const result = await collect(
+            { ...props, collectPercentage: collectPercentage },
+            {
+                notify: mockNotify,
+                sendTransactions: jest.fn(),
+                getProvider: mockProvider,
+            },
+        );
+
+        expect(result).toEqual(toResult(`Invalid collect percentage: ${collectPercentage}, please provide a whole non-negative number`, true));
+    });
 });

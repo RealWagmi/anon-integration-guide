@@ -29,6 +29,16 @@ export async function decreaseLiquidity(
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!SUPPORTED_CHAINS.includes(chainId)) return toResult(`Camelot V3 is not supported on ${chainName}`, true);
 
+    // Validate tokenId
+    if(tokenId && (!Number.isInteger(tokenId) || tokenId < 0)) {
+        return toResult(`Invalid token ID: ${tokenId}, please provide a whole non-negative number`, true);
+    }
+
+    // Validate decreasePercentage
+    if(decreasePercentage && (!Number.isInteger(decreasePercentage) || decreasePercentage < 0)) {
+        return toResult(`Invalid decrease percentage: ${decreasePercentage}, please provide a whole non-negative number`, true);
+    }
+
     await notify(`Preparing to decrease liquidity on Camelot V3...`);
 
     // Determine position ID
@@ -43,7 +53,7 @@ export async function decreaseLiquidity(
 
         positionId = BigInt(positions[0].id);
     } else {
-        positionId = BigInt(tokenId!);
+        positionId =  BigInt(tokenId);
     }
 
     const provider = getProvider(chainId);
@@ -52,7 +62,8 @@ export async function decreaseLiquidity(
     const positionData = await getPositionData(chainId, provider, positionId);
     if (!positionData) return toResult(`Position with ID ${positionId} not found`, true);
 
-    const liquidityToRemove = (BigInt(positionData[6]) * BigInt(decreasePercentage)) / PERCENTAGE_BASE;
+    let decreasePercentageBigInt = BigInt(decreasePercentage);
+    const liquidityToRemove = (BigInt(positionData[6]) * decreasePercentageBigInt) / PERCENTAGE_BASE;
 
     // Remap tokenAB to token01
     let [[token0, token0Symbol, amount0MinWei], [token1, token1Symbol, amount1MinWei]] = await tokenABToToken01(
@@ -121,7 +132,7 @@ export async function decreaseLiquidity(
     });
     multicallTransactionsTxData.push(decreaseLiquidityTxData);
 
-    if (BigInt(decreasePercentage) == PERCENTAGE_BASE) {
+    if (decreasePercentageBigInt == PERCENTAGE_BASE) {
         const collectTxData = await prepareCollectTxData(chainId, provider, positionId, token0, token1, account, Number(PERCENTAGE_BASE));
 
         const burnTxData = encodeFunctionData({
