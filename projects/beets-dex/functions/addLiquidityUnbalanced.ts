@@ -24,7 +24,6 @@ import { BeetsClient } from '../helpers/beets/client';
 import { GqlChain } from '../helpers/beets/types';
 import { formatPoolType, fromGqlPoolMinimalToBalancerPoolStateWithUnderlyings, isBoostedPoolToken } from '../helpers/pools';
 import { getMockPublicWalletClient } from '../helpers/viem';
-import { dump, dumpWithLabel } from '../helpers/debug';
 
 interface Props {
     chainName: string;
@@ -138,16 +137,12 @@ export async function addLiquidityUnbalanced(
         options.notify(`Boosted pool token detected`);
         addressToApprove = PERMIT2[balancerChainId];
         const addLiquidityBoosted = new AddLiquidityBoostedV3();
-        // dumpWithLabel('addLiquidityInput', addLiquidityInput);
-        // dumpWithLabel('poolState', poolState);
         queryOutput = await addLiquidityBoosted.query(addLiquidityInput, poolState);
-        // dumpWithLabel('queryOutput', queryOutput);
         const buildInput = { ...queryOutput, slippage, wethIsEth } as AddLiquidityBoostedBuildCallInput;
         // Sign the permit2 approvals
         const permit2 = await Permit2Helper.signAddLiquidityBoostedApproval({ ...buildInput, client: getMockPublicWalletClient(publicClient, options), owner: account });
         // Build add-liquidity call, including permit2 approvals
         buildOutput = addLiquidityBoosted.buildCallWithPermit2(buildInput, permit2);
-        return toResult(`Boosted pools are not supported yet`, true);
     } else {
         // Query addLiquidity to get expected BPT out
         const addLiquidity = new AddLiquidity();
