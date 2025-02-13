@@ -6,7 +6,7 @@ import {
   	toResult,
   	getChainFromName
 } from '@heyanon/sdk';
-import { supportedChains, FACTORY_ADDRESS } from '../constants';
+import { supportedChains, FACTORY_ADDRESS, GU_COIN_DECIMALS } from '../constants';
 import { factoryAbi, bondingCurveAbi, guCoinAbi } from '../abis';
 import { getTokenAddress } from './getTokenAddress';
 
@@ -61,7 +61,7 @@ export async function sellToken(
 	if (!isGuCoin || isLPd) return toResult('Cannot buy a token: LPd or not a Gu coin', true);
 	
 	// Validate amount
-	const amountWithDecimals = parseUnits(amount, 18);
+	const amountWithDecimals = parseUnits(amount, GU_COIN_DECIMALS);
 	if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);
 	const balance = await publicClient.readContract({
         address: token as Address,
