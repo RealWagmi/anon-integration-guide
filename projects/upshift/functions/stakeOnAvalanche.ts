@@ -48,11 +48,7 @@ export async function stakeOnAvalanche(
     const provider = getProvider(chainId);
 
     // Validate amount
-    const decimals = await provider.readContract({
-        address: vault,
-        abi: erc20Abi,
-        functionName: 'decimals',
-    });
+    const decimals = tokenConfig.vaultDecimals;
     const amountWithDecimals = parseUnits(amount, decimals);
     if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);
     const balance = await provider.readContract({

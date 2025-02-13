@@ -52,19 +52,11 @@ export async function requestRedeemAsset(
     const provider = getProvider(chainId);
     
     // Validate amount
-    let decimals = 18;
-    if (isUnderlyingAsset && tokenConfig.address) {
-        decimals = await provider.readContract({
-            address: tokenConfig.address,
-            abi: erc20Abi,
-            functionName: 'decimals',
-        });
-    } else if (!isUnderlyingAsset) {
-        decimals = await provider.readContract({
-            address: vault,
-            abi: erc20Abi,
-            functionName: 'decimals',
-        });
+    let decimals;
+    if (isUnderlyingAsset) {
+        decimals = tokenConfig.decimals;
+    } else {
+        decimals = tokenConfig.vaultDecimals;
     }
 
     let amountWithDecimals = parseUnits(amount, decimals);

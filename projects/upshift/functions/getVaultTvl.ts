@@ -70,6 +70,10 @@ export async function getVaultTvl({ chainName, token }: Props, { notify }: Funct
 
     const price = responsePrice.data.data;
 
+    if (!amountDeposited) {
+        return toResult('No vault data available', true);
+    }
+
     const tvl = Number(amountDeposited) * price;
 
     return toResult(`Total value locked in ${targetVault?.name} - ${tvl} USD.`);

@@ -1,4 +1,4 @@
-import { Address, encodeFunctionData, erc20Abi, parseUnits } from 'viem';
+import { Address, encodeFunctionData, parseUnits } from 'viem';
 import {
 	FunctionReturn,
 	FunctionOptions,
@@ -42,16 +42,11 @@ export async function unstakeOnAvalanche(
         (config) => config.vaultSymbol.toUpperCase() === token.toUpperCase()
     );
     if (!tokenConfig) return toResult(`Asset is not supported`, true);
-    const vault = tokenConfig.vaultAddress;
 
     const provider = getProvider(chainId);
 
     // Validate amount
-    const decimals = await provider.readContract({
-        address: vault,
-        abi: erc20Abi,
-        functionName: 'decimals',
-    });
+    const decimals = tokenConfig.vaultDecimals;
     const amountWithDecimals = parseUnits(amount, decimals);
     if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);
     const balance = await provider.readContract({

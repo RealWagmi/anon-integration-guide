@@ -48,11 +48,12 @@ export async function depositAsset(
     // Validate amount and wrapping in case native token
     let tokenAddress = tokenConfig.address;
     let amountWithDecimals;
+    const decimals = tokenConfig.decimals;
     if (!tokenAddress) {
         const balance = await provider.getBalance({
             address: account
         });
-        const amountWithDecimals = parseUnits(amount, 18);
+        const amountWithDecimals = parseUnits(amount, decimals);
         
         if (balance < amountWithDecimals) {
             return toResult('Amount exceeds your AVAX balance', true);
@@ -69,11 +70,6 @@ export async function depositAsset(
 	    };
         transactions.push(wrapTx);
     } else {
-        const decimals = await provider.readContract({
-            address: tokenAddress,
-            abi: erc20Abi,
-            functionName: 'decimals',
-        });
         amountWithDecimals = parseUnits(amount, decimals);
         if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);
         const balance = await provider.readContract({
