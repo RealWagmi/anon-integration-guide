@@ -1,6 +1,6 @@
 import { FunctionOptions, FunctionReturn, getChainFromName, toResult, TransactionParams } from '@heyanon/sdk';
 import { Address, encodeFunctionData, PublicClient } from 'viem';
-import { ADDRESSES, SUPPORTED_CHAINS, ZERO_ADDRESS } from '../constants';
+import { ADDRESSES, DEFAULT_SLIPPAGE, PERCENTAGE_BASE, SUPPORTED_CHAINS, ZERO_ADDRESS } from '../constants';
 import { amountToWei } from '../utils';
 import { algebraFactoryAbi, algebraPoolAbi, nonFungiblePositionManagerAbi } from '../abis';
 import { queryLPPositions } from './getLPPositions';
@@ -15,11 +15,12 @@ interface Props {
     tokenId?: number;
     amountAMin?: string;
     amountBMin?: string;
+    slippage?: number;
 }
 
 // TODO: If tokenId is not set, display all positions, so user doesn't need to query it again
 export async function increaseLiquidity(
-    { chainName, account, tokenA, tokenB, amountA, amountB, tokenId, amountAMin, amountBMin }: Props,
+    { chainName, account, tokenA, tokenB, amountA, amountB, tokenId, amountAMin, amountBMin, slippage }: Props,
     { sendTransactions, notify, getProvider }: FunctionOptions,
 ): Promise<FunctionReturn> {
     // Check wallet connection
@@ -33,6 +34,11 @@ export async function increaseLiquidity(
     // Validate tokenId
     if(tokenId && (!Number.isInteger(tokenId) || tokenId < 0)) {
         return toResult(`Invalid token ID: ${tokenId}, please provide a whole non-negative number`, true);
+    }
+
+    // Validate slippage
+    if (slippage && (!Number.isInteger(slippage) || slippage < 0 || slippage > 300)) {
+        return toResult(`Invalid slippage tolerance: ${slippage}, please provide a whole non-negative number, max 3% got ${slippage / 100} %`, true);
     }
 
     await notify(`Preparing to increase liquidity on Camelot V3...`);
@@ -74,16 +80,21 @@ export async function increaseLiquidity(
     // Simulate increase liquidity amounts if amount0Min and/or amount1Min are not provided
     if (amount0MinWei == 0n || amount1MinWei == 0n) {
         const [simulatedAmount0, simulatedAmount1] = await simulateIncreaseLiquidityAmounts(chainId, provider, positionId, amount0Wei, amount1Wei);
-
-        // Set 0.2% slippage tolerance
-        if (amount0MinWei == 0n) {
-            amount0MinWei = (simulatedAmount0 * 9998n) / 10000n;
-        }
-
-        if (amount1MinWei == 0n) {
-            amount1MinWei = (simulatedAmount1 * 9998n) / 10000n;
-        }
+        amount0MinWei = simulatedAmount0;
+        amount1MinWei = simulatedAmount1;
     }
+
+    // Set slippage tolerance
+    let slippageMultiplier
+    if(slippage) {
+        slippageMultiplier = PERCENTAGE_BASE - BigInt(slippage);
+    } else {
+        // Set default 0.2% slippage tolerance
+        slippageMultiplier = PERCENTAGE_BASE - DEFAULT_SLIPPAGE;
+    }
+
+    amount0MinWei = (amount0MinWei * slippageMultiplier) / PERCENTAGE_BASE;
+    amount1MinWei = (amount1MinWei * slippageMultiplier) / PERCENTAGE_BASE;
 
     // Validate amounts
     const tickLower = positionData[4];

@@ -74,6 +74,7 @@ describe('exactInputSingle', () => {
         amountIn: '600',
         amountOutMin: '2.806134849',
         recipient: spender,
+        slippage: 250,
     };
 
     const functionOptions: FunctionOptions = {
@@ -108,7 +109,7 @@ describe('exactInputSingle', () => {
         expect(capturedTransactions).toHaveLength(1);
         expect(capturedTransactions[0].target).toEqual(ADDRESSES[chainId].SWAP_ROUTER_ADDRESS);
         expect(capturedTransactions[0].data).toEqual(
-            '0xbc651188000000000000000000000000af88d065e77c8cc2239327c5edb3a432268e58310000000000000000000000002bcc6d6cdbbdc0a4071e48bb3b969b06b3330c0700000000000000000000000033128fa08f5e0545f4714434b53bdb5e98f62474000000000000000000000000000000000000000000000000000000006789654c0000000000000000000000000000000000000000000000000000000023c3460000000000000000000000000000000000000000000000000000000000a74238410000000000000000000000000000000000000000000000000000000000000000',
+            '0xbc651188000000000000000000000000af88d065e77c8cc2239327c5edb3a432268e58310000000000000000000000002bcc6d6cdbbdc0a4071e48bb3b969b06b3330c0700000000000000000000000033128fa08f5e0545f4714434b53bdb5e98f62474000000000000000000000000000000000000000000000000000000006789654c0000000000000000000000000000000000000000000000000000000023c3460000000000000000000000000000000000000000000000000000000000a313c3a50000000000000000000000000000000000000000000000000000000000000000',
         );
     });
 
@@ -180,7 +181,7 @@ describe('exactInputSingle', () => {
         });
 
         const result = await exactInputSingle(
-            { ...props, amountOutMin: undefined },
+            { ...props, amountOutMin: undefined, slippage: undefined },
             {
                 ...functionOptions,
                 sendTransactions: mockSendTransactions,
@@ -207,6 +208,30 @@ describe('exactInputSingle', () => {
         const diff = expectedAmountOutMin - actualAmountOutMin;
         expect(diff).toBeGreaterThanOrEqual(-1n);
         expect(diff).toBeLessThanOrEqual(1n);
+    });
+
+    it('should return an error if slippage is decimal', async () => {
+        let slippage = 10.01;
+        const result = await exactInputSingle({ ...props, slippage: slippage }, functionOptions);
+        expect(result).toEqual(toResult('Invalid slippage tolerance: 10.01, please provide a whole non-negative number, max 3% got 0.1001 %', true));
+    });
+
+    it('should return an error if slippage is negative', async () => {
+        let slippage = -10;
+        const result = await exactInputSingle({ ...props, slippage: slippage }, functionOptions);
+        expect(result).toEqual(toResult('Invalid slippage tolerance: -10, please provide a whole non-negative number, max 3% got -0.1 %', true));
+    });
+
+    it('should return an error if slippage is decimal', async () => {
+        let slippage = 10.01;
+        const result = await exactInputSingle({ ...props, slippage: slippage }, functionOptions);
+        expect(result).toEqual(toResult('Invalid slippage tolerance: 10.01, please provide a whole non-negative number, max 3% got 0.1001 %', true));
+    });
+
+    it('should return an error if slippage is above threshold', async () => {
+        let slippage = 500;
+        const result = await exactInputSingle({ ...props, slippage: slippage }, functionOptions);
+        expect(result).toEqual(toResult('Invalid slippage tolerance: 500, please provide a whole non-negative number, max 3% got 5 %', true));
     });
 
     it('should set the recipient correctly', async () => {

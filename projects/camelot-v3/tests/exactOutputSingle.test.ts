@@ -1,4 +1,4 @@
-import { exactOutputSingle } from '../functions';
+import { exactInputSingle, exactOutputSingle } from '../functions';
 import { Address, decodeFunctionData } from 'viem';
 import { toResult, FunctionOptions, SendTransactionProps, TransactionReturn, ChainId } from '@heyanon/sdk';
 import { TransactionParams } from '@heyanon/sdk/dist/blockchain/types';
@@ -73,6 +73,7 @@ describe('exactOutputSingle', () => {
         amountOut: '67.200000',
         amountInMax: '0.10715526778495682',
         recipient: spender,
+        slippage: 250,
     };
 
     const functionOptions: FunctionOptions = {
@@ -110,7 +111,7 @@ describe('exactOutputSingle', () => {
         expect(capturedTransactions).toHaveLength(1);
         expect(capturedTransactions[0].target).toEqual(ADDRESSES[chainId].SWAP_ROUTER_ADDRESS);
         expect(capturedTransactions[0].data).toEqual(
-            '0xdb3e219800000000000000000000000082af49447d8a07e3bd95bd0d56f35241523fbab1000000000000000000000000d56734d7f9979dd94fae3d67c7e928234e71cd4c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000029bbc2b5aff41a2143f7d28fe6944453178f147300000000000000000000000000000000000000000000000000000000678a10630000000000000000000000000000000000000000000000000000000004016400000000000000000000000000000000000000000000000000017cb125f8225b940000000000000000000000000000000000000000000000000000000000000000',
+            '0xdb3e219800000000000000000000000082af49447d8a07e3bd95bd0d56f35241523fbab1000000000000000000000000d56734d7f9979dd94fae3d67c7e928234e71cd4c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000029bbc2b5aff41a2143f7d28fe6944453178f147300000000000000000000000000000000000000000000000000000000678a1063000000000000000000000000000000000000000000000000000000000401640000000000000000000000000000000000000000000000000001863593b7f004440000000000000000000000000000000000000000000000000000000000000000',
         );
     });
 
@@ -182,7 +183,7 @@ describe('exactOutputSingle', () => {
         });
 
         const result = await exactOutputSingle(
-            { ...props, amountInMax: undefined },
+            { ...props, amountInMax: undefined, slippage: undefined },
             {
                 ...functionOptions,
                 sendTransactions: mockSendTransactions,
@@ -209,6 +210,30 @@ describe('exactOutputSingle', () => {
         const diff = expectedAmountInMax - actualAmountInMax;
         expect(diff).toBeGreaterThanOrEqual(-1n);
         expect(diff).toBeLessThanOrEqual(1n);
+    });
+
+    it('should return an error if slippage is decimal', async () => {
+        let slippage = 10.01;
+        const result = await exactOutputSingle({ ...props, slippage: slippage }, functionOptions);
+        expect(result).toEqual(toResult('Invalid slippage tolerance: 10.01, please provide a whole non-negative number, max 3% got 0.1001 %', true));
+    });
+
+    it('should return an error if slippage is negative', async () => {
+        let slippage = -10;
+        const result = await exactOutputSingle({ ...props, slippage: slippage }, functionOptions);
+        expect(result).toEqual(toResult('Invalid slippage tolerance: -10, please provide a whole non-negative number, max 3% got -0.1 %', true));
+    });
+
+    it('should return an error if slippage is decimal', async () => {
+        let slippage = 10.01;
+        const result = await exactOutputSingle({ ...props, slippage: slippage }, functionOptions);
+        expect(result).toEqual(toResult('Invalid slippage tolerance: 10.01, please provide a whole non-negative number, max 3% got 0.1001 %', true));
+    });
+
+    it('should return an error if slippage is above threshold', async () => {
+        let slippage = 500;
+        const result = await exactOutputSingle({ ...props, slippage: slippage }, functionOptions);
+        expect(result).toEqual(toResult('Invalid slippage tolerance: 500, please provide a whole non-negative number, max 3% got 5 %', true));
     });
 
     it('should set the recipient correctly', async () => {

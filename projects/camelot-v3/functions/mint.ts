@@ -7,7 +7,15 @@ import {
     TransactionParams,
 } from '@heyanon/sdk';
 import { Address, encodeFunctionData, parseUnits, PublicClient } from 'viem';
-import { ADDRESSES, MAX_TICK, MIN_TICK, SUPPORTED_CHAINS, ZERO_ADDRESS } from '../constants';
+import {
+    ADDRESSES,
+    DEFAULT_SLIPPAGE,
+    MAX_TICK,
+    MIN_TICK,
+    PERCENTAGE_BASE,
+    SUPPORTED_CHAINS,
+    ZERO_ADDRESS,
+} from '../constants';
 import { amountToWei, convertPriceToTick, convertTickToPrice, getDecimals } from '../utils';
 import { algebraFactoryAbi, algebraPoolAbi, nonFungiblePositionManagerAbi } from '../abis';
 
@@ -23,8 +31,9 @@ interface Props {
     lowerPrice?: string; // Assuming price is calculated as tokenB / tokenA (on DEX price is denominated as token1 / token0)
     upperPrice?: string; // Assuming price is calculated as tokenB / tokenA (on DEX price is denominated as token1 / token0)
     lowerPricePercentage?: number;
-    upperPricePercengage?: number;
+    upperPricePercentage?: number;
     recipient?: Address;
+    slippage?: number;
 }
 
 // TODO: How can we detect if user has input wrong lowerPrice? We can inverse it if necessary (i.e. tokenA != token0)
@@ -34,7 +43,7 @@ interface Props {
 // TODO:     /// @dev Call this when the pool does exist and is initialized. Note that if the pool is created but not initialized
 //     /// a method does not exist, i.e. the pool is assumed to be initialized.
 export async function mint(
-    { chainName, account, tokenA, tokenB, amountA, amountB, amountAMin, amountBMin, lowerPrice, upperPrice, lowerPricePercentage, upperPricePercengage, recipient }: Props,
+    { chainName, account, tokenA, tokenB, amountA, amountB, amountAMin, amountBMin, lowerPrice, upperPrice, lowerPricePercentage, upperPricePercentage, recipient, slippage }: Props,
     { sendTransactions, notify, getProvider }: FunctionOptions,
 ): Promise<FunctionReturn> {
     try {
@@ -45,6 +54,11 @@ export async function mint(
         const chainId = getChainFromName(chainName);
         if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
         if (!SUPPORTED_CHAINS.includes(chainId)) return toResult(`Camelot V3 is not supported on ${chainName}`, true);
+
+        // Validate slippage
+        if (slippage && (!Number.isInteger(slippage) || slippage < 0 || slippage > 300)) {
+            return toResult(`Invalid slippage tolerance: ${slippage}, please provide a whole non-negative number, max 3% got ${slippage / 100} %`, true);
+        }
 
         await notify(`Preparing to add liquidity on Camelot V3...`);
 
@@ -76,7 +90,7 @@ export async function mint(
         // Convert prices to ticks
         const [token0Decimals, token1Decimals] = await Promise.all([getDecimals(provider, token0), getDecimals(provider, token1)]);
         let tickLower = priceToTick(lowerPrice, lowerPricePercentage, token0Decimals, token1Decimals, tickSpacing, currentTick, true);
-        let tickUpper = priceToTick(upperPrice, upperPricePercengage, token0Decimals, token1Decimals, tickSpacing, currentTick, false);
+        let tickUpper = priceToTick(upperPrice, upperPricePercentage, token0Decimals, token1Decimals, tickSpacing, currentTick, false);
 
         if (tickLower > tickUpper) {
             return toResult('Lower price should be less than upper price.', true);
@@ -104,16 +118,19 @@ export async function mint(
                 amount1Wei,
                 recipient ?? account,
             );
-
-            // Set 0.2% slippage tolerance
-            if (amount0MinWei == 0n) {
-                amount0MinWei = (simulatedAmount0 * 9998n) / 10000n;
-            }
-
-            if (amount1MinWei == 0n) {
-                amount1MinWei = (simulatedAmount1 * 9998n) / 10000n;
-            }
         }
+
+        // Set slippage tolerance
+        let slippageMultiplier
+        if(slippage) {
+            slippageMultiplier = PERCENTAGE_BASE - BigInt(slippage);
+        } else {
+            // Set default 0.2% slippage tolerance
+            slippageMultiplier = PERCENTAGE_BASE - DEFAULT_SLIPPAGE;
+        }
+
+        amount0MinWei = (amount0MinWei * slippageMultiplier) / PERCENTAGE_BASE;
+        amount1MinWei = (amount1MinWei * slippageMultiplier) / PERCENTAGE_BASE;
 
         // Validate amounts
         if (currentTick >= tickLower && currentTick <= tickUpper) {
@@ -322,14 +339,14 @@ function priceToTick(
     } else if (pricePercentage) {
         const currentPrice = convertTickToPrice(currentTick, token0Decimals, token1Decimals);
 
-        let percentageMuliplier: number;
+        let percentageMultiplier: number;
         if (isLower) {
-            percentageMuliplier = 100 - pricePercentage;
+            percentageMultiplier = Number(PERCENTAGE_BASE) - pricePercentage;
         } else {
-            percentageMuliplier = 100 + pricePercentage;
+            percentageMultiplier = Number(PERCENTAGE_BASE) + pricePercentage;
         }
 
-        const adjustedPrice = (currentPrice * percentageMuliplier) / 100;
+        const adjustedPrice = (currentPrice * percentageMultiplier) / Number(PERCENTAGE_BASE);
         tick = convertPriceToTick(parseUnits(adjustedPrice.toString(), token1Decimals), token0Decimals, tickSpacing, isLower);
     }
 

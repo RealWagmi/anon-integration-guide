@@ -1,6 +1,6 @@
 import { Address, encodeFunctionData } from 'viem';
 import { checkToApprove, FunctionOptions, FunctionReturn, getChainFromName, toResult, TransactionParams } from '@heyanon/sdk';
-import { ADDRESSES, SUPPORTED_CHAINS } from '../constants';
+import { ADDRESSES, DEFAULT_SLIPPAGE, PERCENTAGE_BASE, SUPPORTED_CHAINS } from '../constants';
 import { swapRouterAbi } from '../abis';
 import { callQuoteExactOutputSingle } from './quoteExactOutputSingle';
 import { amountToWei } from '../utils';
@@ -13,13 +13,14 @@ interface Props {
     amountOut: string;
     amountInMax?: string;
     recipient?: Address;
+    slippage?: number;
 }
 
 // Questions:
 // How to check if user wants to swap native ETH?
 // TODO: Support FeeOnTransferTokens?
 export async function exactOutputSingle(
-    { chainName, account, tokenIn, tokenOut, amountOut, amountInMax, recipient }: Props,
+    { chainName, account, tokenIn, tokenOut, amountOut, amountInMax, recipient, slippage }: Props,
     { sendTransactions, notify, getProvider }: FunctionOptions,
 ): Promise<FunctionReturn> {
     try {
@@ -31,6 +32,11 @@ export async function exactOutputSingle(
         if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
         if (!SUPPORTED_CHAINS.includes(chainId)) return toResult(`Camelot V3 is not supported on ${chainName}`, true);
 
+        // Validate slippage
+        if (slippage && (!Number.isInteger(slippage) || slippage < 0 || slippage > 300)) {
+            return toResult(`Invalid slippage tolerance: ${slippage}, please provide a whole non-negative number, max 3% got ${slippage / 100} %`, true);
+        }
+
         await notify(`Preparing to swap tokens on Camelot V3...`);
 
         const provider = getProvider(chainId);
@@ -41,11 +47,19 @@ export async function exactOutputSingle(
         // Simulate swap if amountInMax is not provided to protect from front-running
         if (!amountInMax) {
             const quoteResult = await callQuoteExactOutputSingle(chainId, provider, tokenIn, tokenOut, amountOutWei);
-            const amountIn = quoteResult.result[0];
-
-            // Set 0.2% slippage tolerance
-            amountInMaxWei = (amountIn * 10002n) / 10000n;
+            amountInMaxWei = quoteResult.result[0];
         }
+
+        // Set slippage tolerance
+        let slippageMultiplier
+        if(slippage) {
+            slippageMultiplier = PERCENTAGE_BASE + BigInt(slippage);
+        } else {
+            // Set default 0.2% slippage tolerance
+            slippageMultiplier = PERCENTAGE_BASE + DEFAULT_SLIPPAGE;
+        }
+
+        amountInMaxWei = (amountInMaxWei * slippageMultiplier) / PERCENTAGE_BASE;
 
         // Validate amounts
         if (amountOutWei === 0n) return toResult('Amount OUT must be greater than 0', true);

@@ -1,4 +1,4 @@
-import { mint } from '../functions';
+import { exactInputSingle, mint } from '../functions';
 import { Address, decodeFunctionData } from 'viem';
 import { ChainId, SendTransactionProps, toResult, TransactionReturn } from '@heyanon/sdk';
 import { TransactionParams } from '@heyanon/sdk/dist/blockchain/types';
@@ -94,6 +94,7 @@ describe('mint', () => {
         recipient: spender,
         lowerPrice: lowerPrice,
         upperPrice: upperPrice,
+        slippage: 250,
     };
 
     it('should prepare and send transactions correctly', async () => {
@@ -127,8 +128,8 @@ describe('mint', () => {
                 ...props,
                 lowerPrice: undefined,
                 upperPrice: undefined,
-                lowerPricePercentage: 5,
-                upperPricePercengage: 20,
+                lowerPricePercentage: 500,
+                upperPricePercentage: 2000,
             },
             {
                 notify: mockNotify,
@@ -427,6 +428,46 @@ describe('mint', () => {
         );
 
         expect(result).toEqual(toResult('Amount B must be greater than 0', true));
+    });
+
+    it('should return an error if slippage is decimal', async () => {
+        let slippage = 10.01;
+        const result = await mint({ ...props, slippage: slippage }, {
+            notify: mockNotify,
+            sendTransactions: jest.fn(),
+            getProvider: jest.fn(),
+        });
+        expect(result).toEqual(toResult('Invalid slippage tolerance: 10.01, please provide a whole non-negative number, max 3% got 0.1001 %', true));
+    });
+
+    it('should return an error if slippage is negative', async () => {
+        let slippage = -10;
+        const result = await mint({ ...props, slippage: slippage }, {
+            notify: mockNotify,
+            sendTransactions: jest.fn(),
+            getProvider: jest.fn(),
+        });
+        expect(result).toEqual(toResult('Invalid slippage tolerance: -10, please provide a whole non-negative number, max 3% got -0.1 %', true));
+    });
+
+    it('should return an error if slippage is decimal', async () => {
+        let slippage = 10.01;
+        const result = await mint({ ...props, slippage: slippage }, {
+            notify: mockNotify,
+            sendTransactions: jest.fn(),
+            getProvider: jest.fn(),
+        });
+        expect(result).toEqual(toResult('Invalid slippage tolerance: 10.01, please provide a whole non-negative number, max 3% got 0.1001 %', true));
+    });
+
+    it('should return an error if slippage is above threshold', async () => {
+        let slippage = 500;
+        const result = await mint({ ...props, slippage: slippage }, {
+            notify: mockNotify,
+            sendTransactions: jest.fn(),
+            getProvider: jest.fn(),
+        });
+        expect(result).toEqual(toResult('Invalid slippage tolerance: 500, please provide a whole non-negative number, max 3% got 5 %', true));
     });
 
     //

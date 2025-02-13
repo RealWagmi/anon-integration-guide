@@ -8,7 +8,8 @@ export const GRAPH_URLS: Record<number, string> = {
     [ChainId.ARBITRUM]: `https://gateway.thegraph.com/api/${GRAPH_API_KEY}/subgraphs/id/3utanEBA9nqMjPnuQP1vMCCys6enSM3EawBpKTVwnUw2`,
 };
 
-export const PERCENTAGE_BASE = 100n;
+export const PERCENTAGE_BASE = 10000n;
+export const DEFAULT_SLIPPAGE = 2n;
 export const MIN_TICK = -887272;
 export const MAX_TICK = 887272;
 export const MAX_UINT128 = 2n ** 128n - 1n;
