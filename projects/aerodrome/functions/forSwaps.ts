@@ -1,14 +1,14 @@
 import { FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { Address, formatUnits } from 'viem';
-import lpSugar from "../abis/lpSugar";
-import { LP_SUGAR_ADDRESS } from "../constants";
-import { parseWallet } from "../utils/parse";
+import lpSugar from '../abis/lpSugar';
+import { LP_SUGAR_ADDRESS } from '../constants';
+import { parseWallet } from '../utils/parse';
 
 type Props = {
     chainName: string;
     account: Address;
-    path: string,
-    amount: string,
+    path: string;
+    amount: string;
 };
 
 /**
@@ -25,12 +25,7 @@ export async function forSwaps(props: Props, { getProvider }: FunctionOptions): 
 
     const provider = getProvider(chainId);
 
-    const [
-        amountOut,
-        v3SqrtPriceX96AfterList,
-        v3InitializedTicksCrossedList,
-        v3SwapGasEstimate
-    ] = await provider.readContract({
+    const [amountOut, v3SqrtPriceX96AfterList, v3InitializedTicksCrossedList, v3SwapGasEstimate] = await provider.readContract({
         abi: lpSugar,
         address: LP_SUGAR_ADDRESS,
         functionName: 'forSwaps',
