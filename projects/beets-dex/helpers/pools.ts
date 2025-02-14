@@ -1,5 +1,6 @@
-import { Address, Hex, mapPoolType, PoolStateWithUnderlyings, PoolTokenWithUnderlying } from '@balancer/sdk';
+import { Address, Hex, mapPoolType, PoolStateWithUnderlyings, PoolTokenWithUnderlying, Token } from '@balancer/sdk';
 import { GqlPoolAprItemType, GqlPoolBase, GqlPoolMinimal } from './beets/types';
+import { getEquivalentTokenAddresses } from './tokens';
 
 /**
  * Types of APR items returned by the API that we should consider
@@ -207,4 +208,23 @@ export function formatPoolType(type: string): string {
         .split('_')
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
+}
+
+/**
+ * Filter pools to only those containing all specified tokens.
+ *
+ * Optionally includes pools containing equivalent tokens.
+ */
+export async function filterPoolsByTokens(chainName: string, pools: GqlPoolMinimal[], tokens: Token[], includeEquivalentTokens = false): Promise<GqlPoolMinimal[]> {
+    const equivalentTokensArray = includeEquivalentTokens ? await Promise.all(tokens.map((t) => getEquivalentTokenAddresses(chainName, t))) : tokens.map(() => [] as Address[]);
+
+    return pools.filter((pool) => {
+        // Check that pool contains all tokens (or their equivalents)
+        return tokens.every((token, index) => {
+            const hasToken = poolContainsToken(pool, token.address);
+            if (!includeEquivalentTokens) return hasToken;
+            const hasEquivalentToken = equivalentTokensArray[index].some((addr) => poolContainsToken(pool, addr));
+            return hasToken || hasEquivalentToken;
+        });
+    });
 }

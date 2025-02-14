@@ -14,7 +14,7 @@ interface Props {
     token1Address: Address;
 }
 
-export async function getBestAprForTokenPair({ chainName, token0Address, token1Address }: Props, { notify }: FunctionOptions): Promise<FunctionReturn> {
+export async function getPoolsWithTokenPair({ chainName, token0Address, token1Address }: Props, { notify }: FunctionOptions): Promise<FunctionReturn> {
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
@@ -29,8 +29,8 @@ export async function getBestAprForTokenPair({ chainName, token0Address, token1A
 
     const client = new BeetsClient();
 
-    // Get pools sorted by APR
-    const pools = await client.getPools(GqlPoolOrderBy.Apr, GqlPoolOrderDirection.Desc, MAX_FETCH_POOLS, {
+    // Get pools sorted by TVL
+    const pools = await client.getPools(GqlPoolOrderBy.TotalLiquidity, GqlPoolOrderDirection.Desc, MAX_FETCH_POOLS, {
         chainIn: [anonChainNameToGqlChain(chainName) as GqlChain],
         minTvl: MIN_TVL,
     });
@@ -43,6 +43,7 @@ export async function getBestAprForTokenPair({ chainName, token0Address, token1A
 
     // Filter pools containing both tokens or their equivalents
     const matchingPools = await filterPoolsByTokens(chainName, pools, [token0, token1], true);
+
     if (matchingPools.length === 0) {
         return toResult(`No pools found containing both ${token0.symbol} and ${token1.symbol} with minimum TVL of $${MIN_TVL}`);
     }

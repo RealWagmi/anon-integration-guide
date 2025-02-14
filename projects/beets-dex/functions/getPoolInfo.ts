@@ -6,6 +6,7 @@ import { GqlChain, GqlPoolOrderBy, GqlPoolOrderDirection } from '../helpers/beet
 import { formatPoolMinimal } from '../helpers/pools';
 import { simplifyPool } from '../helpers/pools';
 import { anonChainNameToGqlChain } from '../helpers/chains';
+import { validatePoolId } from '../helpers/validation';
 
 interface Props {
     chainName: string;
@@ -17,6 +18,7 @@ export async function getPoolInfo({ chainName, account, poolId }: Props, { notif
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
+    if (!validatePoolId(poolId)) return toResult(`Invalid pool ID: ${poolId}`, true);
 
     const client = new BeetsClient();
 

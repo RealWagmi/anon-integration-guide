@@ -26,6 +26,13 @@ export function validateSlippageAsPercentage(slippage: string): boolean {
 }
 
 /**
+ * Validate a pool ID
+ */
+export function validatePoolId(poolId: string): boolean {
+    return poolId.startsWith('0x');
+}
+
+/**
  * Verifies if the provided token pair is present in the given Gql pool,
  * accounting also for underlying tokens.
  *

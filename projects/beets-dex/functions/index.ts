@@ -4,6 +4,8 @@ export { executeSwapExactOut } from './executeSwapExactOut';
 export { getQuoteForSwapExactIn } from './getQuoteForSwapExactIn';
 export { getQuoteForSwapExactOut } from './getQuoteForSwapExactOut';
 export { getMyPositionsPortfolio } from './getMyPositionsPortfolio';
+export { getPoolsWithToken } from './getPoolsWithToken';
+export { getPoolsWithTokenPair } from './getPoolsWithTokenPair';
 export { getBestAprForToken } from './getBestAprForToken';
 export { getBestAprForTokenPair } from './getBestAprForTokenPair';
 export { getPoolInfo } from './getPoolInfo';

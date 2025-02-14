@@ -212,7 +212,8 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getBestAprForToken',
-        description: 'Show the top pools containing a specific token, sorted by APR. Only includes pools with TVL > $200,000.',
+        description:
+            'Show pools with the given token, sorted by APR. Only includes pools with TVL > $200,000.  Will include also pools with tokens equivalent to the given token, e.g. if you ask for Sonic, pools with stS will be included too.',
         required: ['chainName', 'tokenAddress'],
         props: [
             {
@@ -230,7 +231,49 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getBestAprForTokenPair',
-        description: 'Show the top pools containing both specified tokens, sorted by APR. Only includes pools with TVL > $200,000.',
+        description:
+            'Show pools with the given pair of tokens, sorted by APR.  Only includes pools with TVL > $200,000.  Will include also pools with tokens equivalent to the given ones, e.g. if you ask for Sonic and USDC, pools with stS and USDC.e will be included too.',
+        required: ['chainName', 'token0Address', 'token1Address'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name',
+            },
+            {
+                name: 'token0Address',
+                type: 'string',
+                description: 'Address of the first token to search for',
+            },
+            {
+                name: 'token1Address',
+                type: 'string',
+                description: 'Address of the second token to search for',
+            },
+        ],
+    },
+    {
+        name: 'getPoolsWithToken',
+        description: 'Show pools with the given token, sorted by TVL. Only includes pools with TVL > $200,000.',
+        required: ['chainName', 'tokenAddress'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name',
+            },
+            {
+                name: 'tokenAddress',
+                type: 'string',
+                description: 'Address of the token to search for',
+            },
+        ],
+    },
+    {
+        name: 'getPoolsWithTokenPair',
+        description: 'Show pools with the given pair of tokens, sorted by TVL.  Only includes pools with TVL > $200,000.',
         required: ['chainName', 'token0Address', 'token1Address'],
         props: [
             {

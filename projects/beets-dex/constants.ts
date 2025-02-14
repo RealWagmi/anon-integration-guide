@@ -50,9 +50,9 @@ export const TOKEN_SYNONYMS = {
 export const EQUIVALENT_TOKENS = {
     [ChainId.SONIC]: {
         ETH: ['WETH', 'STETH'],
-        WETH: ['WETH', 'STETH'],
+        WETH: ['STETH'],
         S: ['WS', 'STS'],
-        WS: ['WS', 'STS'],
+        WS: ['STS'],
         'USDC.e': ['SCUSD'],
     },
 };

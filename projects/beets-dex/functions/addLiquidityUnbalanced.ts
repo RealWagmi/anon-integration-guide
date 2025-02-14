@@ -38,18 +38,10 @@ interface Props {
 
 /**
  * TODO:
- * - fix boosted pools add liquidity (https://github.com/balancer/docs-v3/pull/232#pullrequestreview-2610451961)
- * - support for underlying tokens, e.g. add USDC.e to Boosted Stable Rings pool (same as above?)
  * - getPoolFromName getter, so that the user can add to a pool by its name
  * - test wethIsEth=true
  * - make swap notify message multi-line like for add liquidity
- * - Once you implement boosted pools, decide whether to leave the implementation here (and rename the tool to
- *   addLiquidity) or move it to a new addLiquidityBoosted tool
- * - Implement check on minimum amount that can be added to a boosted pool
- *
- * DONE:
- * - getPool GraphQL endpoint, so that we can show the name of the pool
- * - fix V3 pools add liquidity (https://github.com/balancer/b-sdk/blob/516070ac7b2b16127e8c78be20354874c52548bf/examples/addLiquidity/addLiquidityWithPermit2Signature.ts#L146-L157)
+ * - Implement check on minimum amount that can be added to a boosted pool (WrapAmountTooSmall)
  */
 export async function addLiquidityUnbalanced(
     { chainName, account, poolId, token0Address, token0Amount, token1Address, token1Amount, slippageAsPercentage }: Props,
