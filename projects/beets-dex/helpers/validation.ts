@@ -1,5 +1,5 @@
 import { Address } from '@balancer/sdk';
-import { getBalancerTokenByAddress, getWrapped } from './tokens';
+import { getBalancerTokenByAddress, getWrappedTokens } from './tokens';
 import { GqlPoolMinimal, GqlPoolTokenDetail, GqlToken } from './beets/types';
 import { PublicClient, erc20Abi, parseUnits } from 'viem';
 import { NATIVE_TOKEN_ADDRESS } from '../constants';
@@ -55,7 +55,7 @@ export async function validateTokensAreInPool(chainName: string, pool: GqlPoolMi
     const chainId = getChainFromName(chainName);
     if (!chainId) return [false, `Invalid chain name: ${chainName}`];
 
-    const wrappedTokenAddresses = getWrapped(tokenAddresses, chainId);
+    const wrappedTokenAddresses = getWrappedTokens(tokenAddresses, chainId);
 
     for (const tokenAddress of wrappedTokenAddresses) {
         if (!poolAddresses.includes(tokenAddress)) {

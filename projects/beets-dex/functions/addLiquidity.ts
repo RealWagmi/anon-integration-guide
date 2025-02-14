@@ -16,7 +16,7 @@ import {
 } from '@balancer/sdk';
 import { DEFAULT_SLIPPAGE_AS_PERCENTAGE, NATIVE_TOKEN_ADDRESS, supportedChains } from '../constants';
 import { validateSlippageAsPercentage, validateTokenPositiveDecimalAmount, validateTokenBalances, validateTokensAreInPool } from '../helpers/validation';
-import { toHumanReadableAmount, getBalancerTokenByAddress } from '../helpers/tokens';
+import { toHumanReadableAmount, getBalancerTokenByAddress, getWrappedToken } from '../helpers/tokens';
 import { AddLiquidityBuildCallOutput } from '@balancer/sdk';
 import { Slippage } from '@balancer/sdk';
 import { anonChainNameToBalancerChainId, anonChainNameToGqlChain, getDefaultRpcUrl } from '../helpers/chains';
@@ -36,9 +36,6 @@ interface Props {
     slippageAsPercentage: `${number}` | null;
 }
 
-/**
- * TODO: add Liquidity query fails when providing S liquidity and wethIsEth=true
- */
 export async function addLiquidity(
     { chainName, account, poolId, token0Address, token0Amount, token1Address, token1Amount, slippageAsPercentage }: Props,
     options: FunctionOptions,
@@ -99,7 +96,12 @@ export async function addLiquidity(
     // Prepare input amounts for SDK
     const amountsIn: InputAmount[] = [{ address: token0Address, decimals: token0.decimals, rawAmount: amount0InWei }];
     if (token1Address && amount1InWei && token1) amountsIn.push({ address: token1Address, decimals: token1.decimals, rawAmount: amount1InWei });
-    amountsIn.sort((a, b) => (a.address.toLowerCase() < b.address.toLowerCase() ? -1 : 1));
+
+    // If the token is the native token, wrap it, otherwise the SDK query will fail
+    if (wethIsEth) {
+        if (token0Address === NATIVE_TOKEN_ADDRESS) amountsIn[0].address = getWrappedToken(token0Address, chainId);
+        if (token1Address === NATIVE_TOKEN_ADDRESS) amountsIn[1].address = getWrappedToken(token1Address, chainId);
+    }
 
     // Construct the AddLiquidityInput
     const rpcUrl = getDefaultRpcUrl(publicClient);

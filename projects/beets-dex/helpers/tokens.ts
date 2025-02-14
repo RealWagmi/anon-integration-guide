@@ -135,14 +135,18 @@ export async function getEquivalentTokenAddresses(chainName: string, token: Bala
 /**
  * Given a list of token addresses, return for each token its wrapped
  * version, or the token itself if it is not a native token.
- *
- * This is the opposite of the replaceWrapped function in the Balancer SDK
  */
-export function getWrapped(tokens: Address[], chainId: number): Address[] {
-    return tokens.map((token) => {
-        if (NATIVE_TOKEN_ADDRESS.toLowerCase() === token.toLowerCase()) {
-            return NATIVE_ASSETS[chainId as keyof typeof NATIVE_ASSETS].wrapped;
-        }
-        return token;
-    });
+export function getWrappedTokens(tokens: Address[], chainId: number): Address[] {
+    return tokens.map((token) => getWrappedToken(token, chainId));
+}
+
+/**
+ * Given a token address, return its wrapped version, or the token
+ * itself if it is not a native token.
+ */
+export function getWrappedToken(token: Address, chainId: number): Address {
+    if (NATIVE_TOKEN_ADDRESS.toLowerCase() === token.toLowerCase()) {
+        return NATIVE_ASSETS[chainId as keyof typeof NATIVE_ASSETS].wrapped;
+    }
+    return token;
 }
