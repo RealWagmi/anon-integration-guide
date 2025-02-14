@@ -37,9 +37,7 @@ interface Props {
 }
 
 /**
- * TODO:
- * - getPoolFromName getter, so that the user can add to a pool by its name
- * - add Liquidity query fails when providing S liquidity and wethIsEth=true
+ * TODO: add Liquidity query fails when providing S liquidity and wethIsEth=true
  */
 export async function addLiquidityUnbalanced(
     { chainName, account, poolId, token0Address, token0Amount, token1Address, token1Amount, slippageAsPercentage }: Props,

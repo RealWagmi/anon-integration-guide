@@ -14,7 +14,7 @@ interface Props {
     poolId: string;
 }
 
-export async function getPoolInfo({ chainName, account, poolId }: Props, { notify }: FunctionOptions): Promise<FunctionReturn> {
+export async function getPoolInfoFromPoolId({ chainName, account, poolId }: Props, { notify }: FunctionOptions): Promise<FunctionReturn> {
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);

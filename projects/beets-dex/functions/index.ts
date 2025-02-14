@@ -8,5 +8,6 @@ export { getPoolsWithToken } from './getPoolsWithToken';
 export { getPoolsWithTokenPair } from './getPoolsWithTokenPair';
 export { getBestAprForToken } from './getBestAprForToken';
 export { getBestAprForTokenPair } from './getBestAprForTokenPair';
-export { getPoolInfo } from './getPoolInfo';
+export { getPoolInfoFromPoolId } from './getPoolInfoFromPoolId';
+export { getPoolInfoFromPoolName } from './getPoolInfoFromPoolName';
 export { getTokenAddressFromSymbol } from './getTokenAddressFromSymbol';

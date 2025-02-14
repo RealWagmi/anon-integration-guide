@@ -112,9 +112,6 @@ export async function getSwapQuote(
  * human-readable multi-line string, including information about the price, the
  * amount of tokens that will be swapped, those that will be received, the price
  * impact, and the route taken.
- *
- * TODO: the output should contain a warning in the case that the price
- * impact is greater than 0.5%.
  */
 export function formatSwapQuote(quote: GetQuoteResult, significatDigits = DEFAULT_PRECISION): string {
     const { quote: q, tokenIn, tokenOut } = quote;
@@ -171,8 +168,7 @@ export function formatSwapQuote(quote: GetQuoteResult, significatDigits = DEFAUL
  *
  * Returns the transaction data and amounts for notification purposes.
  *
- * TODO:
- *  - When wethIsEth, asking for Sonic in an exactOut swap results in wS
+ * TODO: When wethIsEth, asking for Sonic in an exactOut swap results in wS
  */
 export function buildSwapTransaction({ account, quote, slippageAsPercentage, deadline }: BuildSwapTransactionProps): BuildSwapTransactionResult {
     const { quote: q, swap, tokenIn, tokenOut, swapKind } = quote;

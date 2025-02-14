@@ -22,12 +22,12 @@ export const tools: AiTool[] = [
             {
                 name: 'poolId',
                 type: 'string',
-                description: 'ID of the pool to add liquidity to',
+                description: 'ID of the pool to add liquidity to, starting with "0x"',
             },
             {
                 name: 'token0Address',
                 type: 'string',
-                description: 'Address of the first token to add',
+                description: 'Address of the first token to add, starting with "0x"',
             },
             {
                 name: 'token0Amount',
@@ -37,7 +37,7 @@ export const tools: AiTool[] = [
             {
                 name: 'token1Address',
                 type: ['string', 'null'],
-                description: 'Optional: Address of the second token to add.  If not provided, the first token will be zapped alone in the pool.',
+                description: 'Optional: Address of the second token to add, starting with "0x". If not provided, the first token will be zapped alone in the pool.',
             },
             {
                 name: 'token1Amount',
@@ -73,12 +73,12 @@ export const tools: AiTool[] = [
             {
                 name: 'tokenInAddress',
                 type: 'string',
-                description: 'Address of the token you want to swap in',
+                description: 'Address of the token you want to swap in, starting with "0x"',
             },
             {
                 name: 'tokenOutAddress',
                 type: 'string',
-                description: 'Address of the token you want to receive',
+                description: 'Address of the token you want to receive, starting with "0x"',
             },
             {
                 name: 'humanReadableAmountIn',
@@ -113,12 +113,12 @@ export const tools: AiTool[] = [
             {
                 name: 'tokenInAddress',
                 type: 'string',
-                description: 'Address of the token you want to swap in',
+                description: 'Address of the token you want to swap in, starting with "0x"',
             },
             {
                 name: 'tokenOutAddress',
                 type: 'string',
-                description: 'Address of the token you want to receive',
+                description: 'Address of the token you want to receive, starting with "0x"',
             },
             {
                 name: 'humanReadableAmountOut',
@@ -148,12 +148,12 @@ export const tools: AiTool[] = [
             {
                 name: 'tokenInAddress',
                 type: 'string',
-                description: 'Address of the token you want to swap in',
+                description: 'Address of the token you want to swap in, starting with "0x"',
             },
             {
                 name: 'tokenOutAddress',
                 type: 'string',
-                description: 'Address of the token you want to receive from the swap',
+                description: 'Address of the token you want to receive from the swap, starting with "0x"',
             },
             {
                 name: 'humanReadableAmountIn',
@@ -177,12 +177,12 @@ export const tools: AiTool[] = [
             {
                 name: 'tokenInAddress',
                 type: 'string',
-                description: 'Address of the token you want to swap in',
+                description: 'Address of the token you want to swap in, starting with "0x"',
             },
             {
                 name: 'tokenOutAddress',
                 type: 'string',
-                description: 'Address of the token you want to receive from the swap',
+                description: 'Address of the token you want to receive from the swap, starting with "0x"',
             },
             {
                 name: 'humanReadableAmountOut',
@@ -213,7 +213,7 @@ export const tools: AiTool[] = [
     {
         name: 'getBestAprForToken',
         description:
-            'Show pools with the given token, sorted by APR. Only includes pools with TVL > $200,000.  Will include also pools with tokens equivalent to the given token, e.g. if you ask for Sonic, pools with stS will be included too.',
+            'Show pools with the best APR yield for the given token, sorted by APR. Only includes pools with TVL > $200,000.  Will include also pools with tokens equivalent to the given token, e.g. if you ask for Sonic, pools with stS will be included too.',
         required: ['chainName', 'tokenAddress'],
         props: [
             {
@@ -225,14 +225,14 @@ export const tools: AiTool[] = [
             {
                 name: 'tokenAddress',
                 type: 'string',
-                description: 'Address of the token to search for',
+                description: 'Address of the token to search for, starting with "0x"',
             },
         ],
     },
     {
         name: 'getBestAprForTokenPair',
         description:
-            'Show pools with the given pair of tokens, sorted by APR.  Only includes pools with TVL > $200,000.  Will include also pools with tokens equivalent to the given ones, e.g. if you ask for Sonic and USDC, pools with stS and USDC.e will be included too.',
+            'Show pools with the best APR yield for the given pair of tokens, sorted by APR.  Only includes pools with TVL > $200,000.  Will include also pools with tokens equivalent to the given ones, e.g. if you ask for Sonic and USDC, pools with stS and USDC.e will be included too.',
         required: ['chainName', 'token0Address', 'token1Address'],
         props: [
             {
@@ -244,12 +244,12 @@ export const tools: AiTool[] = [
             {
                 name: 'token0Address',
                 type: 'string',
-                description: 'Address of the first token to search for',
+                description: 'Address of the first token to search for, starting with "0x"',
             },
             {
                 name: 'token1Address',
                 type: 'string',
-                description: 'Address of the second token to search for',
+                description: 'Address of the second token to search for, starting with "0x"',
             },
         ],
     },
@@ -267,7 +267,7 @@ export const tools: AiTool[] = [
             {
                 name: 'tokenAddress',
                 type: 'string',
-                description: 'Address of the token to search for',
+                description: 'Address of the token to search for, starting with "0x"',
             },
         ],
     },
@@ -285,17 +285,17 @@ export const tools: AiTool[] = [
             {
                 name: 'token0Address',
                 type: 'string',
-                description: 'Address of the first token to search for',
+                description: 'Address of the first token to search for, starting with "0x"',
             },
             {
                 name: 'token1Address',
                 type: 'string',
-                description: 'Address of the second token to search for',
+                description: 'Address of the second token to search for, starting with "0x"',
             },
         ],
     },
     {
-        name: 'getPoolInfo',
+        name: 'getPoolInfoFromPoolId',
         description: 'Get information about a specific pool, including the APR yield, the TVL, and any positions in the pool belonging to the user.',
         required: ['chainName', 'account', 'poolId'],
         props: [
@@ -313,7 +313,25 @@ export const tools: AiTool[] = [
             {
                 name: 'poolId',
                 type: 'string',
-                description: 'ID of the pool to get information about',
+                description: 'ID of the pool to get information about, starting with "0x"',
+            },
+        ],
+    },
+    {
+        name: 'getPoolInfoFromPoolName',
+        description: 'Get information about a specific pool by its name, including the APR yield, the TVL, and any positions in the pool belonging to the user.',
+        required: ['chainName', 'poolName'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name',
+            },
+            {
+                name: 'poolName',
+                type: 'string',
+                description: 'Name of the pool to search for, for example "Staked Sonic Symphony".  The search is case-insensitive, with partial matches allowed.',
             },
         ],
     },
