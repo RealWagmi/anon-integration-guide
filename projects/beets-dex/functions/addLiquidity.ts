@@ -39,7 +39,7 @@ interface Props {
 /**
  * TODO: add Liquidity query fails when providing S liquidity and wethIsEth=true
  */
-export async function addLiquidityUnbalanced(
+export async function addLiquidity(
     { chainName, account, poolId, token0Address, token0Amount, token1Address, token1Amount, slippageAsPercentage }: Props,
     options: FunctionOptions,
 ): Promise<FunctionReturn> {

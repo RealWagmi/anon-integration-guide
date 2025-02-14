@@ -3,7 +3,7 @@ import { supportedChains } from './constants';
 
 export const tools: AiTool[] = [
     {
-        name: 'addLiquidityUnbalanced',
+        name: 'addLiquidity',
         description:
             'Add liquidity to a pool.  Tokens do not need to be proportional.  If they are not, the protocol will automatically zap them for the correct proportions.  If you provide one token amount, it will be zapped in the pool alone.',
         required: ['chainName', 'account', 'poolId', 'token0Address', 'token0Amount', 'token1Address', 'token1Amount', 'slippageAsPercentage'],
