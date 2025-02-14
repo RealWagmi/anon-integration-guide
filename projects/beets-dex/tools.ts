@@ -53,6 +53,41 @@ export const tools: AiTool[] = [
         ],
     },
     {
+        name: 'removeLiquidity',
+        description:
+            'Remove liquidity from a pool and return the tokens to the user.  The amount of liquidity to be removed is specified as a percentage of the user liquidity (default is 100%).  The liquidity will be removed in the same proportions as the pool tokens.',
+        required: ['chainName', 'account', 'poolId', 'removalPercentage', 'slippageAsPercentage'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Account address removing the liquidity',
+            },
+            {
+                name: 'poolId',
+                type: 'string',
+                description: 'ID of the pool to remove liquidity from, starting with "0x"',
+            },
+            {
+                name: 'removalPercentage',
+                type: ['string', 'null'],
+                description: 'Amount of liquidity to remove, expressed as a percentage (e.g. 50 for 50%). If null, all of the user liquidity will be removed.',
+            },
+            {
+                name: 'slippageAsPercentage',
+                type: ['string', 'null'],
+                description:
+                    'The maximum slippage you are willing to tolerate, expressed as a percentage (e.g. 10 for 10%). If null, the default slippage for the chain will be used.',
+            },
+        ],
+    },
+    {
         name: 'executeSwapExactIn',
         description:
             'Get a quote for and then execute a swap where you specify the EXACT AMOUNT YOU WANT TO SEND in order to buy a token. For example: "Swap 1 ETH for USDC", "Sell 1 ETH for USDC", "Buy USDC with 1 ETH".',

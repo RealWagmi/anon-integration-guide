@@ -1,4 +1,5 @@
 export { addLiquidity } from './addLiquidity';
+export { removeLiquidity } from './removeLiquidity';
 export { executeSwapExactIn } from './executeSwapExactIn';
 export { executeSwapExactOut } from './executeSwapExactOut';
 export { getQuoteForSwapExactIn } from './getQuoteForSwapExactIn';

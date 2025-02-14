@@ -3,7 +3,7 @@ import { FunctionReturn, FunctionOptions, getChainFromName, toResult, checkToApp
 import { SwapKind } from '@balancer/sdk';
 import { GetQuoteResult, getSwapQuote, buildSwapTransaction } from '../helpers/swaps';
 import { DEFAULT_DEADLINE_FROM_NOW, DEFAULT_SLIPPAGE_AS_PERCENTAGE, NATIVE_TOKEN_ADDRESS, supportedChains } from '../constants';
-import { validateSlippageAsPercentage, validateTokenPositiveDecimalAmount } from '../helpers/validation';
+import { validatePercentage, validateTokenPositiveDecimalAmount } from '../helpers/validation';
 import { toHumanReadableAmount } from '../helpers/tokens';
 
 interface Props {
@@ -26,7 +26,7 @@ export async function executeSwapExactIn(
 
     // Default values
     slippageAsPercentage = slippageAsPercentage ?? `${DEFAULT_SLIPPAGE_AS_PERCENTAGE}`;
-    if (!validateSlippageAsPercentage(slippageAsPercentage)) return toResult(`Invalid slippage: ${slippageAsPercentage}`, true);
+    if (!validatePercentage(slippageAsPercentage)) return toResult(`Invalid slippage: ${slippageAsPercentage}`, true);
     const deadline = BigInt(Math.floor(Date.now() / 1000)) + DEFAULT_DEADLINE_FROM_NOW;
 
     // Get the quote for the swap

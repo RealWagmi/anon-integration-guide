@@ -101,6 +101,10 @@ export function toHumanReadableAmount(
     return toSignificant(Number(stringWithFullPrecision), minSignificantDigits, maxSignificantDigits, useThousandsSeparator);
 }
 
+/**
+ * Format a number to a string with the given number of significant digits,
+ * using a thousands separator if specified.
+ */
 export function toSignificant(num: number, minSignificantDigits = 2, maxSignificantDigits = DEFAULT_PRECISION, useThousandsSeparator = true): string {
     return num.toLocaleString('en', {
         minimumSignificantDigits: minSignificantDigits,

@@ -76,6 +76,6 @@ export const DEFAULT_DEADLINE_FROM_NOW = 7200n;
 
 /**
  * The default slippage percentage to use for swaps,
- * expressed as a number between 0 and 1.
+ * expressed as a number between 0 and 100.
  */
 export const DEFAULT_SLIPPAGE_AS_PERCENTAGE = 1;

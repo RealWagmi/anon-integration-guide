@@ -15,7 +15,7 @@ import {
     AddLiquidityBoostedUnbalancedInput,
 } from '@balancer/sdk';
 import { DEFAULT_SLIPPAGE_AS_PERCENTAGE, NATIVE_TOKEN_ADDRESS, supportedChains } from '../constants';
-import { validateSlippageAsPercentage, validateTokenPositiveDecimalAmount, validateTokenBalances, validateTokensAreInPool } from '../helpers/validation';
+import { validatePercentage, validateTokenPositiveDecimalAmount, validateTokenBalances, validateTokensAreInPool } from '../helpers/validation';
 import { toHumanReadableAmount, getBalancerTokenByAddress, getWrappedToken } from '../helpers/tokens';
 import { AddLiquidityBuildCallOutput } from '@balancer/sdk';
 import { Slippage } from '@balancer/sdk';
@@ -53,7 +53,7 @@ export async function addLiquidity(
 
     // Parse and validate slippage
     slippageAsPercentage = slippageAsPercentage ?? `${DEFAULT_SLIPPAGE_AS_PERCENTAGE}`;
-    if (!validateSlippageAsPercentage(slippageAsPercentage)) return toResult(`Invalid slippage: ${slippageAsPercentage}`, true);
+    if (!validatePercentage(slippageAsPercentage)) return toResult(`Invalid slippage: ${slippageAsPercentage}`, true);
     const slippage = Slippage.fromPercentage(slippageAsPercentage);
 
     // Get token information
@@ -70,7 +70,7 @@ export async function addLiquidity(
     await options.notify(`Fetching data from liquidity pool...`);
     const pool = await new BeetsClient().getPool(poolId, anonChainNameToGqlChain(chainName) as GqlChain);
     if (!pool) return toResult(`Could not find pool with ID ${poolId}`, true);
-    options.notify(`Pool: "${pool.name}" of type ${formatPoolType(pool.type)}`);
+    options.notify(`Pool info: "${pool.name}" of type ${formatPoolType(pool.type)}`);
     const poolState = await fromGqlPoolMinimalToBalancerPoolStateWithUnderlyings(pool);
 
     // Validate that the tokens are in the pool
@@ -187,11 +187,11 @@ export async function addLiquidity(
 
     // Notify user
     await options.notify(
-        `Adding liquidity to pool ${poolId}:\n` +
-            `- ${token0Amount} ${token0.symbol}\n` +
-            (token1 ? `- ${token1Amount} ${token1.symbol}\n` : '') +
-            `Expected BPT Out: ${toHumanReadableAmount(bptOut, 18)}\n` +
-            `Min BPT Out: ${toHumanReadableAmount(buildOutput.minBptOut.amount, 18)}`,
+        `Adding liquidity to pool ${pool.name}:\n` +
+            `- Add ${token0Amount} ${token0.symbol}` +
+            (token1 ? ` and ${token1Amount} ${token1.symbol}\n` : '') +
+            `- Expected liquidity you'll receive: ${toHumanReadableAmount(bptOut, 18)}\n` +
+            `- Minimum liquidity you'll receive: ${toHumanReadableAmount(buildOutput.minBptOut.amount, 18)}`,
     );
 
     // Send transactions
