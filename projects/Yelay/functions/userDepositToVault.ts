@@ -137,7 +137,7 @@ export async function userDepositToVault(
         data: depositAssetsToVaultDataValidation.result,
     };
 
-    // sign and send ts
+    // sign and send tx
     await notify(
         `Approving and depositing ${amount} ${vaultTokenType.symbol} in vault ${vaultAddressValidation.result} for account ${account}...`,
     );

@@ -120,7 +120,7 @@ export async function userFastRedeemFromVault(
         data: redeemFastDataValidation.result,
     };
 
-    // sign and send ts
+    // sign and send tx
     await notify(
         `Fast redeeming ${amount} ${vaultTokenType.symbol} from vault ${vaultAddressValidation.result} for account ${account}...`,
     );

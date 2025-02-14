@@ -1,7 +1,6 @@
-import { Address } from 'viem';
 import { FunctionReturn, FunctionOptions, toResult, getChainFromName } from '@heyanon/sdk';
 import { supportedChains } from '../constants';
-import { getChainConfig, getSdk, wrapWithResult } from '../utils';
+import { getSdk, wrapWithResult } from '../utils';
 import { VaultAPYInfoQuery } from '@spool.fi/spool-v2-sdk';
 
 export interface GetVaultBaseApyProps {

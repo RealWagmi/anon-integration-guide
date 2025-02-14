@@ -1,7 +1,7 @@
 import { Address } from 'viem';
 import { FunctionReturn, FunctionOptions, toResult, getChainFromName } from '@heyanon/sdk';
 import { supportedChains } from '../constants';
-import { getChainConfig, getSdk, wrapWithResult } from '../utils';
+import { getSdk, wrapWithResult } from '../utils';
 
 export interface GetUserSvtBalanceProps {
     chainName: string;
