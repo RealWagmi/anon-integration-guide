@@ -15,7 +15,7 @@ import {
     AddLiquidityBoostedUnbalancedInput,
 } from '@balancer/sdk';
 import { DEFAULT_SLIPPAGE_AS_PERCENTAGE, NATIVE_TOKEN_ADDRESS, supportedChains } from '../constants';
-import { validateSlippageAsPercentage, validateTokenPositiveDecimalAmount, validateTokenBalances, validateTokenPairInPool } from '../helpers/validation';
+import { validateSlippageAsPercentage, validateTokenPositiveDecimalAmount, validateTokenBalances, validateTokensAreInPool } from '../helpers/validation';
 import { toHumanReadableAmount, getBalancerTokenByAddress } from '../helpers/tokens';
 import { AddLiquidityBuildCallOutput } from '@balancer/sdk';
 import { Slippage } from '@balancer/sdk';
@@ -39,9 +39,7 @@ interface Props {
 /**
  * TODO:
  * - getPoolFromName getter, so that the user can add to a pool by its name
- * - test wethIsEth=true
- * - make swap notify message multi-line like for add liquidity
- * - Implement check on minimum amount that can be added to a boosted pool (WrapAmountTooSmall)
+ * - add Liquidity query fails when providing S liquidity and wethIsEth=true
  */
 export async function addLiquidityUnbalanced(
     { chainName, account, poolId, token0Address, token0Amount, token1Address, token1Amount, slippageAsPercentage }: Props,
@@ -81,8 +79,13 @@ export async function addLiquidityUnbalanced(
     const poolState = await fromGqlPoolMinimalToBalancerPoolStateWithUnderlyings(pool);
 
     // Validate that the tokens are in the pool
-    const [tokensValid, tokensError] = await validateTokenPairInPool(chainName, pool, token0Address, token1Address);
+    const tokensToValidate = [token0Address];
+    if (token1Address) tokensToValidate.push(token1Address);
+    const [tokensValid, tokensError] = await validateTokensAreInPool(chainName, pool, tokensToValidate);
     if (!tokensValid) return toResult(tokensError!, true);
+
+    // Check if either of the tokens is the native token
+    const wethIsEth = token0Address === NATIVE_TOKEN_ADDRESS || token1Address === NATIVE_TOKEN_ADDRESS;
 
     // Check balances
     const publicClient = options.getProvider(chainId);
@@ -116,7 +119,6 @@ export async function addLiquidityUnbalanced(
     let addressToApprove: Address;
     let bptOut: bigint;
     let queryOutput: AddLiquidityQueryOutput | AddLiquidityBoostedQueryOutput;
-    const wethIsEth = false; // TODO: add support for wethIsEth
 
     // Handle special case: the user wants to add liquidity to a boosted token.
     // Tokens in a boosted pool have an underlying token, which is usually
@@ -196,5 +198,5 @@ export async function addLiquidityUnbalanced(
     await options.notify(transactions.length > 1 ? `Sending approve & add liquidity transactions...` : 'Sending add liquidity transaction...');
     const result = await options.sendTransactions({ chainId, account, transactions });
     const message = result.data[result.data.length - 1].message;
-    return toResult(`Successfully added liquidity to pool ${poolId}. ${message}`);
+    return toResult(`Successfully added liquidity to pool ${pool.name}. ${message}`);
 }

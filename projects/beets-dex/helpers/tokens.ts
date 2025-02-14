@@ -1,9 +1,9 @@
 import { Address, formatUnits } from 'viem';
 import { GqlToken } from './beets/types';
-import { Token as BalancerToken } from '@balancer/sdk';
+import { Token as BalancerToken, NATIVE_ASSETS } from '@balancer/sdk';
 import { BeetsClient } from './beets/client';
 import { anonChainNameToGqlChain } from './chains';
-import { DEFAULT_PRECISION, EQUIVALENT_TOKENS, TOKEN_SYNONYMS } from '../constants';
+import { DEFAULT_PRECISION, EQUIVALENT_TOKENS, NATIVE_TOKEN_ADDRESS, TOKEN_SYNONYMS } from '../constants';
 import { getChainFromName } from '@heyanon/sdk';
 
 /**
@@ -130,4 +130,19 @@ export async function getEquivalentTokenAddresses(chainName: string, token: Bala
     );
 
     return addresses.filter((addr): addr is Address => !!addr);
+}
+
+/**
+ * Given a list of token addresses, return for each token its wrapped
+ * version, or the token itself if it is not a native token.
+ *
+ * This is the opposite of the replaceWrapped function in the Balancer SDK
+ */
+export function getWrapped(tokens: Address[], chainId: number): Address[] {
+    return tokens.map((token) => {
+        if (NATIVE_TOKEN_ADDRESS.toLowerCase() === token.toLowerCase()) {
+            return NATIVE_ASSETS[chainId as keyof typeof NATIVE_ASSETS].wrapped;
+        }
+        return token;
+    });
 }

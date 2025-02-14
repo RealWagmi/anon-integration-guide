@@ -170,15 +170,16 @@ export function formatSwapQuote(quote: GetQuoteResult, significatDigits = DEFAUL
  * This handles both exact-in and exact-out swaps.
  *
  * Returns the transaction data and amounts for notification purposes.
+ *
+ * TODO:
+ *  - When wethIsEth, asking for Sonic in an exactOut swap results in wS
  */
 export function buildSwapTransaction({ account, quote, slippageAsPercentage, deadline }: BuildSwapTransactionProps): BuildSwapTransactionResult {
     const { quote: q, swap, tokenIn, tokenOut, swapKind } = quote;
 
     // Allow the user to send the native token directly,
     // without the need to wrap it
-    const tokenInIsNative = tokenIn.address === NATIVE_TOKEN_ADDRESS;
-    const tokenOutIsNative = tokenOut.address === NATIVE_TOKEN_ADDRESS;
-    const wethIsEth = tokenInIsNative || tokenOutIsNative;
+    const wethIsEth = tokenIn.address === NATIVE_TOKEN_ADDRESS || tokenOut.address === NATIVE_TOKEN_ADDRESS;
 
     // Build the call input for the swap transaction
     // In v2 the sender/recipient can be set, in v3 it is always the msg.sender

@@ -241,7 +241,7 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
                     console.log(`Tool '${functionName}' message:`, util.inspect(messages[messages.length - 1], { depth: null, colors: true }));
                 }
             } catch (error) {
-                throw new Error(`Error executing ${functionName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                throw new Error(`Error executing tool '${functionName}': ${error instanceof Error ? `${error.message}` : 'Unknown error'}`);
             }
         }
     }

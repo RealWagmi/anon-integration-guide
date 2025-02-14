@@ -1,9 +1,10 @@
 import { Address } from '@balancer/sdk';
-import { getBalancerTokenByAddress } from './tokens';
+import { getBalancerTokenByAddress, getWrapped } from './tokens';
 import { GqlPoolMinimal, GqlPoolTokenDetail, GqlToken } from './beets/types';
 import { PublicClient, erc20Abi, parseUnits } from 'viem';
 import { NATIVE_TOKEN_ADDRESS } from '../constants';
 import { toHumanReadableAmount } from './tokens';
+import { getChainFromName } from '@heyanon/sdk';
 
 /**
  * Validate an amount of tokens, in decimal form, expressed as a string.
@@ -33,12 +34,14 @@ export function validatePoolId(poolId: string): boolean {
 }
 
 /**
- * Verifies if the provided token pair is present in the given Gql pool,
+ * Verifies if all provided token addresses are present in the given Gql pool,
  * accounting also for underlying tokens.
+ *
+ * Automatically wraps native tokens before the check.
  *
  * Returns an array of [isValid: boolean, errorMessage: string | null]
  */
-export async function validateTokenPairInPool(chainName: string, pool: GqlPoolMinimal, token0Address: Address, token1Address: Address | null): Promise<[boolean, string | null]> {
+export async function validateTokensAreInPool(chainName: string, pool: GqlPoolMinimal, tokenAddresses: Address[]): Promise<[boolean, string | null]> {
     // Get addresses of pool tokens, including any underlying tokens
     const poolTokens: (GqlPoolTokenDetail | GqlToken)[] = [];
     for (const token of pool.poolTokens) {
@@ -48,16 +51,18 @@ export async function validateTokenPairInPool(chainName: string, pool: GqlPoolMi
         }
     }
 
-    if (!poolTokens.map((t) => t.address).includes(token0Address)) {
-        const token0Info = await getBalancerTokenByAddress(chainName, token0Address);
-        if (!token0Info) return [false, `Could not find info for token ${token0Address}`];
-        return [false, `Token ${token0Info?.symbol} is not among the pool's tokens (${poolTokens.map((t) => t.symbol).join(', ')})`];
-    }
+    const poolAddresses = poolTokens.map((t) => t.address);
+    const chainId = getChainFromName(chainName);
+    if (!chainId) return [false, `Invalid chain name: ${chainName}`];
 
-    if (token1Address && !poolTokens.map((t) => t.address).includes(token1Address)) {
-        const token1Info = await getBalancerTokenByAddress(chainName, token1Address);
-        if (!token1Info) return [false, `Could not find info for token ${token1Address}`];
-        return [false, `Token ${token1Info?.symbol} is not among the pool's tokens (${poolTokens.map((t) => t.symbol).join(', ')})`];
+    const wrappedTokenAddresses = getWrapped(tokenAddresses, chainId);
+
+    for (const tokenAddress of wrappedTokenAddresses) {
+        if (!poolAddresses.includes(tokenAddress)) {
+            const tokenInfo = await getBalancerTokenByAddress(chainName, tokenAddress);
+            if (!tokenInfo) return [false, `Could not find info for token ${tokenAddress}`];
+            return [false, `Token ${tokenInfo.symbol} is not among the pool's tokens (${poolTokens.map((t) => t.symbol).join(', ')})`];
+        }
     }
 
     return [true, null];

@@ -62,6 +62,7 @@ export async function executeSwapExactOut(
 
     // Check token balance against max amount in (including slippage)
     const maxAmountInInWei = minAmountOutOrMaxAmountIn.amount;
+    const humanReadableMaxAmountIn = toHumanReadableAmount(maxAmountInInWei, minAmountOutOrMaxAmountIn.token.decimals);
     const provider = options.getProvider(chainId);
     let balance: bigint;
     if (tokenInAddress === NATIVE_TOKEN_ADDRESS) {
@@ -78,7 +79,7 @@ export async function executeSwapExactOut(
     }
     if (balance < maxAmountInInWei) {
         return toResult(
-            `Not enough tokens: you have ${toHumanReadableAmount(balance, tokenIn.decimals)} ${tokenIn.symbol}, you need ${minAmountOutOrMaxAmountIn} ${tokenIn.symbol}`,
+            `Not enough tokens: you have ${toHumanReadableAmount(balance, tokenIn.decimals)} ${tokenIn.symbol}, you need ${humanReadableMaxAmountIn} ${tokenIn.symbol}`,
         );
     }
 
@@ -92,7 +93,7 @@ export async function executeSwapExactOut(
             transactions,
         });
         if (transactions.length > 0) {
-            await options.notify(`Will need to approve the token spend of ${minAmountOutOrMaxAmountIn} ${tokenIn.symbol} on ${chainName}`);
+            await options.notify(`Will need to approve the token spend of ${humanReadableMaxAmountIn} ${tokenIn.symbol} on ${chainName}`);
         }
     }
 
@@ -102,7 +103,7 @@ export async function executeSwapExactOut(
         `You are about to swap approximately ${toHumanReadableAmount(expectedAmount.amount, expectedAmount.token.decimals)} ${tokenIn.symbol} on ${chainName}` +
             ` for exactly ${humanReadableAmountOut} ${tokenOut.symbol}` +
             ` with a slippage tolerance of ${slippageAsPercentage}%` +
-            ` meaning you'll spend at most ${toHumanReadableAmount(minAmountOutOrMaxAmountIn.amount, minAmountOutOrMaxAmountIn.token.decimals)} ${tokenIn.symbol}`,
+            ` meaning you'll spend at most ${humanReadableMaxAmountIn} ${tokenIn.symbol}`,
     );
 
     await options.notify(transactions.length > 1 ? `Sending approve & swap transactions...` : 'Sending swap transaction...');
