@@ -9,15 +9,13 @@ Yelay automatically reallocates user's liquidity among bluechip DeFi protocols i
 ## Common Tasks
 
 1. Basic Operations
-   - "Execute example operation with 100 USDT in @Yelay on Ethereum network"
-   - "Run example transaction with 50 USDC in @Yelay"
+   - Deposit assets to vault
+   - Immediately withdraw asset from vault
 
 2. Information Queries
-   - "Show my current status in @Yelay"
-   - "Check my balance in @Yelay"
-   - "Get example statistics from @Yelay"
-   - "Calculate expected results for my position in @Yelay"
-
+   - Show my current shares in vault X
+   - Show my current assets in vault X
+   - Show vault APY
 
 ## Available Functions
 
@@ -38,17 +36,51 @@ yarn add @heyanon/Yelay
 ## Usage
 
 ### getUserVaultAssetBalance
-Can you get me my assets balance for vault `VAULT_ADDRESS`
+Can you get me my assets balance in vault `VAULT_ADDRESS`
+
+What is my assets balance in vault `VAULT_ADDRESS`
+
+My assets balance in vault `VAULT_ADDRESS`
+
+Show my assets balance in vault `VAULT_ADDRESS`
+
+Show my current assets balance in vault `VAULT_ADDRESS`
 
 ### getUserVaultSvtBalance
-Can you get me my SVT balance for vault `VAULT_ADDRESS`
+Can you get me my SVT balance in vault `VAULT_ADDRESS`
+
+What is my SVT balance in vault `VAULT_ADDRESS`
+
+What are my shares in vault `VAULT_ADDRESS`
+
+My vault shares in vault `VAULT_ADDRESS`
+
+Show my vault shares in `VAULT_ADDRESS`
+
+Show my current vault shares in `VAULT_ADDRESS`
 
 ### getVaultBaseApy
 Can you get the APY for vault `VAULT_ADDRESS`
 
+What is the APY for vault `VAULT_ADDRESS`
+
+Show me the APY for vault `VAULT_ADDRESS`
+
+Vault `VAULT_ADDRESS` APY
+
 ### userDepositToVault
-I would like to deposit `AMOUNT` `VAULT_TOKEN_SYMBOL` to vault `VAULT_ADDRESS`
+I would like to deposit `AMOUNT` `VAULT_TOKEN_SYMBOL` in vault `VAULT_ADDRESS`
+
+Deposit `AMOUNT` `VAULT_TOKEN_SYMBOL` in vault `VAULT_ADDRESS`
+
+Invest `AMOUNT` `VAULT_TOKEN_SYMBOL` in vault `VAULT_ADDRESS`
+
+Transfer `AMOUNT` `VAULT_TOKEN_SYMBOL` in vault `VAULT_ADDRESS`
 
 ### userFastRedeemFromVault
-I would like to fast redeem`AMOUNT` `VAULT_TOKEN_SYMBOL` from vault `VAULT_ADDRESS`
+I would like to redeem `AMOUNT` `VAULT_TOKEN_SYMBOL` from vault `VAULT_ADDRESS`
+
+Redeem `AMOUNT` `VAULT_TOKEN_SYMBOL` from vault `VAULT_ADDRESS`
+
+Withdraw `AMOUNT` `VAULT_TOKEN_SYMBOL` from vault `VAULT_ADDRESS`
 
