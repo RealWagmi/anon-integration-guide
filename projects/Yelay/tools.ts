@@ -5,7 +5,7 @@ export const tools: AiTool[] = [
     // views
     {
         name: 'getUserVaultSvtBalance',
-        description: "Gets user's SVT balance in a vault",
+        description: "Gets user's SVT balance (aka shares) in a vault",
         required: ['chainName', 'account', 'vaultAddress'],
         props: [
             {
@@ -22,7 +22,7 @@ export const tools: AiTool[] = [
             {
                 name: 'vaultAddress',
                 type: 'string',
-                description: 'Vault address',
+                description: "Vault's address",
             },
         ],
     },
@@ -45,14 +45,14 @@ export const tools: AiTool[] = [
             {
                 name: 'vaultAddress',
                 type: 'string',
-                description: 'Vault address',
+                description: "Vault's address",
             },
         ],
     },
     {
         name: 'getVaultBaseApy',
         description: "Gets vault's base APY",
-        required: ['chainName', 'account', 'vaultAddress'],
+        required: ['chainName', 'vaultAddress'],
         props: [
             {
                 name: 'chainName',
@@ -71,7 +71,7 @@ export const tools: AiTool[] = [
     {
         name: 'userDepositToVault',
         description: 'Deposits an asset amount in vault, the asset type is defined by the vault',
-        required: ['chainName', 'account', 'vaultAddress'],
+        required: ['chainName', 'account', 'vaultAddress', 'amount'],
         props: [
             {
                 name: 'chainName',
@@ -87,7 +87,7 @@ export const tools: AiTool[] = [
             {
                 name: 'vaultAddress',
                 type: 'string',
-                description: 'Vault address',
+                description: "Vault's address",
             },
             {
                 name: 'amount',
@@ -99,8 +99,8 @@ export const tools: AiTool[] = [
     {
         name: 'userFastRedeemFromVault',
         description:
-            'Immediately redeems an asset amount from a vault, the asset type is defined by the vault',
-        required: ['chainName', 'account', 'vaultAddress'],
+            'Immediately withdraws an asset amount from a vault, the asset type is defined by the vault',
+        required: ['chainName', 'account', 'vaultAddress', 'amount'],
         props: [
             {
                 name: 'chainName',
@@ -116,11 +116,11 @@ export const tools: AiTool[] = [
             {
                 name: 'vaultAddress',
                 type: 'string',
-                description: 'Vault address',
+                description: "Vault's address",
             },
             {
                 name: 'amount',
-                type: 'the amount to be redeemed from the vault, the token type is defined by the vault',
+                type: 'the amount to be withdrawn from the vault, the token type is defined by the vault',
                 description: 'Vault address',
             },
         ],
