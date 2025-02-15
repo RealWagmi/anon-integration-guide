@@ -1,14 +1,26 @@
 import { Address, parseUnits } from 'viem';
 import { FunctionReturn, FunctionOptions, getChainFromName, toResult, checkToApprove, TransactionParams } from '@heyanon/sdk';
-import { InputAmount, RemoveLiquidityInput, RemoveLiquidityKind, RemoveLiquidity, RemoveLiquidityBuildCallOutput, RemoveLiquidityBaseBuildCallInput } from '@balancer/sdk';
+import {
+    InputAmount,
+    RemoveLiquidityInput,
+    RemoveLiquidityKind,
+    RemoveLiquidity,
+    RemoveLiquidityBuildCallOutput,
+    RemoveLiquidityBaseBuildCallInput,
+    RemoveLiquidityBoostedV3,
+    RemoveLiquidityBoostedProportionalInput,
+    RemoveLiquidityBoostedBuildCallInput,
+    RemoveLiquidityQueryOutput,
+    RemoveLiquidityBoostedQueryOutput,
+} from '@balancer/sdk';
 import { DEFAULT_SLIPPAGE_AS_PERCENTAGE, supportedChains } from '../constants';
 import { validatePercentage } from '../helpers/validation';
-import { to$$$, toHumanReadableAmount, toSignificant } from '../helpers/tokens';
+import { getBalancerTokenByAddress, getUnwrappedSymbol, to$$$, toHumanReadableAmount, toSignificant } from '../helpers/tokens';
 import { Slippage } from '@balancer/sdk';
 import { anonChainNameToBalancerChainId, anonChainNameToGqlChain, getDefaultRpcUrl } from '../helpers/chains';
 import { BeetsClient } from '../helpers/beets/client';
 import { GqlChain } from '../helpers/beets/types';
-import { formatPoolType, fromGqlPoolMinimalToBalancerPoolStateWithUnderlyings } from '../helpers/pools';
+import { formatPoolType, fromGqlPoolMinimalToBalancerPoolStateWithUnderlyings, isBoostedPool } from '../helpers/pools';
 
 interface Props {
     chainName: string;
@@ -18,11 +30,6 @@ interface Props {
     slippageAsPercentage: `${number}` | null;
 }
 
-/**
- * TODO:
- * - Handle WETH/ETH
- * - Does it work with boosted pools?
- */
 export async function removeLiquidity({ chainName, account, poolId, removalPercentage, slippageAsPercentage }: Props, options: FunctionOptions): Promise<FunctionReturn> {
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
@@ -49,7 +56,7 @@ export async function removeLiquidity({ chainName, account, poolId, removalPerce
     options.notify(`Pool info: "${pool.name}" of type ${formatPoolType(pool.type)}`);
     const poolState = await fromGqlPoolMinimalToBalancerPoolStateWithUnderlyings(pool);
 
-    // TODO: Handle WETH/ETH
+    // WETH liquidity will be returned as ETH
     const wethIsEth = true;
 
     // Check that the user has liquidity in the pool
@@ -88,35 +95,63 @@ export async function removeLiquidity({ chainName, account, poolId, removalPerce
 
     // BUILD REMOVE LIQUIDITY TRANSACTION
 
-    // Query the blockchain to get a quote for the liquidity removal.  Please
-    // note that we are requesting a proportional removal, which means that
-    // will receive tokens proportionally to the token pools, to minimze slippage
+    // We will request a proportional removal, which means that
+    // will receive tokens proportionally to the token pools,
+    // to minimze slippage
+
     const liquidityToRemoveAmount: InputAmount = { rawAmount: liquidityToRemoveInWei, decimals: 18, address: poolState.address };
     const publicClient = options.getProvider(chainId);
     const rpcUrl = getDefaultRpcUrl(publicClient);
     if (!rpcUrl) throw new Error(`Chain ${chainName} not supported by viem`);
-    const removeLiquidityInput: RemoveLiquidityInput = {
+    const removeLiquidityInput: RemoveLiquidityInput | RemoveLiquidityBoostedProportionalInput = {
         chainId,
         rpcUrl,
         bptIn: liquidityToRemoveAmount,
         kind: RemoveLiquidityKind.Proportional,
     };
-    // Query removeLiquidity to get the token out amounts
-    const removeLiquidity = new RemoveLiquidity();
-    const queryOutput = await removeLiquidity.query(removeLiquidityInput, poolState);
 
-    // Build the actual call data (and apply slippage)
-    const buildInput = { ...queryOutput, slippage, chainId, wethIsEth } as RemoveLiquidityBaseBuildCallInput;
+    let queryOutput: RemoveLiquidityQueryOutput | RemoveLiquidityBoostedQueryOutput;
     let buildOutput: RemoveLiquidityBuildCallOutput;
-    // In v2 the sender/recipient can be set, in v3 it is always the msg.sender
-    if (queryOutput.protocolVersion === 2) {
-        buildOutput = removeLiquidity.buildCall({ ...buildInput, sender: account as `0x${string}`, recipient: account as `0x${string}` });
+    const transactions: TransactionParams[] = [];
+
+    // Handle special case: the user wants to add liquidity to a boosted token.
+    // Tokens in a boosted pool have an underlying token, which is usually
+    // the token the user wants to add to the pool.  For example, the
+    // Boosted Stable Rings pool has BeefyUSDC.e as the actual token, while
+    // the underlying token is USDC.e.  To provide liquidity in the underlying
+    // we need a special flow.  For reference, see:
+    // https://github.com/balancer/b-sdk/blob/516070ac7b2b16127e8c78be20354874c52548bf/test/v3/addLiquidityBoosted/addLiquidityBoosted.integration.test.ts#L477-L505
+    if (isBoostedPool(pool)) {
+        options.notify(`Boosted pool detected`);
+        const removeLiquidityBoosted = new RemoveLiquidityBoostedV3();
+        // Make sure to request the unwrapped token (e.g. USDC.e and not BeefyUSDC.e)
+        const tokensOutAddresses = poolState.tokens.map((token) => token.underlyingToken?.address ?? token.address);
+        // Query removeLiquidity to get the token out amounts
+        const queryInputBoosted = { ...removeLiquidityInput, tokensOut: tokensOutAddresses } as RemoveLiquidityBoostedProportionalInput;
+        queryOutput = await removeLiquidityBoosted.query(queryInputBoosted, poolState);
+        // Build the actual call data (and apply slippage)
+        const buildInput = { ...queryOutput, slippage, wethIsEth } as RemoveLiquidityBoostedBuildCallInput;
+        buildOutput = removeLiquidityBoosted.buildCall(buildInput);
+        // Approve router to spend pool token
+        await checkToApprove({
+            args: { account, target: pool.address, spender: buildOutput.to, amount: buildOutput.maxBptIn.amount },
+            provider: publicClient,
+            transactions,
+        });
     } else {
-        buildOutput = removeLiquidity.buildCall(buildInput);
+        // Query removeLiquidity to get the token out amounts
+        const removeLiquidity = new RemoveLiquidity();
+        queryOutput = await removeLiquidity.query(removeLiquidityInput, poolState);
+        // Build the actual call data (and apply slippage)
+        const buildInput = { ...queryOutput, slippage, chainId, wethIsEth } as RemoveLiquidityBaseBuildCallInput;
+        // In v2 the sender/recipient can be set, in v3 it is always the msg.sender
+        if (queryOutput.protocolVersion === 2) {
+            buildOutput = removeLiquidity.buildCall({ ...buildInput, sender: account as `0x${string}`, recipient: account as `0x${string}` });
+        } else {
+            buildOutput = removeLiquidity.buildCall(buildInput);
+        }
     }
 
-    // Build the transaction to submit to HeyAnon
-    const transactions: TransactionParams[] = [];
     transactions.push({
         target: buildOutput.to as Address,
         data: buildOutput.callData,
@@ -130,12 +165,13 @@ export async function removeLiquidity({ chainName, account, poolId, removalPerce
     for (let i = 0; i < queryOutput.amountsOut.length; i++) {
         const amountOut = queryOutput.amountsOut[i].amount;
         if (amountOut === 0n) continue; // can happen with nested pools
-        const tokenOut = queryOutput.amountsOut[i].token.address;
-        const tokenOutSymbol = pool.poolTokens.find((t) => t.address === tokenOut)?.symbol as string;
-        const tokenOutDecimals = pool.poolTokens.find((t) => t.address === tokenOut)?.decimals as number;
+        const tokenOut = await getBalancerTokenByAddress(chainName, queryOutput.amountsOut[i].token.address);
+        if (!tokenOut) continue;
+        let tokenOutSymbol = tokenOut.symbol as string;
+        if (wethIsEth) tokenOutSymbol = getUnwrappedSymbol(tokenOutSymbol, tokenOut.address, chainId);
         const minAmountOut = buildOutput.minAmountsOut[i].amount;
-        expectedTokenStrings.push(`${toHumanReadableAmount(amountOut, tokenOutDecimals)} ${tokenOutSymbol}`);
-        minTokenStrings.push(`${toHumanReadableAmount(minAmountOut, tokenOutDecimals)} ${tokenOutSymbol}`);
+        expectedTokenStrings.push(`${toHumanReadableAmount(amountOut, tokenOut.decimals)} ${tokenOutSymbol}`);
+        minTokenStrings.push(`${toHumanReadableAmount(minAmountOut, tokenOut.decimals)} ${tokenOutSymbol}`);
     }
     await options.notify(
         `Removing liquidity from pool ${pool.name}:\n` +
@@ -145,7 +181,7 @@ export async function removeLiquidity({ chainName, account, poolId, removalPerce
     );
 
     // Send transactions
-    await options.notify('Sending remove liquidity transaction...');
+    await options.notify(transactions.length > 1 ? `Sending approve & remove liquidity transactions...` : 'Sending remove liquidity transaction...');
     const result = await options.sendTransactions({ chainId, account, transactions });
     const message = result.data[result.data.length - 1].message;
     return toResult(`Successfully removed liquidity from pool ${pool.name}. ${message}`);

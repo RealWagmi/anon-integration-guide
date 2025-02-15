@@ -166,6 +166,21 @@ export function isBoostedPoolToken(pool: GqlPoolMinimal, underlyingTokenAddress:
 }
 
 /**
+ * Return true if the given GqlPoolMinimal is pool containing a
+ * boosted token, false otherwise.
+ *
+ * A pool is boosted if the user wants to provide liquidity to a token
+ * that is the underlying token of the pool.  For example, if the pool
+ * is a Boosted Stable Rings pool, and the user wants to add USDC.e,
+ * then this will be true.
+ */
+export function isBoostedPool(pool: GqlPoolMinimal): boolean {
+    return pool.poolTokens.some((token) => {
+        return !!token.underlyingToken?.address;
+    });
+}
+
+/**
  * Given a pool, format it into a multi-line string, with just the essential
  * information, including the pool ID.
  *

@@ -155,20 +155,52 @@ export async function getEquivalentTokenAddresses(chainName: string, token: Bala
 }
 
 /**
- * Given a list of token addresses, return for each token its wrapped
- * version, or the token itself if it is not a native token.
+ * Given a list of token addresses, return for each token the address
+ * of its wrapped version.  If the token is not a native token, the
+ * function will return the input token address.
  */
 export function getWrappedTokens(tokens: Address[], chainId: number): Address[] {
     return tokens.map((token) => getWrappedToken(token, chainId));
 }
 
 /**
- * Given a token address, return its wrapped version, or the token
- * itself if it is not a native token.
+ * Given a token address, return the address of its wrapped version.
+ * If the token is not a native token, the function will return the
+ * input token address.
  */
 export function getWrappedToken(token: Address, chainId: number): Address {
     if (NATIVE_TOKEN_ADDRESS.toLowerCase() === token.toLowerCase()) {
         return NATIVE_ASSETS[chainId as keyof typeof NATIVE_ASSETS].wrapped;
     }
     return token;
+}
+
+/**
+ * Given a token address, return the address of its unwrapped version,
+ * that is, the address of the native token of the chain.  If the
+ * token is not a wrapped token, the function will return the input
+ * address.
+ */
+export function getUnwrappedToken(token: Address, chainId: number): Address {
+    const chainNativeAsset = NATIVE_ASSETS[chainId as keyof typeof NATIVE_ASSETS];
+    const isWrapped = chainNativeAsset.wrapped === token;
+    if (isWrapped) {
+        return NATIVE_TOKEN_ADDRESS;
+    }
+    return token;
+}
+
+/**
+ * Given a token symbol and address, return the unwrapped symbol,
+ * that is, the symbol of the native token of the chain.     If the
+ * token is not a wrapped token, the function will return the input
+ * symbol.
+ */
+export function getUnwrappedSymbol(symbol: string, token: Address, chainId: number): string {
+    const chainNativeAsset = NATIVE_ASSETS[chainId as keyof typeof NATIVE_ASSETS];
+    const isWrapped = chainNativeAsset.wrapped === token;
+    if (isWrapped) {
+        return chainNativeAsset.symbol as string;
+    }
+    return symbol;
 }

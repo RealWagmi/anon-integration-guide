@@ -167,8 +167,6 @@ export function formatSwapQuote(quote: GetQuoteResult, significatDigits = DEFAUL
  * This handles both exact-in and exact-out swaps.
  *
  * Returns the transaction data and amounts for notification purposes.
- *
- * TODO: When wethIsEth, asking for Sonic in an exactOut swap results in wS
  */
 export function buildSwapTransaction({ account, quote, slippageAsPercentage, deadline }: BuildSwapTransactionProps): BuildSwapTransactionResult {
     const { quote: q, swap, tokenIn, tokenOut, swapKind } = quote;

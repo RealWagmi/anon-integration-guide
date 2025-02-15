@@ -189,7 +189,7 @@ export async function addLiquidity(
     await options.notify(
         `Adding liquidity to pool ${pool.name}:\n` +
             `- Add ${token0Amount} ${token0.symbol}` +
-            (token1 ? ` and ${token1Amount} ${token1.symbol}\n` : '') +
+            (token1 ? ` and ${token1Amount} ${token1.symbol}\n` : '\n') +
             `- Expected liquidity you'll receive: ${toHumanReadableAmount(bptOut, 18)}\n` +
             `- Minimum liquidity you'll receive: ${toHumanReadableAmount(buildOutput.minBptOut.amount, 18)}`,
     );
