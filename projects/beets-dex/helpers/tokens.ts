@@ -102,15 +102,33 @@ export function toHumanReadableAmount(
 }
 
 /**
- * Format a number to a string with the given number of significant digits,
- * using a thousands separator if specified.
+ * Format a number to a string with the given number of significant
+ * digits, using a thousands separator if specified.
  */
-export function toSignificant(num: number, minSignificantDigits = 2, maxSignificantDigits = DEFAULT_PRECISION, useThousandsSeparator = true): string {
+export function toSignificant(
+    num: number,
+    minSignificantDigits: number | undefined = undefined,
+    maxSignificantDigits: number | undefined = DEFAULT_PRECISION,
+    useThousandsSeparator = true,
+): string {
     return num.toLocaleString('en', {
         minimumSignificantDigits: minSignificantDigits,
         maximumSignificantDigits: maxSignificantDigits,
         useGrouping: useThousandsSeparator,
         notation: 'standard', // Ensures we don't get scientific notation
+    });
+}
+
+/**
+ * Format a number representing a dollar value to a string.  By default,
+ * it will show two fractional digits.
+ */
+export function to$$$(num: number, minFractionDigits: number | undefined = 2, maxFractionDigits: number | undefined = 2): string {
+    return num.toLocaleString('en', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: minFractionDigits,
+        maximumFractionDigits: maxFractionDigits,
     });
 }
 

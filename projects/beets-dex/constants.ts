@@ -18,7 +18,7 @@ export const MAX_FETCH_POOLS = 100;
  * Minimum TVL in dollars that pools must have to be included
  * in search results.
  */
-export const MIN_TVL = 200_000;
+export const MIN_TVL = 100_000;
 
 /**
  * Token synonyms, used to accept multiple spellings or slight variants

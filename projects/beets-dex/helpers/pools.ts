@@ -1,6 +1,6 @@
 import { Address, Hex, mapPoolType, PoolStateWithUnderlyings, PoolTokenWithUnderlying, Token } from '@balancer/sdk';
 import { GqlPoolAprItemType, GqlPoolBase, GqlPoolMinimal } from './beets/types';
-import { getEquivalentTokenAddresses } from './tokens';
+import { getEquivalentTokenAddresses, to$$$ } from './tokens';
 
 /**
  * Types of APR items returned by the API that we should consider
@@ -183,16 +183,16 @@ export function formatPoolMinimal(pool: SimplifiedPool, titlePrefix: string = ''
     parts.push(`${titlePrefix}${pool.name} [${tokens}]:`);
     const offset = '   ';
     if (pool.userBalanceUsd) {
-        parts.push(`${offset}- User position $${pool.userBalanceUsd.toFixed(2)}`);
+        parts.push(`${offset}- User position ${to$$$(pool.userBalanceUsd)}`);
     }
     if (pool.userStakedBalanceUsd) {
-        parts.push(`${offset}- User staked position $${pool.userStakedBalanceUsd.toFixed(2)}`);
+        parts.push(`${offset}- User staked position ${to$$$(pool.userStakedBalanceUsd)}`);
     }
     parts.push(`${offset}- APR: ${(pool.apr * 100).toFixed(2)}%`);
     if (pool.aprBoost) {
         parts.push(`${offset}- APR with max staking: ${((pool.apr + pool.aprBoost) * 100).toFixed(2)}%`);
     }
-    parts.push(`${offset}- TVL: $${pool.tvlUsd.toFixed(0)}`);
+    parts.push(`${offset}- TVL: ${to$$$(pool.tvlUsd, 0, 0)}`);
     parts.push(`${offset}- Pool ID: ${pool.id}`);
     parts.push(`${offset}- Pool type: ${formatPoolType(pool.type)}`);
 

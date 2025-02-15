@@ -3,7 +3,7 @@ import { FunctionReturn, FunctionOptions, getChainFromName, toResult, checkToApp
 import { InputAmount, RemoveLiquidityInput, RemoveLiquidityKind, RemoveLiquidity, RemoveLiquidityBuildCallOutput, RemoveLiquidityBaseBuildCallInput } from '@balancer/sdk';
 import { DEFAULT_SLIPPAGE_AS_PERCENTAGE, supportedChains } from '../constants';
 import { validatePercentage } from '../helpers/validation';
-import { toHumanReadableAmount, toSignificant } from '../helpers/tokens';
+import { to$$$, toHumanReadableAmount, toSignificant } from '../helpers/tokens';
 import { Slippage } from '@balancer/sdk';
 import { anonChainNameToBalancerChainId, anonChainNameToGqlChain, getDefaultRpcUrl } from '../helpers/chains';
 import { BeetsClient } from '../helpers/beets/client';
@@ -50,7 +50,7 @@ export async function removeLiquidity({ chainName, account, poolId, removalPerce
     const poolState = await fromGqlPoolMinimalToBalancerPoolStateWithUnderlyings(pool);
 
     // TODO: Handle WETH/ETH
-    const wethIsEth = false;
+    const wethIsEth = true;
 
     // Check that the user has liquidity in the pool
     if (!pool.userBalance || Number(pool.userBalance.totalBalance) === 0) return toResult(`You do not have any liquidity in pool '${pool.name}'`, true);
@@ -71,7 +71,7 @@ export async function removeLiquidity({ chainName, account, poolId, removalPerce
     const userWalletLiquidity = pool.userBalance.walletBalance;
     const userWalletLiquidityInWei = parseUnits(userWalletLiquidity, 18);
     const userWalletLiquidityUsd = pool.userBalance.walletBalanceUsd;
-    options.notify(`You have $${toSignificant(userWalletLiquidityUsd)} of liquidity in the pool (${toSignificant(Number(userWalletLiquidity))} LP tokens)`);
+    options.notify(`You have ${to$$$(userWalletLiquidityUsd)} of liquidity in the pool (${toSignificant(Number(userWalletLiquidity))} LP tokens)`);
 
     // Calculate the amount of liquidity to remove
     let liquidityToRemoveInWei;
@@ -82,7 +82,7 @@ export async function removeLiquidity({ chainName, account, poolId, removalPerce
     } else {
         liquidityToRemoveInWei = (userWalletLiquidityInWei * BigInt(removalPercentage)) / 100n;
         options.notify(
-            `Will remove ${removalPercentage}% of your liquidity from the pool for a total of $${toSignificant(liquidityToRemoveUsd)} (${toHumanReadableAmount(liquidityToRemoveInWei, 18)} LP tokens)`,
+            `Will remove ${removalPercentage}% of your liquidity from the pool for a total of ${to$$$(liquidityToRemoveUsd)} (${toHumanReadableAmount(liquidityToRemoveInWei, 18)} LP tokens)`,
         );
     }
 
@@ -139,7 +139,7 @@ export async function removeLiquidity({ chainName, account, poolId, removalPerce
     }
     await options.notify(
         `Removing liquidity from pool ${pool.name}:\n` +
-            `- Remove ${removalPercentage}% of your liquidity for a total of $${toSignificant(liquidityToRemoveUsd)} (${toHumanReadableAmount(liquidityToRemoveInWei, 18)} LP tokens)\n` +
+            `- Remove ${removalPercentage}% of your liquidity for a total of ${to$$$(liquidityToRemoveUsd)} (${toHumanReadableAmount(liquidityToRemoveInWei, 18)} LP tokens)\n` +
             `- Expected tokens you'll receive: ${expectedTokenStrings.join(', ')}\n` +
             `- Minimum tokens you'll receive: ${minTokenStrings.join(', ')}`,
     );

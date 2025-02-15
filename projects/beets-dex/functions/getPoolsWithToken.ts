@@ -5,7 +5,7 @@ import { BeetsClient } from '../helpers/beets/client';
 import { GqlChain, GqlPoolOrderBy, GqlPoolOrderDirection } from '../helpers/beets/types';
 import { formatPoolMinimal, simplifyPool } from '../helpers/pools';
 import { anonChainNameToGqlChain } from '../helpers/chains';
-import { getBalancerTokenByAddress } from '../helpers/tokens';
+import { getBalancerTokenByAddress, to$$$ } from '../helpers/tokens';
 import { filterPoolsByTokens } from '../helpers/pools';
 
 interface Props {
@@ -30,7 +30,7 @@ export async function getPoolsWithToken({ chainName, tokenAddress }: Props, { no
     });
 
     if (!pools || pools.length === 0) {
-        return toResult(`No pools found with minimum TVL of $${MIN_TVL}`);
+        return toResult(`No pools found with minimum TVL of ${to$$$(MIN_TVL, 0, 0)}`);
     }
 
     notify(`Found ${pools.length} pools, filtering...`);
@@ -39,7 +39,7 @@ export async function getPoolsWithToken({ chainName, tokenAddress }: Props, { no
     const matchingPools = await filterPoolsByTokens(chainName, pools, [token], true);
 
     if (matchingPools.length === 0) {
-        return toResult(`No pools found containing token ${tokenAddress} with minimum TVL of $${MIN_TVL}`);
+        return toResult(`No pools found containing token ${tokenAddress} with minimum TVL of ${to$$$(MIN_TVL, 0, 0)}`);
     }
 
     return toResult(matchingPools.map((pool, index) => formatPoolMinimal(simplifyPool(pool), `${index + 1}. `)).join('\n'));
