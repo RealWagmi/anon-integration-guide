@@ -100,10 +100,11 @@ export async function executeSwapExactOut(
     transactions.push(swapTransaction);
 
     await options.notify(
-        `You are about to swap approximately ${toHumanReadableAmount(expectedAmount.amount, expectedAmount.token.decimals)} ${tokenIn.symbol} on ${chainName}` +
-            ` for exactly ${humanReadableAmountOut} ${tokenOut.symbol}` +
-            ` with a slippage tolerance of ${slippageAsPercentage}%` +
-            ` meaning you'll spend at most ${humanReadableMaxAmountIn} ${tokenIn.symbol}`,
+        `You are about to swap on ${chainName}:\n` +
+            `- Approximately ${toHumanReadableAmount(expectedAmount.amount, expectedAmount.token.decimals)} ${tokenIn.symbol}\n` +
+            `- For exactly ${humanReadableAmountOut} ${tokenOut.symbol}\n` +
+            `- With a slippage tolerance of ${slippageAsPercentage}%\n` +
+            `- You'll spend at most ${humanReadableMaxAmountIn} ${tokenIn.symbol}`,
     );
 
     await options.notify(transactions.length > 1 ? `Sending approve & swap transactions...` : 'Sending swap transaction...');
