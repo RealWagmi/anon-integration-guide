@@ -44,7 +44,7 @@ function getSystemPrompt(options: AskBeetsOptions | undefined, chainName: string
 function getSystemPromptMinimal(options: AskBeetsOptions | undefined, chainName: string, account: string) {
     const basePrompt = `You will interact with the ${PROTOCOL_NAME} protocol via your tools. Given a request, you will need to determine which tools to call.`;
 
-    const tokenPrompt = `\nYou will never modify token names or symbols, or make them plural.`;
+    const tokenPrompt = `\nYou WILL NOT modify token addresses, names or symbols, not even to make them plural.`;
 
     const toolConfigPrompt = `\nAll tools that require the chainName and account arguments will need the following default values: chainName: "${chainName}", account: "${account}".`;
 

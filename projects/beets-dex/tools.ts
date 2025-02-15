@@ -89,7 +89,7 @@ export const tools: AiTool[] = [
     {
         name: 'executeSwapExactIn',
         description:
-            'Get a quote for and then execute a swap where you specify the EXACT AMOUNT YOU WANT TO SEND in order to buy a token. For example: "Swap 1 ETH for USDC", "Sell 1 ETH for USDC", "Buy USDC with 1 ETH".',
+            'Get a quote for and then execute a swap where you specify the EXACT AMOUNT YOU WANT TO SEND in order to buy a token. For example: "Swap 1 X for Y", "Sell 1 X for Y", "Buy Y with 1 X".',
         required: ['chainName', 'account', 'tokenInAddress', 'tokenOutAddress', 'humanReadableAmountIn', 'slippageAsPercentage'],
         props: [
             {
@@ -130,7 +130,7 @@ export const tools: AiTool[] = [
     {
         name: 'executeSwapExactOut',
         description:
-            'Get a quote for and then execute a swap where you specify the EXACT AMOUNT YOU WANT TO RECEIVE of the token you want to buy. For example: "Swap ETH for 1000 USDC", "Sell ETH for 1000 USDC", "Buy 1000 USDC with ETH"',
+            'Get a quote for and then execute a swap where you specify the EXACT AMOUNT YOU WANT TO RECEIVE of the token you want to buy. For example: "Swap X for 1000 Y", "Sell X for 1000 Y", "Buy 1000 Y with X".',
         required: ['chainName', 'account', 'tokenInAddress', 'tokenOutAddress', 'humanReadableAmountOut', 'slippageAsPercentage'],
         props: [
             {
@@ -170,7 +170,7 @@ export const tools: AiTool[] = [
     {
         name: 'getQuoteForSwapExactIn',
         description:
-            'Given a FIXED AMOUNT TO SEND ORDER TO BUY A TOKEN, calculate how many tokens will be received in return.  For example: "How much USDC will I get for 1 ETH?", "USDC if I sell 1 ETH?", "USDC I can get for 1 ETH?"',
+            'Given a FIXED AMOUNT TO SEND ORDER TO BUY A TOKEN, calculate how many tokens will be received in return.  For example: "How much Y will I get for 1 X?", "Y I can get for 1 X?".',
         required: ['chainName', 'tokenInAddress', 'tokenOutAddress', 'humanReadableAmountIn'],
         props: [
             {
@@ -199,7 +199,7 @@ export const tools: AiTool[] = [
     {
         name: 'getQuoteForSwapExactOut',
         description:
-            'Given a FIXED AMOUNT TO RECEIVE, calculate how many tokens need to be sent.  For example: "How much ETH do I need to buy 1000 USDC?", "USDC needed to buy 1 ETH?", "How much USDC to reeive exactly 1 ETH?"',
+            'Given a FIXED AMOUNT TO RECEIVE, calculate how many tokens need to be sent.  For example: "How much X do I need to buy 1000 Y?", "How much X to receive exactly 1 Y?".',
         required: ['chainName', 'tokenInAddress', 'tokenOutAddress', 'humanReadableAmountOut'],
         props: [
             {
