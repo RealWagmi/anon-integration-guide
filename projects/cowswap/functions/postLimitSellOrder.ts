@@ -59,7 +59,8 @@ export async function postLimitSellOrder(
 
     const sellTokenAmountBN = parseUnits(sellTokenAmount, sellTokenInfo.decimals);
     const buyTokenAmountBN = (buyTokenPriceBN / sellTokenPriceBN) * sellTokenAmountBN;
-
+    const buyTokenAmount =  parseUnits(formatUnits(buyTokenAmountBN, sellTokenInfo.decimals), buyTokenInfo.decimals);
+    
     const approval = [];
 
     await checkToApprove({
