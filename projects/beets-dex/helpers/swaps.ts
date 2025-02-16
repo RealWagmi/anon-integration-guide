@@ -119,7 +119,6 @@ export function formatSwapQuote(quote: GetQuoteResult, significatDigits = DEFAUL
     const parts = [];
 
     let price = 0;
-    const PRECISION_FACTOR = DECIMAL_SCALES[significatDigits as keyof typeof DECIMAL_SCALES];
     if (q.swapKind === SwapKind.GivenIn) {
         // Add basic swap information
         const humanReadableAmountIn = toHumanReadableAmount(q.amountIn.amount, tokenIn.decimals, significatDigits);
@@ -127,8 +126,8 @@ export function formatSwapQuote(quote: GetQuoteResult, significatDigits = DEFAUL
         const humanReadableExpectedAmountOut = toHumanReadableAmount(q.expectedAmountOut.amount, tokenOut.decimals, significatDigits);
         parts.push(`For ${humanReadableExpectedAmountOut} ${tokenOut.symbol}`);
         // Add price information
-        const fullPrecisionPrice = Number((q.amountIn.scale18 * WAD) / q.expectedAmountOut.scale18) / Number(WAD);
-        parts.push(`Price: ${toSignificant(fullPrecisionPrice, 2, significatDigits)} ${tokenIn.symbol} per ${tokenOut.symbol}`);
+        price = Number((q.amountIn.scale18 * WAD) / q.expectedAmountOut.scale18) / Number(WAD);
+        parts.push(`Price: ${toSignificant(price, 2, significatDigits)} ${tokenIn.symbol} per ${tokenOut.symbol}`);
     } else {
         // Add basic swap information
         const humanReadableExpectedAmountIn = toHumanReadableAmount(q.expectedAmountIn.amount, tokenIn.decimals, significatDigits);
@@ -136,12 +135,11 @@ export function formatSwapQuote(quote: GetQuoteResult, significatDigits = DEFAUL
         const humanReadableAmountOut = toHumanReadableAmount(q.amountOut.amount, tokenOut.decimals, significatDigits);
         parts.push(`For ${humanReadableAmountOut} ${tokenOut.symbol}`);
         // Add price information
-        const fullPrecisionPrice = Number((q.expectedAmountIn.scale18 * WAD) / q.amountOut.scale18) / Number(WAD);
-        parts.push(`Price: ${toSignificant(fullPrecisionPrice, 2, significatDigits)} ${tokenIn.symbol} per ${tokenOut.symbol}`);
+        price = Number((q.expectedAmountIn.scale18 * WAD) / q.amountOut.scale18) / Number(WAD);
+        parts.push(`Price: ${toSignificant(price, 2, significatDigits)} ${tokenIn.symbol} per ${tokenOut.symbol}`);
     }
 
     // Add reverse price information
-    // TODO: Why it is infinity sometimes?  Possibly more often with exactOut.
     const reversePrice = 1 / price;
     parts.push(`Price: ${reversePrice.toFixed(significatDigits)} ${tokenOut.symbol} per ${tokenIn.symbol}`);
 

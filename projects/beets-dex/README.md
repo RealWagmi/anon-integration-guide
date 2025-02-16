@@ -89,13 +89,12 @@ yarn ask "Swap 100 USDC for BEETS" --verbose
 
 ## Future improvements
 
-- Check success of TXs
+- Check success of liquidity TXs
 - Introduce pause between token approvals and swaps/addliq/removeliq?
 - Action: Claim incentive rewards
 - Action: Stake liquidity
 - Action: Unstake liquidity
 - Action: Optimism support
-- Tell user exact amount received after swap event
 - Tell user exact amount received after remove liquidity event
 - Allow to remove liquidity to a single token
 - Price impact estimation for swaps
