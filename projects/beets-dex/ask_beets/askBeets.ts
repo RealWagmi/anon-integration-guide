@@ -4,6 +4,7 @@ import { createPublicClient, http, createWalletClient } from 'viem';
 import { sonic } from 'viem/chains';
 import { FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { tools } from '../tools';
+import { tools as askBeetsTools } from './tools';
 import * as functions from '../functions';
 import util from 'util';
 import chalk from 'chalk';
@@ -180,7 +181,7 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
         const completion = await llmClient.chat.completions.create({
             model: getLlmModel(),
             messages: messages as OpenAI.Chat.Completions.ChatCompletionMessageParam[],
-            tools: tools.map((tool) => fromHeyAnonToolsToOpenAiTools(tool)),
+            tools: [...tools, ...askBeetsTools].map((tool) => fromHeyAnonToolsToOpenAiTools(tool)),
             tool_choice: 'auto',
         });
 

@@ -89,6 +89,8 @@ yarn ask "Swap 100 USDC for BEETS" --verbose
 
 ## Future improvements
 
+- Check success of TXs
+- Introduce pause between token approvals and swaps/addliq/removeliq?
 - Action: Claim incentive rewards
 - Action: Stake liquidity
 - Action: Unstake liquidity
