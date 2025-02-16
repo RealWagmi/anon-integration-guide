@@ -1,5 +1,5 @@
 import { FunctionReturn, toResult, getChainFromName, FunctionOptions, checkToApprove, TransactionParams } from '@heyanon/sdk';
-import { Address, parseUnits, encodeFunctionData } from 'viem';
+import { Address, parseUnits, encodeFunctionData, formatUnits } from 'viem';
 import { VoidSigner } from '@ethersproject/abstract-signer';
 import { supportedChains } from '../constants';
 import {
@@ -59,8 +59,8 @@ export async function postLimitSellOrder(
 
     const sellTokenAmountBN = parseUnits(sellTokenAmount, sellTokenInfo.decimals);
     const buyTokenAmountBN = (buyTokenPriceBN / sellTokenPriceBN) * sellTokenAmountBN;
-    const buyTokenAmount =  parseUnits(formatUnits(buyTokenAmountBN, sellTokenInfo.decimals), buyTokenInfo.decimals);
-    
+    const buyTokenAmount = parseUnits(formatUnits(buyTokenAmountBN, sellTokenInfo.decimals), buyTokenInfo.decimals);
+
     const approval = [];
 
     await checkToApprove({
@@ -97,7 +97,7 @@ export async function postLimitSellOrder(
         buyToken,
         buyTokenDecimals: buyTokenInfo.decimals,
         sellAmount: sellTokenAmountBN.toString(),
-        buyAmount: buyTokenAmountBN.toString(),
+        buyAmount: buyTokenAmount.toString(),
         chainId: chainId as number,
         signer,
         appCode: 'HeyAnon',
