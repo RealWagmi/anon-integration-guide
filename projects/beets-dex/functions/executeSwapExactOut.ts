@@ -1,10 +1,11 @@
-import { Address, erc20Abi } from 'viem';
+import { Address, erc20Abi, formatUnits, parseUnits } from 'viem';
 import { FunctionReturn, FunctionOptions, getChainFromName, toResult, checkToApprove, TransactionParams } from '@heyanon/sdk';
 import { SwapKind } from '@balancer/sdk';
 import { GetQuoteResult, getSwapQuote, buildSwapTransaction } from '../helpers/swaps';
 import { DEFAULT_DEADLINE_FROM_NOW, DEFAULT_SLIPPAGE_AS_PERCENTAGE, NATIVE_TOKEN_ADDRESS, supportedChains } from '../constants';
 import { validatePercentage, validateTokenPositiveDecimalAmount } from '../helpers/validation';
-import { toHumanReadableAmount } from '../helpers/tokens';
+import { toHumanReadableAmount, getTokenTransferAmounts } from '../helpers/tokens';
+import { sendTransactionsAndWaitForReceipts } from '../helpers/viem';
 
 interface Props {
     chainName: string;
@@ -107,8 +108,39 @@ export async function executeSwapExactOut(
             `- You'll spend at most ${humanReadableMaxAmountIn} ${tokenIn.symbol}`,
     );
 
+    // Send the transactions and wait for confirmation
     await options.notify(transactions.length > 1 ? `Sending approve & swap transactions...` : 'Sending swap transaction...');
-    const result = await options.sendTransactions({ chainId: getChainFromName(chainName)!, account, transactions });
-    const message = result.data[result.data.length - 1].message;
-    return toResult(result.isMultisig ? message : `Successfully performed swap. ${message}`);
+    const { hashes, messages, receipts } = await sendTransactionsAndWaitForReceipts({
+        publicClient: provider,
+        transactions,
+        sendTransactions: options.sendTransactions,
+        account,
+        chainId,
+    });
+
+    if (transactions.length > 1) {
+        options.notify(`Approval transaction sent with hash: ${hashes[0]}`);
+    }
+    options.notify(`Swap transaction sent with hash: ${hashes.at(-1)}`);
+
+    const swapReceipt = receipts.at(-1);
+    if (!swapReceipt?.status || swapReceipt.status !== 'success') {
+        return toResult('Swap transaction failed. For more details, search for the hash in a block explorer: ' + hashes.at(-1), true);
+    }
+
+    // Return summary of the swap with actual values
+    let { tokenInAmountInWei, tokenOutAmountInWei } = getTokenTransferAmounts(swapReceipt, account, tokenInAddress, tokenOutAddress);
+    if (tokenInAddress === NATIVE_TOKEN_ADDRESS) {
+        tokenInAmountInWei = transactions.at(-1)?.value as bigint;
+    }
+    if (tokenOutAddress === NATIVE_TOKEN_ADDRESS) {
+        // TODO: Compute the received amount of native tokens.
+        // This is tricky because we need to compute the gas
+        // spent. For the time being we just show what the
+        // user asked for, since this is an exactOut swap.
+        tokenOutAmountInWei = parseUnits(humanReadableAmountOut, tokenOut.decimals);
+    }
+    return toResult(
+        `Successfully swapped ${formatUnits(tokenInAmountInWei, tokenIn.decimals)} ${tokenIn.symbol} for ${formatUnits(tokenOutAmountInWei, tokenOut.decimals)} ${tokenOut.symbol}. ${messages.at(-1)}`,
+    );
 }

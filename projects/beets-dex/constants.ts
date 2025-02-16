@@ -67,7 +67,7 @@ export const ALLOW_TOKEN_SYNONYMS = true;
  * The default precision used to show token amounts,
  * expressed as a number of decimal places.
  */
-export const DEFAULT_PRECISION = 4;
+export const DEFAULT_PRECISION = 6;
 
 /**
  * Used to calculate the default deadline for swaps,

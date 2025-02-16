@@ -1,4 +1,4 @@
-import { Address, formatUnits } from 'viem';
+import { Address, formatUnits, decodeEventLog, Log, TransactionReceipt, erc20Abi } from 'viem';
 import { GqlToken } from './beets/types';
 import { Token as BalancerToken, NATIVE_ASSETS } from '@balancer/sdk';
 import { BeetsClient } from './beets/client';
@@ -203,4 +203,47 @@ export function getUnwrappedSymbol(symbol: string, token: Address, chainId: numb
         return chainNativeAsset.symbol as string;
     }
     return symbol;
+}
+
+/**
+ * Extract token transfer amounts from a transaction receipt.
+ * Returns the amounts of tokens transferred in and out for
+ * the given account.
+ *
+ * For native tokens, the function will return 0.
+ * To compute the amount of native tokens received, subtract
+ * the initial balance from the final balance, and add spent
+ * gas.  To compute the amount of native tokens sent, just
+ * get the transaction and extract the value.
+ */
+export function getTokenTransferAmounts(
+    receipt: TransactionReceipt,
+    account: Address,
+    tokenInAddress: Address,
+    tokenOutAddress: Address,
+): {
+    tokenInAmountInWei: bigint;
+    tokenOutAmountInWei: bigint;
+} {
+    let tokenInAmountInWei: bigint = 0n;
+    let tokenOutAmountInWei: bigint = 0n;
+
+    receipt.logs.forEach((log: Log) => {
+        try {
+            const event = decodeEventLog({ abi: erc20Abi, data: log.data, topics: log.topics });
+            if (event.eventName === 'Transfer') {
+                const { from, to, value } = event.args;
+                if (from.toLowerCase() === account.toLowerCase() && log.address.toLowerCase() === tokenInAddress.toLowerCase()) {
+                    tokenInAmountInWei = value;
+                }
+                if (to.toLowerCase() === account.toLowerCase() && log.address.toLowerCase() === tokenOutAddress.toLowerCase()) {
+                    tokenOutAmountInWei = value;
+                }
+            }
+        } catch (error) {
+            // Skip logs that aren't Transfer events
+        }
+    });
+
+    return { tokenInAmountInWei, tokenOutAmountInWei };
 }

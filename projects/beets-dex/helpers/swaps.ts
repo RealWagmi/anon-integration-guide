@@ -141,6 +141,7 @@ export function formatSwapQuote(quote: GetQuoteResult, significatDigits = DEFAUL
     }
 
     // Add reverse price information
+    // TODO: Why it is infinity sometimes?  Possibly more often with exactOut.
     const reversePrice = 1 / price;
     parts.push(`Price: ${reversePrice.toFixed(significatDigits)} ${tokenOut.symbol} per ${tokenIn.symbol}`);
 

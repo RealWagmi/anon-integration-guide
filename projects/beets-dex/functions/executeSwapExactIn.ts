@@ -1,10 +1,11 @@
-import { Address, erc20Abi, parseUnits } from 'viem';
+import { Address, erc20Abi, parseUnits, decodeEventLog, Log, formatUnits } from 'viem';
 import { FunctionReturn, FunctionOptions, getChainFromName, toResult, checkToApprove, TransactionParams } from '@heyanon/sdk';
 import { SwapKind } from '@balancer/sdk';
 import { GetQuoteResult, getSwapQuote, buildSwapTransaction } from '../helpers/swaps';
 import { DEFAULT_DEADLINE_FROM_NOW, DEFAULT_SLIPPAGE_AS_PERCENTAGE, NATIVE_TOKEN_ADDRESS, supportedChains } from '../constants';
 import { validatePercentage, validateTokenPositiveDecimalAmount } from '../helpers/validation';
-import { toHumanReadableAmount } from '../helpers/tokens';
+import { toHumanReadableAmount, getTokenTransferAmounts } from '../helpers/tokens';
+import { sendTransactionsAndWaitForReceipts } from '../helpers/viem';
 
 interface Props {
     chainName: string;
@@ -53,9 +54,7 @@ export async function executeSwapExactIn(
     const provider = options.getProvider(chainId);
     let balance: bigint;
     if (tokenInAddress === NATIVE_TOKEN_ADDRESS) {
-        balance = await provider.getBalance({
-            address: account,
-        });
+        balance = await provider.getBalance({ address: account });
     } else {
         balance = await provider.readContract({
             address: tokenInAddress,
@@ -99,8 +98,43 @@ export async function executeSwapExactIn(
             `- You'll receive at least ${toHumanReadableAmount(minAmountOutOrMaxAmountIn.amount, minAmountOutOrMaxAmountIn.token.decimals)} ${tokenOut.symbol}`,
     );
 
+    // Send the transactions and wait for confirmation
     await options.notify(transactions.length > 1 ? `Sending approve & swap transactions...` : 'Sending swap transaction...');
-    const result = await options.sendTransactions({ chainId, account, transactions });
-    const message = result.data[result.data.length - 1].message;
-    return toResult(`Successfully performed swap. ${message}`);
+    const { hashes, messages, receipts } = await sendTransactionsAndWaitForReceipts({
+        publicClient: provider,
+        transactions,
+        sendTransactions: options.sendTransactions,
+        account,
+        chainId,
+    });
+
+    if (transactions.length > 1) {
+        options.notify(`Approval transaction sent with hash: ${hashes[0]}`);
+    }
+    options.notify(`Swap transaction sent with hash: ${hashes.at(-1)}`);
+
+    const swapReceipt = receipts.at(-1);
+    if (!swapReceipt?.status || swapReceipt.status !== 'success') {
+        return toResult('Swap transaction failed. For more details, search for the hash in a block explorer: ' + hashes.at(-1), true);
+    }
+
+    // Return summary of the swap with actual values
+    let { tokenInAmountInWei, tokenOutAmountInWei } = getTokenTransferAmounts(swapReceipt, account, tokenInAddress, tokenOutAddress);
+    if (tokenInAddress === NATIVE_TOKEN_ADDRESS) {
+        tokenInAmountInWei = transactions.at(-1)?.value as bigint;
+    }
+    if (tokenOutAddress === NATIVE_TOKEN_ADDRESS) {
+        // TODO: Compute the received amount of native tokens.
+        // This is tricky because we need to compute the gas
+        // spent.  For the time being we just include the
+        // amount from the quote, specifying it is an
+        // approximate amount.
+        tokenOutAmountInWei = expectedAmount.amount;
+        return toResult(
+            `Successfully swapped ${formatUnits(tokenInAmountInWei, tokenIn.decimals)} ${tokenIn.symbol} for approximately ${formatUnits(tokenOutAmountInWei, tokenOut.decimals)} ${tokenOut.symbol}. ${messages.at(-1)}`,
+        );
+    }
+    return toResult(
+        `Successfully swapped ${formatUnits(tokenInAmountInWei, tokenIn.decimals)} ${tokenIn.symbol} for ${formatUnits(tokenOutAmountInWei, tokenOut.decimals)} ${tokenOut.symbol}. ${messages.at(-1)}`,
+    );
 }
