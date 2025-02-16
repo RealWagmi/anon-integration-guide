@@ -104,7 +104,7 @@ export async function validateTokenBalances(
         }
 
         // Store human readable balance
-        balances[token.address] = toHumanReadableAmount(balanceInWei, tokenInfo.decimals);
+        balances[token.address] = toHumanReadableAmount(balanceInWei, tokenInfo.decimals, tokenInfo.decimals, tokenInfo.decimals);
 
         if (balanceInWei < amountWei) {
             return [false, `Not enough ${tokenInfo.symbol}: you have ${balances[token.address]}, need ${token.amount}`, balances];
