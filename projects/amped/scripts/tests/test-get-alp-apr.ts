@@ -2,7 +2,7 @@ import { createPublicClient, createWalletClient, http, formatUnits } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts';
 import { NETWORKS, RPC_URLS, CONTRACT_ADDRESSES } from '../../constants.js';
 import { getALPAPR } from '../../functions/liquidity/getALPAPR.js';
-import { TransactionReturn } from '@heyanon/sdk';
+import { type FunctionOptions } from '@heyanon/sdk';
 import 'dotenv/config';
 
 // Load private key from environment
@@ -48,34 +48,43 @@ async function main() {
         console.log('\nTesting get ALP APR...');
         console.log('Wallet address:', account.address);
 
+        // Create options object with required structure
+        const functionOptions = {
+            evm: {
+                getProvider: () => publicClient,
+                sendTransactions: async () => ({ isMultisig: false, data: [] }),
+                getRecipient: async () => account.address,
+            },
+            solana: {
+                cluster: 'mainnet-beta',
+                commitment: 'confirmed',
+            },
+            notify: async (msg: string) => console.log(msg),
+        } as FunctionOptions;
+
         const result = await getALPAPR(
             {
                 chainName: NETWORKS.SONIC,
                 account: account.address,
             },
-            {
-                getProvider: () => publicClient,
-                notify: async (msg: string) => console.log(msg),
-                sendTransactions: async ({ transactions }): Promise<TransactionReturn> => {
-                    throw new Error('This function should not require transactions');
-                },
-            },
+            functionOptions
         );
 
         if (result.success) {
             const data = JSON.parse(result.data);
             console.log('\nALP APR Information:');
             console.log('-------------------');
-            console.log(`Base APR: ${Number(data.baseApr).toFixed(2)}%`);
+            console.log(`Base APR: ${data.baseApr}%`);
 
             console.log('\nReward Details:');
-            console.log(`Total Supply: ${Number(formatUnits(BigInt(data.totalSupply), 18)).toLocaleString()} ALP`);
-            console.log(`Yearly Rewards: ${Number(formatUnits(BigInt(data.yearlyRewards), 18)).toLocaleString()} wS`);
-            console.log(`Tokens Per Interval: ${formatUnits(BigInt(data.tokensPerInterval), 18)} wS/second`);
+            console.log(`Total Supply: ${Number(data.totalSupply).toLocaleString()} ALP`);
+            console.log(`Yearly Rewards: ${Number(data.yearlyRewards).toLocaleString()} wS`);
+            console.log(`Tokens Per Interval: ${data.tokensPerInterval} wS/second`);
 
             // Calculate daily and weekly rewards for better understanding
-            const dailyRewards = BigInt(data.yearlyRewards) / BigInt(365);
-            const weeklyRewards = BigInt(data.yearlyRewards) / BigInt(52);
+            const yearlyRewardsBigInt = BigInt(data.raw.yearlyRewards);
+            const dailyRewards = yearlyRewardsBigInt / BigInt(365);
+            const weeklyRewards = yearlyRewardsBigInt / BigInt(52);
 
             console.log('\nEstimated Rewards (if total supply remains constant):');
             console.log(`Daily Rewards: ${Number(formatUnits(dailyRewards, 18)).toLocaleString()} wS`);

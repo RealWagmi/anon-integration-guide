@@ -1,1 +1,38 @@
-{}
+{
+  "name": "amped",
+  "version": "1.0.0",
+  "description": "Amped Finance Integration",
+  "type": "module",
+  "scripts": {
+    "test:add-liquidity": "tsx scripts/tests/test-add-liquidity.ts",
+    "test:swaps-liquidity": "tsx scripts/tests/test-swaps-liquidity.ts",
+    "test:market-swap": "tsx scripts/tests/test-market-swap.ts",
+    "test:check-address": "tsx scripts/tests/check-address.ts",
+    "test:remove-liquidity": "tsx scripts/tests/test-remove-liquidity.ts",
+    "test:get-positions": "tsx scripts/tests/test-get-positions.ts",
+    "test:get-position": "tsx scripts/tests/test-get-position.ts",
+    "test:get-all-positions": "tsx scripts/tests/test-get-all-positions.ts",
+    "test:get-perps-liquidity": "tsx scripts/tests/test-get-perps-liquidity.ts",
+    "test:s-ws-swap": "tsx scripts/tests/test-s-ws-swap.ts",
+    "test:get-earnings": "tsx scripts/tests/test-get-earnings.ts",
+    "test:get-user-liquidity": "tsx scripts/tests/test-get-user-liquidity.ts",
+    "test:remove-liquidity-weth": "tsx scripts/tests/test-remove-liquidity-weth.ts",
+    "test:pool-liquidity": "tsx scripts/tests/test-pool-liquidity.ts",
+    "test:open-position": "tsx scripts/tests/test-open-position.ts",
+    "test:get-user-balances": "tsx scripts/tests/test-get-user-token-balances.ts",
+    "test:get-alp-apr": "tsx scripts/tests/test-get-alp-apr.ts",
+    "test:close-position": "tsx scripts/tests/test-close-position.ts",
+    "test:claim-rewards": "tsx scripts/tests/test-claim-rewards.ts",
+    "test": "tsx scripts/tests/test-add-liquidity.ts"
+  },
+  "dependencies": {
+    "@heyanon/sdk": "latest",
+    "dotenv": "^16.3.1",
+    "viem": "^1.19.11"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}

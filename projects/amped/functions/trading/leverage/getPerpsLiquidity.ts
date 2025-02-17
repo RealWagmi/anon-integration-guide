@@ -1,5 +1,5 @@
 import { Address, isAddress, formatUnits } from 'viem';
-import { FunctionReturn, FunctionOptions, toResult, getChainFromName } from '@heyanon/sdk';
+import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
 import { CONTRACT_ADDRESSES, NETWORKS } from '../../../constants.js';
 import { Vault } from '../../../abis/Vault.js';
 import { VaultPriceFeed } from '../../../abis/VaultPriceFeed.js';
@@ -13,7 +13,7 @@ interface Props {
 }
 
 interface LiquidityInfo {
-    maxLeverage: number;
+    maxLeverage: string;
     poolAmount: string;
     poolAmountUsd: string;
     reservedAmount: string;
@@ -22,6 +22,11 @@ interface LiquidityInfo {
     availableLiquidityUsd: string;
     fundingRate: string;
     priceUsd: string;
+}
+
+interface LiquidityResponse {
+    success: boolean;
+    info: LiquidityInfo;
 }
 
 /**
@@ -35,10 +40,8 @@ interface LiquidityInfo {
  * @param options - System tools for blockchain interactions
  * @returns Information about token liquidity and trading parameters
  */
-export async function getPerpsLiquidity({ chainName, account, indexToken, collateralToken, isLong }: Props, { getProvider, notify }: FunctionOptions): Promise<FunctionReturn> {
+export async function getPerpsLiquidity({ chainName, account, indexToken, collateralToken, isLong }: Props, options: FunctionOptions): Promise<FunctionReturn> {
     // Validate chain
-    const chainId = getChainFromName(chainName);
-    if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (chainName !== NETWORKS.SONIC) {
         return toResult('This function is only supported on Sonic chain', true);
     }
@@ -62,73 +65,82 @@ export async function getPerpsLiquidity({ chainName, account, indexToken, collat
         }
 
         // Validate trading token
-        const supportedTradingTokens = [CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH, CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN, CONTRACT_ADDRESSES[NETWORKS.SONIC].ANON];
+        const supportedTradingTokens = [
+            CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH,
+            CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN,
+            CONTRACT_ADDRESSES[NETWORKS.SONIC].ANON
+        ];
 
         if (!supportedTradingTokens.includes(indexToken)) {
             return toResult(`Token ${indexToken} is not supported for trading`, true);
         }
 
-        await notify('Checking perpetual trading liquidity information...');
+        await options.notify('Checking perpetual trading liquidity information...');
 
-        const provider = getProvider(chainId);
+        const provider = options.evm.getProvider(146);
 
-        const vaultAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT as Address;
-        const priceFeedAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT_PRICE_FEED as Address;
-
-        await notify('Fetching token price...');
         // Get token price first to validate token is supported
-        const priceResponse = (await provider.readContract({
-            address: priceFeedAddress,
+        await options.notify('Fetching token price...');
+        const priceResponse = await provider.readContract({
+            address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT_PRICE_FEED,
             abi: VaultPriceFeed,
             functionName: 'getPrice',
             args: [indexToken, isLong, !isLong, true],
-        })) as bigint;
+        }) as bigint;
 
         if (priceResponse === 0n) {
             return toResult(`No price feed available for ${indexToken}`, true);
         }
 
-        const priceUsd = Number(formatUnits(priceResponse, 30));
-        await notify(`Current price: $${priceUsd.toFixed(4)}`);
-
-        await notify('Fetching pool information...');
         // Get pool and reserved amounts
+        await options.notify('Fetching pool information...');
         const [poolAmount, reservedAmount] = await Promise.all([
             provider.readContract({
-                address: vaultAddress,
+                address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT,
                 abi: Vault,
                 functionName: 'poolAmounts',
                 args: [indexToken],
             }) as Promise<bigint>,
             provider.readContract({
-                address: vaultAddress,
+                address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT,
                 abi: Vault,
                 functionName: 'reservedAmounts',
                 args: [indexToken],
             }) as Promise<bigint>,
         ]);
 
-        // Calculate available liquidity
+        // Calculate available liquidity with safe type conversion
         const availableLiquidity = poolAmount - reservedAmount;
 
-        // Format response data
+        // Calculate USD values with safe type conversion
+        // Need to divide by both 1e30 (price decimals) and 1e18 (token decimals)
+        const poolAmountUsd = (poolAmount * priceResponse) / BigInt(1e48);
+        const reservedAmountUsd = (reservedAmount * priceResponse) / BigInt(1e48);
+        const availableLiquidityUsd = (availableLiquidity * priceResponse) / BigInt(1e48);
+
+        // Format response data with all numeric values as strings
         const liquidityInfo: LiquidityInfo = {
-            maxLeverage: 50, // Fixed at 50x for now
+            maxLeverage: '50', // Fixed at 50x for now
             poolAmount: formatUnits(poolAmount, 18),
-            poolAmountUsd: (Number(formatUnits(poolAmount, 18)) * priceUsd).toFixed(2),
+            poolAmountUsd: formatUnits(poolAmountUsd, 0), // Already divided by all decimals
             reservedAmount: formatUnits(reservedAmount, 18),
-            reservedAmountUsd: (Number(formatUnits(reservedAmount, 18)) * priceUsd).toFixed(2),
+            reservedAmountUsd: formatUnits(reservedAmountUsd, 0), // Already divided by all decimals
             availableLiquidity: formatUnits(availableLiquidity, 18),
-            availableLiquidityUsd: (Number(formatUnits(availableLiquidity, 18)) * priceUsd).toFixed(2),
+            availableLiquidityUsd: formatUnits(availableLiquidityUsd, 0), // Already divided by all decimals
             fundingRate: '0', // Fixed at 0 for now
-            priceUsd: priceUsd.toFixed(4),
+            priceUsd: formatUnits(priceResponse, 30),
         };
 
-        await notify(`Pool Amount: ${liquidityInfo.poolAmount} tokens ($${liquidityInfo.poolAmountUsd})`);
-        await notify(`Reserved Amount: ${liquidityInfo.reservedAmount} tokens ($${liquidityInfo.reservedAmountUsd})`);
-        await notify(`Available Liquidity: ${liquidityInfo.availableLiquidity} tokens ($${liquidityInfo.availableLiquidityUsd})`);
+        await options.notify(`Pool Amount: ${liquidityInfo.poolAmount} tokens ($${liquidityInfo.poolAmountUsd})`);
+        await options.notify(`Reserved Amount: ${liquidityInfo.reservedAmount} tokens ($${liquidityInfo.reservedAmountUsd})`);
+        await options.notify(`Available Liquidity: ${liquidityInfo.availableLiquidity} tokens ($${liquidityInfo.availableLiquidityUsd})`);
 
-        return toResult(JSON.stringify(liquidityInfo));
+        const response: LiquidityResponse = {
+            success: true,
+            info: liquidityInfo,
+        };
+
+        return toResult(JSON.stringify(response));
     } catch (error) {
         if (error instanceof Error) {
             return toResult(`Failed to get perpetual trading liquidity: ${error.message}`, true);

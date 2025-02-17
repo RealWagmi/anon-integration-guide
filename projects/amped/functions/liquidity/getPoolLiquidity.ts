@@ -1,6 +1,8 @@
 import { formatUnits, getContract } from 'viem';
-import { FunctionReturn, FunctionOptions, toResult, getChainFromName } from '@heyanon/sdk';
+import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
 import { CONTRACT_ADDRESSES, NETWORKS } from '../../constants.js';
+import { getChainFromName } from '../../utils.js';
+import { VaultPriceFeed } from '../../abis/VaultPriceFeed.js';
 
 interface Props {
     chainName: (typeof NETWORKS)[keyof typeof NETWORKS];
@@ -71,6 +73,30 @@ const VAULT_ABI = [
     },
 ] as const;
 
+// Helper function for safe string conversion
+function safeToString(value: unknown): string {
+    if (value === null || value === undefined) return '';
+    return String(value);
+}
+
+// Helper function for safe number conversion
+function safeToNumber(value: unknown): number {
+    if (value === null || value === undefined) return 0;
+    if (typeof value === 'string') {
+        const parsed = parseFloat(value);
+        return isNaN(parsed) ? 0 : parsed;
+    }
+    if (typeof value === 'number') return isNaN(value) ? 0 : value;
+    if (typeof value === 'bigint') {
+        try {
+            return Number(value);
+        } catch {
+            return 0;
+        }
+    }
+    return 0;
+}
+
 /**
  * Gets the total liquidity pool (ALP) supply and Assets Under Management (AUM) on Amped Finance
  * @param props - The function parameters
@@ -78,7 +104,7 @@ const VAULT_ABI = [
  * @param options - System tools for blockchain interactions
  * @returns Pool information including total supply, AUM, and individual token liquidity
  */
-export async function getPoolLiquidity({ chainName }: Props, { notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
+export async function getPoolLiquidity({ chainName }: Props, options: FunctionOptions): Promise<FunctionReturn> {
     // Validate chain
     const chainId = getChainFromName(chainName);
     if (!chainId) {
@@ -89,9 +115,9 @@ export async function getPoolLiquidity({ chainName }: Props, { notify, getProvid
     }
 
     try {
-        await notify('Fetching pool liquidity information...');
+        await options.notify('Fetching pool liquidity information...');
 
-        const provider = getProvider(chainId);
+        const provider = options.evm.getProvider(chainId);
 
         // Get total supply and AUM in parallel
         const [totalSupply, aum] = await Promise.all([
@@ -117,7 +143,7 @@ export async function getPoolLiquidity({ chainName }: Props, { notify, getProvid
             { symbol: 'EURC', address: CONTRACT_ADDRESSES[NETWORKS.SONIC].EURC, decimals: 6 },
         ];
 
-        await notify('Fetching individual token liquidity...');
+        await options.notify('Fetching individual token liquidity...');
 
         // Get liquidity info for each token
         const tokenLiquidity: TokenLiquidity[] = await Promise.all(
@@ -136,42 +162,39 @@ export async function getPoolLiquidity({ chainName }: Props, { notify, getProvid
                         args: [token.address],
                     }) as Promise<bigint>,
                     provider.readContract({
-                        address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT,
-                        abi: VAULT_ABI,
-                        functionName: 'getMinPrice',
-                        args: [token.address],
+                        address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT_PRICE_FEED,
+                        abi: VaultPriceFeed,
+                        functionName: 'getPrice',
+                        args: [token.address, false, true, false],
                     }) as Promise<bigint>,
                 ]);
 
                 const availableAmount = poolAmount - reservedAmount;
-                const priceFormatted = formatUnits(price, 30);
 
-                const poolAmountFormatted = formatUnits(poolAmount, token.decimals);
-                const reservedAmountFormatted = formatUnits(reservedAmount, token.decimals);
-                const availableAmountFormatted = formatUnits(availableAmount, token.decimals);
-
-                const poolAmountUsd = (Number(poolAmountFormatted) * Number(priceFormatted)).toString();
-                const reservedAmountUsd = (Number(reservedAmountFormatted) * Number(priceFormatted)).toString();
-                const availableAmountUsd = (Number(availableAmountFormatted) * Number(priceFormatted)).toString();
+                // Calculate USD values with proper precision
+                // Price is in 1e30, amounts in token decimals
+                const poolAmountUsd = (poolAmount * price) / BigInt(10 ** token.decimals);
+                const reservedAmountUsd = (reservedAmount * price) / BigInt(10 ** token.decimals);
+                const availableAmountUsd = (availableAmount * price) / BigInt(10 ** token.decimals);
 
                 return {
                     symbol: token.symbol,
                     address: token.address,
-                    poolAmount: poolAmountFormatted,
-                    reservedAmount: reservedAmountFormatted,
-                    availableAmount: availableAmountFormatted,
-                    price: priceFormatted,
-                    poolAmountUsd,
-                    reservedAmountUsd,
-                    availableAmountUsd,
+                    poolAmount: formatUnits(poolAmount, token.decimals),
+                    reservedAmount: formatUnits(reservedAmount, token.decimals),
+                    availableAmount: formatUnits(availableAmount, token.decimals),
+                    price: formatUnits(price, 30),
+                    poolAmountUsd: formatUnits(poolAmountUsd, 30),
+                    reservedAmountUsd: formatUnits(reservedAmountUsd, 30),
+                    availableAmountUsd: formatUnits(availableAmountUsd, 30),
                 };
             }),
         );
 
-        // Calculate derived values
+        // Calculate derived values with safe conversions
         const totalSupplyFormatted = formatUnits(totalSupply, 18);
         const aumFormatted = formatUnits(aum, 30);
-        const aumPerToken = totalSupply === 0n ? '0' : (Number(aumFormatted) / Number(totalSupplyFormatted)).toString();
+        const aumPerToken = totalSupply === 0n ? '0' : formatUnits((aum * BigInt(1e18)) / totalSupply, 30);
 
         const poolLiquidity: PoolLiquidity = {
             totalSupply: totalSupplyFormatted,
@@ -181,9 +204,9 @@ export async function getPoolLiquidity({ chainName }: Props, { notify, getProvid
             tokens: tokenLiquidity,
         };
 
-        await notify(`Total ALP Supply: ${poolLiquidity.totalSupply} ALP`);
-        await notify(`Total Value Locked: $${poolLiquidity.aum}`);
-        await notify(`ALP Price: $${poolLiquidity.aumPerToken}`);
+        await options.notify(`Total ALP Supply: ${poolLiquidity.totalSupply} ALP`);
+        await options.notify(`Total Value Locked: $${Number(poolLiquidity.aum).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+        await options.notify(`ALP Price: $${Number(poolLiquidity.aumPerToken).toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 })}`);
 
         return toResult(JSON.stringify(poolLiquidity));
     } catch (error) {

@@ -43,12 +43,15 @@ export async function removeLiquidity(
 
     try {
         const publicClient = getProvider(chainId);
-        const amountInWei = parseUnits(amount, 18);
 
-        // Validate amount is greater than zero
-        if (amountInWei <= 0n) {
+        // Validate amount format
+        const parsedAmount = parseFloat(amount);
+        if (isNaN(parsedAmount) || parsedAmount <= 0) {
             return toResult('Amount must be greater than zero', true);
         }
+
+        // Convert amount to wei with safe conversion
+        const amountInWei = parseUnits(parsedAmount.toString(), 18);
 
         // Get token-specific details first
         const isNativeToken = tokenOut.toLowerCase() === CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN.toLowerCase();
@@ -70,11 +73,15 @@ export async function removeLiquidity(
                 { getProvider, notify, sendTransactions },
             );
 
-            if (!userLiquidityResult.success) {
+            if (!userLiquidityResult.success || !userLiquidityResult.data) {
                 return userLiquidityResult;
             }
 
             const userLiquidity = JSON.parse(userLiquidityResult.data);
+            if (!userLiquidity || !userLiquidity.availableAmount) {
+                return toResult('Invalid user liquidity data returned', true);
+            }
+
             const userAvailableAmount = parseUnits(userLiquidity.availableAmount, 18);
 
             if (amountInWei > userAvailableAmount) {
@@ -83,22 +90,38 @@ export async function removeLiquidity(
 
             // Then check pool liquidity and calculate minOut based on current price
             const poolLiquidityResult = await getPoolLiquidity({ chainName }, { getProvider, notify, sendTransactions });
-            if (!poolLiquidityResult.success) {
+            if (!poolLiquidityResult.success || !poolLiquidityResult.data) {
                 return poolLiquidityResult;
             }
 
             const poolData = JSON.parse(poolLiquidityResult.data);
+            if (!poolData || !poolData.aum || !poolData.totalSupply) {
+                return toResult('Invalid pool data returned', true);
+            }
+
             const glpPrice = Number(poolData.aum) / Number(poolData.totalSupply);
-            const amountUsd = Number(amount) * glpPrice;
+            if (isNaN(glpPrice)) {
+                return toResult('Invalid GLP price calculation', true);
+            }
+
+            const amountUsd = parsedAmount * glpPrice;
 
             // Get token price and available liquidity
-            const tokenInfo = poolData.tokens.find((t: any) => t.address.toLowerCase() === tokenAddress.toLowerCase());
-            if (!tokenInfo) {
+            const tokenInfo = poolData.tokens.find((t: any) => {
+                if (!t || !t.address) return false;
+                return t.address.toLowerCase() === tokenAddress.toLowerCase();
+            });
+
+            if (!tokenInfo || !tokenInfo.price || !tokenInfo.availableAmount) {
                 return toResult(`Token ${tokenOut} not found in pool`, true);
             }
 
             const tokenPriceFormatted = Number(tokenInfo.price);
             const tokenAvailableFormatted = Number(tokenInfo.availableAmount);
+
+            if (isNaN(tokenPriceFormatted) || isNaN(tokenAvailableFormatted)) {
+                return toResult('Invalid token price or available amount', true);
+            }
 
             // Calculate minOut with slippage tolerance
             const minOutAmount = (amountUsd / tokenPriceFormatted) * (1 - slippageTolerance / 100);
@@ -106,13 +129,13 @@ export async function removeLiquidity(
 
             // Check if pool has enough available liquidity
             if (minOutAmount > tokenAvailableFormatted) {
-                return toResult(`Insufficient pool liquidity for ${isNativeToken ? 'S' : tokenInfo.symbol}. ` + `Required: ${minOutAmount.toFixed(decimals)}, Available: ${tokenAvailableFormatted}`, true);
+                return toResult(`Insufficient pool liquidity for ${isNativeToken ? 'S' : tokenInfo.symbol}. ` + 
+                    `Required: ${minOutAmount.toFixed(decimals)}, Available: ${tokenAvailableFormatted}`, true);
             }
 
             // Additional safety check for extreme price impact
             const priceImpact = (minOutAmount / tokenAvailableFormatted) * 100;
             if (priceImpact > 10) {
-                // If removing more than 10% of available liquidity
                 return toResult(
                     `Removal amount too large for ${isNativeToken ? 'S' : tokenInfo.symbol} - would cause significant price impact (${priceImpact.toFixed(2)}%). ` +
                         `Consider reducing the amount or splitting into multiple transactions.`,
@@ -121,7 +144,7 @@ export async function removeLiquidity(
             }
         } else {
             // If skipping safety checks, use a default minOut based on amount and slippage
-            const minOutAmount = Number(amount) * (1 - slippageTolerance / 100);
+            const minOutAmount = parsedAmount * (1 - slippageTolerance / 100);
             minOutInTokenWei = parseUnits(minOutAmount.toFixed(decimals), decimals);
         }
 
@@ -168,9 +191,9 @@ export async function removeLiquidity(
                     success: true,
                     hash: result.data[0].hash,
                     details: {
-                        amount,
+                        amount: formatUnits(amountInWei, 18),
                         tokenOut,
-                        minOut: minOutInTokenWei.toString(),
+                        minOut: formatUnits(minOutInTokenWei, decimals),
                         warning: 'Could not parse RemoveLiquidity event from transaction receipt'
                     },
                 }),
@@ -216,14 +239,15 @@ export async function removeLiquidity(
             );
         }
 
+        // Return data with all numeric values as strings
         return toResult(
             JSON.stringify({
                 success: true,
                 hash: result.data[0].hash,
                 details: {
-                    amount,
+                    amount: formatUnits(amountInWei, 18),
                     tokenOut,
-                    minOut: minOutInTokenWei.toString(),
+                    minOut: formatUnits(minOutInTokenWei, decimals),
                     receivedAmount: formatUnits(decodedEvent.args.amountOut, decimals),
                     aumInUsdg: formatUnits(decodedEvent.args.aumInUsdg, 18),
                     glpSupply: formatUnits(decodedEvent.args.glpSupply, 18),

@@ -1,3 +1,5 @@
+import { Abi } from 'viem';
+
 export const RewardRouter = [
   {
     inputs: [
@@ -7,7 +9,7 @@ export const RewardRouter = [
       { name: '_minGlp', type: 'uint256' }
     ],
     name: 'mintAndStakeGlp',
-    outputs: [{ type: 'uint256' }],
+    outputs: [{ name: "", type: "uint256" }],
     stateMutability: 'nonpayable',
     type: 'function'
   },
@@ -17,7 +19,7 @@ export const RewardRouter = [
       { name: '_minGlp', type: 'uint256' }
     ],
     name: 'mintAndStakeGlpETH',
-    outputs: [{ type: 'uint256' }],
+    outputs: [{ name: "", type: "uint256" }],
     stateMutability: 'payable',
     type: 'function'
   },
@@ -44,4 +46,4 @@ export const RewardRouter = [
     stateMutability: 'nonpayable',
     type: 'function'
   }
-] as const; 
+] as const satisfies Abi; 

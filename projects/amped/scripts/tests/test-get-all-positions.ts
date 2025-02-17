@@ -1,6 +1,6 @@
-import { createPublicClient, http, type Chain, type Transport, type PublicClient, formatUnits } from 'viem';
+import { createPublicClient, http, type Chain, type Transport, type PublicClient } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { getUserTokenBalances } from '../../functions/liquidity/getUserTokenBalances.js';
+import { getAllOpenPositions } from '../../functions/trading/leverage/getAllOpenPositions.js';
 import { CHAIN_CONFIG, NETWORKS } from '../../constants.js';
 import dotenv from 'dotenv';
 
@@ -19,14 +19,15 @@ async function main() {
 
     const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`);
 
-    console.log('\nTesting getUserTokenBalances...');
+    console.log('\nTesting getAllOpenPositions...');
 
     // Test 1: Invalid chain name
     console.log('\nTest 1: Invalid chain name');
-    const invalidChainResult = await getUserTokenBalances(
+    const invalidChainResult = await getAllOpenPositions(
         {
-            chainName: 'invalid-chain',
+            chainName: 'invalid-chain' as any,
             account: account.address,
+            isLong: true,
         },
         {
             evm: {
@@ -42,10 +43,11 @@ async function main() {
 
     // Test 2: Invalid account address
     console.log('\nTest 2: Invalid account address');
-    const invalidAccountResult = await getUserTokenBalances(
+    const invalidAccountResult = await getAllOpenPositions(
         {
             chainName: NETWORKS.SONIC,
             account: '0x0000000000000000000000000000000000000000',
+            isLong: true,
         },
         {
             evm: {
@@ -59,12 +61,13 @@ async function main() {
     );
     console.log('Invalid account test result:', invalidAccountResult);
 
-    // Test 3: Valid request
-    console.log('\nTest 3: Valid request');
-    const result = await getUserTokenBalances(
+    // Test 3: Valid request for long positions
+    console.log('\nTest 3: Valid request for long positions');
+    const longResult = await getAllOpenPositions(
         {
             chainName: NETWORKS.SONIC,
             account: account.address,
+            isLong: true,
         },
         {
             evm: {
@@ -77,24 +80,40 @@ async function main() {
         }
     );
 
-    if (!result.success) {
-        throw new Error(`Failed to get token balances: ${result.data}`);
+    if (!longResult.success) {
+        console.error('Failed to get long positions:', longResult.data);
+    } else {
+        console.log('\nLong positions request successful!');
+        const data = JSON.parse(longResult.data);
+        console.log('Positions details:', JSON.stringify(data, null, 2));
     }
 
-    console.log('\nRequest successful!');
-    const data = JSON.parse(result.data);
-    
-    // Print formatted token balances
-    console.log('\nToken Balances:');
-    data.tokens.forEach((token: any) => {
-        console.log(`\n${token.symbol}:`);
-        console.log(`  Balance: ${token.balance} ${token.symbol}`);
-        console.log(`  USD Value: $${Number(token.balanceUsd).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
-        console.log(`  Price: $${Number(token.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}`);
-    });
+    // Test 4: Valid request for short positions
+    console.log('\nTest 4: Valid request for short positions');
+    const shortResult = await getAllOpenPositions(
+        {
+            chainName: NETWORKS.SONIC,
+            account: account.address,
+            isLong: false,
+        },
+        {
+            evm: {
+                getProvider: () => publicClient,
+            },
+            notify: async (message: string) => {
+                console.log(message);
+                return Promise.resolve();
+            }
+        }
+    );
 
-    // Format total balance
-    console.log(`\nTotal Balance USD: $${data.totalBalanceUsd}`);
+    if (!shortResult.success) {
+        console.error('Failed to get short positions:', shortResult.data);
+    } else {
+        console.log('\nShort positions request successful!');
+        const data = JSON.parse(shortResult.data);
+        console.log('Positions details:', JSON.stringify(data, null, 2));
+    }
 }
 
-main().catch(console.error);
+main().catch(console.error); 

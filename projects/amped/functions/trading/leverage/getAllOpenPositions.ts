@@ -1,6 +1,7 @@
-import { CONTRACT_ADDRESSES, NETWORKS } from '../../../constants';
-import { FunctionOptions, FunctionReturn, toResult, getChainFromName } from '@heyanon/sdk';
-import { getPosition } from './getPositions';
+import { CONTRACT_ADDRESSES, NETWORKS } from '../../../constants.js';
+import { FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
+import { getPosition } from './getPosition.js';
+import { getChainFromName } from '../../../utils.js';
 
 interface Props {
     chainName: (typeof NETWORKS)[keyof typeof NETWORKS];
@@ -8,23 +9,55 @@ interface Props {
     isLong: boolean;
 }
 
+interface Position {
+    size: string;
+    collateral: string;
+    collateralUsd: string;
+    averagePrice: string;
+    currentPrice: string;
+    entryFundingRate: string;
+    hasProfit: boolean;
+    realizedPnl: string;
+    unrealizedPnlUsd: string;
+    unrealizedPnlPercentage: string;
+    leverage: string;
+    liquidationPrice: string;
+    lastUpdated: string | null;
+}
+
 interface OpenPosition {
     indexToken: `0x${string}`;
     collateralToken: `0x${string}`;
     isLong: boolean;
-    position: {
-        size: string;
-        collateral: string;
-        collateralUsd: string;
-        averagePrice: string;
-        currentPrice: string;
-        entryFundingRate: string;
-        hasProfit: boolean;
-        realizedPnl: string;
-        unrealizedPnlUsd: string;
-        unrealizedPnlPercentage: string;
-        lastUpdated: Date | null;
-    };
+    position: Position;
+    tokenSymbol: string;
+    collateralSymbol: string;
+}
+
+interface OpenPositionsResponse {
+    success: boolean;
+    positions: OpenPosition[];
+    totalPositionValue: string;
+    totalUnrealizedPnl: string;
+    totalCollateralValue: string;
+}
+
+function getTokenSymbol(address: `0x${string}`): string {
+    const addressLower = address.toLowerCase();
+    switch (addressLower) {
+        case CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN.toLowerCase():
+            return 'S';
+        case CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH.toLowerCase():
+            return 'WETH';
+        case CONTRACT_ADDRESSES[NETWORKS.SONIC].ANON.toLowerCase():
+            return 'ANON';
+        case CONTRACT_ADDRESSES[NETWORKS.SONIC].USDC.toLowerCase():
+            return 'USDC';
+        case CONTRACT_ADDRESSES[NETWORKS.SONIC].EURC.toLowerCase():
+            return 'EURC';
+        default:
+            return 'UNKNOWN';
+    }
 }
 
 /**
@@ -36,7 +69,7 @@ interface OpenPosition {
  * @param options - System tools for blockchain interactions
  * @returns Array of all open positions with their details
  */
-export async function getAllOpenPositions({ chainName, account, isLong }: Props, { getProvider, notify, sendTransactions }: FunctionOptions): Promise<FunctionReturn> {
+export async function getAllOpenPositions({ chainName, account, isLong }: Props, options: FunctionOptions): Promise<FunctionReturn> {
     try {
         // Validate chain using SDK helper
         const chainId = getChainFromName(chainName);
@@ -45,22 +78,36 @@ export async function getAllOpenPositions({ chainName, account, isLong }: Props,
             return toResult('This function is only supported on Sonic chain', true);
         }
 
-        await notify('Checking all positions...');
+        // Validate account
+        if (!account || account === '0x0000000000000000000000000000000000000000') {
+            return toResult('Invalid account address', true);
+        }
+
+        await options.notify('Checking all positions...');
 
         // Define valid index tokens for positions
-        const indexTokens = [CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN, CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH, CONTRACT_ADDRESSES[NETWORKS.SONIC].ANON] as const;
+        const indexTokens = [
+            CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN,
+            CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH,
+            CONTRACT_ADDRESSES[NETWORKS.SONIC].ANON
+        ] as const;
 
         // Define possible collateral tokens for short positions (only stablecoins)
-        const shortCollateralTokens = [CONTRACT_ADDRESSES[NETWORKS.SONIC].USDC, CONTRACT_ADDRESSES[NETWORKS.SONIC].EURC] as const;
+        const shortCollateralTokens = [
+            CONTRACT_ADDRESSES[NETWORKS.SONIC].USDC,
+            CONTRACT_ADDRESSES[NETWORKS.SONIC].EURC
+        ] as const;
 
         const openPositions: OpenPosition[] = [];
+        let totalPositionValue = 0;
+        let totalUnrealizedPnl = 0;
+        let totalCollateralValue = 0;
 
         // Check each index token
         for (const indexToken of indexTokens) {
-            await notify(
-                `\nChecking ${isLong ? 'long' : 'short'} positions for ${
-                    indexToken === CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN ? 'S' : indexToken === CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH ? 'WETH' : 'ANON'
-                }...`,
+            const tokenSymbol = getTokenSymbol(indexToken);
+            await options.notify(
+                `\nChecking ${isLong ? 'long' : 'short'} positions for ${tokenSymbol}...`,
             );
 
             // For long positions, only check when collateral matches index token
@@ -76,69 +123,82 @@ export async function getAllOpenPositions({ chainName, account, isLong }: Props,
                         collateralToken: collateralToken as `0x${string}`,
                         isLong,
                     },
-                    { getProvider, notify, sendTransactions },
+                    options,
                 );
 
+                if (!positionResult.success || !positionResult.data) {
+                    continue;
+                }
+
                 const positionData = JSON.parse(positionResult.data);
-                if (positionData.success && positionData.position && positionData.position.size !== '0.0') {
+                if (positionData.success && positionData.position && Number(positionData.position.size) > 0) {
+                    const position = positionData.position as Position;
+                    
+                    // Add position to array with token symbols
                     openPositions.push({
                         indexToken: indexToken as `0x${string}`,
                         collateralToken: collateralToken as `0x${string}`,
                         isLong,
-                        position: positionData.position,
+                        position,
+                        tokenSymbol: getTokenSymbol(indexToken as `0x${string}`),
+                        collateralSymbol: getTokenSymbol(collateralToken as `0x${string}`),
                     });
+
+                    // Update totals with safe numeric conversion
+                    totalPositionValue += Number(position.size);
+                    totalUnrealizedPnl += Number(position.unrealizedPnlUsd);
+                    totalCollateralValue += Number(position.collateralUsd);
                 }
             }
         }
 
         if (openPositions.length === 0) {
-            await notify(`\nNo active ${isLong ? 'long' : 'short'} positions found`);
-            return toResult(JSON.stringify({ success: true, positions: [] }));
+            await options.notify(`\nNo active ${isLong ? 'long' : 'short'} positions found`);
+            const response: OpenPositionsResponse = {
+                success: true,
+                positions: [],
+                totalPositionValue: '0',
+                totalUnrealizedPnl: '0',
+                totalCollateralValue: '0',
+            };
+            return toResult(JSON.stringify(response));
         }
 
-        await notify(`\nFound ${openPositions.length} active ${isLong ? 'long' : 'short'} position(s):`);
-        openPositions.forEach((pos, index) => {
-            notify(`\n${index + 1}. Position Details:`);
-            notify(
-                `Index Token: ${
-                    pos.indexToken === CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN ? 'S' : pos.indexToken === CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH ? 'WETH' : 'ANON'
-                }`,
-            );
-            notify(
-                `Collateral Token: ${
-                    pos.collateralToken === CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN
-                        ? 'S'
-                        : pos.collateralToken === CONTRACT_ADDRESSES[NETWORKS.SONIC].USDC
-                          ? 'USDC'
-                          : 'ANON'
-                }`,
-            );
-            notify(`Size: ${pos.position.size} USD`);
-            notify(
-                `Collateral: ${pos.position.collateral} ${
-                    pos.collateralToken === CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN
-                        ? 'S'
-                        : pos.collateralToken === CONTRACT_ADDRESSES[NETWORKS.SONIC].USDC
-                          ? 'USDC'
-                          : 'ANON'
-                } (${pos.position.collateralUsd} USD)`,
-            );
-            notify(`Entry Price: ${pos.position.averagePrice} USD`);
-            notify(`Current Price: ${pos.position.currentPrice} USD`);
-            notify(`Unrealized PnL: ${pos.position.unrealizedPnlUsd} USD (${pos.position.unrealizedPnlPercentage}%)`);
-        });
+        await options.notify(`\nFound ${openPositions.length} active ${isLong ? 'long' : 'short'} position(s):`);
+        
+        // Log position summaries
+        for (const [index, pos] of openPositions.entries()) {
+            await options.notify(`\n${index + 1}. Position Details:`);
+            await options.notify(`Index Token: ${pos.tokenSymbol}`);
+            await options.notify(`Collateral Token: ${pos.collateralSymbol}`);
+            await options.notify(`Size: ${pos.position.size} USD`);
+            await options.notify(`Collateral: ${pos.position.collateral} ${pos.collateralSymbol} (${pos.position.collateralUsd} USD)`);
+            await options.notify(`Entry Price: ${pos.position.averagePrice} USD`);
+            await options.notify(`Current Price: ${pos.position.currentPrice} USD`);
+            await options.notify(`Leverage: ${pos.position.leverage}x`);
+            await options.notify(`Liquidation Price: ${pos.position.liquidationPrice} USD`);
+            await options.notify(`Unrealized PnL: ${pos.position.unrealizedPnlUsd} USD (${pos.position.unrealizedPnlPercentage}%)`);
+        }
 
-        return toResult(
-            JSON.stringify({
-                success: true,
-                positions: openPositions,
-            }),
-        );
+        // Log portfolio summary
+        await options.notify('\nPortfolio Summary:');
+        await options.notify(`Total Position Value: $${totalPositionValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+        await options.notify(`Total Unrealized PnL: $${totalUnrealizedPnl.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+        await options.notify(`Total Collateral Value: $${totalCollateralValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+
+        const response: OpenPositionsResponse = {
+            success: true,
+            positions: openPositions,
+            totalPositionValue: totalPositionValue.toString(),
+            totalUnrealizedPnl: totalUnrealizedPnl.toString(),
+            totalCollateralValue: totalCollateralValue.toString(),
+        };
+
+        return toResult(JSON.stringify(response));
     } catch (error) {
-        console.error('Error getting all positions:', error);
-        return toResult(
-            error instanceof Error ? `Failed to get all positions: ${error.message}` : 'Failed to get all positions. Please check your parameters and try again.',
-            true,
-        );
+        if (error instanceof Error) {
+            return toResult(`Failed to get all positions: ${error.message}`, true);
+        }
+        return toResult('Failed to get all positions: Unknown error', true);
     }
 } 

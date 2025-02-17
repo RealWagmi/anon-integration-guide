@@ -1,8 +1,11 @@
-import { Address, getContract, createPublicClient, http, Chain } from 'viem';
-import { FunctionReturn, FunctionOptions, toResult, getChainFromName } from '@heyanon/sdk';
+import { Address, getContract, createPublicClient, http, Chain, type PublicClient } from 'viem';
+import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
 import { CONTRACT_ADDRESSES, NETWORKS } from '../../constants.js';
 import { ERC20 } from '../../abis/ERC20.js';
 import { Vault } from '../../abis/Vault.js';
+import { getChainFromName } from '../../utils.js';
+import { formatUnits } from 'viem';
+import { VaultPriceFeed } from '../../abis/VaultPriceFeed.js';
 
 interface Props {
     chainName: (typeof NETWORKS)[keyof typeof NETWORKS];
@@ -18,6 +21,30 @@ interface TokenInfo {
     price: string;
 }
 
+// Helper function for safe string conversion
+function safeToString(value: unknown): string {
+    if (value === null || value === undefined) return '';
+    return String(value);
+}
+
+// Helper function for safe number conversion
+function safeToNumber(value: unknown): number {
+    if (value === null || value === undefined) return 0;
+    if (typeof value === 'string') {
+        const parsed = parseFloat(value);
+        return isNaN(parsed) ? 0 : parsed;
+    }
+    if (typeof value === 'number') return isNaN(value) ? 0 : value;
+    if (typeof value === 'bigint') {
+        try {
+            return Number(value);
+        } catch {
+            return 0;
+        }
+    }
+    return 0;
+}
+
 /**
  * Gets balances and USD values of all supported tokens on Amped Finance
  * @param props - The function parameters
@@ -26,7 +53,7 @@ interface TokenInfo {
  * @param options - System tools for blockchain interactions
  * @returns Information about token balances and their USD values
  */
-export async function getUserTokenBalances({ chainName, account }: Props, { getProvider, notify }: FunctionOptions): Promise<FunctionReturn> {
+export async function getUserTokenBalances({ chainName, account }: Props, options: FunctionOptions): Promise<FunctionReturn> {
     // Validate chain
     const chainId = getChainFromName(chainName);
     if (!chainId) {
@@ -42,13 +69,13 @@ export async function getUserTokenBalances({ chainName, account }: Props, { getP
     }
 
     try {
-        await notify('Fetching token balances...');
+        await options.notify('Fetching token balances...');
 
-        const provider = getProvider(chainId);
+        const provider = options.evm.getProvider(chainId);
         const tokenInfos: TokenInfo[] = [];
 
-        await notify('Initializing vault contract...');
-        await notify(`Vault address: ${CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT}`);
+        await options.notify('Initializing vault contract...');
+        await options.notify(`Vault address: ${CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT}`);
 
         // Get native token (S) balance
         try {
@@ -57,35 +84,35 @@ export async function getUserTokenBalances({ chainName, account }: Props, { getP
                 params: [account, 'latest'],
             });
 
-            await notify(`Raw native balance: ${nativeBalance}`);
-            const nativeBalanceBigInt = BigInt(nativeBalance);
-            await notify(`Native balance BigInt: ${nativeBalanceBigInt.toString()}`);
+            await options.notify(`Raw native balance: ${safeToString(nativeBalance)}`);
+            const nativeBalanceBigInt = BigInt(safeToString(nativeBalance) || '0');
+            await options.notify(`Native balance BigInt: ${nativeBalanceBigInt.toString()}`);
 
-            await notify('Getting native token price...');
-            await notify(`Native token address: ${CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN}`);
+            await options.notify('Getting native token price...');
+            await options.notify(`Native token address: ${CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN}`);
 
             const nativePrice = await provider.readContract({
-                address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT,
-                abi: Vault,
-                functionName: 'getMaxPrice',
-                args: [CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN],
+                address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT_PRICE_FEED,
+                abi: VaultPriceFeed,
+                functionName: 'getPrice',
+                args: [CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN, false, true, false],
             }) as bigint;
 
-            await notify(`Native price from Amped Finance: ${nativePrice.toString()}`);
+            await options.notify(`Native price from Amped Finance: ${nativePrice.toString()}`);
 
-            // Price is in 1e30, balance in 1e18, result should be in USD
-            const nativeBalanceUsd = (nativeBalanceBigInt * nativePrice) / BigInt(1e48);
+            // Price is in 1e30, balance in 1e18, result should be in USD (1e30)
+            const nativeBalanceUsd = (nativeBalanceBigInt * nativePrice) / BigInt(1e18);
 
-            await notify(`Native balance USD from Amped Finance: ${nativeBalanceUsd.toString()}`);
+            await options.notify(`Native balance USD from Amped Finance: ${formatUnits(nativeBalanceUsd, 30)}`);
 
             // Add native token (S)
             tokenInfos.push({
                 symbol: 'S',
                 address: CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN,
                 decimals: 18,
-                balance: nativeBalanceBigInt.toString(),
-                balanceUsd: nativeBalanceUsd.toString(),
-                price: nativePrice.toString(),
+                balance: formatUnits(nativeBalanceBigInt, 18),
+                balanceUsd: formatUnits(nativeBalanceUsd, 30),
+                price: formatUnits(nativePrice, 30),
             });
 
             // Get wrapped native token (WS) balance
@@ -96,16 +123,16 @@ export async function getUserTokenBalances({ chainName, account }: Props, { getP
                 args: [account],
             }) as bigint;
 
-            const wrappedBalanceUsd = (wrappedBalance * nativePrice) / BigInt(1e48);
+            const wrappedBalanceUsd = (wrappedBalance * nativePrice) / BigInt(1e18);
 
             // Add wrapped native token (WS)
             tokenInfos.push({
                 symbol: 'WS',
                 address: CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN,
                 decimals: 18,
-                balance: wrappedBalance.toString(),
-                balanceUsd: wrappedBalanceUsd.toString(),
-                price: nativePrice.toString(),
+                balance: formatUnits(wrappedBalance, 18),
+                balanceUsd: formatUnits(wrappedBalanceUsd, 30),
+                price: formatUnits(nativePrice, 30),
             });
 
         } catch (error) {
@@ -133,21 +160,21 @@ export async function getUserTokenBalances({ chainName, account }: Props, { getP
                     args: [account],
                 }) as Promise<bigint>,
                 provider.readContract({
-                    address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT,
-                    abi: Vault,
-                    functionName: 'getMaxPrice',
-                    args: [token.address],
+                    address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT_PRICE_FEED,
+                    abi: VaultPriceFeed,
+                    functionName: 'getPrice',
+                    args: [token.address, false, true, false],
                 }) as Promise<bigint>,
             ]);
 
-            // Price is in 1e30, balance in token decimals, result should be in USD
-            const balanceUsd = (balance * price) / (BigInt(10) ** BigInt(token.decimals) * BigInt(1e30));
+            // Price is in 1e30, balance in token decimals, result should be in USD (1e30)
+            const balanceUsd = (balance * price) / BigInt(10 ** token.decimals);
 
             return {
                 ...token,
-                balance: balance.toString(),
-                balanceUsd: balanceUsd.toString(),
-                price: price.toString(),
+                balance: formatUnits(balance, token.decimals),
+                balanceUsd: formatUnits(balanceUsd, 30),
+                price: formatUnits(price, 30),
             };
         });
 
@@ -155,10 +182,15 @@ export async function getUserTokenBalances({ chainName, account }: Props, { getP
         const tokenResults = await Promise.all(tokenDataPromises);
         tokenInfos.push(...tokenResults);
 
+        // Calculate total balance in USD
+        const totalBalanceUsd = tokenInfos.reduce((sum, token) => {
+            return sum + Number(token.balanceUsd);
+        }, 0);
+
         return toResult(
             JSON.stringify({
                 tokens: tokenInfos,
-                totalBalanceUsd: tokenInfos.reduce((sum, token) => sum + Number(token.balanceUsd), 0).toString(),
+                totalBalanceUsd: totalBalanceUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
             }),
         );
     } catch (error) {

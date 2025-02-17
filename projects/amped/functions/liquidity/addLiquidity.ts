@@ -1,13 +1,11 @@
 import { Address, getContract, encodeFunctionData, parseUnits, formatUnits, decodeEventLog } from 'viem';
-import { FunctionReturn, FunctionOptions, toResult, TransactionParams, getChainFromName, checkToApprove } from '@heyanon/sdk';
+import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
 import { CONTRACT_ADDRESSES, NETWORKS } from '../../constants.js';
 import { ERC20 } from '../../abis/ERC20.js';
 import { RewardRouter } from '../../abis/RewardRouter.js';
 import { getUserTokenBalances } from './getUserTokenBalances.js';
 import { getPoolLiquidity } from './getPoolLiquidity.js';
-
-// Define supported token symbols
-export type SupportedToken = 'S' | 'WS' | 'WETH' | 'ANON' | 'USDC' | 'EURC';
+import { SupportedToken, getTokenAddress } from '../../utils.js';
 
 interface Props {
     chainName: string;
@@ -19,38 +17,14 @@ interface Props {
     minGlp?: string;
 }
 
-// Helper function to get token address from symbol
-function getTokenAddress(symbol: SupportedToken): Address {
-    switch (symbol) {
-        case 'S':
-            return CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN;
-        case 'WS':
-            return CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN;
-        case 'WETH':
-            return CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH;
-        case 'ANON':
-            return CONTRACT_ADDRESSES[NETWORKS.SONIC].ANON;
-        case 'USDC':
-            return CONTRACT_ADDRESSES[NETWORKS.SONIC].USDC;
-        case 'EURC':
-            return CONTRACT_ADDRESSES[NETWORKS.SONIC].EURC;
-        default:
-            throw new Error(`Unsupported token symbol: ${symbol}`);
-    }
-}
-
-function getNativeTokenAddress(): Address {
-    return CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN;
-}
-
 /**
- * Add liquidity to the Amped Finance protocol by providing tokens in exchange for ALP
- * @param props - The liquidity addition parameters
+ * Adds liquidity to the protocol by providing tokens and receiving ALP in return
+ * @param props - The function parameters
  * @param props.chainName - The name of the chain (must be "sonic")
- * @param props.account - The account providing liquidity
- * @param props.tokenSymbol - Symbol of the token to provide as liquidity (S, WETH, ANON, USDC, EURC)
- * @param props.amount - Exact amount of tokens to provide as liquidity. Required if percentOfBalance is not provided.
- * @param props.percentOfBalance - Percentage of balance to use (1-100). Required if amount is not provided.
+ * @param props.account - The account address to add liquidity for
+ * @param props.tokenSymbol - Symbol of the token to provide as liquidity
+ * @param props.amount - Optional exact amount of tokens to provide
+ * @param props.percentOfBalance - Optional percentage of token balance to use (1-100)
  * @param props.minUsdg - Optional minimum USDG to receive (default: 0)
  * @param props.minGlp - Optional minimum ALP to receive (default: 0)
  * @param options - System tools for blockchain interactions
@@ -58,14 +32,12 @@ function getNativeTokenAddress(): Address {
  */
 export async function addLiquidity(
     { chainName, account, tokenSymbol, amount, percentOfBalance, minUsdg = '0', minGlp = '0' }: Props,
-    { getProvider, notify, sendTransactions }: FunctionOptions,
+    options: FunctionOptions
 ): Promise<FunctionReturn> {
     // Check wallet connection
     if (!account) return toResult('Wallet not connected', true);
 
     // Validate chain
-    const chainId = getChainFromName(chainName);
-    if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (chainName !== NETWORKS.SONIC) {
         return toResult(`Protocol is only supported on Sonic chain`, true);
     }
@@ -79,157 +51,172 @@ export async function addLiquidity(
         return toResult('Cannot specify both amount and percentOfBalance. Please provide only one.', true);
     }
 
-    if (percentOfBalance && (percentOfBalance <= 0 || percentOfBalance > 100)) {
-        return toResult('Percentage must be between 1 and 100', true);
+    // Validate amount format if provided
+    if (amount) {
+        const parsedAmount = parseFloat(amount);
+        if (isNaN(parsedAmount) || parsedAmount <= 0) {
+            return toResult('Amount must be a valid number greater than zero', true);
+        }
+    }
+
+    // Validate percentage if provided
+    if (percentOfBalance) {
+        if (percentOfBalance <= 0 || percentOfBalance > 100) {
+            return toResult('Percentage must be between 1 and 100', true);
+        }
     }
 
     try {
-        // Get token address from symbol
-        const tokenIn = getTokenAddress(tokenSymbol);
-
-        await notify('Checking token balances...');
+        const provider = options.evm.getProvider(146); // Sonic chain ID
 
         // Get user's token balance and info
-        const userBalanceResult = await getUserTokenBalances({ chainName, account }, { getProvider, notify, sendTransactions });
+        const userBalanceResult = await getUserTokenBalances({ chainName, account }, options);
 
-        if (!userBalanceResult.success) {
+        if (!userBalanceResult.success || !userBalanceResult.data) {
             return userBalanceResult;
         }
 
         const balanceData = JSON.parse(userBalanceResult.data);
-        const tokenInfo = balanceData.tokens.find((t: any) => t.address.toLowerCase() === tokenIn.toLowerCase());
+        const tokenInfo = balanceData.tokens.find((t: any) => t.symbol === tokenSymbol);
 
         if (!tokenInfo) {
-            return toResult(`Token ${tokenSymbol} not found in supported tokens`, true);
+            return toResult(`Token ${tokenSymbol} not found in user's balance`, true);
         }
 
-        // Calculate amount to add
+        // Calculate amount to add based on percentage if needed
         let amountToAdd: string;
-        if (amount) {
-            amountToAdd = amount;
-        } else if (percentOfBalance) {
-            const balance = Number(formatUnits(BigInt(tokenInfo.balance), tokenInfo.decimals));
-            amountToAdd = (balance * (percentOfBalance / 100)).toFixed(tokenInfo.decimals);
+        if (percentOfBalance) {
+            const balance = Number(tokenInfo.balance);
+            if (balance <= 0) {
+                return toResult(`Insufficient ${tokenSymbol} balance`, true);
+            }
+            amountToAdd = (balance * (percentOfBalance / 100)).toString();
         } else {
-            // This should never happen due to earlier validation
-            return toResult('Internal error: No amount specified', true);
+            amountToAdd = amount!;
         }
 
-        // Parse amounts using the correct decimals
-        const parsedAmount = parseUnits(amountToAdd, tokenInfo.decimals);
-        const userBalance = BigInt(tokenInfo.balance);
-
-        // Check minimum amount (0.0001 for most tokens)
-        const minAmount = parseUnits('0.0001', tokenInfo.decimals);
-        if (parsedAmount < minAmount) {
-            return toResult(`Amount too small. Minimum amount is 0.0001 ${tokenInfo.symbol}. Specified amount: ${amountToAdd} ${tokenInfo.symbol}`, true);
-        }
+        // Convert amount to contract units
+        const decimals = Number(tokenInfo.decimals);
+        const amountInWei = parseUnits(amountToAdd, decimals);
 
         // Check if user has enough balance
-        if (userBalance < parsedAmount) {
-            const formattedBalance = formatUnits(userBalance, tokenInfo.decimals);
-            return toResult(`Insufficient ${tokenInfo.symbol} balance. Required: ${amountToAdd}, Available: ${formattedBalance} ${tokenInfo.symbol}`, true);
+        const userBalance = BigInt(tokenInfo.balance);
+        if (userBalance < amountInWei) {
+            return toResult(
+                `Insufficient ${tokenSymbol} balance. Required: ${amountToAdd}, Available: ${formatUnits(userBalance, decimals)}`,
+                true
+            );
         }
 
         // Get current pool liquidity for price impact check
-        const poolLiquidityResult = await getPoolLiquidity({ chainName }, { getProvider, notify, sendTransactions });
+        const poolLiquidityResult = await getPoolLiquidity({ chainName }, options);
 
-        if (!poolLiquidityResult.success) {
+        if (!poolLiquidityResult.success || !poolLiquidityResult.data) {
             return poolLiquidityResult;
         }
 
         const poolData = JSON.parse(poolLiquidityResult.data);
-        const tokenValueUsd = Number(tokenInfo.balanceUsd) * (Number(amountToAdd) / Number(formatUnits(userBalance, tokenInfo.decimals)));
-        const priceImpact = (tokenValueUsd / Number(poolData.aum)) * 100;
+        const tokenLiquidity = poolData.tokens.find((t: any) => t.symbol === tokenSymbol);
 
-        // Warn if price impact is high
-        if (priceImpact > 1) {
-            await notify(`Warning: High price impact (${priceImpact.toFixed(2)}%). Consider reducing the amount.`);
+        if (!tokenLiquidity) {
+            return toResult(`No liquidity data found for ${tokenSymbol}`, true);
         }
 
-        await notify('Preparing to add liquidity...');
-        const provider = getProvider(chainId);
-
-        // Check token approval if not native token
-        const transactions: TransactionParams[] = [];
-        if (tokenIn !== CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN) {
-            await notify('Checking token approval...');
-
-            // Use checkApprove helper to handle token approval
-            await checkToApprove({
-                args: {
-                    account,
-                    target: tokenIn,
-                    spender: CONTRACT_ADDRESSES[NETWORKS.SONIC].GLP_MANAGER,
-                    amount: parsedAmount
-                },
-                provider,
-                transactions
-            });
-
-            if (transactions.length > 0) {
-                await notify('Token approval needed, adding approval transaction...');
-            } else {
-                await notify('Token already has sufficient approval.');
+        // Check price impact
+        const poolAmount = safeToNumber(tokenLiquidity.poolAmount);
+        if (poolAmount > 0) {
+            const priceImpact = (safeToNumber(amountToAdd) / poolAmount) * 100;
+            if (priceImpact > 10) {
+                return toResult(
+                    `Amount too large - would cause significant price impact (${priceImpact.toFixed(2)}%). Consider reducing the amount or splitting into multiple transactions.`,
+                    true
+                );
             }
         }
 
-        await notify('Preparing transaction...');
+        // Prepare transactions
+        const transactions = [];
+        const tokenIn = getTokenAddress(tokenSymbol);
+        const isNativeToken = tokenSymbol === 'S';
 
-        // Parse min amounts
-        const parsedMinUsdg = parseUnits(minUsdg, 18);
-        const parsedMinGlp = parseUnits(minGlp, 18);
+        // Add approval transaction if needed
+        if (!isNativeToken) {
+            const allowance = await provider.readContract({
+                address: tokenIn,
+                abi: ERC20,
+                functionName: 'allowance',
+                args: [account, CONTRACT_ADDRESSES[NETWORKS.SONIC].REWARD_ROUTER],
+            }) as bigint;
 
-        // Add the main transaction
+            if (allowance < amountInWei) {
+                transactions.push({
+                    target: tokenIn,
+                    data: encodeFunctionData({
+                        abi: ERC20,
+                        functionName: 'approve',
+                        args: [CONTRACT_ADDRESSES[NETWORKS.SONIC].REWARD_ROUTER, amountInWei],
+                    }),
+                });
+            }
+        }
+
+        // Add mint transaction
+        let mintData: `0x${string}`;
+        if (isNativeToken) {
+            mintData = encodeFunctionData({
+                abi: RewardRouter,
+                functionName: 'mintAndStakeGlpETH',
+                args: [parseUnits(minUsdg, 18), parseUnits(minGlp, 18)]
+            });
+        } else {
+            mintData = encodeFunctionData({
+                abi: RewardRouter,
+                functionName: 'mintAndStakeGlp',
+                args: [tokenIn, amountInWei, parseUnits(minUsdg, 18), parseUnits(minGlp, 18)]
+            });
+        }
+
         transactions.push({
             target: CONTRACT_ADDRESSES[NETWORKS.SONIC].REWARD_ROUTER,
-            value: tokenIn === CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN ? parsedAmount : 0n,
-            data: tokenIn === CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN
-                ? encodeFunctionData({
-                    abi: RewardRouter,
-                    functionName: 'mintAndStakeGlpETH',
-                    args: [parsedMinUsdg, parsedMinGlp],
-                })
-                : encodeFunctionData({
-                    abi: RewardRouter,
-                    functionName: 'mintAndStakeGlp',
-                    args: [tokenIn, parsedAmount, parsedMinUsdg, parsedMinGlp],
-                }),
+            data: mintData,
+            value: isNativeToken ? amountInWei : undefined,
         });
 
         // Send transactions
-        await notify('Executing transaction...');
-        const txResult = await sendTransactions({
-            chainId,
+        const result = await options.evm.sendTransactions({
+            chainId: 146,
             account,
             transactions,
         });
 
-        if (!txResult.data?.[0]?.hash) {
+        if (!result.data?.[0]?.hash) {
             return toResult('Transaction failed: No transaction hash returned', true);
         }
 
-        // Get transaction receipt and parse AddLiquidity event
-        const receipt = await provider.getTransactionReceipt({ hash: txResult.data[0].hash });
+        // Wait for transaction to be mined
+        await options.notify('Waiting for transaction to be mined...');
+        const receipt = await provider.waitForTransactionReceipt({ 
+            hash: result.data[0].hash,
+            timeout: 60_000, // 60 seconds timeout
+        });
 
         const addLiquidityEvents = receipt.logs.filter(log => {
-            return log.address.toLowerCase() === CONTRACT_ADDRESSES[NETWORKS.SONIC].GLP_MANAGER.toLowerCase() &&
-                   log.topics[0] === '0x2c76ed4ddb0c8a6e4c6f8f266e08ee5b5f4b9a5e0e8f591b6eec14e821b7f1ac'; // keccak256('AddLiquidity(address,address,uint256,uint256,uint256,uint256,uint256)')
+            const logAddress = safeToString(log?.address).toLowerCase();
+            const targetAddress = safeToString(CONTRACT_ADDRESSES[NETWORKS.SONIC].GLP_MANAGER).toLowerCase();
+            return logAddress === targetAddress &&
+                   log?.topics?.[0] === '0x2c76ed4ddb0c8a6e4c6f8f266e08ee5b5f4b9a5e0e8f591b6eec14e821b7f1ac'; // keccak256('AddLiquidity(address,address,uint256,uint256,uint256,uint256,uint256)')
         });
 
         if (addLiquidityEvents.length === 0) {
             return toResult(
                 JSON.stringify({
                     success: true,
-                    transactionHash: txResult.data[0].hash,
+                    hash: result.data[0].hash,
                     details: {
-                        token: tokenSymbol,
-                        amount: formatUnits(parsedAmount, tokenInfo.decimals),
-                        tokenSymbol: tokenInfo.symbol,
-                        amountUsd: tokenValueUsd.toFixed(2),
-                        minUsdg: formatUnits(parsedMinUsdg, 18),
-                        minGlp: formatUnits(parsedMinGlp, 18),
-                        priceImpact: priceImpact.toFixed(4),
+                        tokenSymbol,
+                        amount: amountToAdd,
+                        minUsdg,
+                        minGlp,
                         warning: 'Could not parse AddLiquidity event from transaction receipt'
                     },
                 }),
@@ -238,6 +225,22 @@ export async function addLiquidity(
 
         // Parse the event data
         const eventData = addLiquidityEvents[0];
+        if (!eventData?.data || !eventData?.topics) {
+            return toResult(
+                JSON.stringify({
+                    success: true,
+                    hash: result.data[0].hash,
+                    details: {
+                        tokenSymbol,
+                        amount: amountToAdd,
+                        minUsdg,
+                        minGlp,
+                        warning: 'Invalid event data structure'
+                    },
+                }),
+            );
+        }
+
         const decodedEvent = decodeEventLog({
             abi: [{
                 anonymous: false,
@@ -257,32 +260,20 @@ export async function addLiquidity(
             topics: eventData.topics
         });
 
-        // Verify the event data matches our expectations
-        if (decodedEvent.args.account.toLowerCase() !== account.toLowerCase() ||
-            decodedEvent.args.token.toLowerCase() !== tokenIn.toLowerCase()) {
-            return toResult(
-                `Add liquidity event validation failed. Expected account ${account} and token ${tokenIn}, but got account ${decodedEvent.args.account} and token ${decodedEvent.args.token}`,
-                true
-            );
-        }
-
+        // Return data with all numeric values as strings
         return toResult(
             JSON.stringify({
                 success: true,
-                transactionHash: txResult.data[0].hash,
+                hash: result.data[0].hash,
                 details: {
-                    token: tokenSymbol,
-                    amount: formatUnits(parsedAmount, tokenInfo.decimals),
-                    tokenSymbol: tokenInfo.symbol,
-                    amountUsd: tokenValueUsd.toFixed(2),
-                    minUsdg: formatUnits(parsedMinUsdg, 18),
-                    minGlp: formatUnits(parsedMinGlp, 18),
-                    priceImpact: priceImpact.toFixed(4),
-                    // Add event data
-                    receivedAlp: formatUnits(decodedEvent.args.mintAmount, 18),
-                    aumInUsdg: formatUnits(decodedEvent.args.aumInUsdg, 18),
-                    glpSupply: formatUnits(decodedEvent.args.glpSupply, 18),
-                    usdgAmount: formatUnits(decodedEvent.args.usdgAmount, 18),
+                    tokenSymbol,
+                    amount: amountToAdd,
+                    minUsdg,
+                    minGlp,
+                    aumInUsdg: formatUnits(decodedEvent.args.aumInUsdg || 0n, 18),
+                    glpSupply: formatUnits(decodedEvent.args.glpSupply || 0n, 18),
+                    usdgAmount: formatUnits(decodedEvent.args.usdgAmount || 0n, 18),
+                    mintAmount: formatUnits(decodedEvent.args.mintAmount || 0n, 18),
                 },
             }),
         );
@@ -292,4 +283,28 @@ export async function addLiquidity(
         }
         return toResult('Failed to add liquidity: Unknown error', true);
     }
+}
+
+// Helper function for safe string conversion
+function safeToString(value: unknown): string {
+    if (value === null || value === undefined) return '';
+    return String(value);
+}
+
+// Helper function for safe number conversion
+function safeToNumber(value: unknown): number {
+    if (value === null || value === undefined) return 0;
+    if (typeof value === 'string') {
+        const parsed = parseFloat(value);
+        return isNaN(parsed) ? 0 : parsed;
+    }
+    if (typeof value === 'number') return isNaN(value) ? 0 : value;
+    if (typeof value === 'bigint') {
+        try {
+            return Number(value);
+        } catch {
+            return 0;
+        }
+    }
+    return 0;
 }

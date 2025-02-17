@@ -1,4 +1,4 @@
-import { Address } from 'viem';
+import { Address, Chain } from 'viem';
 
 // Constants for APR calculations
 export const PRECISION = 1e30;
@@ -28,40 +28,42 @@ export const EXPLORER_URLS = {
 
 export const CONTRACT_ADDRESSES: Record<string, Record<string, Address>> = {
     [NETWORKS.SONIC]: {
-        GLP_MANAGER: '0xA16FaBE630E75981b03b31AAD20F5BDDE581acDF' as Address,
-        GLP_TOKEN: '0x5d51a52D952A61D5d1fc19F90a8244b995877bd9' as Address,
-        REWARD_ROUTER: '0xA0411BBefDC6d896615d1ece1C3212353842C2dF' as Address,
-        REWARD_DISTRIBUTOR: '0x069d9C2eec92f777e80F019f944B9a8f775b3634' as Address,
-        REWARD_TRACKER: '0x21Efb5680d6127d6C39AE0d62D80cb9fc8935887' as Address,
-        VAULT: '0x11944027D4eDC1C17db2D5E9020530dcEcEfb85b' as Address,
+        GLP_MANAGER: '0x4DE729B85dDB172F1bb775882f355bA25764E430' as Address,
+        GLP_TOKEN: '0x6fbaeE8bEf2e8f5c34A08BdD4A4AB777Bd3f6764' as Address,
+        REWARD_ROUTER: '0xE72A2d5B3b09c88D4E8Cc60e74BD438d7168e80F' as Address,
+        REWARD_DISTRIBUTOR: '0xfcb51C49cE6A23d370797a7E3e601046b43B6172' as Address,
+        REWARD_TRACKER: '0x765d548229169E14b397c8c87FF7E8a64f36F469' as Address,
+        VAULT: '0x5B8caae7cC6Ea61fb96Fd251C4Bc13e48749C7Da' as Address,
         NATIVE_TOKEN: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE' as Address, // Native token (S)
-        WRAPPED_NATIVE_TOKEN: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38' as Address, // Wrapped native token (wS)
+        WRAPPED_NATIVE_TOKEN: '0x039e2fb66102314ce7b64ce5ce3e5183bc94ad38' as Address, // Wrapped native token (wS)
         WETH: '0x50c42deacd8fc9773493ed674b675be577f2634b' as Address,
         USDC: '0x29219dd400f2bf60e5a23d13be72b486d4038894' as Address,
-        EURC: '0xe715cbA7B5cCb33790ceBFF1436809d36cb17E57' as Address,
         ANON: '0x79bbf4508b1391af3a0f4b30bb5fc4aa9ab0e07c' as Address,
-        ROUTER: '0x96EFEcB86b3408de4F92454E30a0c99E58299F35' as Address,
-        POSITION_ROUTER: '0x82546eCf796C28882d98FfF8aB9FC109DC86221a' as Address,
-        VAULT_PRICE_FEED: '0x9c2C2177EcE50f44EfbD234fd6c816849D47F3c2' as Address,
+        ROUTER: '0x451D212c080267feF47Fd777002C9186e61C5a2C' as Address,
+        POSITION_ROUTER: '0x69E44517D74709d552A69046585bef02d8c34D5B' as Address,
+        VAULT_PRICE_FEED: '0x51B9fcDF00423D597066A8a041ab38152a74Fe96' as Address,
         FS_ALP: '0xfb0e5aabfac2f946d6f45fcd4303ff721a4e3237' as Address, // Fee + Staked ALP token
-        ALP_VESTER: '0xE3C124f417bE01e4fA373892CFdcd1b0c4b8996F' as Address // VesterGLP
+        ALP_VESTER: '0x931d5560D236e0780FD872331e28D7598E0DeDcc' as Address // VesterGLP
     }
 } as const;
 
-export const CHAIN_CONFIG = {
+export const CHAIN_CONFIG: Record<typeof NETWORKS[keyof typeof NETWORKS], Chain> = {
     [NETWORKS.SONIC]: {
-        id: CHAIN_IDS[NETWORKS.SONIC],
-        name: NETWORKS.SONIC,
-        network: NETWORKS.SONIC,
-        nativeCurrency: { 
-            name: 'Sonic', 
-            symbol: 'S', 
-            decimals: 18 
+        id: 146,
+        name: 'sonic',
+        network: 'sonic',
+        nativeCurrency: {
+            name: 'Sonic',
+            symbol: 'S',
+            decimals: 18,
         },
         rpcUrls: {
-            default: { 
-                http: [RPC_URLS[NETWORKS.SONIC]] 
-            }
-        }
-    }
+            default: {
+                http: ['https://rpc.soniclabs.com'],
+            },
+            public: {
+                http: ['https://rpc.soniclabs.com'],
+            },
+        },
+    },
 } as const;

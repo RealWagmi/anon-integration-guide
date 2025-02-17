@@ -1,98 +1,78 @@
-import { createPublicClient, createWalletClient, http } from 'viem';
-import { privateKeyToAccount } from 'viem/accounts';
-import { NETWORKS, RPC_URLS, CONTRACT_ADDRESSES } from '../../constants.js';
+import { createPublicClient, http, type Chain, type Transport, type PublicClient } from 'viem';
 import { getPoolLiquidity } from '../../functions/liquidity/getPoolLiquidity.js';
-import { TransactionReturn } from '@heyanon/sdk';
-import 'dotenv/config';
+import { CHAIN_CONFIG, NETWORKS } from '../../constants.js';
+import dotenv from 'dotenv';
 
-// Load private key from environment
-const PRIVATE_KEY = process.env.PRIVATE_KEY;
-if (!PRIVATE_KEY) {
-    throw new Error('PRIVATE_KEY not found in .env file');
-}
-
-// Ensure private key is properly formatted
-const formattedPrivateKey = PRIVATE_KEY.startsWith('0x') ? PRIVATE_KEY : `0x${PRIVATE_KEY}`;
-const account = privateKeyToAccount(formattedPrivateKey as `0x${string}`);
-
-// Define chain configuration
-const sonicChain = {
-    id: 146,
-    name: 'Sonic',
-    network: 'sonic',
-    nativeCurrency: {
-        name: 'Sonic',
-        symbol: 'S',
-        decimals: 18,
-    },
-    rpcUrls: {
-        default: { http: [RPC_URLS[NETWORKS.SONIC]] },
-        public: { http: [RPC_URLS[NETWORKS.SONIC]] },
-    },
-};
+dotenv.config();
 
 async function main() {
-    try {
-        // Create clients
-        const publicClient = createPublicClient({
-            chain: sonicChain,
-            transport: http(),
-        });
+    // Initialize client
+    const publicClient = createPublicClient({
+        chain: CHAIN_CONFIG[NETWORKS.SONIC] as Chain,
+        transport: http(),
+    }) as PublicClient<Transport, Chain>;
 
-        const walletClient = createWalletClient({
-            account,
-            chain: sonicChain,
-            transport: http(),
-        });
+    console.log('\nTesting getPoolLiquidity...');
 
-        console.log('\nTesting get pool liquidity...');
-
-        const result = await getPoolLiquidity(
-            {
-                chainName: NETWORKS.SONIC,
-            },
-            {
+    // Test 1: Invalid chain name
+    console.log('\nTest 1: Invalid chain name');
+    const invalidChainResult = await getPoolLiquidity(
+        {
+            chainName: 'invalid-chain',
+        },
+        {
+            evm: {
                 getProvider: () => publicClient,
-                notify: async (msg: string) => console.log(msg),
-                sendTransactions: async ({ transactions }): Promise<TransactionReturn> => {
-                    throw new Error('This function should not require transactions');
-                },
             },
-        );
-
-        if (result.success) {
-            const data = JSON.parse(result.data);
-            console.log('\nPool Overview:');
-            console.log('-------------');
-            console.log(`Total ALP Supply: ${Number(data.totalSupply).toLocaleString()} ALP`);
-            console.log(`Total Value Locked: $${Number(data.aum).toLocaleString()}`);
-            console.log(`ALP Price: $${Number(data.aumPerToken).toFixed(6)}`);
-
-            console.log('\nToken Liquidity:');
-            console.log('---------------');
-            data.tokens.forEach((token: any) => {
-                console.log(`\n${token.symbol}:`);
-                console.log(`  Pool Amount: ${Number(token.poolAmount).toLocaleString()} ($${Number(token.poolAmountUsd).toLocaleString()})`);
-                console.log(`  Reserved: ${Number(token.reservedAmount).toLocaleString()} ($${Number(token.reservedAmountUsd).toLocaleString()})`);
-                console.log(`  Available: ${Number(token.availableAmount).toLocaleString()} ($${Number(token.availableAmountUsd).toLocaleString()})`);
-                console.log(`  Price: $${Number(token.price).toFixed(6)}`);
-            });
-
-            console.log('\nRaw Data:');
-            console.log(JSON.stringify(data, null, 2));
-        } else {
-            console.error('\nFailed to get pool liquidity:', result.data);
+            notify: async (message: string) => {
+                console.log(message);
+                return Promise.resolve();
+            }
         }
-    } catch (error) {
-        console.error('\nUnexpected error:', error);
-        if (error instanceof Error) {
-            console.error('Error message:', error.message);
-            console.error('Error stack:', error.stack);
+    );
+    console.log('Invalid chain test result:', invalidChainResult);
+
+    // Test 2: Valid request
+    console.log('\nTest 2: Valid request');
+    const result = await getPoolLiquidity(
+        {
+            chainName: NETWORKS.SONIC,
+        },
+        {
+            evm: {
+                getProvider: () => publicClient,
+            },
+            notify: async (message: string) => {
+                console.log(message);
+                return Promise.resolve();
+            }
         }
+    );
+
+    if (!result.success) {
+        throw new Error(`Failed to get pool liquidity: ${result.data}`);
     }
+
+    console.log('\nRequest successful!');
+    const data = JSON.parse(result.data);
+    
+    // Print formatted pool liquidity info
+    console.log('\nPool Overview:');
+    console.log(`Total Supply: ${data.totalSupply} ALP`);
+    console.log(`Total Value Locked: $${data.aum}`);
+    console.log(`ALP Price: $${data.aumPerToken}`);
+
+    console.log('\nToken Liquidity:');
+    data.tokens.forEach((token: any) => {
+        console.log(`\n${token.symbol}:`);
+        console.log(`  Pool Amount: ${token.poolAmount}`);
+        console.log(`  Reserved Amount: ${token.reservedAmount}`);
+        console.log(`  Available Amount: ${token.availableAmount}`);
+        console.log(`  Price: $${token.price}`);
+        console.log(`  Pool Value: $${token.poolAmountUsd}`);
+        console.log(`  Reserved Value: $${token.reservedAmountUsd}`);
+        console.log(`  Available Value: $${token.availableAmountUsd}`);
+    });
 }
 
-main().catch((error) => {
-    console.error('\nFatal error:', error);
-    process.exit(1);
-});
+main().catch(console.error);

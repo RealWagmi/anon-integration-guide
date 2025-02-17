@@ -75,33 +75,35 @@ export async function getSwapsLiquidity({ chainName, account }: Props, { getProv
                 }) as Promise<bigint>,
             ]);
 
-            // Calculate available amount
+            // Add null checks
+            if (!poolAmount || !reservedAmount || !maxPrice) {
+                await notify(`Failed to get liquidity data for ${symbol}`);
+                continue;
+            }
+
+            // Calculate available amount with safe type conversion
             const availableAmount = poolAmount - reservedAmount;
 
-            // Calculate USD values (price comes in with 30 decimals)
-            const priceUsd = formatUnits(maxPrice, 30);
-            const availableUsd = (Number(formatUnits(availableAmount, decimals)) * Number(priceUsd)).toString();
-
-            // Format response data
+            // Format values as strings to avoid bigint in response
             const swapLiquidity: SwapLiquidity = {
                 token: address,
                 symbol,
                 poolAmount: poolAmount.toString(),
                 reservedAmount: reservedAmount.toString(),
                 availableAmount: availableAmount.toString(),
-                priceUsd,
-                availableUsd,
+                priceUsd: formatUnits(maxPrice, 30),
+                availableUsd: (Number(formatUnits(availableAmount, decimals)) * Number(formatUnits(maxPrice, 30))).toString(),
             };
 
             liquidityResults.push(swapLiquidity);
 
-            // Log liquidity details
+            // Log liquidity details with safe number formatting
             await notify(`\nLiquidity Details for ${symbol}:`);
-            await notify(`Pool Amount: ${swapLiquidity.poolAmount}`);
-            await notify(`Reserved Amount: ${swapLiquidity.reservedAmount}`);
-            await notify(`Available Amount: ${swapLiquidity.availableAmount}`);
-            await notify(`Price (USD): $${Number(priceUsd).toFixed(2)}`);
-            await notify(`Available Value (USD): $${Number(availableUsd).toFixed(2)}`);
+            await notify(`Pool Amount: ${formatUnits(poolAmount, decimals)}`);
+            await notify(`Reserved Amount: ${formatUnits(reservedAmount, decimals)}`);
+            await notify(`Available Amount: ${formatUnits(availableAmount, decimals)}`);
+            await notify(`Price (USD): $${Number(formatUnits(maxPrice, 30)).toFixed(2)}`);
+            await notify(`Available Value (USD): $${Number(swapLiquidity.availableUsd).toFixed(2)}`);
         }
 
         return toResult(

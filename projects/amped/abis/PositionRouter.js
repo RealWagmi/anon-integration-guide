@@ -66,13 +66,7 @@ export var PositionRouter = [
             }
         ],
         "name": "createIncreasePosition",
-        "outputs": [
-            {
-                "internalType": "bytes32",
-                "name": "",
-                "type": "bytes32"
-            }
-        ],
+        "outputs": [],
         "stateMutability": "payable",
         "type": "function"
     },

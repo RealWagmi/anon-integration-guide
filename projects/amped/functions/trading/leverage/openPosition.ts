@@ -1,13 +1,11 @@
-import { type PublicClient, type WalletClient, type Account, encodeFunctionData, Address, type Chain, type Client } from 'viem';
-import { CONTRACT_ADDRESSES, NETWORKS, CHAIN_CONFIG } from '../../../constants.js';
-import { Vault } from '../../../abis/Vault.js';
+import { type PublicClient, type Account, encodeFunctionData, Address, formatUnits, parseUnits } from 'viem';
+import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
+import { CONTRACT_ADDRESSES, NETWORKS } from '../../../constants.js';
 import { VaultPriceFeed } from '../../../abis/VaultPriceFeed.js';
 import { PositionRouter } from '../../../abis/PositionRouter.js';
 import { ERC20 } from '../../../abis/ERC20.js';
 import { getPerpsLiquidity } from './getPerpsLiquidity.js';
 import { getUserTokenBalances } from '../../liquidity/getUserTokenBalances.js';
-import { FunctionOptions, FunctionReturn, toResult, TransactionParams, checkToApprove, getChainFromName } from '@heyanon/sdk';
-import { Router } from '../../../abis/Router.js';
 
 interface Props {
     chainName: (typeof NETWORKS)[keyof typeof NETWORKS];
@@ -15,8 +13,8 @@ interface Props {
     indexToken: Address;
     collateralToken: Address;
     isLong: boolean;
-    sizeUsd: number;
-    collateralUsd: number;
+    sizeUsd: string;
+    collateralUsd: string;
     referralCode?: Address;
     slippageBps?: number;
 }
@@ -25,9 +23,9 @@ interface PositionValidation {
     success: boolean;
     error?: string;
     details?: {
-        indexTokenPrice: number;
-        collateralTokenPrice: number;
-        leverage: number;
+        indexTokenPrice: string;
+        collateralTokenPrice: string;
+        leverage: string;
         requiredCollateralAmount: bigint;
         sizeDelta: bigint;
         allowance: bigint;
@@ -45,11 +43,26 @@ interface TokenBalance {
     price: string;
 }
 
-interface TokenBalanceWithNumber extends Omit<TokenBalance, 'balanceUsd'> {
-    balanceUsd: number;
+interface OpenPositionResponse {
+    success: boolean;
+    hash: string;
+    details: {
+        indexToken: Address;
+        collateralToken: Address;
+        isLong: boolean;
+        sizeUsd: string;
+        collateralUsd: string;
+        leverage: string;
+        positionKey?: string;
+        collateralDelta?: string;
+        sizeDelta?: string;
+        price?: string;
+        fee?: string;
+        warning?: string;
+    };
 }
 
-async function checkTokenBalance(publicClient: PublicClient, tokenAddress: `0x${string}`, userAddress: `0x${string}`, decimals: number = 18): Promise<number> {
+async function checkTokenBalance(publicClient: PublicClient, tokenAddress: Address, userAddress: Address, decimals: number = 18): Promise<string> {
     try {
         const balance = await publicClient.readContract({
             address: tokenAddress,
@@ -58,10 +71,10 @@ async function checkTokenBalance(publicClient: PublicClient, tokenAddress: `0x${
             args: [userAddress],
         });
 
-        return Number(balance) / Math.pow(10, decimals);
+        return formatUnits(balance, decimals);
     } catch (error) {
         console.error('Error checking token balance:', error);
-        return 0;
+        return '0';
     }
 }
 
@@ -75,56 +88,63 @@ export async function validateOpenPosition(publicClient: PublicClient, params: P
         // Get token prices
         const [indexTokenPrice, collateralTokenPrice] = (await Promise.all([
             publicClient.readContract({
-                address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT_PRICE_FEED as `0x${string}`,
+                address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT_PRICE_FEED as Address,
                 abi: VaultPriceFeed,
                 functionName: 'getPrice',
                 args: [params.indexToken, params.isLong, !params.isLong, true],
             }),
             publicClient.readContract({
-                address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT_PRICE_FEED as `0x${string}`,
+                address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT_PRICE_FEED as Address,
                 abi: VaultPriceFeed,
                 functionName: 'getPrice',
                 args: [priceReferenceToken, false, true, true],
             }),
         ])) as [bigint, bigint];
 
-        // Convert prices to USD with 30 decimals for display
-        const indexTokenPriceUsd = Number(indexTokenPrice) / 1e30;
-        const collateralTokenPriceUsd = Number(collateralTokenPrice) / 1e30;
+        // Format prices as strings with proper decimal places
+        const indexTokenPriceStr = formatUnits(indexTokenPrice, 30);
+        const collateralTokenPriceStr = formatUnits(collateralTokenPrice, 30);
 
         console.log('\nPrice Details:');
-        console.log('Index Token Price:', indexTokenPriceUsd);
-        console.log('Collateral Token Price:', collateralTokenPriceUsd);
+        console.log('Index Token Price:', indexTokenPriceStr);
+        console.log('Collateral Token Price:', collateralTokenPriceStr);
 
-        // Calculate required collateral amount in token decimals (18 for most tokens)
-        const requiredCollateralAmount = BigInt(Math.floor((params.collateralUsd / collateralTokenPriceUsd) * 1e18));
+        // Calculate required collateral amount in token decimals
+        const sizeUsdBigInt = parseUnits(params.sizeUsd, 30);
+        const collateralUsdBigInt = parseUnits(params.collateralUsd, 30);
+        const leverage = formatUnits(sizeUsdBigInt * BigInt(1e30) / collateralUsdBigInt, 30);
+        
+        // Convert collateral USD to token amount
+        // Price is in 1e30 decimals, we want the result in 1e18 (token decimals)
+        // So we multiply by 1e18 instead of 1e30 to get the correct decimals
+        const requiredCollateralAmount = (collateralUsdBigInt * BigInt(1e18)) / collateralTokenPrice;
 
         // Get minimum execution fee
-        const minExecutionFee = (await publicClient.readContract({
-            address: CONTRACT_ADDRESSES[NETWORKS.SONIC].POSITION_ROUTER as `0x${string}`,
+        const minExecutionFee = await publicClient.readContract({
+            address: CONTRACT_ADDRESSES[NETWORKS.SONIC].POSITION_ROUTER as Address,
             abi: PositionRouter,
             functionName: 'minExecutionFee',
-        })) as bigint;
+        }) as bigint;
 
         // Check token allowance only for non-native tokens
         let allowance = 0n;
         if (params.collateralToken.toLowerCase() !== CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN.toLowerCase()) {
-            allowance = (await publicClient.readContract({
+            allowance = await publicClient.readContract({
                 address: params.collateralToken,
                 abi: ERC20,
                 functionName: 'allowance',
                 args: [account.address, CONTRACT_ADDRESSES[NETWORKS.SONIC].ROUTER],
-            })) as bigint;
+            }) as bigint;
         }
 
         return {
             success: true,
             details: {
-                indexTokenPrice: indexTokenPriceUsd,
-                collateralTokenPrice: collateralTokenPriceUsd,
-                leverage: params.sizeUsd / params.collateralUsd,
+                indexTokenPrice: indexTokenPriceStr,
+                collateralTokenPrice: collateralTokenPriceStr,
+                leverage,
                 requiredCollateralAmount,
-                sizeDelta: 0n, // This will be calculated in openPosition
+                sizeDelta: sizeUsdBigInt,
                 allowance,
                 minExecutionFee,
                 indexTokenPriceRaw: indexTokenPrice,
@@ -189,338 +209,214 @@ function isPublicClient(client: any): client is PublicClient {
 
 export async function openPosition(
     { chainName, account, indexToken, collateralToken, isLong, sizeUsd, collateralUsd, referralCode, slippageBps = 30 }: Props,
-    { getProvider, notify, sendTransactions }: FunctionOptions,
+    options: FunctionOptions,
 ): Promise<FunctionReturn> {
     try {
         // Validate chain
-        const chainId = getChainFromName(chainName);
-        if (!chainId) {
-            return toResult(`Network ${chainName} not supported`, true);
-        }
         if (chainName !== NETWORKS.SONIC) {
             return toResult('This function is only supported on Sonic chain', true);
         }
 
-        // Basic parameter validation
-        if (sizeUsd < 11) {
-            return toResult('Position size must be at least $11 to cover minimum execution fees', true);
+        // Check user's token balances first
+        const balancesResult = await getUserTokenBalances({
+            chainName,
+            account
+        }, options);
+
+        if (!balancesResult.success) {
+            return toResult('Failed to check token balances', true);
         }
 
-        if (collateralUsd < 10) {
-            return toResult('Collateral amount must be at least $10 to maintain position health', true);
+        const balances = JSON.parse(balancesResult.data);
+        const tokenBalance = balances.tokens.find((token: any) => 
+            token.address.toLowerCase() === collateralToken.toLowerCase()
+        );
+
+        if (!tokenBalance) {
+            return toResult(`Token ${collateralToken} not found in user's balance`, true);
         }
 
-        const leverage = sizeUsd / collateralUsd;
-        if (leverage < 1.1) {
-            return toResult('Leverage must be at least 1.1x to open a position', true);
+        // Convert collateral USD to token amount for comparison
+        const requiredAmount = Number(collateralUsd) / Number(tokenBalance.price);
+        const userBalance = Number(tokenBalance.balance);
+
+        if (userBalance < requiredAmount) {
+            return toResult(
+                `Insufficient balance. Required: ${requiredAmount.toFixed(6)} ${tokenBalance.symbol}, Available: ${userBalance.toFixed(6)} ${tokenBalance.symbol}`,
+                true
+            );
         }
 
-        // Get and validate provider
-        const client = getProvider(chainId);
-        if (!isPublicClient(client)) {
-            return toResult('Invalid provider: missing required methods', true);
+        // Check available liquidity first
+        const liquidityResult = await getPerpsLiquidity(
+            {
+                chainName,
+                account: account as `0x${string}`,
+                indexToken,
+                collateralToken,
+                isLong
+            },
+            options
+        );
+
+        if (!liquidityResult.success) {
+            return toResult('Failed to check liquidity', true);
         }
 
-        await notify('Validating position parameters...');
+        const liquidityInfo = JSON.parse(liquidityResult.data);
+        const availableLiquidityUsd = Number(liquidityInfo.availableLiquidityUsd);
+        const requestedSizeUsd = Number(sizeUsd);
 
-        // Validate position parameters early to get required amounts
+        if (availableLiquidityUsd < requestedSizeUsd) {
+            return toResult(`Insufficient liquidity. Available: $${availableLiquidityUsd}, Requested: $${requestedSizeUsd}`, true);
+        }
+
+        // Validate input values
+        const sizeUsdBigInt = parseUnits(sizeUsd, 30);
+        const collateralUsdBigInt = parseUnits(collateralUsd, 30);
+
+        if (sizeUsdBigInt <= 0n) {
+            return toResult('Position size must be greater than 0', true);
+        }
+
+        if (collateralUsdBigInt <= 0n) {
+            return toResult('Collateral amount must be greater than 0', true);
+        }
+
+        // Calculate and validate leverage
+        const leverageBigInt = sizeUsdBigInt * BigInt(1e30) / collateralUsdBigInt;
+        const leverageStr = formatUnits(leverageBigInt, 30);
+        const leverageNum = Number(leverageStr);
+
+        if (leverageNum < 1.1 || leverageNum > 50) {
+            return toResult(`Invalid leverage (${leverageStr}x). Must be between 1.1x and 50x`, true);
+        }
+
+        // Get validation details including prices and required amounts
         const validation = await validateOpenPosition(
-            client,
-            { chainName, account, indexToken, collateralToken, isLong, sizeUsd, collateralUsd, referralCode, slippageBps },
-            { address: account } as Account,
+            options.evm.getProvider(146),
+            { chainName, account, indexToken, collateralToken, isLong, sizeUsd, collateralUsd, slippageBps },
+            { address: account } as Account
         );
 
         if (!validation.success || !validation.details) {
             return toResult(validation.error || 'Position validation failed', true);
         }
 
-        await notify(`Checking balance for ${collateralUsd} USD worth of collateral...`);
+        // Prepare transactions
+        const transactions: { target: Address; data: `0x${string}`; value?: bigint }[] = [];
 
-        // Check user's token balance
-        const balanceResult = await getUserTokenBalances({ chainName, account }, { getProvider, notify, sendTransactions });
-
-        if (!balanceResult.success) {
-            return toResult(`Failed to verify token balances: ${balanceResult.data}`, true);
-        }
-
-        const balanceData = JSON.parse(balanceResult.data);
-        const collateralTokenBalance = balanceData.tokens.find((t: any) => t.address.toLowerCase() === collateralToken.toLowerCase());
-
-        if (!collateralTokenBalance) {
-            return toResult(`Failed to find balance for collateral token`, true);
-        }
-
-        await notify('\nBalance Check:');
-        await notify(`Token: ${collateralTokenBalance.symbol}`);
-        await notify(`Raw Balance: ${collateralTokenBalance.balance}`);
-        await notify(`USD Value: $${collateralTokenBalance.balanceUsd}`);
-        await notify(`Required: $${collateralUsd}`);
-
-        // If insufficient balance, find alternative collateral token
-        if (Number(collateralTokenBalance.balanceUsd) < collateralUsd) {
-            await notify('\nInsufficient balance in requested collateral token. Checking alternatives...');
-
-            // Sort tokens by USD balance
-            const availableTokens = balanceData.tokens
-                .map(
-                    (t: TokenBalance): TokenBalanceWithNumber => ({
-                        ...t,
-                        balanceUsd: Number(t.balanceUsd),
-                    }),
-                )
-                .filter((t: TokenBalanceWithNumber) => t.balanceUsd >= collateralUsd)
-                .sort((a: TokenBalanceWithNumber, b: TokenBalanceWithNumber) => b.balanceUsd - a.balanceUsd);
-
-            if (availableTokens.length === 0) {
-                const balances = balanceData.tokens
-                    .map((t: TokenBalance) => `${t.symbol}: $${Number(t.balanceUsd).toFixed(2)}`)
-                    .join('\n');
-                return toResult(`Insufficient balance in all tokens. Required: $${collateralUsd}.\nAvailable balances:\n${balances}`, true);
-            }
-
-            // Use the token with highest balance as collateral
-            const bestToken = availableTokens[0];
-            await notify(`\nFound better collateral token: ${bestToken.symbol} (Balance: $${bestToken.balanceUsd.toFixed(2)})`);
-
-            // Recursively call openPosition with the new collateral token
-            return openPosition(
-                {
-                    chainName,
-                    account,
-                    indexToken,
-                    collateralToken: bestToken.address,
-                    isLong,
-                    sizeUsd,
-                    collateralUsd,
-                    referralCode,
-                    slippageBps,
-                },
-                { getProvider, notify, sendTransactions },
-            );
-        }
-
-        // Check liquidity using getPerpsLiquidity
-        const liquidityResult = await getPerpsLiquidity(
-            {
-                chainName,
-                account,
-                indexToken,
-                collateralToken,
-                isLong,
-            },
-            { getProvider, notify, sendTransactions },
-        );
-
-        if (!liquidityResult.success) {
-            return toResult(liquidityResult.data, true);
-        }
-
-        const liquidityInfo = JSON.parse(liquidityResult.data);
-
-        await notify('\nLiquidity Check:');
-        await notify(`Available Liquidity: $${liquidityInfo.availableLiquidityUsd}`);
-        await notify(`Required Size: $${sizeUsd}`);
-        await notify(`Max Leverage: ${liquidityInfo.maxLeverage}x`);
-
-        // If position size exceeds available liquidity, check alternatives
-        if (sizeUsd > Number(liquidityInfo.availableLiquidityUsd)) {
-            const alternatives = await checkAlternativeLiquidity(client, isLong, { getProvider, notify, sendTransactions }, account);
-            const viableAlternatives = alternatives.filter((alt) => Number(alt.availableLiquidityUsd) >= sizeUsd && alt.address.toLowerCase() !== indexToken.toLowerCase());
-
-            if (viableAlternatives.length > 0) {
-                return toResult(
-                    JSON.stringify({
-                        error: `Position size $${sizeUsd} exceeds available liquidity $${liquidityInfo.availableLiquidityUsd}`,
-                        alternatives: viableAlternatives,
-                    }),
-                    true,
-                );
-            }
-
-            return toResult(
-                `Position size $${sizeUsd} exceeds available liquidity $${liquidityInfo.availableLiquidityUsd}. No alternative tokens have sufficient liquidity.`,
-                true,
-            );
-        }
-
-        // Validate leverage against max leverage
-        if (leverage > liquidityInfo.maxLeverage) {
-            return toResult(`Leverage ${leverage.toFixed(2)}x exceeds maximum allowed ${liquidityInfo.maxLeverage}x`, true);
-        }
-
-        // Check if position router is approved as plugin and approve if needed
-        await notify('Checking plugin approval status...');
-        const routerAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].ROUTER;
-        const positionRouterAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].POSITION_ROUTER;
-        
-        const isPluginApproved = await client.readContract({
-            address: routerAddress,
-            abi: Router,
-            functionName: 'approvedPlugins',
-            args: [account, positionRouterAddress],
-        });
-
-        if (!isPluginApproved) {
-            await notify('Approving position router plugin...');
-            const approvalTx: TransactionParams = {
-                target: routerAddress,
-                value: 0n,
-                data: encodeFunctionData({
-                    abi: Router,
-                    functionName: 'approvePlugin',
-                    args: [positionRouterAddress],
-                }),
-            };
-
-            try {
-                const approvalResult = await sendTransactions({
-                    chainId,
-                    account,
-                    transactions: [approvalTx],
-                });
-                await notify('Plugin approval successful!');
-            } catch (approvalError) {
-                console.error('Plugin approval error:', approvalError);
-                return toResult('Failed to approve position router plugin', true);
-            }
-        }
-
-        // Check token approval if not using native token
+        // Add approval transaction if needed for non-native tokens
         if (collateralToken.toLowerCase() !== CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN.toLowerCase()) {
-            await notify('Checking token approval...');
-            const currentAllowance = await client.readContract({
+            await options.notify('Checking token approval...');
+            
+            // Check current allowance
+            const provider = options.evm.getProvider(146);
+            const currentAllowance = await provider.readContract({
                 address: collateralToken,
                 abi: ERC20,
                 functionName: 'allowance',
-                args: [account, routerAddress],
-            });
+                args: [account, CONTRACT_ADDRESSES[NETWORKS.SONIC].POSITION_ROUTER],
+            }) as bigint;
 
+            await options.notify(`Current allowance: ${formatUnits(currentAllowance, 18)} tokens`);
+            await options.notify(`Required allowance: ${formatUnits(validation.details.requiredCollateralAmount, 18)} tokens`);
+
+            // Add approval transaction if needed
             if (currentAllowance < validation.details.requiredCollateralAmount) {
-                await notify('Approving token spending...');
-                const tokenApprovalTx: TransactionParams = {
-                    target: collateralToken,
-                    value: 0n,
-                    data: encodeFunctionData({
-                        abi: ERC20,
-                        functionName: 'approve',
-                        args: [routerAddress, validation.details.requiredCollateralAmount],
-                    }),
-                };
+                await options.notify('Insufficient allowance, adding approval transaction...');
+                const approvalData = encodeFunctionData({
+                    abi: ERC20,
+                    functionName: 'approve',
+                    args: [
+                        CONTRACT_ADDRESSES[NETWORKS.SONIC].POSITION_ROUTER,
+                        validation.details.requiredCollateralAmount,
+                    ],
+                });
 
-                try {
-                    const tokenApprovalResult = await sendTransactions({
-                        chainId,
-                        account,
-                        transactions: [tokenApprovalTx],
-                    });
-                    await notify('Token approval successful!');
-                } catch (tokenApprovalError) {
-                    console.error('Token approval error:', tokenApprovalError);
-                    return toResult('Failed to approve token spending', true);
-                }
+                transactions.push({
+                    target: collateralToken,
+                    data: approvalData,
+                    value: 0n,
+                });
+            } else {
+                await options.notify('Token already approved, skipping approval transaction');
             }
-        } else {
-            await notify('Using native token (S) - no approval needed');
         }
 
-        // Calculate sizeDelta in USD terms with 30 decimals
-        const positionSizeUsd = collateralUsd * (sizeUsd / collateralUsd); // collateral * leverage
-        const sizeDelta = BigInt(Math.floor(positionSizeUsd * 1e30));
+        // Prepare position transaction
+        const positionPath = [indexToken.toLowerCase() === collateralToken.toLowerCase() ? indexToken : collateralToken];
+        const referralBytes32 = referralCode ? 
+            `0x${referralCode.slice(2).padEnd(64, '0')}` : 
+            `0x${'0'.repeat(64)}`;
 
-        // Calculate acceptable price with same decimals as keeper (30)
-        const acceptablePrice = isLong
-            ? (validation.details.indexTokenPriceRaw * BigInt(10000 + slippageBps)) / BigInt(10000)
-            : (validation.details.indexTokenPriceRaw * BigInt(10000 - slippageBps)) / BigInt(10000);
+        // Use a consistent slippage approach (0.3% for both open and close)
+        // For long positions: acceptablePrice = price * (1 + slippage)
+        // For short positions: acceptablePrice = price * (1 - slippage)
+        const slippageFactor = isLong ? (10000n + BigInt(slippageBps)) : (10000n - BigInt(slippageBps));
+        const acceptablePrice = (validation.details.indexTokenPriceRaw * slippageFactor) / 10000n;
 
-        await notify('\nTransaction Parameters:');
-        await notify(`Collateral Amount: ${validation.details.requiredCollateralAmount.toString()}`);
-        await notify(`Position Size USD: ${positionSizeUsd}`);
-        await notify(`Leverage: ${leverage}x`);
-        await notify(`Size Delta (30d USD): ${sizeDelta.toString()}`);
-        await notify(`Price (30d): ${validation.details.indexTokenPriceRaw.toString()}`);
-        await notify(`Acceptable Price (30d): ${acceptablePrice.toString()}`);
-        await notify(`Execution Fee: ${validation.details.minExecutionFee.toString()}`);
+        await options.notify(`Creating position with:
+            Size: $${sizeUsd}
+            Collateral: $${collateralUsd}
+            Leverage: ${validation.details.leverage}x
+            Price: ${formatUnits(validation.details.indexTokenPriceRaw, 30)}
+            Acceptable Price: ${formatUnits(acceptablePrice, 30)}
+            Slippage: ${slippageBps} bps
+        `);
 
-        // Prepare transaction data
-        const txData: TransactionParams = {
-            target: CONTRACT_ADDRESSES[NETWORKS.SONIC].POSITION_ROUTER,
-            value:
-                validation.details.minExecutionFee +
-                (collateralToken.toLowerCase() === CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN.toLowerCase() ? validation.details.requiredCollateralAmount : 0n),
-            data: encodeFunctionData({
-                abi: PositionRouter,
-                functionName:
-                    collateralToken.toLowerCase() === CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN.toLowerCase() ? 'createIncreasePositionETH' : 'createIncreasePosition',
-                args:
-                    collateralToken.toLowerCase() === CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN.toLowerCase()
-                        ? [
-                              CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN.toLowerCase() === indexToken.toLowerCase()
-                                  ? [CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN]
-                                  : [CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN, indexToken],
-                              indexToken,
-                              0n, // minOut
-                              sizeDelta,
-                              isLong,
-                              acceptablePrice,
-                              validation.details.minExecutionFee,
-                              referralCode || '0x0000000000000000000000000000000000000000000000000000000000000000',
-                              '0x0000000000000000000000000000000000000000',
-                          ]
-                        : [
-                              // For regular ERC20 positions
-                              collateralToken.toLowerCase() === indexToken.toLowerCase()
-                                  ? [collateralToken] // Same token - use it once
-                                  : [collateralToken, indexToken], // Different tokens - specify the path
-                              indexToken,
-                              validation.details.requiredCollateralAmount, // amountIn is the collateral amount for ERC20
-                              0n, // minOut
-                              sizeDelta,
-                              isLong,
-                              acceptablePrice,
-                              validation.details.minExecutionFee,
-                              referralCode || '0x0000000000000000000000000000000000000000000000000000000000000000',
-                              '0x0000000000000000000000000000000000000000',
-                          ],
-            }),
+        const positionData = encodeFunctionData({
+            abi: PositionRouter,
+            functionName: 'createIncreasePosition',
+            args: [
+                positionPath,
+                indexToken,
+                validation.details.requiredCollateralAmount,
+                0n,
+                validation.details.sizeDelta,
+                isLong,
+                acceptablePrice,
+                validation.details.minExecutionFee,
+                referralBytes32 as `0x${string}`,
+                '0x0000000000000000000000000000000000000000'
+            ],
+        });
+
+        const value = collateralToken.toLowerCase() === CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN.toLowerCase()
+            ? validation.details.requiredCollateralAmount + validation.details.minExecutionFee
+            : validation.details.minExecutionFee;
+
+        transactions.push({
+            target: CONTRACT_ADDRESSES[chainName].POSITION_ROUTER as `0x${string}`,
+            data: positionData,
+            value
+        });
+
+        // Send transactions
+        await options.notify('Creating position...');
+        const result = await options.evm.sendTransactions({
+            chainId: 146,
+            account: account as `0x${string}`,
+            transactions,
+        });
+
+        const response: OpenPositionResponse = {
+            success: true,
+            hash: result.data[0].hash,
+            details: {
+                indexToken,
+                collateralToken,
+                isLong,
+                sizeUsd,
+                collateralUsd,
+                leverage: leverageStr,
+                price: validation.details.indexTokenPrice,
+                fee: formatUnits(validation.details.minExecutionFee, 18)
+            }
         };
 
-        try {
-            await notify('Sending transaction to open position...');
-            const txResult = await sendTransactions({
-                chainId,
-                account,
-                transactions: [txData],
-            });
-
-            await notify('Transaction sent successfully!');
-            return toResult(
-                JSON.stringify({
-                    success: true,
-                    hash: txResult.data[0].hash,
-                    details: {
-                        positionType: isLong ? 'Long' : 'Short',
-                        positionSizeUsd,
-                        leverage,
-                        sizeDelta: sizeDelta.toString(),
-                        acceptablePrice: acceptablePrice.toString(),
-                    },
-                }),
-            );
-        } catch (txError) {
-            console.error('Transaction error:', txError);
-            if (txError instanceof Error) {
-                if (txError.message.includes('insufficient funds')) {
-                    return toResult('Insufficient funds to cover position and execution fee', true);
-                }
-                if (txError.message.includes('exceeds allowance')) {
-                    return toResult('Token approval failed or was denied', true);
-                }
-                return toResult(`Transaction failed: ${txError.message}`, true);
-            }
-            return toResult('Transaction failed. Please check your parameters and try again.', true);
-        }
+        return toResult(JSON.stringify(response, null, 2));
     } catch (error) {
-        console.error('Error in openPosition:', error);
-        return toResult(error instanceof Error ? error.message : 'Unknown error occurred', true);
+        return toResult(`ERROR: Failed to open position: ${error}\n`, true);
     }
 }
