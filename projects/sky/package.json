@@ -1,5 +1,5 @@
 {
-    name: "@projects/sky",
+    "name": "@projects/sky",
     "version": "1.0.0",
     "scripts": {
         "yarn": "yarn install"
