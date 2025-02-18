@@ -17,6 +17,41 @@ const walletProps = [
 
 const walletRequiredProps = ['chainName', 'account'];
 
+const permitObject = {
+    description: 'Low level object defining permit',
+    type: 'object',
+    properties: {
+        token: 'string',
+        amount: 'string',
+        expiration: 'string',
+        nonce: 'string',
+    },
+    required: ['token', 'amount', 'expiration', 'nonce']
+};
+
+const routeObject = {
+    description: 'Low level object defining V2 route',
+    type: 'object',
+    properties: {
+        from: 'string',
+        to: 'string',
+        stable: 'boolean',
+    },
+    required: ['from', 'to', 'stable']
+};
+
+const allowanceTransferObject = {
+    description: 'Low level object defining allowance transfer',
+    type: 'object',
+    properties: {
+        from: 'string',
+        to: 'string',
+        amount: 'string',
+        token: 'string',
+    },
+    required: ['from', 'to', 'amount', 'token'],
+}
+
 export const tools: AiTool[] = [
     {
         name: 'quoteExactInput',
@@ -47,7 +82,252 @@ export const tools: AiTool[] = [
     {
         name: 'execute',
         description: 'Executes a swap along with provided inputs',
-        required: [],
-        props: [],
+        required: [...walletRequiredProps, 'commandList'],
+        props: [
+            ...walletProps,
+            {
+                name: 'commandList',
+                type: 'object',
+                properties: {
+                    commands: {
+                        type: 'array',
+                        items: {
+                            oneOf: [
+                                {
+                                    description: 'Command: V3 swap exact in',
+                                    type: 'object',
+                                    properties: {
+                                        commandCode: { const: '00' },
+                                        recipient: { type: 'string' },
+                                        amountIn: { type: 'string' },
+                                        amountOutMin: { type: 'string' },
+                                        path: { type: 'string' },
+                                        payerIsUser: { type: 'boolean' }
+                                    },
+                                    required: ['commandCode', 'recipient', 'amountIn', 'amountOutMin', 'path', 'payerIsUser'],
+                                },
+                                {
+                                    description: 'Command: V3 swap exact out',
+                                    type: 'object',
+                                    properties: {
+                                        commandCode: { const: '01' },
+                                        recipient: { type: 'string' },
+                                        amountOut: { type: 'string' },
+                                        amountInMax: { type: 'string' },
+                                        path: { type: 'string' },
+                                        payerIsUser: { type: 'boolean' }
+                                    },
+                                    required: ['commandCode', 'recipient', 'amountOut', 'amountInMax', 'path', 'payerIsUser'],
+                                },
+                                {
+                                    description: 'Command: Permit2 transfer from',
+                                    type: 'object',
+                                    properties: {
+                                        commandCode: { const: '02' },
+                                        token: { type: 'string' },
+                                        recipient: { type: 'string' },
+                                        amount: { type: 'string' },
+                                    },
+                                    required: ['commandCode', 'token', 'recipient', 'amount'],
+                                },
+                                {
+                                    description: 'Command: Permit2 permit batch',
+                                    type: 'object',
+                                    properties: {
+                                        commandCode: { const: '03' },
+                                        permits: {
+                                            type: 'array',
+                                            items: permitObject,
+                                        },
+                                        spender: { type: 'string' },
+                                        sigDeadline: { type: 'string' },
+                                    },
+                                    required: ['commandCode', 'permits', 'spender', 'sigDeadline'],
+                                },
+                                {
+                                    description: 'Command: Sweep',
+                                    type: 'object',
+                                    properties: {
+                                        commandCode: { const: '04' },
+                                        token: { type: 'string' },
+                                        recipient: { type: 'string' },
+                                        amountMin: { type: 'string' },
+                                    },
+                                    required: ['commandCode', 'token', 'recipient', 'amountMin'],
+                                },
+                                {
+                                    description: 'Command: Transfer',
+                                    type: 'object',
+                                    properties: {
+                                        commandCode: { const: '05' },
+                                        token: { type: 'string' },
+                                        recipient: { type: 'string' },
+                                        value: { type: 'string' },
+                                    },
+                                    required: ['commandCode', 'token', 'recipient', 'value'],
+                                },
+                                {
+                                    description: 'Command: Pay portion',
+                                    type: 'object',
+                                    properties: {
+                                        commandCode: { const: '06' },
+                                        token: { type: 'string' },
+                                        recipient: { type: 'string' },
+                                        bips: { type: 'string' },
+                                    },
+                                    required: ['commandCode', 'token', 'recipient', 'bips'],
+                                },
+                                {
+                                    description: 'Command: V2 swap exact in',
+                                    type: 'object',
+                                    properties: {
+                                        commandCode: { const: '08' },
+                                        recipient: { type: 'string' },
+                                        amountIn: { type: 'string' },
+                                        amountOutMin: { type: 'string' },
+                                        routes: {
+                                            type: 'array',
+                                            items: routeObject,
+                                        },
+                                        payerIsUser: { type: 'boolean' },
+                                    },
+                                    required: ['commandCode', 'recipient', 'amountIn', 'amountOutMin', 'routes', 'payerIsUser'],
+                                },
+                                {
+                                    description: 'Command: V2 swap exact out',
+                                    type: 'object',
+                                    properties: {
+                                        commandCode: { const: '09' },
+                                        recipient: { type: 'string' },
+                                        amountOut: { type: 'string' },
+                                        amountInMax: { type: 'string' },
+                                        routes: {
+                                            type: 'array',
+                                            items: routeObject,
+                                        },
+                                        payerIsUser: { type: 'boolean' },
+                                    },
+                                    required: ['commandCode', 'recipient', 'amountOut', 'amountInMax', 'routes', 'payerIsUser'],
+                                },
+                                {
+                                    description: 'Command: Permit2 permit',
+                                    type: 'object',
+                                    properties: {
+                                        commandCode: { const: '0a' },
+                                        permit: permitObject,
+                                        spender: { type: 'string' },
+                                        sigDeadline: { type: 'string' },
+                                    },
+                                    required: ['commandCode', 'permit', 'spender', 'sigDeadline'],
+                                },
+                                {
+                                    description: 'Command: Wrap ETH',
+                                    type: 'object',
+                                    properties: {
+                                        commandCode: { const: '0b' },
+                                        recipient: { type: 'string' },
+                                        amountMin: { type: 'string' },
+                                    },
+                                    required: ['commandCode', 'recipient', 'amountMin'],
+                                },
+                                {
+                                    description: 'Command: Unwrap wETH',
+                                    type: 'object',
+                                    properties: {
+                                        commandCode: { const: '0c' },
+                                        recipient: { type: 'string' },
+                                        amountMin: { type: 'string' },
+                                    },
+                                    required: ['commandCode', 'recipient', 'amountMin'],
+                                },
+                                {
+                                    description: 'Command: Permit2 transfer from batch',
+                                    type: 'object',
+                                    properties: {
+                                        commandCode: { const: '0d' },
+                                        transfers: {
+                                            type: 'array',
+                                            items: allowanceTransferObject,
+                                        },
+                                    },
+                                    required: ['commandCode', 'transfers'],
+                                },
+                                {
+                                    description: 'Command: Balance check ERC20',
+                                    type: 'object',
+                                    properties: {
+                                        commandCode: { const: '0e' },
+                                        owner: { type: 'string' },
+                                        token: { type: 'string' },
+                                        minBalance: { type: 'string' },
+                                    },
+                                    required: ['commandCode', 'owner', 'token', 'minBalance'],
+                                },
+                                {
+                                    description: 'Command: Check owner for ERC721',
+                                    type: 'object',
+                                    properties: {
+                                        commandCode: { const: '15' },
+                                        owner: { type: 'string' },
+                                        token: { type: 'string' },
+                                        id: { type: 'string' },
+                                    },
+                                    required: ['commandCode', 'owner', 'token', 'id'],
+                                },
+                                {
+                                    description: 'Command: Check owner for ERC1155',
+                                    type: 'object',
+                                    properties: {
+                                        commandCode: { const: '16' },
+                                        owner: { type: 'string' },
+                                        token: { type: 'string' },
+                                        id: { type: 'string' },
+                                        minBalance: { type: 'string' },
+                                    },
+                                    required: ['commandCode', 'owner', 'token', 'id', 'minBalance'],
+                                },
+                                {
+                                    description: 'Command: Sweep ERC721',
+                                    type: 'object',
+                                    properties: {
+                                        commandCode: { const: '17' },
+                                        token: { type: 'string' },
+                                        recipient: { type: 'string' },
+                                        id: { type: 'string' },
+                                    },
+                                    required: ['commandCode', 'token', 'recipient', 'id'],
+                                },
+                                {
+                                    description: 'Command: Sweep ERC1155',
+                                    type: 'object',
+                                    properties: {
+                                        commandCode: { const: '1d' },
+                                        token: { type: 'string' },
+                                        recipient: { type: 'string' },
+                                        id: { type: 'string' },
+                                        amount: { type: 'string' },
+                                    },
+                                    required: ['commandCode', 'token', 'recipient', 'id', 'amount'],
+                                },
+                                {
+                                    description: 'Command: Approve ERC20',
+                                    type: 'object',
+                                    properties: {
+                                        commandCode: { const: '22' },
+                                        token: { type: 'string' },
+                                        spender: { type: 'string' },
+                                    },
+                                    required: ['commandCode', 'token', 'spender'],
+                                },
+                            ],
+                        },
+                    },
+                },
+                description:
+                    'Object containing list of commands with arguments to perform. ' +
+                    'Example swap from ETH to AERO can consists of Wrapping ETH and ' +
+                    'swapping through different pools over V3 and / or V2 version of protocol',
+            },
+        ],
     },
 ];

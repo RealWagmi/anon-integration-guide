@@ -1,6 +1,6 @@
 import { getChainFromName } from '@heyanon/sdk';
 import { Address, isAddress, parseUnits } from 'viem';
-import { FeeAmount, supportedChains } from '../constants';
+import { CommandList, FeeAmount, supportedChains } from '../constants';
 
 type Result<Data> =
     | {
@@ -61,3 +61,12 @@ export const parseTokensAndFees = <Props extends { tokens: Address[]; fees: FeeA
         },
     };
 };
+
+export const parseCommandList = <Props extends { commandList: CommandList }>({ commandList }: Props): Result<{ commandList: CommandList }> => {
+    return {
+        success: true,
+        data: {
+            commandList
+        }
+    }
+}
