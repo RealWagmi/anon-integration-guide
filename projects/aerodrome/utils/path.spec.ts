@@ -1,6 +1,6 @@
 import { Buffer } from 'node:buffer';
 import { Address, getAddress } from 'viem';
-import { FEE_SIZE, FeeAmount, feeAmounts } from '../constants';
+import { FEE_SIZE, FeeAmount, FEE_AMOUNTS } from '../constants';
 import { describe, it, expect } from 'vitest';
 import { encodePath } from './path';
 
@@ -61,6 +61,6 @@ describe('encodePath', () => {
         const [tokensOut, feesOut] = decodePath(path);
 
         expect(tokensIn).toEqual(tokensOut);
-        expect(feesIn.map((fee) => feeAmounts[fee])).toEqual(feesOut);
+        expect(feesIn.map((fee) => FEE_AMOUNTS[fee])).toEqual(feesOut);
     });
 });

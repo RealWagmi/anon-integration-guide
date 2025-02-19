@@ -1,6 +1,6 @@
 import { getChainFromName } from '@heyanon/sdk';
 import { Address, isAddress, parseUnits } from 'viem';
-import { CommandList, FeeAmount, supportedChains, V2SwapExactIn, V3SwapExactIn } from '../constants';
+import { CommandList, FEE_AMOUNTS, FeeAmount, supportedChains, V2SwapExactIn, V3SwapExactIn } from '../constants';
 
 type Result<Data> =
     | {
@@ -42,6 +42,16 @@ export const parseAmount = <Props extends { amount: string; decimals: number }>(
     };
 };
 
+export const parseTokensAndFee = <Props extends { token0: Address, token1: Address, fee?: FeeAmount }>({token0, token1, fee}: Props): Result<{ token0: Address, token1: Address, fee: FeeAmount }> => {
+    return {
+        success: true,
+        data: {
+            token0,
+            token1,
+            fee: fee ?? "V3_LOW"
+        }
+    }
+}
 export const parseTokensAndFees = <Props extends { tokens: Address[]; fees: FeeAmount[] }>({ tokens, fees }: Props): Result<{ tokens: Address[]; fees: FeeAmount[] }> => {
     if (!Array.isArray(tokens)) return { success: false, errorMessage: 'Expected tokens to be an array' };
 

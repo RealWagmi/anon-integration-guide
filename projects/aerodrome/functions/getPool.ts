@@ -2,7 +2,7 @@ import { FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { Address } from 'viem';
 import poolFactory from '../abis/poolFactory';
 import { POOL_FACTORY_ADDRESS } from '../constants';
-import { parseWallet } from '../utils/parse';
+import { parseTokensAndFee, parseWallet } from '../utils/parse';
 
 type Props = {
     chainName: string;
@@ -22,18 +22,19 @@ export async function getPool(props: Props, { getProvider }: FunctionOptions): P
         return toResult(wallet.errorMessage, true);
     }
 
-    // default to 500
-    const tokensAndFees = parseTokensAndFees(props);
+    // default to V3_LOW
+    const tokensAndFee = parseTokensAndFee(props);
+    if (!tokensAndFee.success) {
+        return toResult(tokensAndFee.errorMessage, true);
+    }
+
+    const { token0, token1, fee } = tokensAndFee.data;
 
     const { chainId } = wallet.data;
 
     const provider = getProvider(chainId);
 
-    const token0 = '';
-    const token1 = '';
-    const fee = 500;
-
-    const [poolAddress] = await provider.readContract({
+    const poolAddress = await provider.readContract({
         abi: poolFactory,
         address: POOL_FACTORY_ADDRESS,
         functionName: 'getPool',
