@@ -71,5 +71,5 @@ Key functions of Upshift:
 ## Installation
 
 ```bash
-yarn add @heyanon/upshift
+pnpm add @heyanon/project-upshift
 ```
