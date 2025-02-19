@@ -21,7 +21,6 @@ import { anonChainNameToBalancerChainId, anonChainNameToGqlChain, getDefaultRpcU
 import { BeetsClient } from '../helpers/beets/client';
 import { GqlChain } from '../helpers/beets/types';
 import { formatPoolType, fromGqlPoolMinimalToBalancerPoolStateWithUnderlyings, isBoostedPool } from '../helpers/pools';
-import { getMockPublicWalletClient } from '../helpers/viem';
 
 interface Props {
     chainName: string;

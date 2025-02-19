@@ -1,6 +1,6 @@
 node_modules
 .vscode
 .env
-contracts
-requests
-balancer
+src/contracts
+src/requests
+src/balancer
