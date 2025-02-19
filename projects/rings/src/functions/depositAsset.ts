@@ -1,14 +1,8 @@
 import { Address, encodeFunctionData, erc20Abi, parseUnits } from 'viem';
-import {
-	FunctionReturn,
-	FunctionOptions,
-	TransactionParams,
-	toResult,
-	getChainFromName,
-    checkToApprove
-} from '@heyanon/sdk';
+import { FunctionReturn, FunctionOptions, toResult, EVM, EvmChain } from '@heyanon/sdk';
 import { supportedChains, TOKEN } from '../constants';
 import { scTellerAbi, wrappedNativeAbi } from '../abis';
+const { getChainFromName, checkToApprove } = EVM.utils;
 
 interface Props {
 	chainName: string;
@@ -23,17 +17,19 @@ interface Props {
  * @param tools - System tools for blockchain interactions.
  * @returns Amount of LP tokens.
  */
-export async function depositAsset(
-	{ chainName, account, amount, asset }: Props,
-	{ sendTransactions, notify, getProvider }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function depositAsset({ chainName, account, amount, asset }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+	const {
+		evm: { getProvider, sendTransactions },
+		notify,
+	} = options;
+
 	// Check wallet connection
 	if (!account) return toResult('Wallet not connected', true);
 
     await notify('Checking everything...');
 
 	// Validate chain
-	const chainId = getChainFromName(chainName);
+	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Rings is not supported on ${chainName}`, true);
 
@@ -43,12 +39,12 @@ export async function depositAsset(
 	// Validate asset
 	let tokenConfig;
 	let baseAsset;
-	if (['ETH', 'USD'].includes(assetUpper)) {
+	if (['ETH', 'USD', 'BTC'].includes(assetUpper)) {
 		baseAsset = assetUpper;
-		const depositAsset = baseAsset === 'ETH' ? 'WETH' : 'USDC';
+		const depositAsset = baseAsset === 'ETH' ? 'WETH' : (baseAsset === 'BTC' ? 'WBTC' : 'USDC');
 		tokenConfig = TOKEN[baseAsset][depositAsset];
-	} else if (['WETH', 'USDC'].includes(assetUpper)) {
-		baseAsset = assetUpper === 'WETH' ? 'ETH' : 'USD';
+	} else if (['WETH', 'USDC', 'WBTC'].includes(assetUpper)) {
+		baseAsset = assetUpper === 'WETH' ? 'ETH' : (assetUpper === 'WBTC' ? 'BTC' :'USD');
 		tokenConfig = TOKEN[baseAsset][assetUpper];
 	} else {
 		return toResult(`Unsupported asset: ${asset}`, true);
@@ -56,7 +52,7 @@ export async function depositAsset(
 
 	const assetAddress = tokenConfig.address;
 
-	const transactions: TransactionParams[] = [];
+	const transactions: EVM.types.TransactionParams[] = [];
 
     // Validate amount and wrap ETH
     const provider = getProvider(chainId);
@@ -72,7 +68,7 @@ export async function depositAsset(
             return toResult('Amount exceeds your ETH balance', true);
         }
 
-		const wrapTx: TransactionParams = {
+		const wrapTx: EVM.types.TransactionParams = {
 			target: assetAddress,
 			data: encodeFunctionData({
 					abi: wrappedNativeAbi,
@@ -96,7 +92,7 @@ export async function depositAsset(
 
     await notify(`Depositing ${asset}...`);
 
-	const depositAddress = (baseAsset === 'ETH' ? TOKEN.ETH.SCETH.teller : TOKEN.USD.SCUSD.teller) as Address;
+	const depositAddress = TOKEN[baseAsset][`SC${baseAsset}`].teller as Address;
 
     // Approve the asset beforehand
     await checkToApprove({
@@ -111,7 +107,7 @@ export async function depositAsset(
     });
     
 	// Prepare deposit transaction
-	const tx: TransactionParams = {
+	const tx: EVM.types.TransactionParams = {
 			target: depositAddress,
 			data: encodeFunctionData({
 					abi: scTellerAbi,

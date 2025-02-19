@@ -1,14 +1,8 @@
 import { Address, encodeFunctionData, erc20Abi, parseUnits } from 'viem';
-import {
-	FunctionReturn,
-	FunctionOptions,
-	TransactionParams,
-	toResult,
-	getChainFromName,
-    checkToApprove
-} from '@heyanon/sdk';
+import { FunctionReturn, FunctionOptions, toResult, EVM, EvmChain } from '@heyanon/sdk';
 import { supportedChains, TOKEN } from '../constants';
 import { veAbi } from '../abis';
+const { getChainFromName, checkToApprove } = EVM.utils;
 
 interface Props {
 	chainName: string;
@@ -24,17 +18,19 @@ interface Props {
  * @param tools - System tools for blockchain interactions.
  * @returns ERC-721 token ID.
  */
-export async function lockAsset(
-	{ chainName, account, amount, asset, weeks }: Props,
-	{ sendTransactions, notify, getProvider }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function lockAsset({ chainName, account, amount, asset, weeks }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+	const {
+		evm: { getProvider, sendTransactions },
+		notify,
+	} = options;
+
 	// Check wallet connection
 	if (!account) return toResult('Wallet not connected', true);
 
     await notify('Checking everything...');
 
 	// Validate chain
-	const chainId = getChainFromName(chainName);
+	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Rings is not supported on ${chainName}`, true);
 
@@ -43,23 +39,23 @@ export async function lockAsset(
 
 	// Validate asset
 	let baseAsset;
-	if (['STKSCETH', 'STKSCUSD'].includes(assetUpper)) {
+	if (['STKSCETH', 'STKSCUSD', 'STKSCBTC'].includes(assetUpper)) {
 		baseAsset = assetUpper.slice(5);
-	} else if (['VEETH', 'VEUSD'].includes(assetUpper)) {
+	} else if (['VEETH', 'VEUSD', 'VEBTC'].includes(assetUpper)) {
 		baseAsset = assetUpper.slice(2);
 	} else {
 		return toResult(`Unsupported asset: ${asset}`, true);
 	}
 
-	const stakedAsset = baseAsset === 'ETH' ? TOKEN.ETH.STKSCETH : TOKEN.USD.STKSCUSD;
+	const stakedAssetAddress = TOKEN[baseAsset][`STKSC${baseAsset}`].address;
 
     // Validate amount
     const provider = getProvider(chainId);
-	const decimals = TOKEN[baseAsset][stakedAsset].decimals;
+	const decimals = TOKEN[baseAsset][`STKSC${baseAsset}`].decimals;
     const amountWithDecimals = parseUnits(amount, decimals);
     if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);
     const balance = await provider.readContract({
-        address: stakedAsset.address as Address,
+        address: stakedAssetAddress,
         abi: erc20Abi,
         functionName: 'balanceOf',
         args: [account],
@@ -67,20 +63,20 @@ export async function lockAsset(
     if (balance < amountWithDecimals) return toResult('Amount exceeds your balance', true);
 
 	// Validate lock duration
-	if (weeks < 1 || weeks > 104) return toResult('Lock duration must be between 1 and 104 weeks', true);
+	if (weeks < 1 || weeks > 52 || !Number.isInteger(weeks)) return toResult('Lock duration must be integer and between 1 and 52 weeks', true);
 
     await notify(`Locking stksc${baseAsset}...`);
 
-    const transactions: TransactionParams[] = [];
+    const transactions: EVM.types.TransactionParams[] = [];
 
-	const voteAsset = baseAsset === 'ETH' ? TOKEN.ETH.VEETH : TOKEN.USD.VEUSD;
+	const voteAssetAddress = TOKEN[baseAsset][`VE${baseAsset}`].address;
 
     // Approve the asset beforehand
     await checkToApprove({
         args: {
             account,
-            target: stakedAsset.address as Address,
-            spender: voteAsset.address as Address,
+            target: stakedAssetAddress,
+            spender: voteAssetAddress,
             amount: amountWithDecimals
         },
         transactions,
@@ -89,8 +85,8 @@ export async function lockAsset(
     
 	// Prepare lock transaction
 	const lockDuration = weeks * 7 * 24 * 60 * 60;
-	const tx: TransactionParams = {
-			target: voteAsset.address as Address,
+	const tx: EVM.types.TransactionParams = {
+			target: voteAssetAddress,
 			data: encodeFunctionData({
 					abi: veAbi,
 					functionName: 'create_lock',

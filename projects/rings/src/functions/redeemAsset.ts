@@ -1,14 +1,8 @@
 import { Address, encodeFunctionData, erc20Abi, parseUnits } from 'viem';
-import {
-	FunctionReturn,
-	FunctionOptions,
-	TransactionParams,
-	toResult,
-	getChainFromName,
-    checkToApprove
-} from '@heyanon/sdk';
+import { FunctionReturn, FunctionOptions, toResult, EVM, EvmChain } from '@heyanon/sdk';
 import { supportedChains, TOKEN } from '../constants';
-import { stkscWithdrawQueueAbi } from '../abis';
+import { scWithdrawQueueAbi } from '../abis';
+const { getChainFromName, checkToApprove } = EVM.utils;
 
 interface Props {
 	chainName: string;
@@ -18,22 +12,24 @@ interface Props {
 }
 
 /**
- * Unstakes LP asset from the Rings protocol.
- * @param props - The unstake parameters.
+ * Redeems asset from the Rings protocol.
+ * @param props - The redeem parameters.
  * @param tools - System tools for blockchain interactions.
  * @returns Request ID.
  */
-export async function unstakeAsset(
-	{ chainName, account, amount, asset }: Props,
-	{ sendTransactions, notify, getProvider }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function redeemAsset({ chainName, account, amount, asset }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+	const {
+		evm: { getProvider, sendTransactions },
+		notify,
+	} = options;
+
 	// Check wallet connection
 	if (!account) return toResult('Wallet not connected', true);
 
     await notify('Checking everything...');
 
 	// Validate chain
-	const chainId = getChainFromName(chainName);
+	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Rings is not supported on ${chainName}`, true);
 
@@ -41,45 +37,42 @@ export async function unstakeAsset(
     const assetUpper = asset.toUpperCase();
 
 	// Validate asset
-	let tokenConfig;
 	let baseAsset;
-	if (['STKSCETH', 'STKSCUSD'].includes(assetUpper)) {
-		baseAsset = assetUpper.slice(5);
-		tokenConfig = TOKEN[baseAsset][assetUpper];
-	} else if (['SCETH', 'SCUSD'].includes(assetUpper)) {
-		baseAsset = assetUpper.slice(2);
-		tokenConfig = TOKEN[baseAsset][`STK${assetUpper}`];
+	if (['ETH', 'USD', 'BTC'].includes(assetUpper)) {
+		baseAsset = assetUpper;
+	} else if (['WETH', 'USDC', 'WBTC'].includes(assetUpper)) {
+		baseAsset = assetUpper === 'WETH' ? 'ETH' : (assetUpper === 'WBTC' ? 'BTC' : 'USD');
 	} else {
 		return toResult(`Unsupported asset: ${asset}`, true);
 	}
 
-	const stakedAssetAddress = tokenConfig.address;
+	const lpAsset = TOKEN[baseAsset][`SC${baseAsset}`];
 
     // Validate amount
     const provider = getProvider(chainId);
-	const decimals = tokenConfig.decimals;
+	const decimals = lpAsset.decimals;
     const amountWithDecimals = parseUnits(amount, decimals);
     if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);
     const balance = await provider.readContract({
-        address: stakedAssetAddress,
+        address: lpAsset.address,
         abi: erc20Abi,
         functionName: 'balanceOf',
         args: [account],
     })
     if (balance < amountWithDecimals) return toResult('Amount exceeds your balance', true);
 
-    await notify('Sending unstake request...');
+    await notify(`Sending request to redeem ${baseAsset}...`);
 
-    const transactions: TransactionParams[] = [];
+    const transactions: EVM.types.TransactionParams[] = [];
 
-	const withdrawAddress = tokenConfig.withdraw;
-	const lpAssetAddress = (baseAsset === 'ETH' ? TOKEN.ETH.SCETH.address : TOKEN.USD.SCUSD.address) as Address;
+	const withdrawAddress = lpAsset.withdraw as Address;
+	const redeemAsset = baseAsset === 'ETH' ? 'WETH' : (baseAsset === 'BTC' ? 'WBTC' : 'USDC');
 
     // Approve the asset beforehand
     await checkToApprove({
         args: {
             account,
-            target: stakedAssetAddress,
+            target: lpAsset.address,
             spender: withdrawAddress,
             amount: amountWithDecimals
         },
@@ -87,26 +80,26 @@ export async function unstakeAsset(
         provider,
     });
     
-	// Prepare unstake transaction
+	// Prepare redeem transaction
 	const discount = 1;
 	const secondsToDeadline = 432000;
-	const tx: TransactionParams = {
+	const tx: EVM.types.TransactionParams = {
 			target: withdrawAddress,
 			data: encodeFunctionData({
-					abi: stkscWithdrawQueueAbi,
+					abi: scWithdrawQueueAbi,
 					functionName: 'requestOnChainWithdraw',
-					args: [lpAssetAddress, amountWithDecimals, discount, secondsToDeadline],
+					args: [redeemAsset, amountWithDecimals, discount, secondsToDeadline],
 			}),
 	};
 	transactions.push(tx);
 
 	// Sign and send transaction
 	const result = await sendTransactions({ chainId, account, transactions });
-	const unstakeMessage = result.data[result.data.length - 1];
+	const redeemMessage = result.data[result.data.length - 1];
 
 	return toResult(
 		result.isMultisig ? 
-		unstakeMessage.message : 
-		`Successfully requested unstake for sc${baseAsset}. sc${baseAsset} will be deposited in 5 days. You can cancel the unstake during that period.`
+		redeemMessage.message : 
+		`Successfully requested redeem for ${asset}. ${asset} will be deposited in 5 days. You can cancel the redeem during that period.`
 	);
 }

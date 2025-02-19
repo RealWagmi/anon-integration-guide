@@ -75,6 +75,6 @@ Key functions of Rings:
 ## Installation
 
 ```bash
-yarn add @heyanon/rings
+pnpm add @heyanon/project-rings
 ```
 

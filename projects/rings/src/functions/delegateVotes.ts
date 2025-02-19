@@ -1,13 +1,8 @@
 import { Address, encodeFunctionData } from 'viem';
-import {
-	FunctionReturn,
-	FunctionOptions,
-	TransactionParams,
-	toResult,
-	getChainFromName,
-} from '@heyanon/sdk';
+import { FunctionReturn, FunctionOptions, toResult, EVM, EvmChain } from '@heyanon/sdk';
 import { supportedChains, TOKEN } from '../constants';
 import { veAbi } from '../abis';
+const { getChainFromName } = EVM.utils;
 
 interface Props {
 	chainName: string;
@@ -22,17 +17,19 @@ interface Props {
  * @param tools - System tools for blockchain interactions.
  * @returns Success message.
  */
-export async function delegateVotesEth(
-	{ chainName, account, asset, delegatee }: Props,
-	{ sendTransactions, notify }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function delegateVotesEth({ chainName, account, asset, delegatee }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+	const {
+		evm: { sendTransactions },
+		notify,
+	} = options;
+
 	// Check wallet connection
 	if (!account) return toResult('Wallet not connected', true);
 
     await notify('Checking everything...');
 
 	// Validate chain
-	const chainId = getChainFromName(chainName);
+	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Rings is not supported on ${chainName}`, true);
 
@@ -42,10 +39,10 @@ export async function delegateVotesEth(
 	// Validate asset
 	let tokenConfig;
 	let baseAsset;
-	if (['ETH', 'USD'].includes(assetUpper)) {
+	if (['ETH', 'USD', 'BTC'].includes(assetUpper)) {
 		baseAsset = assetUpper;
 		tokenConfig = TOKEN[baseAsset][`VE${assetUpper}`];
-	} else if (['VEETH', 'VEUSD'].includes(assetUpper)) {
+	} else if (['VEETH', 'VEUSD', 'VEBTC'].includes(assetUpper)) {
 		baseAsset = assetUpper.slice(2);
 		tokenConfig = TOKEN[baseAsset][assetUpper];
 	} else {
@@ -55,7 +52,7 @@ export async function delegateVotesEth(
     await notify('Delegating votes...');
     
 	// Prepare delegate transaction
-	const tx: TransactionParams = {
+	const tx: EVM.types.TransactionParams = {
 			target: tokenConfig.address,
 			data: encodeFunctionData({
 					abi: veAbi,

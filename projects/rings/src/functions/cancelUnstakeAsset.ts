@@ -1,13 +1,8 @@
 import { Address, encodeFunctionData, parseAbiItem } from 'viem';
-import {
-	FunctionReturn,
-	FunctionOptions,
-	TransactionParams,
-	toResult,
-	getChainFromName,
-} from '@heyanon/sdk';
+import { FunctionReturn, FunctionOptions, toResult, EVM, EvmChain } from '@heyanon/sdk';
 import { supportedChains, TOKEN } from '../constants';
 import { stkscWithdrawQueueAbi } from '../abis';
+const { getChainFromName } = EVM.utils;
 
 interface Props {
 	chainName: string;
@@ -21,17 +16,19 @@ interface Props {
  * @param tools - System tools for blockchain interactions.
  * @returns Success message.
  */
-export async function cancelUnstakeAsset(
-	{ chainName, account, asset }: Props,
-	{ sendTransactions, notify, getProvider }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function cancelUnstakeAsset({ chainName, account, asset }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+	const {
+		evm: { getProvider, sendTransactions },
+		notify,
+	} = options;
+
 	// Check wallet connection
 	if (!account) return toResult('Wallet not connected', true);
 
     await notify('Checking everything...');
 
 	// Validate chain
-	const chainId = getChainFromName(chainName);
+	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Rings is not supported on ${chainName}`, true);
 
@@ -41,10 +38,10 @@ export async function cancelUnstakeAsset(
 	// Validate asset
 	let tokenConfig;
 	let baseAsset;
-	if (['STKSCETH', 'STKSCUSD'].includes(assetUpper)) {
+	if (['STKSCETH', 'STKSCUSD', 'STKSCBTC'].includes(assetUpper)) {
 		baseAsset = assetUpper.slice(5);
 		tokenConfig = TOKEN[baseAsset][assetUpper];
-	} else if (['SCETH', 'SCUSD'].includes(assetUpper)) {
+	} else if (['SCETH', 'SCUSD', 'SCBTC'].includes(assetUpper)) {
 		baseAsset = assetUpper.slice(2);
 		tokenConfig = TOKEN[baseAsset][`STK${assetUpper}`];
 	} else {
@@ -52,9 +49,12 @@ export async function cancelUnstakeAsset(
 	}
 
 	const withdrawAddress = tokenConfig.withdraw;
+	if (!withdrawAddress) {
+		return toResult(`Unsupported asset: ${asset}`, true);
+	}
 
     // Determine assetOut address based on base asset
-    const assetOut = baseAsset === 'ETH' ? TOKEN.ETH.SCETH.address : TOKEN.USD.SCUSD.address;
+    const assetOut = baseAsset === 'ETH' ? TOKEN.ETH.SCETH.address : (baseAsset === 'BTC' ? TOKEN.BTC.SCBTC.address : TOKEN.USD.SCUSD.address);
 
 	// Getting transaction parameters from event
 	const provider = getProvider(chainId);
@@ -106,7 +106,7 @@ export async function cancelUnstakeAsset(
 		secondsToMaturity,
 		secondsToDeadline,
 	];
-	const tx: TransactionParams = {
+	const tx: EVM.types.TransactionParams = {
 			target: withdrawAddress,
 			data: encodeFunctionData({
 					abi: stkscWithdrawQueueAbi,

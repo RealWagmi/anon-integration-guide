@@ -1,37 +1,35 @@
 import { Address, encodeFunctionData } from 'viem';
-import {
-	FunctionReturn,
-	FunctionOptions,
-	TransactionParams,
-	toResult,
-	getChainFromName,
-} from '@heyanon/sdk';
+import { FunctionReturn, FunctionOptions, toResult, EVM, EvmChain } from '@heyanon/sdk';
 import { supportedChains, TOKEN } from '../constants';
 import { veAbi } from '../abis';
+const { getChainFromName } = EVM.utils;
 
 interface Props {
 	chainName: string;
 	account: Address;
 	asset: string;
+	weeks: number;
 }
 
 /**
- * Unlocks all staked asset from the Rings protocol.
- * @param props - The unlock parameters.
+ * Increases locked staked asset duration in the Rings protocol.
+ * @param props - The extension parameters.
  * @param tools - System tools for blockchain interactions.
  * @returns Success message.
  */
-export async function unlockAsset(
-	{ chainName, account, asset }: Props,
-	{ sendTransactions, notify, getProvider }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function extendLock({ chainName, account, asset, weeks }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+	const {
+		evm: { getProvider, sendTransactions },
+		notify,
+	} = options;
+
 	// Check wallet connection
 	if (!account) return toResult('Wallet not connected', true);
 
     await notify('Checking everything...');
 
 	// Validate chain
-	const chainId = getChainFromName(chainName);
+	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Rings is not supported on ${chainName}`, true);
 
@@ -40,43 +38,44 @@ export async function unlockAsset(
 
 	// Validate asset
 	let baseAsset;
-	let tokenConfig;
-	if (['STKSCETH', 'STKSCUSD'].includes(assetUpper)) {
+	if (['STKSCETH', 'STKSCUSD', 'STKSCBTC'].includes(assetUpper)) {
 		baseAsset = assetUpper.slice(5);
-		tokenConfig = TOKEN[baseAsset][`VE${assetUpper}`];
-	} else if (['VEETH', 'VEUSD'].includes(assetUpper)) {
+	} else if (['VEETH', 'VEUSD', 'VEBTC'].includes(assetUpper)) {
 		baseAsset = assetUpper.slice(2);
-		tokenConfig = TOKEN[baseAsset][assetUpper];
 	} else {
 		return toResult(`Unsupported asset: ${asset}`, true);
 	}
 
-    await notify(`Unlocking stksc${baseAsset}...`);
+	// Validate lock duration
+	if (weeks < 1 || weeks > 52 || !Number.isInteger(weeks)) return toResult('Lock duration must be integer and between 1 and 52 weeks', true);
 
-	const voteAssetAddress = tokenConfig.address;
+    await notify(`Extending stksc${baseAsset} lock duration...`);
+
+	const voteAsset = TOKEN[baseAsset][`VE${baseAsset}`].address;
     
-	// Prepare unlock transaction
+	// Prepare extension transaction
     const provider = getProvider(chainId);
     const tokenId = await provider.readContract({
-        address: voteAssetAddress,
+        address: voteAsset,
         abi: veAbi,
         functionName: 'tokenOfOwnerByIndex',
         args: [account, 0],
     })
     if (tokenId === 0) return toResult(`No locked stksc${baseAsset}`, true);
 
-	const tx: TransactionParams = {
-			target: voteAssetAddress,
+    const lockDuration = weeks * 7 * 24 * 60 * 60;
+	const tx: EVM.types.TransactionParams = {
+			target: voteAsset,
 			data: encodeFunctionData({
 					abi: veAbi,
-					functionName: 'withdraw',
-					args: [tokenId],
+					functionName: 'increase_unlock_time',
+					args: [tokenId, lockDuration],
 			}),
 	};
 
 	// Sign and send transaction
 	const result = await sendTransactions({ chainId, account, transactions: [tx] });
-	const unlockMessage = result.data[result.data.length - 1];
+	const lockMessage = result.data[result.data.length - 1];
 
-	return toResult(result.isMultisig ? unlockMessage.message : `Successfully unlocked stksc${baseAsset}.`);
+	return toResult(result.isMultisig ? lockMessage.message : `Successfully extended stksc${baseAsset} lock.`);
 }

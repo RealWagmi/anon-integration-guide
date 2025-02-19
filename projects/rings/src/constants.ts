@@ -1,8 +1,18 @@
-import { ChainId } from '@heyanon/sdk';
+import { Chain, EVM } from '@heyanon/sdk';
+import { Address } from 'viem';
 
-export const supportedChains = [ChainId.SONIC];
+const { ChainIds } = EVM.constants;
 
-export const TOKEN = {
+export const supportedChains = [ChainIds[Chain.BSC]];
+
+interface AssetConfig {
+    address: Address,
+    decimals: number,
+    teller?: Address,
+    withdraw?: Address
+}
+
+export const TOKEN: Record<string, Record<string, AssetConfig>> = {
     ETH: {
         SCETH: {
             address: '0x3bcE5CB273F0F148010BbEa2470e7b5df84C7812',
@@ -45,6 +55,28 @@ export const TOKEN = {
         USDC: {
             address: '0x29219dd400f2Bf60E5a23d13Be72B486D4038894',
             decimals: 6,
+        },
+    },
+    BTC: {
+        SCBTC: {
+            address: '0xBb30e76d9Bb2CC9631F7fC5Eb8e87B5Aff32bFbd',
+            decimals: 8,
+            teller: '0xAce7DEFe3b94554f0704d8d00F69F273A0cFf079',
+            withdraw: '0x488000E6a0CfC32DCB3f37115e759aF50F55b48B',
+        },
+        STKSCBTC: {
+            address: '0xD0851030C94433C261B405fEcbf1DEC5E15948d0',
+            decimals: 8,
+            teller: '0x825254012306bB410b550631895fe58DdCE1f4a9',
+            withdraw: '0x6dF97Ed8B28d9528cd34335c0a151F10E48b6eF3',
+        },
+        VEBTC: {
+            address: '0x7585D9C32Db1528cEAE4770Fd1d01B888F5afA9e',
+            decimals: 8,
+        },
+        WBTC: {
+            address: '0x0555E30da8f98308EdB960aa94C0Db47230d2B9c',
+            decimals: 8,
         },
     },
 }
