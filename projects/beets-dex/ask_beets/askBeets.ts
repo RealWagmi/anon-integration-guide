@@ -143,6 +143,10 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
 
                 const receipt = await provider.waitForTransactionReceipt({ hash });
 
+                if (!receipt?.status || receipt.status !== 'success') {
+                    throw new Error(`Transaction failed with hash: ${receipt.transactionHash}`);
+                }
+
                 txsReturns.push({
                     hash: receipt.transactionHash,
                     message: `Transaction confirmed with hash: ${receipt.transactionHash}`,

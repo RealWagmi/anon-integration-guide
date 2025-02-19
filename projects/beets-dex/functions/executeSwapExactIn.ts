@@ -1,4 +1,4 @@
-import { Address, erc20Abi, parseUnits, decodeEventLog, Log, formatUnits } from 'viem';
+import { Address, erc20Abi, parseUnits, decodeEventLog, Log, formatUnits, TransactionReceipt } from 'viem';
 import { FunctionReturn, FunctionOptions, getChainFromName, toResult, checkToApprove, TransactionParams } from '@heyanon/sdk';
 import { SwapKind } from '@balancer/sdk';
 import { GetQuoteResult, getSwapQuote, buildSwapTransaction } from '../helpers/swaps';
@@ -113,12 +113,8 @@ export async function executeSwapExactIn(
     }
     options.notify(`Swap transaction sent with hash: ${hashes.at(-1)}`);
 
-    const swapReceipt = receipts.at(-1);
-    if (!swapReceipt?.status || swapReceipt.status !== 'success') {
-        return toResult('Swap transaction failed. For more details, search for the hash in a block explorer: ' + hashes.at(-1), true);
-    }
-
     // Return summary of the swap with actual values
+    const swapReceipt = receipts.at(-1) as TransactionReceipt;
     let { tokenInAmountInWei, tokenOutAmountInWei } = getTokenTransferAmounts(swapReceipt, account, tokenInAddress, tokenOutAddress);
     if (tokenInAddress === NATIVE_TOKEN_ADDRESS) {
         tokenInAmountInWei = transactions.at(-1)?.value as bigint;

@@ -33,7 +33,7 @@ export async function getPoolInfoFromPoolName({ chainName, poolName }: Props, { 
     // If multiple pools match, return list of matches
     if (pools.length > 1) {
         const matchingPools = pools.map((pool, index) => formatPoolMinimal(simplifyPool(pool), `${index + 1}. `)).join('\n');
-        return toResult(`Multiple pools found matching "${poolName}". Please specify which pool you'd like information about:\n\n${matchingPools}`, true);
+        return toResult(`Multiple pools found matching "${poolName}". Please specify the name of the pool and enclose it in quotes:\n\n${matchingPools}`, true);
     }
 
     // Return detailed info for the single matching pool

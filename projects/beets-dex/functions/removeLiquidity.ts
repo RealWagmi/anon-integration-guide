@@ -21,6 +21,7 @@ import { anonChainNameToBalancerChainId, anonChainNameToGqlChain, getDefaultRpcU
 import { BeetsClient } from '../helpers/beets/client';
 import { GqlChain } from '../helpers/beets/types';
 import { formatPoolType, fromGqlPoolMinimalToBalancerPoolStateWithUnderlyings, isBoostedPool } from '../helpers/pools';
+import { getMockPublicWalletClient } from '../helpers/viem';
 
 interface Props {
     chainName: string;
@@ -113,6 +114,7 @@ export async function removeLiquidity({ chainName, account, poolId, removalPerce
     let queryOutput: RemoveLiquidityQueryOutput | RemoveLiquidityBoostedQueryOutput;
     let buildOutput: RemoveLiquidityBuildCallOutput;
     const transactions: TransactionParams[] = [];
+    let addressToApprove: Address | null;
 
     // Handle special case: the user wants to add liquidity to a boosted token.
     // Tokens in a boosted pool have an underlying token, which is usually
@@ -130,26 +132,31 @@ export async function removeLiquidity({ chainName, account, poolId, removalPerce
         const queryInputBoosted = { ...removeLiquidityInput, tokensOut: tokensOutAddresses } as RemoveLiquidityBoostedProportionalInput;
         queryOutput = await removeLiquidityBoosted.query(queryInputBoosted, poolState);
         // Build the actual call data (and apply slippage)
-        const buildInput = { ...queryOutput, slippage, wethIsEth } as RemoveLiquidityBoostedBuildCallInput;
+        const buildInput = { ...queryOutput, slippage, chainId, wethIsEth } as RemoveLiquidityBoostedBuildCallInput;
         buildOutput = removeLiquidityBoosted.buildCall(buildInput);
-        // Approve router to spend pool token
-        await checkToApprove({
-            args: { account, target: pool.address, spender: buildOutput.to, amount: buildOutput.maxBptIn.amount },
-            provider: publicClient,
-            transactions,
-        });
+        addressToApprove = buildOutput.to; // will approve the Balancer router
     } else {
         // Query removeLiquidity to get the token out amounts
         const removeLiquidity = new RemoveLiquidity();
         queryOutput = await removeLiquidity.query(removeLiquidityInput, poolState);
-        // Build the actual call data (and apply slippage)
         const buildInput = { ...queryOutput, slippage, chainId, wethIsEth } as RemoveLiquidityBaseBuildCallInput;
+        // Build the actual call data (and apply slippage)
         // In v2 the sender/recipient can be set, in v3 it is always the msg.sender
         if (queryOutput.protocolVersion === 2) {
             buildOutput = removeLiquidity.buildCall({ ...buildInput, sender: account as `0x${string}`, recipient: account as `0x${string}` });
+            addressToApprove = null; // v2 pools don't require an approval
         } else {
             buildOutput = removeLiquidity.buildCall(buildInput);
+            addressToApprove = buildOutput.to; // will approve the Balancer router
         }
+    }
+
+    if (addressToApprove) {
+        await checkToApprove({
+            args: { account, target: pool.address, spender: addressToApprove, amount: buildOutput.maxBptIn.amount },
+            provider: publicClient,
+            transactions,
+        });
     }
 
     transactions.push({
