@@ -1,0 +1,65 @@
+# Kernel
+
+Integration with Kernel
+
+
+## Overview
+
+Kernel is a restaking protocol that reimagines cryptoeconomic security. 
+At its core, Kernel allows BNB token holders to amplify the utility of their assets through a restaking mechanism. 
+Users can contribute to the security of multiple services simultaneously, creating a robust, shared security framework.
+
+## Features
+
+Key functions of Kernel:
+- Stake and unstake supported assets for BTC and BNB
+- Gain points for future $KERNEL rewards
+
+## Supported Networks
+
+- BSC
+
+## Common Tasks
+
+1. Basic Operations
+   - stakeAssetByAddress
+      - "Stake 0.1 0xf6718b2701D4a6498eF77D7c152b2137Ab28b8A3 token in @kernel"
+      - "Deposit all 0xf6718b2701D4a6498eF77D7c152b2137Ab28b8A3 token in @kernel"
+   - stakeAssetBySymbol
+      - "Stake 0.034 pumpBTC in @kernel"
+      - "Deposit all bnbx in @kernel"
+   - stakeBNB
+      - "Stake 5 BNB in @kernel"
+      - "Deposit all BNB in @kernel"
+   - unstakeAssetByAddress
+      - "Unstake 0.02 0x1bdd3Cf7F79cfB8EdbB955f20ad99211551BA275 tokens from @kernel"
+      - "Withdraw all 0x1bdd3Cf7F79cfB8EdbB955f20ad99211551BA275 tokens from @kernel"
+   - unstakeAssetBySymbol
+      - "Withdraw all LBTC from @kernel"
+      - "Unstake 35 slisBNB from @kernel"
+   - unstakeBNB
+      - "Unstake 1 BNB from @kernel"
+      - "Withdraw all BNB from @kernel"
+
+2. Information Queries
+   - getPointsForAsset
+      - "Show current points for BNBX in @kernel"
+      - "Check pumpBTC points in @kernel"
+   - getTvl
+      - "Show current TVL in @kernel"
+      - "Check total value locked in @kernel"
+   - getUserPoints
+      - "Check my points in @kernel"
+      - "Show 0xffdd45f075e5f757e86bb83fca7114bed9914166 points in @kernel"
+
+
+## Addressing Pain Points
+
+- Staking liquid staking tokens (LSTs) for BNB and BTC to help secure the chain and earn rewards
+
+## Installation
+
+```bash
+pnpm add @heyanon/project-kernel
+```
+
