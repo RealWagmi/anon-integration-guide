@@ -1,17 +1,17 @@
-# KernelDAO
+# Kernel
 
-Integration with KernelDAO
+Integration with Kernel
 
 
 ## Overview
 
-KernelDAO is a restaking protocol that reimagines cryptoeconomic security. 
+Kernel is a restaking protocol that reimagines cryptoeconomic security. 
 At its core, Kernel allows BNB token holders to amplify the utility of their assets through a restaking mechanism. 
 Users can contribute to the security of multiple services simultaneously, creating a robust, shared security framework.
 
 ## Features
 
-Key functions of KernelDAO:
+Key functions of Kernel:
 - Stake and unstake supported assets for BTC and BNB
 - Gain points for future $KERNEL rewards
 
@@ -60,6 +60,6 @@ Key functions of KernelDAO:
 ## Installation
 
 ```bash
-yarn add @heyanon/kernel
+pnpm add @heyanon/project-kernel
 ```
 

@@ -1,6 +1,8 @@
-import { ChainId } from '@heyanon/sdk';
+import { Chain, EVM } from '@heyanon/sdk';
 
-export const supportedChains = [ChainId.BSC];
+const { ChainIds } = EVM.constants;
+
+export const supportedChains = [ChainIds[Chain.BSC]];
 
 export const STAKER_GATEWAY_ADDRESS = '0xb32dF5B33dBCCA60437EC17b27842c12bFE83394';
 export const ASSET_REGISTRY_ADDRESS = '0xd0B91Fc0a323bbb726faAF8867CdB1cA98c44ABB';
