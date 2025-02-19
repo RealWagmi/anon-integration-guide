@@ -89,3 +89,12 @@ export const parseSwap = <Props extends { swap: V3SwapExactIn }>({ swap }: Props
         }
     }
 }
+
+export const parsePoolAddress = <Props extends { poolAddress: Address }>({ poolAddress }: Props): Result<{ poolAddress: Address }> => {
+    return {
+        success: true,
+        data: {
+            poolAddress
+        }
+    }
+}

@@ -346,7 +346,7 @@ export const tools: AiTool[] = [
     {
         name: 'getPool',
         description: 'Retrieve and return pool address for tokens and fee',
-        required: [...walletRequiredProps, 'token0', 'token1', 'fees'],
+        required: [...walletRequiredProps, 'token0', 'token1', 'fee'],
         props: [
             ...walletProps,
             {
