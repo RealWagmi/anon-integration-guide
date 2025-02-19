@@ -15,12 +15,18 @@ Each module (protocol) must follow this minimal structure:
 
 ```
 your-module/
-├── functions/
-│   ├── index.ts
-│   ├── your-function.ts
+├── src/
+│   ├── functions/
+│   │   ├── index.ts
+│   │   ├── your-function.ts
+│   ├── constants.ts
+│   ├── types.ts
+│   ├── tools.ts
+│   └── helpers/
+│       └── utils.ts
 ├── index.ts
 ├── package.json
-├── tools.ts
+├── tsconfig.json
 └── README.md
 ```
 
