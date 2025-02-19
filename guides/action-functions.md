@@ -30,7 +30,7 @@ Action functions perform transactions and interact with the blockchain. They use
    - Example:
 
      ```typescript
-      const transactions: TransactionParams[] = [];
+      const transactions: EVM.types.TransactionParams[] = [];
 
       // Check and prepare approve transaction if needed
       await checkToApprove({
@@ -46,7 +46,7 @@ Action functions perform transactions and interact with the blockchain. They use
       );
 
       // Prepare deposit transaction
-      const tx: TransactionParams = {
+      const tx: EVM.types.TransactionParams = {
         target: PROTOCOL_ADDRESS,
         data: encodeFunctionData({
           abi: protocolAbi,
@@ -60,12 +60,12 @@ Action functions perform transactions and interact with the blockchain. They use
 
       // Sign and send transaction
       const result = await sendTransactions({ chainId, account, transactions });
-      const depositMessage = result.data[result.data.length - 1];
+      const depositData = result.data[result.data.length - 1];
 
       return toResult(
         result.isMultisig
           ? depositMessage.message
-          : `Successfully deposited ${amount} tokens. ${depositMessage.message}`
+          : `Successfully deposited ${amount} tokens. ${JSON.stringify(depositData)}`
       );
      ```
 
@@ -80,7 +80,7 @@ Action functions perform transactions and interact with the blockchain. They use
       return toResult(
         result.isMultisig
           ? depositMessage.message
-          : `Successfully deposited ${amount} tokens. ${depositMessage.message}`
+          : `Successfully deposited ${amount} tokens. ${JSON.stringify(depositData)}`
       );
      ```
 
@@ -90,6 +90,6 @@ Action functions perform transactions and interact with the blockchain. They use
    - Use comments to explain complex logic or skipped code sections.
    - Do not leave blank lines within functions.
 
-## Example: `depositExample`
+## Example: `mintToken`
 
 See the code in the [Action Function Example](action-function-example.md).
