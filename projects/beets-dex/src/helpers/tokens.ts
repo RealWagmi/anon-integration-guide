@@ -39,7 +39,7 @@ export async function getGqlTokenBySymbol(chainName: string, symbol: string, acc
         }
     }
 
-    const token = allTokens.find((token) => token.symbol.toLowerCase() === symbol.toLowerCase());
+    const token = allTokens.find(token => token.symbol.toLowerCase() === symbol.toLowerCase());
     if (!token) return null;
 
     return token;
@@ -56,7 +56,7 @@ export async function getGqlTokenByAddress(chainName: string, address: Address):
         throw new Error(`Chain ${chainName} not supported by Beets backend`);
     }
     const allTokens = await client.getTokens([gqlChain]);
-    const token = allTokens.find((token) => token.address.toLowerCase() === address.toLowerCase());
+    const token = allTokens.find(token => token.address.toLowerCase() === address.toLowerCase());
     if (!token) return null;
     return token;
 }
@@ -145,7 +145,7 @@ export async function getEquivalentTokenAddresses(chainName: string, token: Bala
     const equivalentSymbols = equivalentTokens?.[(token.symbol as string).toUpperCase() as keyof typeof equivalentTokens] || [];
 
     const addresses = await Promise.all(
-        equivalentSymbols.map(async (symbol) => {
+        equivalentSymbols.map(async symbol => {
             const token = await getBalancerTokenBySymbol(chainName, symbol);
             return token?.address;
         }),
@@ -160,7 +160,7 @@ export async function getEquivalentTokenAddresses(chainName: string, token: Bala
  * function will return the input token address.
  */
 export function getWrappedTokens(tokens: Address[], chainId: number): Address[] {
-    return tokens.map((token) => getWrappedToken(token, chainId));
+    return tokens.map(token => getWrappedToken(token, chainId));
 }
 
 /**

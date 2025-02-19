@@ -158,8 +158,8 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
                 data: txsReturns,
             };
         },
-        signTypedDatas: async (typedDatas) => {
-            const signatures = await Promise.all(typedDatas.map((typedData) => signer.signTypedData(typedData)));
+        signTypedDatas: async typedDatas => {
+            const signatures = await Promise.all(typedDatas.map(typedData => signer.signTypedData(typedData)));
             return signatures;
         },
         notify,
@@ -185,7 +185,7 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
         const completion = await llmClient.chat.completions.create({
             model: getLlmModel(),
             messages: messages as OpenAI.Chat.Completions.ChatCompletionMessageParam[],
-            tools: [...tools, ...askBeetsTools].map((tool) => fromHeyAnonToolsToOpenAiTools(tool)),
+            tools: [...tools, ...askBeetsTools].map(tool => fromHeyAnonToolsToOpenAiTools(tool)),
             tool_choice: 'auto',
         });
 
@@ -268,7 +268,7 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
     // Return all tool calls followed by the final comment of the assistant
     let combinedMessage = funcReturns
         .map((r, i) => {
-            const toolName = messages.find((m) => m.role === 'tool' && m.content === r.data)?.name || 'Unknown Tool';
+            const toolName = messages.find(m => m.role === 'tool' && m.content === r.data)?.name || 'Unknown Tool';
             const msg = chalk.underline.bold(`TOOL CALL ${i + 1}`) + `: ${toolName}`;
             return `${msg}\n${r.data}`;
         })
