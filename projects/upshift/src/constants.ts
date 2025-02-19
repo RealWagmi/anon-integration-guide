@@ -1,11 +1,13 @@
-import { ChainId } from '@heyanon/sdk';
+import { Chain, EVM } from '@heyanon/sdk';
 import { Address } from 'viem';
 
-export const supportedChains = [ChainId.ETHEREUM, ChainId.BASE, ChainId.AVALANCHE];
+const { ChainIds } = EVM.constants;
+
+export const supportedChains = [ChainIds[Chain.ETHEREUM], ChainIds[Chain.BASE], ChainIds[Chain.AVALANCHE]];
 
 export interface TokenConfig {
     name: string,
-    address: Address,
+    address?: Address,
     wrapped?: Address,
     decimals: number,
     vaultAddress: Address,
@@ -15,8 +17,8 @@ export interface TokenConfig {
     api: string
 }
 
-export const TOKEN = {
-    [ChainId.ETHEREUM]: {
+export const TOKEN: Record<number, Record<string, TokenConfig>> = {
+    [ChainIds.ethereum]: {
         LBTC: {
             name: 'Lombard',
             address: '0x8236a87084f8B84306f72007F36F2618A5634494',
@@ -46,7 +48,6 @@ export const TOKEN = {
         },
         ETH: {
             name: 'Treehouse',
-            address: '',
             wrapped: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
             decimals: 18,
             vaultAddress: '0x5Fde59415625401278c4d41C6beFCe3790eb357f',
@@ -64,7 +65,7 @@ export const TOKEN = {
             api: 'ethena'
         }
     },
-    [ChainId.BASE]: {
+    [ChainIds.base]: {
         LBTC: {
             name: 'Lombard',
             address: '0xecAc9C5F704e954931349Da37F60E39f515c11c1',
@@ -75,10 +76,9 @@ export const TOKEN = {
             api: 'lombard'
         }
     },
-    [ChainId.AVALANCHE]: {
+    [ChainIds.avalanche]: {
         AVAX: {
             name: 'Avalanche',
-            address: '',
             wrapped: '0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7',
             decimals: 18,
             vaultAddress: '0xB2bFb52cfc40584AC4e9e2B36a5B8d6554A56e0b',

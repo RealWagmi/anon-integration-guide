@@ -1,6 +1,7 @@
 import axios from 'axios';
-import { FunctionOptions, FunctionReturn, getChainFromName, toResult } from '@heyanon/sdk';
-import { supportedChains, TOKEN, TokenConfig } from '../constants'
+import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
+import { supportedChains, TOKEN } from '../constants';
+const { getChainFromName } = EVM.utils;
 
 interface VaultData {
     symbol: string;
@@ -25,20 +26,20 @@ interface Props {
 }
 
 /**
- * Fetches vault's rewards.
+ * Fetches vault's APY.
  * @param props - The request parameters. 
- * @returns Rewards.
+ * @returns APY.
  */
-export async function getVaultRewards({ chainName, token }: Props, { notify }: FunctionOptions): Promise<FunctionReturn> {
+export async function getVaultApy({ chainName, token }: Props, { notify }: FunctionOptions): Promise<FunctionReturn> {
     await notify('Checking inputs...');
 
     // Validate chain
-	const chainId = getChainFromName(chainName);
+	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Upshift is not supported on ${chainName}`, true);
 
     // Validate asset
-    const tokenConfig: TokenConfig = TOKEN[chainId][token.toUpperCase()];
+    const tokenConfig = TOKEN[chainId][token.toUpperCase()];
     if (!tokenConfig) toResult('Asset is not supported', true);
     const apiKey = tokenConfig.api;
 
@@ -54,10 +55,7 @@ export async function getVaultRewards({ chainName, token }: Props, { notify }: F
     const targetVault = responseVault.data.data.find(
         (vault) => vault.symbol === tokenConfig.vaultSymbol
     );
-    let rewardsInfo = 'No additional rewards';
-    if (targetVault?.rewards?.additional_points?.length) {
-        rewardsInfo = targetVault.rewards.additional_points.join(', ');
-    }
+    const apyInfo = targetVault?.apy ? `APY: ${targetVault?.apy}%` : '';
 
-    return toResult(`${targetVault?.name} rewards: ${rewardsInfo}`);
+    return toResult(`${targetVault?.name} ${apyInfo}`);
 }

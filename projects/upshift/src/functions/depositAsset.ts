@@ -1,14 +1,8 @@
 import { Address, encodeFunctionData, erc20Abi, parseUnits } from 'viem';
-import {
-	FunctionReturn,
-	FunctionOptions,
-	TransactionParams,
-	toResult,
-	getChainFromName,
-    checkToApprove
-} from '@heyanon/sdk';
+import { FunctionReturn, FunctionOptions, toResult, EVM, EvmChain } from '@heyanon/sdk';
 import { supportedChains, TOKEN } from '../constants';
 import { vaultAbi, wrappedNativeAbi } from '../abis';
+const { getChainFromName, checkToApprove } = EVM.utils;
 
 interface Props {
 	chainName: string;
@@ -23,17 +17,18 @@ interface Props {
  * @param tools - System tools for blockchain interactions.
  * @returns Amount of received LP tokens.
  */
-export async function depositAsset(
-	{ chainName, account, amount, token }: Props,
-	{ sendTransactions, notify, getProvider }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function depositAsset({ chainName, account, amount, token }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+    const {
+		evm: { getProvider, sendTransactions },
+		notify,
+	} = options;
 	// Check wallet connection
 	if (!account) return toResult('Wallet not connected', true);
 
     await notify('Checking everything...');
 
 	// Validate chain
-	const chainId = getChainFromName(chainName);
+	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Upshift is not supported on ${chainName}`, true);
 
@@ -43,7 +38,7 @@ export async function depositAsset(
 
     const provider = getProvider(chainId);
 
-    const transactions: TransactionParams[] = [];
+    const transactions: EVM.types.TransactionParams[] = [];
 
     // Validate amount and wrapping in case native token
     let tokenAddress = tokenConfig.address;
@@ -60,8 +55,8 @@ export async function depositAsset(
         }
 
         tokenAddress = tokenConfig.wrapped;
-        const wrapTx: TransactionParams = {
-			target: tokenAddress,
+        const wrapTx: EVM.types.TransactionParams = {
+			target: tokenAddress as Address,
 			data: encodeFunctionData({
 					abi: wrappedNativeAbi,
 					functionName: 'deposit',
@@ -87,16 +82,16 @@ export async function depositAsset(
     await checkToApprove({
         args: {
             account,
-            target: tokenAddress,
+            target: tokenAddress as Address,
             spender: tokenConfig.vaultAddress,
-            amount: amountWithDecimals
+            amount: amountWithDecimals as bigint
         },
         transactions,
         provider,
     });
 
 	// Prepare deposit transaction
-	const tx: TransactionParams = {
+	const tx: EVM.types.TransactionParams = {
 			target: tokenConfig.vaultAddress,
 			data: encodeFunctionData({
 					abi: vaultAbi,

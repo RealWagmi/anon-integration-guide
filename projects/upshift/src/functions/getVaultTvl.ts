@@ -1,6 +1,7 @@
 import axios from 'axios';
-import { FunctionOptions, FunctionReturn, getChainFromName, toResult } from '@heyanon/sdk';
-import { supportedChains, TOKEN, TokenConfig } from '../constants'
+import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
+import { supportedChains, TOKEN } from '../constants';
+const { getChainFromName } = EVM.utils;
 
 interface VaultData {
     symbol: string;
@@ -19,26 +20,31 @@ interface ApiVaultResponse {
     status: number;
 }
 
+interface ApiPriceResponse {
+    data: number;
+    status: number;
+}
+
 interface Props {
     chainName: string;
     token: string;
 }
 
 /**
- * Fetches vault's APY.
+ * Fetches vault's TVL.
  * @param props - The request parameters. 
- * @returns APY.
+ * @returns TVL.
  */
-export async function getVaultApy({ chainName, token }: Props, { notify }: FunctionOptions): Promise<FunctionReturn> {
+export async function getVaultTvl({ chainName, token }: Props, { notify }: FunctionOptions): Promise<FunctionReturn> {
     await notify('Checking inputs...');
 
     // Validate chain
-	const chainId = getChainFromName(chainName);
+	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Upshift is not supported on ${chainName}`, true);
 
     // Validate asset
-    const tokenConfig: TokenConfig = TOKEN[chainId][token.toUpperCase()];
+    const tokenConfig = TOKEN[chainId][token.toUpperCase()];
     if (!tokenConfig) toResult('Asset is not supported', true);
     const apiKey = tokenConfig.api;
 
@@ -54,7 +60,22 @@ export async function getVaultApy({ chainName, token }: Props, { notify }: Funct
     const targetVault = responseVault.data.data.find(
         (vault) => vault.symbol === tokenConfig.vaultSymbol
     );
-    const apyInfo = targetVault?.apy ? `APY: ${targetVault?.apy}%` : '';
+    const amountDeposited = targetVault?.totalSupply.normalized;
 
-    return toResult(`${targetVault?.name} ${apyInfo}`);
+    const responsePrice = await axios.get<ApiPriceResponse>(`https://${apiKey}.upshift.finance/api/proxy/prices?asset=${token.toLowerCase()}`);
+
+    // Validate response
+    if (!responsePrice.data?.data) {
+        return toResult(`Couldn't fetch price`, true);
+    }
+
+    const price = responsePrice.data.data;
+
+    if (!amountDeposited) {
+        return toResult('No vault data available', true);
+    }
+
+    const tvl = Number(amountDeposited) * price;
+
+    return toResult(`Total value locked in ${targetVault?.name} - ${tvl} USD.`);
 }

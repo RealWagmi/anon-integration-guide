@@ -1,15 +1,9 @@
 import { Address, encodeFunctionData, erc20Abi, parseUnits } from 'viem';
-import {
-	FunctionReturn,
-	FunctionOptions,
-	TransactionParams,
-	toResult,
-	getChainFromName,
-    checkToApprove,
-    ChainId
-} from '@heyanon/sdk';
-import { TOKEN, TokenConfig } from '../constants';
+import { FunctionReturn, FunctionOptions, toResult, EVM, EvmChain } from '@heyanon/sdk';
+import { TOKEN } from '../constants';
 import { stakeAbi } from '../abis';
+const { getChainFromName, checkToApprove } = EVM.utils;
+const { ChainIds } = EVM.constants;
 
 interface Props {
 	chainName: string;
@@ -24,22 +18,23 @@ interface Props {
  * @param tools - System tools for blockchain interactions.
  * @returns Success message.
  */
-export async function stakeOnAvalanche(
-	{ chainName, account, amount, token }: Props,
-	{ sendTransactions, notify, getProvider }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function stakeOnAvalanche({ chainName, account, amount, token }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+    const {
+		evm: { getProvider, sendTransactions },
+		notify,
+	} = options;
 	// Check wallet connection
 	if (!account) return toResult('Wallet not connected', true);
 
     await notify('Checking everything...');
 
 	// Validate chain
-	const chainId = getChainFromName(chainName);
+	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
-	if (chainId !== ChainId.AVALANCHE) return toResult(`Staking LP tokens is not supported on ${chainName}`, true);
+	if (chainId !== ChainIds.avalanche) return toResult(`Staking LP tokens is not supported on ${chainName}`, true);
 
     // Validate token
-    const tokenConfig = Object.values((TOKEN as Record<number, Record<string, TokenConfig>>)[chainId]).find(
+    const tokenConfig = Object.values(TOKEN[chainId]).find(
         (config) => config.vaultSymbol.toUpperCase() === token.toUpperCase()
     );
     if (!tokenConfig) return toResult(`Asset is not supported`, true);
@@ -61,7 +56,7 @@ export async function stakeOnAvalanche(
 
     await notify('Staking asset...');
 
-    const transactions: TransactionParams[] = [];
+    const transactions: EVM.types.TransactionParams[] = [];
 
     // Approve the asset beforehand
     await checkToApprove({
@@ -76,7 +71,7 @@ export async function stakeOnAvalanche(
     });
 
 	// Prepare stake transaction
-	const tx: TransactionParams = {
+	const tx: EVM.types.TransactionParams = {
 			target: tokenConfig.stakeAddress as Address,
 			data: encodeFunctionData({
 					abi: stakeAbi,

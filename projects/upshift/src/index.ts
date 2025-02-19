@@ -5,5 +5,5 @@ import * as functions from './functions';
 export default {
     tools,
     functions,
-    description: 'Integration with KernelDAO',
+    description: 'Upshift is a digital storefront for on-chain yield, powered by August Digital.',
 } satisfies AdapterExport;

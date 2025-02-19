@@ -1,13 +1,8 @@
 import { Address, encodeFunctionData } from 'viem';
-import {
-	FunctionReturn,
-	FunctionOptions,
-	TransactionParams,
-	toResult,
-	getChainFromName,
-} from '@heyanon/sdk';
+import { FunctionReturn, FunctionOptions, toResult, EVM, EvmChain } from '@heyanon/sdk';
 import { supportedChains, TOKEN } from '../constants';
 import { vaultAbi } from '../abis';
+const { getChainFromName } = EVM.utils;
 
 interface Props {
 	chainName: string;
@@ -21,17 +16,18 @@ interface Props {
  * @param tools - System tools for blockchain interactions.
  * @returns Success message.
  */
-export async function claimAsset(
-	{ chainName, account, token }: Props,
-	{ sendTransactions, notify, getProvider }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function claimAsset({ chainName, account, token }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+	const {
+		evm: { getProvider, sendTransactions },
+		notify,
+	} = options;
 	// Check wallet connection
 	if (!account) return toResult('Wallet not connected', true);
 
     await notify('Checking everything...');
 
 	// Validate chain
-	const chainId = getChainFromName(chainName);
+	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Upshift is not supported on ${chainName}`, true);
 
@@ -48,7 +44,7 @@ export async function claimAsset(
 	await notify('Claiming asset...');
 
 	// Prepare claim transaction
-	const tx: TransactionParams = {
+	const tx: EVM.types.TransactionParams = {
 			target: tokenConfig.vaultAddress,
 			data: encodeFunctionData({
 					abi: vaultAbi,
