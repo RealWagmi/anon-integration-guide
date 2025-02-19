@@ -1,6 +1,6 @@
-# Gu Trade
+# Gu
 
-GuTrade Integration
+Gu Integration
 
 
 ## Overview
@@ -11,7 +11,7 @@ Tokens launched through Gu Trade can be easily bridged with LayerZero, ensuring 
 
 ## Features
 
-Key functions of Gu Trade:
+Key functions of Gu:
 - Deploy tokens
 - Buy and sell tokens that are not bonded yet
 - Fetch token address with name and symbol
@@ -62,5 +62,5 @@ Key functions of Gu Trade:
 ## Installation
 
 ```bash
-yarn add @heyanon/gu-trade
+pnpm add @heyanon/gu-project
 ```

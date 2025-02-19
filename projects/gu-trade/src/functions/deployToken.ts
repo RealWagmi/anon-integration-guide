@@ -1,13 +1,8 @@
 import { Address, encodeFunctionData, hexToBigInt, toHex } from 'viem';
-import {
-	FunctionReturn,
-	FunctionOptions,
-	TransactionParams,
-	toResult,
-	getChainFromName
-} from '@heyanon/sdk';
+import { FunctionReturn, FunctionOptions, toResult, EVM, EvmChain} from '@heyanon/sdk';
 import { supportedChains, FACTORY_ADDRESS } from '../constants';
 import { factoryAbi } from '../abis';
+const { getChainFromName } = EVM.utils;
 
 interface Props {
 	chainName: string;
@@ -24,15 +19,17 @@ interface Props {
  * @param tools - System tools for blockchain interactions.
  * @returns Address of the token.
  */
-export async function deployToken(
-	{ chainName, account, name, symbol, description, image}: Props,
-	{ sendTransactions, notify, getProvider }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function deployToken({ chainName, account, name, symbol, description, image}: Props, options: FunctionOptions): Promise<FunctionReturn> {
+	const {
+		evm: { getProvider, sendTransactions },
+		notify,
+	} = options;
+
 	// Check wallet connection
 	if (!account) return toResult('Wallet not connected', true);
 
 	// Validate chain
-	const chainId = getChainFromName(chainName);
+	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Gu is not supported on ${chainName}`, true);
 
@@ -47,7 +44,7 @@ export async function deployToken(
 	await notify('Deploying token...');
 
 	// Prepare deploy transaction
-	const tx: TransactionParams = {
+	const tx: EVM.types.TransactionParams = {
 			target: FACTORY_ADDRESS,
 			data: encodeFunctionData({
 					abi: factoryAbi,

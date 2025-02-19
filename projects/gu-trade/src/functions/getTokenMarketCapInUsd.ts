@@ -1,8 +1,9 @@
 import { Address, formatUnits, isAddress } from 'viem';
-import { FunctionReturn, toResult, getChainFromName, FunctionOptions } from '@heyanon/sdk';
+import { FunctionReturn, toResult, FunctionOptions, EVM, EvmChain } from '@heyanon/sdk';
 import { ETH_USD_ORACLE_ADDRESS, supportedChains } from '../constants';
 import { ethOracleAbi, guCoinAbi } from '../abis';
 import { getTokenAddress } from './getTokenAddress';
+const { getChainFromName } = EVM.utils;
 
 interface Props {
     chainName: string;
@@ -10,14 +11,18 @@ interface Props {
 }
 
 /**
- * Fetch current token price in USD.
+ * Fetch current token market cap in USD.
  * @param props - The request parameters.
- * @param tools - System tools for blockchain interactions. 
- * @returns Token price.
+ * @param tools - System tools for blockchain interactions.
+ * @returns Token market cap.
  */
-export async function getTokenPriceInUsd({ chainName, token }: Props, { getProvider }: FunctionOptions): Promise<FunctionReturn> {
+export async function getTokenMarketCapInUsd({ chainName, token }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+    const {
+		evm: { getProvider }
+	} = options;
+    
     // Validate chain
-    const chainId = getChainFromName(chainName);
+    const chainId = getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Gu is not supported on ${chainName}`, true);
 
@@ -30,10 +35,10 @@ export async function getTokenPriceInUsd({ chainName, token }: Props, { getProvi
 
     const publicClient = getProvider(chainId);
 
-    const tokenPrice = await publicClient.readContract({
+    const mcap = await publicClient.readContract({
         address: token as Address,
         abi: guCoinAbi,
-        functionName: 'price',
+        functionName: 'reserveBalance',
     }) as bigint;
 
     const ethPrice = await publicClient.readContract({
@@ -42,11 +47,10 @@ export async function getTokenPriceInUsd({ chainName, token }: Props, { getProvi
         functionName: 'latestAnswer',
     }) as bigint;
 
-    // Convert price to proper format
-    const tokenPriceInEth = parseFloat(formatUnits(tokenPrice, 18)); 
+    const mcapInEth = parseFloat(formatUnits(mcap, 18)); 
     const ethPriceInUsd = parseFloat(formatUnits(ethPrice, 8)); 
 
-    const tokenPriceInUsd = tokenPriceInEth * ethPriceInUsd;
+    const mcapInUsd = mcapInEth * ethPriceInUsd;
 
-    return toResult(`Current price: $${tokenPriceInUsd.toFixed(0)} USD`);
+    return toResult(`Current Market Cap: $${mcapInUsd.toFixed(0)} USD`);
 }

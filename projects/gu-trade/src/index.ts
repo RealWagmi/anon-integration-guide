@@ -5,5 +5,5 @@ import * as functions from './functions';
 export default {
     tools,
     functions,
-    description: 'Enter the GU Factory and launch or trade the funniest tokens on Arbitrum. Create or buy any crap you like, and you will still win.',
+    description: 'Gu Trade is the ultimate protocol to launch and trade your tokens and memecoins, built on top of CamelotDEX.',
 } satisfies AdapterExport;

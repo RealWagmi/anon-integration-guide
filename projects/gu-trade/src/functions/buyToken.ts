@@ -1,14 +1,9 @@
 import { Address, encodeFunctionData, isAddress, parseUnits } from 'viem';
-import {
-  	FunctionReturn,
-  	FunctionOptions,
-  	TransactionParams,
-  	toResult,
-  	getChainFromName
-} from '@heyanon/sdk';
+import { FunctionReturn, FunctionOptions, toResult, EVM, EvmChain } from '@heyanon/sdk';
 import { supportedChains, FACTORY_ADDRESS, GU_COIN_DECIMALS } from '../constants';
 import { factoryAbi, bondingCurveAbi, guCoinAbi } from '../abis';
 import { getTokenAddress } from './getTokenAddress';
+const { getChainFromName } = EVM.utils;
 
 interface Props {
   	chainName: string;
@@ -24,17 +19,19 @@ interface Props {
  * @param tools - System tools for blockchain interactions.
  * @returns Tokens acquired.
  */
-export async function buyToken(
-    { chainName, account, token, amount, slippage } : Props,
-    { sendTransactions, notify, getProvider }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function buyToken({ chainName, account, token, amount, slippage } : Props, options: FunctionOptions): Promise<FunctionReturn> {
+	const {
+		evm: { getProvider, sendTransactions },
+		notify,
+	} = options;
+
     // Check wallet connection
 	if (!account) return toResult('Wallet not connected', true);
 
 	await notify('Checking everything...');
 
 	// Validate chain
-	const chainId = getChainFromName(chainName);
+	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Gu is not supported on ${chainName}`, true);
 
@@ -96,7 +93,7 @@ export async function buyToken(
 
 	await notify('Initializing buy...');
 
-	const tx: TransactionParams = {
+	const tx: EVM.types.TransactionParams = {
         target: bondingCurveAddress,
         data: encodeFunctionData({
             abi: bondingCurveAbi,

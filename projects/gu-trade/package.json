@@ -1,17 +1,43 @@
 {
-    "name": "@projects/gu-trade",
-    "version": "1.0.0",
-    "scripts": {
-        "yarn": "yarn install"
-    },
-    "dependencies": {
-        "@heyanon/sdk": "^1.0.4",
-        "axios": "^1.7.9"
-    },
-    "license": "MIT",
-    "engines": {
-        "npm": "please-use-yarn",
-        "node": ">=18.x",
-        "yarn": ">=1.22"
-    }
+	"name": "@heyanon/project-gu",
+	"version": "1.0.0",
+	"license": "MIT",
+	"main": "dist/index.js",
+	"typings": "dist/index.d.ts",
+	"module": "dist/index.mjs",
+	"files": [
+		"dist"
+	],
+	"engines": {
+		"node": ">=18"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"start": "tsup --watch",
+		"build": "tsup",
+		"test": "vitest --run",
+		"lint": "tsdx lint",
+		"prepare": "pnpm run build",
+		"size": "size-limit",
+		"analyze": "size-limit --why",
+		"format": "prettier --write \"*/**/*.ts\""
+	},
+	"devDependencies": {
+		"@size-limit/preset-small-lib": "^9.0.0",
+		"@types/big.js": "^6.2.0",
+		"@types/jest": "^29.5.12",
+		"@types/node": "^22.13.4",
+		"tsdx": "^0.14.1",
+		"tslib": "^2.6.2",
+		"tsup": "^7.2.0",
+		"typescript": "^5.7.3"
+	},
+	"dependencies": {
+		"@heyanon/sdk": "^2.0.2",
+		"axios": "^1.7.9",
+		"viem": "2.22.9",
+		"vitest": "^2.1.8"
+	}
 }
