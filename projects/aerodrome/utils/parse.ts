@@ -1,6 +1,6 @@
 import { getChainFromName } from '@heyanon/sdk';
 import { Address, isAddress, parseUnits } from 'viem';
-import { CommandList, FeeAmount, supportedChains } from '../constants';
+import { CommandList, FeeAmount, supportedChains, V2SwapExactIn, V3SwapExactIn } from '../constants';
 
 type Result<Data> =
     | {
@@ -67,6 +67,15 @@ export const parseCommandList = <Props extends { commandList: CommandList }>({ c
         success: true,
         data: {
             commandList
+        }
+    }
+}
+
+export const parseSwap = <Props extends { swap: V3SwapExactIn }>({ swap }: Props): Result<{ swap: V3SwapExactIn }> => {
+    return {
+        success: true,
+        data: {
+            swap
         }
     }
 }
