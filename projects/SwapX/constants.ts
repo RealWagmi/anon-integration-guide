@@ -1,4 +1,12 @@
 import { Address } from 'viem';
+import 'dotenv/config';
+
+import BigNumber from 'bignumber.js';
+
+BigNumber.config({
+    ROUNDING_MODE: BigNumber.ROUND_DOWN,
+    DECIMAL_PLACES: 0,
+});
 
 enum VaultType {
     CONCENTRATED,
@@ -24,6 +32,8 @@ type TokenInfo = {
     decimals: number;
 };
 
+export const WEEK_IN_SECONDS = 604800;
+
 export const veSWPx = '0xAA30F0977620D4d46B3Bb3Cf0794Fe645d576CA3' as Address;
 
 export const SONIC_TOKENS: Record<string, TokenInfo> = {
@@ -46,6 +56,12 @@ export const SONIC_TOKENS: Record<string, TokenInfo> = {
         decimals: 18,
     },
 };
+
+export const veSWPxAddress = '0xAA30F0977620D4d46B3Bb3Cf0794Fe645d576CA3' as Address;
+
+export const voterV3Address = '0xC1AE2779903cfB84CB9DEe5c03EcEAc32dc407F2' as Address;
+
+export const rewardsDistributor = '0x1C236D74f61C6199e6D23201D53a59753f4c94D3';
 
 export const ichiVaults: IchiVault[] = [
     {
