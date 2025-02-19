@@ -1,12 +1,8 @@
 import { Address, erc20Abi, formatUnits } from 'viem';
-import {
-	FunctionReturn,
-	FunctionOptions,
-	toResult,
-	getChainFromName,
-} from '@heyanon/sdk';
-import { supportedChains, TOKEN } from '../constants';
+import {FunctionReturn, FunctionOptions, toResult, EVM, EvmChain } from '@heyanon/sdk';
+import { CONTRACT, supportedChains } from '../constants';
 import { dtokenAbi, oracleAbi, unitrollerAbi } from '../abis';
+const { getChainFromName } = EVM.utils;
 
 interface Props {
 	chainName: string;
@@ -21,15 +17,20 @@ interface Props {
  */
 export async function getUsersHealthFactor(
 	{ chainName, account }: Props,
-	{ notify, getProvider }: FunctionOptions
+	options: FunctionOptions
 ): Promise<FunctionReturn> {
+    const {
+		evm: { getProvider },
+		notify,
+	} = options;
+
 	// Check wallet connection
 	if (!account) return toResult('Wallet not connected', true);
 
     await notify('Checking everything...');
 
 	// Validate chain
-	const chainId = getChainFromName(chainName);
+	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Deepr Finance is not supported on ${chainName}`, true);
 
@@ -37,7 +38,7 @@ export async function getUsersHealthFactor(
 
     // Calculating health factor
     const [, liquidity, ] = await provider.readContract({
-        address: TOKEN.CONTRACT.UNITROLLER as Address,
+        address: CONTRACT.UNITROLLER,
         abi: unitrollerAbi,
         functionName: 'getAccountLiquidity',
         args: [account],
@@ -45,7 +46,7 @@ export async function getUsersHealthFactor(
     const availableLiquidity = liquidity / BigInt(1e18);
 
     const markets = await provider.readContract({
-        address: TOKEN.CONTRACT.UNITROLLER as Address,
+        address: CONTRACT.UNITROLLER,
         abi: unitrollerAbi,
         functionName: 'getAssetsIn',
         args: [account],
@@ -55,7 +56,7 @@ export async function getUsersHealthFactor(
 
     for (const market of markets) {
         const price = await provider.readContract({
-            address: TOKEN.CONTRACT.ORACLE as Address,
+            address: CONTRACT.ORACLE,
             abi: oracleAbi,
             functionName: 'getUnderlyingPrice',
             args: [market],

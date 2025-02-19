@@ -1,13 +1,8 @@
 import { Address, encodeFunctionData } from 'viem';
-import {
-	FunctionReturn,
-	FunctionOptions,
-	TransactionParams,
-	toResult,
-	getChainFromName,
-} from '@heyanon/sdk';
-import { supportedChains, TOKEN } from '../constants';
+import { FunctionReturn, FunctionOptions, toResult, EVM, EvmChain } from '@heyanon/sdk';
+import { CONTRACT, supportedChains } from '../constants';
 import { rewardpoolAbi, unitrollerAbi } from '../abis';
+const { getChainFromName } = EVM.utils;
 
 interface Props {
 	chainName: string;
@@ -20,32 +15,33 @@ interface Props {
  * @param tools - System tools for blockchain interactions.
  * @returns Success message.
  */
-export async function claimDeepr(
-	{ chainName, account }: Props,
-	{ sendTransactions, notify, getProvider }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function claimDeepr({ chainName, account }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+	const {
+		evm: { getProvider, sendTransactions },
+		notify,
+	} = options;
 	// Check wallet connection
 	if (!account) return toResult('Wallet not connected', true);
 
 	await notify('Checking everything...');
 
 	// Validate chain
-	const chainId = getChainFromName(chainName);
+	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Deepr Finance is not supported on ${chainName}`, true);
 
 	const provider = getProvider(chainId);
-	const transactions: TransactionParams[] = [];
+	const transactions: EVM.types.TransactionParams[] = [];
 
 	// Check if user has staked tokens
 	const [, , rewardDebt, , ] = await provider.readContract({
-        address: TOKEN.CONTRACT.REWARDPOOL as Address,
+        address: CONTRACT.REWARDPOOL,
         abi: rewardpoolAbi,
         functionName: 'userInfo',
         args: [account],
     }) as [bigint, bigint, bigint, boolean, bigint];
-	const txHarvest: TransactionParams = {
-		target: TOKEN.CONTRACT.REWARDPOOL as Address,
+	const txHarvest: EVM.types.TransactionParams = {
+		target: CONTRACT.REWARDPOOL,
 		data: encodeFunctionData({
 				abi: rewardpoolAbi,
 				functionName: 'harvest',
@@ -58,8 +54,8 @@ export async function claimDeepr(
 	await notify('Claiming DEEPR...');
 
 	// Prepare claim transaction
-	const txClaim: TransactionParams = {
-			target: TOKEN.CONTRACT.UNITROLLER as Address,
+	const txClaim: EVM.types.TransactionParams = {
+			target: CONTRACT.UNITROLLER,
 			data: encodeFunctionData({
 					abi: unitrollerAbi,
 					functionName: 'claimDeepr',

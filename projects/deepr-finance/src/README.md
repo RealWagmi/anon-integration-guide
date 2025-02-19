@@ -91,5 +91,5 @@ Key functions of Deepr Finance:
 ## Installation
 
 ```bash
-yarn add @heyanon/deepr-finance
+pnpm add @heyanon/project-deepr
 ```

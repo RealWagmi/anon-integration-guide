@@ -1,12 +1,8 @@
 import { formatUnits } from 'viem';
-import {
-	FunctionReturn,
-	FunctionOptions,
-	toResult,
-	getChainFromName,
-} from '@heyanon/sdk';
+import { FunctionReturn, FunctionOptions, toResult, EVM, EvmChain } from '@heyanon/sdk';
 import { supportedChains, TOKEN } from '../constants';
 import { dtokenAbi } from '../abis';
+const { getChainFromName } = EVM.utils;
 
 interface Props {
 	chainName: string;
@@ -14,26 +10,28 @@ interface Props {
 }
 
 /**
- * Fetch supply APY and APR.
+ * Fetch borrow APY and APR.
  * @param props - The request parameters.
  * @param tools - System tools for blockchain interactions.
  * @returns Success message.
  */
-export async function getMarketSupplyRate(
-	{ chainName, asset }: Props,
-	{ notify, getProvider }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function getMarketBorrowRate({ chainName, asset }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+    const {
+		evm: { getProvider },
+		notify,
+	} = options;
+
     await notify('Checking everything...');
 
 	// Validate chain
-	const chainId = getChainFromName(chainName);
+	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Deepr Finance is not supported on ${chainName}`, true);
 
     // Validate asset
     const assetConfig = TOKEN[asset.toUpperCase()];
     if (!assetConfig) return toResult(`Asset is not supported`, true);
-    const marketAddress = assetConfig.MARKET;
+    const marketAddress = assetConfig.MARKET.ADDRESS;
 
     // Accrued Interest calculation
     const provider = getProvider(chainId);
@@ -43,21 +41,21 @@ export async function getMarketSupplyRate(
 
     const decimals = assetConfig.DECIMALS;
 
-    const supplyRatePerSecond = await provider.readContract({
+    const borrowRatePerSecond = await provider.readContract({
         address: marketAddress,
         abi: dtokenAbi,
-        functionName: 'supplyRatePerSecond'
+        functionName: 'borrowRatePerSecond'
     }) as bigint;
 
-    const supplyRatePerSecondNumber = parseFloat(formatUnits(supplyRatePerSecond, decimals));
+    const borrowRatePerSecondNumber = parseFloat(formatUnits(borrowRatePerSecond, decimals));
 
-    const supplyApr = supplyRatePerSecondNumber * (secondsPerDay * daysPerYear) * 100;
+    const borrowApr = borrowRatePerSecondNumber * (secondsPerDay * daysPerYear) * 100;
 
-    const supplyApy =
+    const borrowApy =
             (Math.pow(
-                (supplyRatePerSecondNumber) * secondsPerDay + 1,
+                (borrowRatePerSecondNumber) * secondsPerDay + 1,
                 daysPerYear
             ) - 1) * 100;
 
-	return toResult(`${asset} Supply Market: APR - ${supplyApr}%, APY - ${supplyApy}%.`);
+	return toResult(`${asset} Borrow Market: APR - ${borrowApr}%, APY - ${borrowApy}%.`);
 }

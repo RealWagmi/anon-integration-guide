@@ -1,14 +1,8 @@
 import { Address, encodeFunctionData, maxUint256, parseUnits } from 'viem';
-import {
-	FunctionReturn,
-	FunctionOptions,
-	TransactionParams,
-	toResult,
-	getChainFromName,
-    checkToApprove
-} from '@heyanon/sdk';
+import { FunctionReturn, FunctionOptions, toResult, EVM, EvmChain } from '@heyanon/sdk';
 import { supportedChains, TOKEN } from '../constants';
 import { dtokenAbi } from '../abis';
+const { getChainFromName, checkToApprove } = EVM.utils;
 
 interface Props {
 	chainName: string;
@@ -23,17 +17,19 @@ interface Props {
  * @param tools - System tools for blockchain interactions.
  * @returns Success message.
  */
-export async function withdrawAsset(
-	{ chainName, account, amount, asset }: Props,
-	{ sendTransactions, notify, getProvider }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function withdrawAsset({ chainName, account, amount, asset }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+	const {
+		evm: { getProvider, sendTransactions },
+		notify,
+	} = options;
+
 	// Check wallet connection
 	if (!account) return toResult('Wallet not connected', true);
 
     await notify('Checking everything...');
 
 	// Validate chain
-	const chainId = getChainFromName(chainName);
+	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Deepr Finance is not supported on ${chainName}`, true);
 
@@ -48,7 +44,7 @@ export async function withdrawAsset(
     const decimals = assetConfig.DECIMALS;
     const amountWithDecimals = parseUnits(amount, decimals);
     if (amountWithDecimals === 0n) return toResult('Amount must be greater than 0', true);
-    const balanceTx: TransactionParams = {
+    const balanceTx: EVM.types.TransactionParams = {
         target: marketAddress,
         data: encodeFunctionData({
                 abi: dtokenAbi,
@@ -64,7 +60,7 @@ export async function withdrawAsset(
     await notify(`Your lent balance is ${balance} ${asset}`)
     await notify(`Withdrawing ${amount} ${asset}...`);
 
-    const transactions: TransactionParams[] = [];
+    const transactions: EVM.types.TransactionParams[] = [];
 
 	// Approve the asset beforehand
 	await checkToApprove({
@@ -79,7 +75,7 @@ export async function withdrawAsset(
 	});
 
 	// Prepare withdraw transaction
-	const tx: TransactionParams = {
+	const tx: EVM.types.TransactionParams = {
 			target: marketAddress,
 			data: encodeFunctionData({
 					abi: dtokenAbi,

@@ -1,13 +1,8 @@
 import { Address, encodeFunctionData, parseUnits } from 'viem';
-import {
-	FunctionReturn,
-	FunctionOptions,
-	TransactionParams,
-	toResult,
-	getChainFromName,
-} from '@heyanon/sdk';
-import { supportedChains, TOKEN } from '../constants';
+import { FunctionReturn, FunctionOptions, toResult, EVM, EvmChain } from '@heyanon/sdk';
+import { CONTRACT, supportedChains, TOKEN } from '../constants';
 import { dtokenAbi, oracleAbi, unitrollerAbi } from '../abis';
+const { getChainFromName } = EVM.utils;
 
 interface Props {
 	chainName: string;
@@ -22,17 +17,18 @@ interface Props {
  * @param tools - System tools for blockchain interactions.
  * @returns Success message.
  */
-export async function borrowAsset(
-	{ chainName, account, amount, asset }: Props,
-	{ sendTransactions, notify, getProvider }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function borrowAsset({ chainName, account, amount, asset }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+    const {
+		evm: { getProvider, sendTransactions },
+		notify,
+	} = options;
 	// Check wallet connection
 	if (!account) return toResult('Wallet not connected', true);
 
     await notify('Checking everything...');
 
 	// Validate chain
-	const chainId = getChainFromName(chainName);
+	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Deepr Finance is not supported on ${chainName}`, true);
 
@@ -46,17 +42,17 @@ export async function borrowAsset(
 
     // Validate amount
     const [, liquidity, ] = await provider.readContract({
-        address: TOKEN.CONTRACT.UNITROLLER as Address,
+        address: CONTRACT.UNITROLLER,
         abi: unitrollerAbi,
         functionName: 'getAccountLiquidity',
         args: [account],
     }) as [bigint, bigint, bigint];
 
     await notify(`You can borrow up to ${liquidity / BigInt(1e18)} USD.`);
-    await notify('NEVER borrow near the maximum amount because your account will be instantly liquidated.');
+    await notify('NEVER borrow the maximum amount or your account will be instantly liquidated.');
 
     const assetPrice = await provider.readContract({
-        address: TOKEN.CONTRACT.ORACLE as Address,
+        address: CONTRACT.ORACLE,
         abi: oracleAbi,
         functionName: 'getPrice',
         args: [assetAddress],
@@ -71,7 +67,7 @@ export async function borrowAsset(
     await notify(`Borrowing ${amount} ${asset}...`);
 
 	// Prepare borrow transaction
-	const tx: TransactionParams = {
+	const tx: EVM.types.TransactionParams = {
 			target: marketAddress,
 			data: encodeFunctionData({
 					abi: dtokenAbi,

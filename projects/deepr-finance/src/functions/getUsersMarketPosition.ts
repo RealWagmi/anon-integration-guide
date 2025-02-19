@@ -1,12 +1,8 @@
 import { Address, formatUnits } from 'viem';
-import {
-	FunctionReturn,
-	FunctionOptions,
-	toResult,
-	getChainFromName,
-} from '@heyanon/sdk';
+import { FunctionReturn, FunctionOptions, toResult, EVM, EvmChain } from '@heyanon/sdk';
 import { supportedChains, TOKEN } from '../constants';
 import { dtokenAbi } from '../abis';
+const { getChainFromName } = EVM.utils;
 
 interface Props {
 	chainName: string;
@@ -22,15 +18,20 @@ interface Props {
  */
 export async function getUsersMarketPosition(
 	{ chainName, account, asset }: Props,
-	{ notify, getProvider }: FunctionOptions
+	options: FunctionOptions
 ): Promise<FunctionReturn> {
+    const {
+		evm: { getProvider },
+		notify,
+	} = options;
+
 	// Check wallet connection
 	if (!account) return toResult('Wallet not connected', true);
 
     await notify('Checking everything...');
 
 	// Validate chain
-	const chainId = getChainFromName(chainName);
+	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Deepr Finance is not supported on ${chainName}`, true);
 

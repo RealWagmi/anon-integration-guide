@@ -1,13 +1,8 @@
 import { Address, encodeFunctionData } from 'viem';
-import {
-	FunctionReturn,
-	FunctionOptions,
-	TransactionParams,
-	toResult,
-	getChainFromName,
-} from '@heyanon/sdk';
-import { supportedChains, TOKEN } from '../constants';
+import { FunctionReturn, FunctionOptions, toResult, EVM, EvmChain } from '@heyanon/sdk';
+import { CONTRACT, supportedChains } from '../constants';
 import { rewardpoolAbi } from '../abis';
+const { getChainFromName } = EVM.utils;
 
 interface Props {
 	chainName: string;
@@ -20,31 +15,33 @@ interface Props {
  * @param tools - System tools for blockchain interactions.
  * @returns Success message.
  */
-export async function withdrawLockedDeepr(
-	{ chainName, account }: Props,
-	{ sendTransactions, notify, getProvider }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function withdrawLockedDeepr({ chainName, account }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+	const {
+		evm: { getProvider, sendTransactions },
+		notify,
+	} = options;
+
 	// Check wallet connection
 	if (!account) return toResult('Wallet not connected', true);
 
     await notify('Checking everything...');
 
 	// Validate chain
-	const chainId = getChainFromName(chainName);
+	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Deepr Finance is not supported on ${chainName}`, true);
 
     const provider = getProvider(chainId);
 
 	const timelockSeconds = await provider.readContract({
-        address: TOKEN.CONTRACT.REWARDPOOL as Address,
+        address: CONTRACT.REWARDPOOL,
         abi: rewardpoolAbi,
         functionName: 'timelockInterval',
     }) as bigint;
 
     // Validate unstaking request
     const [, , , isRequestStarted, requestTimestamp] = await provider.readContract({
-        address: TOKEN.CONTRACT.REWARDPOOL as Address,
+        address: CONTRACT.REWARDPOOL,
         abi: rewardpoolAbi,
         functionName: 'userInfo',
         args: [account],
@@ -56,8 +53,8 @@ export async function withdrawLockedDeepr(
 	await notify('Withdrawing DEEPR...');
 
 	// Prepare withdraw transaction
-	const tx: TransactionParams = {
-			target: TOKEN.CONTRACT.REWARDPOOL as Address,
+	const tx: EVM.types.TransactionParams = {
+			target: CONTRACT.REWARDPOOL,
 			data: encodeFunctionData({
 					abi: rewardpoolAbi,
 					functionName: 'withdrawLockedTokens',

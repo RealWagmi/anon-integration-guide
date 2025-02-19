@@ -1,12 +1,8 @@
-import { Address, formatUnits } from 'viem';
-import {
-	FunctionReturn,
-	FunctionOptions,
-	toResult,
-	getChainFromName,
-} from '@heyanon/sdk';
-import { supportedChains, TOKEN } from '../constants';
+import { formatUnits } from 'viem';
+import { FunctionReturn, FunctionOptions, toResult, EVM, EvmChain } from '@heyanon/sdk';
+import { CONTRACT, supportedChains } from '../constants';
 import { rewardpoolAbi } from '../abis';
+const { getChainFromName } = EVM.utils;
 
 interface Props {
 	chainName: string;
@@ -20,12 +16,17 @@ interface Props {
  */
 export async function getStakeDeeprApr(
 	{ chainName }: Props,
-	{ notify, getProvider }: FunctionOptions
+	options: FunctionOptions
 ): Promise<FunctionReturn> {
+    const {
+		evm: { getProvider },
+		notify,
+	} = options;
+
     await notify('Checking everything...');
 
 	// Validate chain
-	const chainId = getChainFromName(chainName);
+	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Deepr Finance is not supported on ${chainName}`, true);
 
@@ -36,7 +37,7 @@ export async function getStakeDeeprApr(
     const daysPerYear = 365;
 
     const stakeRatePerSecond = await provider.readContract({
-        address: TOKEN.CONTRACT.REWARDPOOL as Address,
+        address: CONTRACT.REWARDPOOL,
         abi: rewardpoolAbi,
         functionName: 'rewardsPerSec'
     }) as bigint;

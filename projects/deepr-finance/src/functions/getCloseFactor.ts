@@ -1,12 +1,7 @@
-import { Address } from 'viem';
-import {
-	FunctionReturn,
-	FunctionOptions,
-	toResult,
-	getChainFromName,
-} from '@heyanon/sdk';
-import { supportedChains, ADDRESS } from '../constants';
+import { FunctionReturn, FunctionOptions, toResult, EvmChain, EVM } from '@heyanon/sdk';
+import { CONTRACT, supportedChains } from '../constants';
 import { unitrollerAbi } from '../abis';
+const { getChainFromName } = EVM.utils;
 
 interface Props {
 	chainName: string;
@@ -18,22 +13,23 @@ interface Props {
  * @param tools - System tools for blockchain interactions.
  * @returns Success message.
  */
-export async function getCloseFactor(
-	{ chainName }: Props,
-	{ notify, getProvider }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function getCloseFactor({ chainName }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+	const {
+		evm: { getProvider },
+		notify,
+	} = options;
 
     await notify('Checking everything...');
 
 	// Validate chain
-	const chainId = getChainFromName(chainName);
+	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Deepr Finance is not supported on ${chainName}`, true);
 
     const provider = getProvider(chainId);
 
     const closeFactorMantissa = await provider.readContract({
-        address: ADDRESS.CONTRACT.UNITROLLER as Address,
+        address: CONTRACT.UNITROLLER,
         abi: unitrollerAbi,
         functionName: 'closeFactorMantissa',
     }) as bigint;
