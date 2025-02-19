@@ -1,6 +1,3 @@
-# Getter Function Example
-
-```typescript
 import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { Address, formatUnits } from 'viem';
 import { ssrAbi, strAbi } from '../abis';
@@ -53,12 +50,3 @@ export async function getUserPositionOnSKY({ chainName, account }: Props, { evm:
 			`- Available to withdraw: ${formatUnits(maxWithdraw, 18)} USDS`,
 	);
 }
-```
-
-**Key Points**:
-
-- Validates input arguments.
-- Does not use `sendTransactions`.
-- Ensures data returned does not exceed 500 tokens.
-- Returns the result using `toResult`.
-- Includes JSDoc comments.

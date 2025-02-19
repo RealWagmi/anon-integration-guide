@@ -29,6 +29,6 @@ Getter functions retrieve data from the blockchain or protocols. They **do not**
    - Include JSDoc comments.
    - Explain any complex logic.
 
-## Example: `getRewardsExample`
+## Example: `getUserPositionOnSKY`
 
 [See the code in the [Getter Function Example](getter-function-example.md).

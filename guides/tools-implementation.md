@@ -19,8 +19,8 @@ Each module must include a `tools.ts` file that defines functions for LLM integr
 
    - Import required chain utilities:
      ```typescript
-     import { getChainName } from "@heyanon/sdk";
-     import { supportedChains } from "./constants";
+     import { AiTool, EVM } from '@heyanon/sdk';
+     import { supportedChains, supportedPools } from './constants';
      ```
    - Use chain enumeration for network parameters:
      ```typescript
@@ -33,9 +33,9 @@ Each module must include a `tools.ts` file that defines functions for LLM integr
    - Define supported chains in your module's `constants.ts`:
 
      ```typescript
-     import { ChainId } from "@heyanon/sdk";
-
-     export const supportedChains = [ChainId.ETHEREUM];
+     import { Chain, EVM } from '@heyanon/sdk';
+     const { ChainIds } = EVM.constants;
+     export const supportedChains = [ChainIds[Chain.BSC], ChainIds[Chain.ETHEREUM], ChainIds[Chain.BASE]];
      ```
 
    - Use `getChainName` utility to ensure consistent chain naming
@@ -48,44 +48,41 @@ Each module must include a `tools.ts` file that defines functions for LLM integr
 ## Example Implementation
 
 ```typescript
-import { getChainName } from "@heyanon/sdk";
+import { AiTool, EVM } from '@heyanon/sdk';
 import { supportedChains } from "./constants";
 
+const { getChainName } = EVM.utils;
 export const functions = [
   {
-    name: "depositExample",
-    description: "Deposits a specified amount of tokens into the protocol.",
-    parameters: {
-      type: "object",
-      properties: {
-        chainName: {
-          type: "string",
-          enum: supportedChains.map(getChainName),
-          description: "Name of the blockchain network",
-        },
-        userAddress: { type: "string", description: "User's wallet address" },
-        assetAddress: { type: "string", description: "Token contract address" },
-        amount: { type: "string", description: "Amount to deposit" },
-      },
-      required: ["chainName", "userAddress", "assetAddress", "amount"],
-    },
-  },
+		name: 'mintToken',
+		description: 'Mint or supply token to venus lending protocol.',
+		required: ['chainName', 'account', 'amount', 'tokenSymbol', 'pool'],
+		props: [
+			{ name: 'chainName', type: 'string', enum: supportedChains.map(getChainName), description: 'Chain name where to execute the transaction' },
+			{ name: 'account', type: 'string', description: 'Account address that will execute the transaction' },
+			{ name: 'tokenSymbol', type: 'string', description: 'The token symbol that is involved in the transaction.' },
+			{ name: 'pool', type: 'string', enum: supportedPools, description: 'The Pool in which the transaction will be executed.' },
+			{ name: 'amount', type: 'string', description: 'Amount of tokens in decimal format' },
+		],
+	},
   {
-    name: "getRewardsExample",
-    description: "Retrieves the rewards earned by a user.",
-    parameters: {
-      type: "object",
-      properties: {
-        chainName: {
-          type: "string",
-          enum: supportedChains.map(getChainName),
-          description: "Name of the blockchain network",
-        },
-        userAddress: { type: "string", description: "User's wallet address" },
-      },
-      required: ["chainName", "userAddress"],
-    },
-  },
+		name: 'getUserPositionOnSKY',
+		description: 'Get complete user position in Sky protocol including STR staking and SSR positions',
+		required: ['chainName', 'account'],
+		props: [
+			{
+				name: 'chainName',
+				type: 'string',
+				enum: supportedChains.map(getChainName),
+				description: 'Chain name',
+			},
+			{
+				name: 'account',
+				type: 'string',
+				description: 'Account address to check',
+			},
+		],
+	},
 ];
 ```
 
