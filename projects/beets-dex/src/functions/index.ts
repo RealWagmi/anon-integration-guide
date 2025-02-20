@@ -11,6 +11,7 @@ export { getBestAprForToken } from './getBestAprForToken';
 export { getBestAprForTokenPair } from './getBestAprForTokenPair';
 export { getPoolInfoFromPoolId } from './getPoolInfoFromPoolId';
 export { getPoolInfoFromPoolName } from './getPoolInfoFromPoolName';
+export { getBeetsCapabilities } from './getBeetsCapabilities';
 
 // askBeets specific tools
 export { getTokenBalance } from './getTokenBalance';

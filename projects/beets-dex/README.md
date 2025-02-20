@@ -1,6 +1,6 @@
 # Beets DEX - Swap efficiently on Sonic
 
-Beets DEX allows you to swap instantly hundreds of tokens, leveraging Sonic Chain ultrafast transaction speed and Balancer revolutionary architecture.
+Beets DEX is a decentralized exchange that allows you to swap tokens and earn yield on Sonic Chain, leveraging Balancer's revolutionary architecture for capital-efficient trading.
 
 ## Supported Networks
 
@@ -8,6 +8,8 @@ Beets DEX allows you to swap instantly hundreds of tokens, leveraging Sonic Chai
 
 ## Common Tasks
 
+- **Get information about what Beets DEX can do**
+    - What can I do on Beets DEX?
 - **Liquidity management**
     - Add 100 USDC liquidity to Boosted Stable Rings on @beets-dex
     - Add 100 USDC and 50 scUSD liquidity to Boosted Stable Rings on @beets-dex
@@ -40,6 +42,7 @@ Beets DEX allows you to swap instantly hundreds of tokens, leveraging Sonic Chai
 
 ## Available Functions
 
+- `getBeetsCapabilities`: Get information about what Beets DEX can do and example prompts.
 - `addLiquidity`: Add liquidity to a pool. Tokens do not need to be proportional as the protocol will automatically zap them for the correct proportions. If you provide one token amount, it will be zapped in the pool alone.
 - `removeLiquidity`: Remove liquidity from a pool and return the tokens to the user. The amount of liquidity to be removed is specified as a percentage of the user liquidity (default is 100%). The liquidity will be removed in the same proportions as the pool tokens.
 - `executeSwapExactIn`: Get a quote for and then execute a swap where you specify the EXACT AMOUNT YOU WANT TO SEND in order to buy a token. For example: "Swap 1 X for Y", "Sell 1 X for Y", "Buy Y with 1 X".
@@ -53,7 +56,6 @@ Beets DEX allows you to swap instantly hundreds of tokens, leveraging Sonic Chai
 - `getPoolsWithTokenPair`: Show pools with the given pair of tokens, sorted by TVL. Only includes pools with TVL > $100,000.
 - `getPoolInfoFromPoolId`: Get information about a specific pool, including the APR yield, the TVL, and any positions in the pool belonging to the user.
 - `getPoolInfoFromPoolName`: Get information about a specific pool by its name, including the APR yield and the TVL.
-- `getTokenAddressFromSymbol`: Get the address of a token from its symbol.
 
 ## Installation
 
