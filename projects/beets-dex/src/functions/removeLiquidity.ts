@@ -30,6 +30,20 @@ interface Props {
     slippageAsPercentage: `${number}` | null;
 }
 
+/**
+ * Removes liquidity from a Balancer pool proportionally across all tokens.
+ * Handles both regular and boosted pools, automatically unwrapping any wrapped tokens.
+ *
+ * @param {Object} props - The input parameters
+ * @param {string} props.chainName - Name of the blockchain network
+ * @param {Address} props.account - Address of the account removing liquidity
+ * @param {string} props.poolId - ID of the Balancer pool
+ * @param {`${number}`|null} props.removalPercentage - Percentage of user's liquidity to remove (e.g. "100" for 100%, "50" for 50%, etc.)
+ * @param {`${number}`|null} props.slippageAsPercentage - Maximum acceptable slippage as percentage (e.g. "1" for 1%)
+ * @param {FunctionOptions} options - HeyAnon SDK options, including provider and notification handlers
+ * @returns {Promise<FunctionReturn>} Result of the liquidity removal with transaction hash
+ * @throws Will throw if the user has staked positions or if pool validation fails
+ */
 export async function removeLiquidity({ chainName, account, poolId, removalPercentage, slippageAsPercentage }: Props, options: FunctionOptions): Promise<FunctionReturn> {
     const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);

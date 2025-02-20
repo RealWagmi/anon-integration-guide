@@ -10,6 +10,15 @@ interface Props {
     poolName: string;
 }
 
+/**
+ * Gets detailed information about pools matching a name.
+ * Returns multiple matches (with error) if name is ambiguous.
+ *
+ * @param {Object} props - The input parameters
+ * @param {string} props.chainName - Name of the blockchain network
+ * @param {string} props.poolName - Full or partial name of pool to search for
+ * @returns {Promise<FunctionReturn>} Detailed pool information or list of matching pools
+ */
 export async function getPoolInfoFromPoolName({ chainName, poolName }: Props): Promise<FunctionReturn> {
     const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);

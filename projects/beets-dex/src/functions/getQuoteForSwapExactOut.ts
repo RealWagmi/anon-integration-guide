@@ -12,6 +12,18 @@ interface Props {
     humanReadableAmountOut: string;
 }
 
+/**
+ * Gets a quote for a swap targeting an exact output amount, without executing the trade.
+ * Useful for price discovery and pre-trade analysis.
+ *
+ * @param {Object} props - The input parameters
+ * @param {string} props.chainName - Name of the blockchain network
+ * @param {Address} props.tokenInAddress - Address of token being sold
+ * @param {Address} props.tokenOutAddress - Address of token being bought
+ * @param {string} props.humanReadableAmountOut - Exact amount to receive in decimal form (e.g. "1.5" rather than "1500000000000000000")
+ * @param {FunctionOptions} options - HeyAnon SDK options, including provider and notification handlers
+ * @returns {Promise<FunctionReturn>} Quote details including required input amount and price impact
+ */
 export async function getQuoteForSwapExactOut({ chainName, tokenInAddress, tokenOutAddress, humanReadableAmountOut }: Props, options: FunctionOptions): Promise<FunctionReturn> {
     const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);

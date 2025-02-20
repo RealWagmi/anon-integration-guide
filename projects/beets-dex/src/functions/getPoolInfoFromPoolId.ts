@@ -14,6 +14,16 @@ interface Props {
     poolId: string;
 }
 
+/**
+ * Gets detailed information about a specific pool by its ID.
+ * Includes composition, TVL, APR and user position if account provided.
+ *
+ * @param {Object} props - The input parameters
+ * @param {string} props.chainName - Name of the blockchain network
+ * @param {Address|null} props.account - Optional address to check position for
+ * @param {string} props.poolId - ID of the pool to query
+ * @returns {Promise<FunctionReturn>} Detailed pool information
+ */
 export async function getPoolInfoFromPoolId({ chainName, account, poolId }: Props): Promise<FunctionReturn> {
     const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);

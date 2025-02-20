@@ -7,6 +7,16 @@ interface Props {
     symbol: string;
 }
 
+/**
+ * Resolves a token symbol to its address on a specific chain.
+ * Handles token synonyms if enabled in constants.
+ *
+ * @param {Object} props - The input parameters
+ * @param {string} props.chainName - Name of the blockchain network
+ * @param {string} props.symbol - Token symbol to look up
+ * @param {FunctionOptions} options - HeyAnon SDK options, including provider and notification handlers
+ * @returns {Promise<FunctionReturn>} Token address if found
+ */
 export async function getTokenAddressFromSymbol({ chainName, symbol }: Props, { notify }: FunctionOptions): Promise<FunctionReturn> {
     const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);

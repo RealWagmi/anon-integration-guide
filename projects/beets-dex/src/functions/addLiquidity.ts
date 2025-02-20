@@ -36,6 +36,23 @@ interface Props {
     slippageAsPercentage: `${number}` | null;
 }
 
+/**
+ * Adds liquidity to a Balancer pool. Can handle both regular and boosted pools.
+ * For boosted pools, it automatically handles adding liquidity using the underlying token.
+ *
+ * @param {Object} props - The input parameters
+ * @param {string} props.chainName - Name of the blockchain network
+ * @param {Address} props.account - Address of the account adding liquidity
+ * @param {string} props.poolId - ID of the Balancer pool
+ * @param {Address} props.token0Address - Address of the first token to add
+ * @param {string} props.token0Amount - Amount of first token in decimal form (e.g. "1.5" rather than "1500000000000000000")
+ * @param {Address|null} props.token1Address - Optional address of second token.  If omitted, the first token will be added as a single token.
+ * @param {string|null} props.token1Amount - Optional amount of second token in decimal form (e.g. "1.5" rather than "1500000000000000000")
+ * @param {`${number}`|null} props.slippageAsPercentage - Maximum acceptable slippage as percentage (e.g. "1" for 1%)
+ * @param {FunctionOptions} options - HeyAnon SDK options, including provider and notification handlers
+ * @returns {Promise<FunctionReturn>} Result of the liquidity addition with transaction hash
+ * @throws Will throw if token approvals fail or if the pool/token validation fails
+ */
 export async function addLiquidity(
     { chainName, account, poolId, token0Address, token0Amount, token1Address, token1Amount, slippageAsPercentage }: Props,
     options: FunctionOptions,

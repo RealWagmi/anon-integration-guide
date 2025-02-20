@@ -14,6 +14,17 @@ interface Props {
     token1Address: Address;
 }
 
+/**
+ * Finds all pools that contain a specific pair of tokens, sorted by TVL.
+ * Only includes pools above minimum TVL threshold.
+ *
+ * @param {Object} props - The input parameters
+ * @param {string} props.chainName - Name of the blockchain network
+ * @param {Address} props.token0Address - Address of first token
+ * @param {Address} props.token1Address - Address of second token
+ * @param {FunctionOptions} options - HeyAnon SDK options, including provider and notification handlers
+ * @returns {Promise<FunctionReturn>} List of pools sorted by TVL with pool details
+ */
 export async function getPoolsWithTokenPair({ chainName, token0Address, token1Address }: Props, { notify }: FunctionOptions): Promise<FunctionReturn> {
     const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);

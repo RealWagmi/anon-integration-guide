@@ -14,6 +14,16 @@ interface Props {
     tokenAddress: Address;
 }
 
+/**
+ * Finds pools with the highest APR that contain a specific token.
+ * Only includes pools above minimum TVL threshold.
+ *
+ * @param {Object} props - The input parameters
+ * @param {string} props.chainName - Name of the blockchain network
+ * @param {Address} props.tokenAddress - Address of token to search for
+ * @param {FunctionOptions} options - HeyAnon SDK options, including provider and notification handlers
+ * @returns {Promise<FunctionReturn>} List of pools sorted by APR with pool details
+ */
 export async function getBestAprForToken({ chainName, tokenAddress }: Props, { notify }: FunctionOptions): Promise<FunctionReturn> {
     const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);

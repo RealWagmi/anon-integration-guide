@@ -16,6 +16,21 @@ interface Props {
     slippageAsPercentage: `${number}` | null;
 }
 
+/**
+ * Executes a token swap with an exact input amount.
+ * Automatically handles approvals and native token wrapping/unwrapping.
+ *
+ * @param {Object} props - The input parameters
+ * @param {string} props.chainName - Name of the blockchain network
+ * @param {Address} props.account - Address of the account performing the swap
+ * @param {Address} props.tokenInAddress - Address of token being sold
+ * @param {Address} props.tokenOutAddress - Address of token being bought
+ * @param {string} props.humanReadableAmountIn - Exact amount to sell in decimal form (e.g. "1.5" rather than "1500000000000000000")
+ * @param {`${number}`|null} props.slippageAsPercentage - Maximum acceptable slippage as percentage (e.g. "1" for 1%)
+ * @param {FunctionOptions} options - HeyAnon SDK options, including provider and notification handlers
+ * @returns {Promise<FunctionReturn>} Result of the swap including amounts and transaction hash
+ * @throws Will throw if token approvals fail or if insufficient balance
+ */
 export async function executeSwapExactIn(
     { chainName, account, tokenInAddress, tokenOutAddress, humanReadableAmountIn, slippageAsPercentage }: Props,
     options: FunctionOptions,

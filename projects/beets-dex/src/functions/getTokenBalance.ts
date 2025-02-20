@@ -9,6 +9,17 @@ interface Props {
     tokenAddress: Address;
 }
 
+/**
+ * Gets the token balance for a specific account.
+ * Returns balance in human readable format.
+ *
+ * @param {Object} props - The input parameters
+ * @param {string} props.chainName - Name of the blockchain network
+ * @param {Address} props.account - Address to check balance for
+ * @param {Address} props.tokenAddress - Address of token to check
+ * @param {FunctionOptions} options - HeyAnon SDK options, including provider and notification handlers
+ * @returns {Promise<FunctionReturn>} Token balance with symbol
+ */
 export async function getTokenBalance({ chainName, account, tokenAddress }: Props, { notify, evm: { getProvider } }: FunctionOptions): Promise<FunctionReturn> {
     const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);

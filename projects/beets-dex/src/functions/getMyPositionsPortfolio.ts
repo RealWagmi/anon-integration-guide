@@ -12,6 +12,15 @@ interface Props {
     account: Address;
 }
 
+/**
+ * Retrieves all liquidity positions for a given account in Balancer pools.
+ * Returns positions sorted by USD value.
+ *
+ * @param {Object} props - The input parameters
+ * @param {string} props.chainName - Name of the blockchain network
+ * @param {Address} props.account - Address to check positions for
+ * @returns {Promise<FunctionReturn>} List of positions with pool details, token amounts, and APR
+ */
 export async function getMyPositionsPortfolio({ chainName, account }: Props): Promise<FunctionReturn> {
     const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
