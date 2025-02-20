@@ -44,7 +44,7 @@ Integration with CoW Swap
     - "Sell 0.5 WBTC when WBTC hits $45,000 on BASE."
 - postSwapOrder
     - "Swap 100 USDC for DAI on BASE."
-    - "Swap 50 LINK for ETH on BASE."
+    - "Swap 50 USDC for ETH on BASE."
 
 ## Installation
 
