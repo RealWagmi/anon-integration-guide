@@ -11,7 +11,7 @@ import {
   COW_PROTOCOL_SETTLEMENT_CONTRACT_ADDRESS,
   SupportedChainId,
 } from "@cowprotocol/cow-sdk";
-import { cowswapSettlementAbi } from "../abis/cowswap_settlement_abi";
+import { cowswapSettlementAbi } from "../abis/cowswapSettlementAbi";
 
 interface Props {
   chainName: string;

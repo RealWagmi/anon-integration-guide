@@ -19,7 +19,7 @@ import {
   TradingSdk,
 } from "@cowprotocol/cow-sdk";
 import { getTokenInfo, slippageToleranceToBips } from "../utils";
-import { cowswapSettlementAbi } from "../abis/cowswap_settlement_abi";
+import { cowswapSettlementAbi } from "../abis/cowswapSettlementAbi";
 
 interface Props {
   chainName: string;

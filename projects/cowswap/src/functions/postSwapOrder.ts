@@ -5,7 +5,7 @@ import { FunctionReturn, FunctionOptions, toResult } from "@heyanon/sdk";
 import { supportedChains } from "../constants";
 import { VoidSigner } from "@ethersproject/abstract-signer";
 
-import { cowswapSettlementAbi } from "../abis/cowswap_settlement_abi";
+import { cowswapSettlementAbi } from "../abis/cowswapSettlementAbi";
 import {
   COW_PROTOCOL_VAULT_RELAYER_ADDRESS,
   COW_PROTOCOL_SETTLEMENT_CONTRACT_ADDRESS,
