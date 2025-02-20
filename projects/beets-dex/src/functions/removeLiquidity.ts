@@ -1,4 +1,4 @@
-import { Address, parseUnits } from 'viem';
+import { Address, erc20Abi, parseUnits } from 'viem';
 import { EVM, EvmChain, FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
 import {
     InputAmount,
@@ -74,7 +74,16 @@ export async function removeLiquidity({ chainName, account, poolId, removalPerce
     const wethIsEth = true;
 
     // Check that the user has liquidity in the pool
-    if (!pool.userBalance || Number(pool.userBalance.totalBalance) === 0) return toResult(`You do not have any liquidity in pool '${pool.name}'`, true);
+    const publicClient = options.evm.getProvider(chainId);
+    const bptBalanceInWei = await publicClient.readContract({ address: poolState.address, abi: erc20Abi, functionName: 'balanceOf', args: [account] });
+    if (bptBalanceInWei === 0n) return toResult(`You do not have any liquidity in pool '${pool.name}'`, true);
+    options.notify(`You have ${toHumanReadableAmount(bptBalanceInWei, 18, 18, 18)} liquidity pool tokens in ${pool.name}`);
+
+    // The subgraph lags with respect to onchain data; check that the user balance is up to date.
+    if (!pool.userBalance || parseUnits(pool.userBalance.walletBalance, 18) !== bptBalanceInWei) {
+        options.notify(`Subgraph out of sync: ${pool.userBalance?.walletBalance} != ${toHumanReadableAmount(bptBalanceInWei, 18, 18, 18)}`);
+        return toResult(`Protocol info is out of sync.  Please try again in a minute to allow the subgraph to catch up.`, true);
+    }
 
     // Check that the user has no staked positions in the pool
     // TODO: Handle staking with optional argument "unstakeIfNeeded"
@@ -114,7 +123,6 @@ export async function removeLiquidity({ chainName, account, poolId, removalPerce
     // to minimze slippage
 
     const liquidityToRemoveAmount: InputAmount = { rawAmount: liquidityToRemoveInWei, decimals: 18, address: poolState.address };
-    const publicClient = options.evm.getProvider(chainId);
     const rpcUrl = getDefaultRpcUrl(publicClient);
     if (!rpcUrl) throw new Error(`Chain ${chainName} not supported by viem`);
     const removeLiquidityInput: RemoveLiquidityInput | RemoveLiquidityBoostedProportionalInput = {

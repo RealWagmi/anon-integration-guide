@@ -69,8 +69,23 @@ export async function validateTokensAreInPool(chainName: string, pool: GqlPoolMi
 }
 
 /**
+ * Validate that an account has a given token, regardless of
+ * the amount.
+ *
+ * The token must be in Balancer's token list, otherwise the function
+ * will return false.
+ */
+export async function validateHasToken(publicClient: PublicClient, account: Address, tokenAddress: Address): Promise<boolean> {
+    const [hasBalance, _errorMessage, _balances] = await validateTokenBalances(publicClient, account, [{ address: tokenAddress, amount: '0' }]);
+    return hasBalance;
+}
+
+/**
  * Validates if an account has sufficient balance for the specified tokens and amounts.
  * Returns [hasBalance, errorMessage, balances] where balances contains the human readable amounts
+ *
+ * Both the token address and the amount must be in Balancer's token list, otherwise the function
+ * will return false.
  */
 export async function validateTokenBalances(
     publicClient: PublicClient,
