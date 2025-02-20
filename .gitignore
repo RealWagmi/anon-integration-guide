@@ -1,4 +1,73 @@
+# SDK and build artifacts
 *.log
 .DS_Store
 node_modules
 dist
+
+# Dependencies
+jspm_packages
+
+# Build outputs
+build
+out
+*.tsbuildinfo
+
+# Environment and config
+.env
+.env.local
+.env.*
+.npmrc
+
+# Logs and debugging
+logs
+npm-debug.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Cache and temp directories
+.npm
+.eslintcache
+.stylelintcache
+.node_repl_history
+.cache
+.temp
+.tmp
+*.pid
+*.seed
+*.pid.lock
+
+# IDE and editor files
+.idea
+.vscode
+*.swp
+*.swo
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Coverage and test outputs
+coverage
+.nyc_output
+lib-cov
+
+# Yarn specific
+projects/amped/.yarn/*
+!projects/amped/.yarn/patches
+!projects/amped/.yarn/plugins
+!projects/amped/.yarn/releases
+!projects/amped/.yarn/sdks
+!projects/amped/.yarn/versions
+projects/amped/.pnp.*
+.yarnrc.yml
+yarn-debug.log*
+yarn-error.log*
+.yarn-integrity
+
+# TypeScript
+*.tsbuildinfo
+.tscache
+tsconfig.tsbuildinfo
+
+# HeyAnon SDK specific
+.heyanon-cache
+.heyanon-debug.log*
