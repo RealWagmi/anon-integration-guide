@@ -1,4 +1,6 @@
 node_modules
 .vscode
 .env
-contracts
+src/contracts
+src/requests
+dist
