@@ -1,0 +1,25 @@
+{
+    "name": "@projects/SwapX",
+    "version": "1.0.0",
+    "type": "module",
+    "scripts": {
+        "yarn": "yarn install"
+    },
+    "dependencies": {
+        "@heyanon/sdk": "^1.0.4",
+        "bignumber.js": "^9.1.2",
+        "dotenv": "^16.4.7",
+        "tevm": "^1.0.0-next.127",
+        "viem": "^2.22.11"
+    },
+    "license": "MIT",
+    "engines": {
+        "npm": "please-use-yarn",
+        "node": ">=18.x",
+        "yarn": ">=1.22"
+    },
+    "devDependencies": {
+        "@types/node": "^22.13.1",
+        "vitest": "^3.0.5"
+    }
+}
