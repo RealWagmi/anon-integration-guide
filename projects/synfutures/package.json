@@ -1,0 +1,47 @@
+{
+    "name": "@heyanon/synfutures-integration",
+    "version": "1.0.0",
+    "description": "SynFutures integration for HeyAnon",
+    "main": "dist/index.js",
+    "module": "dist/index.mjs",
+    "types": "dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "engines": {
+        "node": ">=18"
+    },
+    "scripts": {
+        "build": "tsc",
+        "dev": "tsup --watch",
+        "test": "jest",
+        "test:prompts": "ts-node src/examples/run.ts",
+        "test:batch": "ts-node src/examples/batch-test.ts",
+        "lint": "eslint . --ext .ts",
+        "example": "ts-node src/examples/run.ts",
+        "ask": "ts-node src/examples/run.ts"
+    },
+    "dependencies": {
+        "@heyanon/sdk": "^2.0.4",
+        "@synfutures/oyster-sdk": "0.2.29",
+        "chalk": "^4.1.2",
+        "dotenv": "^16.4.5",
+        "minimist": "^1.2.8",
+        "openai": "^4.28.4",
+        "viem": "^2.7.9"
+    },
+    "devDependencies": {
+        "@types/jest": "^29.5.12",
+        "@types/minimist": "^1.2.5",
+        "@types/node": "^20.11.19",
+        "@typescript-eslint/eslint-plugin": "^5.0.0",
+        "@typescript-eslint/parser": "^5.0.0",
+        "eslint": "^8.0.0",
+        "jest": "^29.7.0",
+        "ts-jest": "^29.1.2",
+        "ts-node": "^10.9.2",
+        "tslib": "^2.6.2",
+        "tsup": "6.7.0",
+        "typescript": "^5.3.3"
+    }
+}
