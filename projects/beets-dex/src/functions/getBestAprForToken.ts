@@ -1,6 +1,6 @@
 import { Address } from 'viem';
 import { EVM, FunctionReturn, toResult, FunctionOptions, EvmChain } from '@heyanon/sdk';
-import { MAX_FETCH_POOLS, MIN_TVL, supportedChains } from '../constants';
+import { MAX_FETCH_POOLS, MAX_POOLS_IN_RESULTS, MIN_TVL, supportedChains } from '../constants';
 import { BeetsClient } from '../helpers/beets/client';
 import { GqlChain, GqlPoolOrderBy, GqlPoolOrderDirection } from '../helpers/beets/types';
 import { formatPoolMinimal } from '../helpers/pools';
@@ -42,5 +42,10 @@ export async function getBestAprForToken({ chainName, tokenAddress }: Props, { n
         return toResult(`No pools found containing token ${tokenAddress} with minimum TVL of ${to$$$(MIN_TVL, 0, 0)}`);
     }
 
-    return toResult(matchingPools.map((pool, index) => formatPoolMinimal(simplifyPool(pool), `${index + 1}. `)).join('\n'));
+    return toResult(
+        matchingPools
+            .slice(0, MAX_POOLS_IN_RESULTS)
+            .map((pool, index) => formatPoolMinimal(simplifyPool(pool), `${index + 1}. `))
+            .join('\n'),
+    );
 }

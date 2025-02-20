@@ -1,6 +1,6 @@
 import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { Address } from 'viem';
-import { MAX_FETCH_POOLS, MIN_TVL, supportedChains } from '../constants';
+import { MAX_FETCH_POOLS, MAX_POOLS_IN_RESULTS, MIN_TVL, supportedChains } from '../constants';
 import { BeetsClient } from '../helpers/beets/client';
 import { GqlChain, GqlPoolOrderBy, GqlPoolOrderDirection } from '../helpers/beets/types';
 import { anonChainNameToGqlChain } from '../helpers/chains';
@@ -48,5 +48,10 @@ export async function getPoolsWithTokenPair({ chainName, token0Address, token1Ad
         return toResult(`No pools found containing both ${token0.symbol} and ${token1.symbol} with minimum TVL of ${to$$$(MIN_TVL, 0, 0)}`);
     }
 
-    return toResult(matchingPools.map((pool, index) => formatPoolMinimal(simplifyPool(pool), `${index + 1}. `)).join('\n'));
+    return toResult(
+        matchingPools
+            .slice(0, MAX_POOLS_IN_RESULTS)
+            .map((pool, index) => formatPoolMinimal(simplifyPool(pool), `${index + 1}. `))
+            .join('\n'),
+    );
 }

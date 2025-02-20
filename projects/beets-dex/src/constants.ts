@@ -11,6 +11,12 @@ export const supportedChains = [ChainIds.sonic];
 export const NATIVE_TOKEN_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
 
 /**
+ * Maximum number of pools to show in the search results,
+ * important to avoid the 500 token limit for getters.
+ */
+export const MAX_POOLS_IN_RESULTS = 10;
+
+/**
  * Maximum number of pools to fetch from the backend in
  * a single request.
  */
