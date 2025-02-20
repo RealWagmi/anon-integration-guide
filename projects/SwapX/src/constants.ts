@@ -63,6 +63,8 @@ export const voterV3Address = '0xC1AE2779903cfB84CB9DEe5c03EcEAc32dc407F2' as Ad
 
 export const rewardsDistributor = '0x1C236D74f61C6199e6D23201D53a59753f4c94D3';
 
+export const multiCall3 = '0xcA11bde05977b3631167028862bE2a173976CA11';
+
 export const ichiVaults: IchiVault[] = [
     {
         title: 'wS-WETH',

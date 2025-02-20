@@ -1,7 +1,7 @@
 import { ChainId, FunctionOptions, toResult, TransactionParams } from '@heyanon/sdk';
 import { Address, encodeFunctionData } from 'viem';
 import { VotingEscrow } from '../../utils/VotingEscrow';
-import { voterV3Abi } from '../../abis/VoterV3Abi';
+import { voterV3Abi } from '../../abis/voterV3Abi';
 import { voterV3Address } from '../../constants';
 
 interface Props {

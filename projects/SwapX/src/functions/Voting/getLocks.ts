@@ -1,6 +1,6 @@
 import { ChainId, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
-import { Address, formatUnits, parseEther } from 'viem';
-import { SONIC_TOKENS, veSWPxAddress } from '../../constants';
+import { Address, formatUnits } from 'viem';
+import { SONIC_TOKENS } from '../../constants';
 import { epochTimestampInSecToDate } from '../../utils';
 import { VotingEscrow } from '../../utils/VotingEscrow';
 

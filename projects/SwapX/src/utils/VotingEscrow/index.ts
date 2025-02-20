@@ -2,11 +2,26 @@ import { Address, PublicClient } from 'viem';
 import { votingEscrowAbi } from '../../abis/votingEscrowAbi';
 import { veSWPxAddress } from '../../constants';
 
+interface LockInfo {
+    lockId: bigint;
+    amount: string;
+    unlockTime: bigint;
+}
+
 export class VotingEscrow {
     provider: PublicClient;
 
     constructor(_provider: PublicClient) {
         this.provider = _provider;
+    }
+
+    async getBalanceOfNFT(tokenId: bigint) {
+        return (await this.provider.readContract({
+            abi: votingEscrowAbi,
+            address: veSWPxAddress,
+            functionName: 'balanceOfNFT',
+            args: [tokenId],
+        })) as bigint;
     }
 
     async getSwpxLocksTokenIds(account: Address) {
@@ -16,12 +31,6 @@ export class VotingEscrow {
             functionName: 'balanceOf',
             args: [account],
         })) as bigint;
-
-        interface LockInfo {
-            lockId: bigint;
-            amount: string;
-            unlockTime: bigint;
-        }
 
         let lockInfos: LockInfo[] = [];
 

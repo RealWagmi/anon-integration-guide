@@ -1,5 +1,5 @@
 import { PublicClient } from 'viem';
-import { rewardsDistributorAbi } from '../../abis/RewardsDistributorAbi';
+import { rewardsDistributorAbi } from '../../abis/rewardsDistributorAbi';
 import { rewardsDistributor } from '../../constants';
 
 export class RewardsDistributor {
