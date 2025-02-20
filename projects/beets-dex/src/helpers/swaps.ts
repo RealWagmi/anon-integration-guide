@@ -1,12 +1,11 @@
-import { DECIMAL_SCALES, ExactInQueryOutput, ExactOutQueryOutput, SwapKind, Token, WAD } from '@balancer/sdk';
+import { ExactInQueryOutput, ExactOutQueryOutput, SwapKind, Token, WAD } from '@balancer/sdk';
 import { Address } from 'viem';
-import { FunctionOptions, getChainFromName } from '@heyanon/sdk';
+import { EVM, FunctionOptions, EvmChain } from '@heyanon/sdk';
 import { anonChainNameToBalancerChainId, getDefaultRpcUrl } from '../helpers/chains';
 import { BalancerApi, Swap, TokenAmount } from '@balancer/sdk';
 import { getBalancerTokenByAddress, toHumanReadableAmount, toSignificant } from '../helpers/tokens';
 import { DEFAULT_PRECISION, NATIVE_TOKEN_ADDRESS } from '../constants';
 import { Slippage, SwapBuildCallInput, SwapBuildOutputExactIn, SwapBuildOutputExactOut } from '@balancer/sdk';
-import { TransactionParams } from '@heyanon/sdk';
 
 export interface GetQuoteProps {
     chainName: string;
@@ -32,7 +31,7 @@ interface BuildSwapTransactionProps {
 }
 
 interface BuildSwapTransactionResult {
-    transaction: TransactionParams;
+    transaction: EVM.types.TransactionParams;
     minAmountOutOrMaxAmountIn: TokenAmount;
     expectedAmount: TokenAmount;
     tokenIn: Token;
@@ -55,7 +54,7 @@ interface BuildSwapTransactionResult {
  */
 export async function getSwapQuote(
     { chainName, tokenInAddress, tokenOutAddress, humanReadableAmount, swapKind }: GetQuoteProps,
-    { notify, getProvider }: FunctionOptions,
+    { notify, evm: { getProvider } }: FunctionOptions,
 ): Promise<GetQuoteResult> {
     // Get tokens
     const balancerTokenIn = await getBalancerTokenByAddress(chainName, tokenInAddress);
@@ -96,7 +95,7 @@ export async function getSwapQuote(
     });
 
     // Get RPC URL
-    const chainId = getChainFromName(chainName);
+    const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     const publicClient = getProvider(chainId);
     const rpcUrl = getDefaultRpcUrl(publicClient);
     if (!rpcUrl) throw new Error(`Chain ${chainName} not supported by viem`);
@@ -196,7 +195,7 @@ export function buildSwapTransaction({ account, quote, slippageAsPercentage, dea
     }
 
     const callData = swap.buildCall(buildInput);
-    const transaction: TransactionParams = {
+    const transaction: EVM.types.TransactionParams = {
         target: callData.to,
         data: callData.callData,
         value: callData.value,

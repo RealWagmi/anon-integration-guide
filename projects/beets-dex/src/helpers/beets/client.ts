@@ -34,7 +34,7 @@ export class BeetsClient {
     }
 
     private async sleep(ms: number): Promise<void> {
-        return new Promise(resolve => setTimeout(resolve, ms));
+        return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
     private async executeQueryWithRetry<T>(query: string, variables?: any, fragments: string[] = [], attempt: number = 1): Promise<T> {
@@ -707,10 +707,10 @@ export class BeetsClient {
 function staticMemoize(cacheKeyFn?: (...args: any[]) => string) {
     const cache = new Map<string, any>();
 
-    return function(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         const originalMethod = descriptor.value;
 
-        descriptor.value = async function(...args: any[]) {
+        descriptor.value = async function (...args: any[]) {
             const key = cacheKeyFn ? cacheKeyFn(...args) : JSON.stringify(args);
 
             if (cache.has(key)) {

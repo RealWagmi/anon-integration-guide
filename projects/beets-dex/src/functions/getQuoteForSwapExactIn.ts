@@ -1,5 +1,5 @@
 import { Address } from 'viem';
-import { FunctionReturn, FunctionOptions, getChainFromName, toResult } from '@heyanon/sdk';
+import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { SwapKind } from '@balancer/sdk';
 import { formatSwapQuote, getSwapQuote } from '../helpers/swaps';
 import { supportedChains } from '../constants';
@@ -13,7 +13,7 @@ interface Props {
 }
 
 export async function getQuoteForSwapExactIn({ chainName, tokenInAddress, tokenOutAddress, humanReadableAmountIn }: Props, options: FunctionOptions): Promise<FunctionReturn> {
-    const chainId = getChainFromName(chainName);
+    const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
     if (!validateTokenPositiveDecimalAmount(humanReadableAmountIn)) return toResult(`Invalid swap amount: ${humanReadableAmountIn}`, true);

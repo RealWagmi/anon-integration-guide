@@ -46,7 +46,7 @@ export function fromHeyAnonToolsToOpenAiTools(tool: AiTool): OpenAI.Chat.Complet
             parameters: {
                 type: 'object',
                 properties: Object.fromEntries(
-                    tool.props.map(prop => [
+                    tool.props.map((prop) => [
                         prop.name,
                         {
                             type: prop.type,

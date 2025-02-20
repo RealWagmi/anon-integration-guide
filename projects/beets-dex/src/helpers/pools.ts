@@ -54,7 +54,7 @@ export interface SimplifiedPoolToken {
  * - Pool type
  */
 export function simplifyPool(pool: GqlPoolMinimal): SimplifiedPool {
-    const [minApr, maxApr] = computePoolTotalApr(pool);
+    const [minApr, _maxApr] = computePoolTotalApr(pool);
     return {
         name: pool.name,
         type: formatPoolType(pool.type),

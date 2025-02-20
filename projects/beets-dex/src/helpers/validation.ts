@@ -4,7 +4,7 @@ import { GqlPoolMinimal, GqlPoolTokenDetail, GqlToken } from './beets/types';
 import { PublicClient, erc20Abi, parseUnits } from 'viem';
 import { NATIVE_TOKEN_ADDRESS } from '../constants';
 import { toHumanReadableAmount } from './tokens';
-import { getChainFromName } from '@heyanon/sdk';
+import { EVM, EvmChain } from '@heyanon/sdk';
 
 /**
  * Validate an amount of tokens, in decimal form, expressed as a string.
@@ -52,7 +52,7 @@ export async function validateTokensAreInPool(chainName: string, pool: GqlPoolMi
     }
 
     const poolAddresses = poolTokens.map((t) => t.address);
-    const chainId = getChainFromName(chainName);
+    const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return [false, `Invalid chain name: ${chainName}`];
 
     const wrappedTokenAddresses = getWrappedTokens(tokenAddresses, chainId);

@@ -1,5 +1,5 @@
 import { Address, erc20Abi, formatUnits, parseUnits, TransactionReceipt } from 'viem';
-import { FunctionReturn, FunctionOptions, getChainFromName, toResult, checkToApprove, TransactionParams } from '@heyanon/sdk';
+import { EVM, FunctionReturn, FunctionOptions, toResult, EvmChain } from '@heyanon/sdk';
 import { SwapKind } from '@balancer/sdk';
 import { GetQuoteResult, getSwapQuote, buildSwapTransaction } from '../helpers/swaps';
 import { DEFAULT_DEADLINE_FROM_NOW, DEFAULT_SLIPPAGE_AS_PERCENTAGE, NATIVE_TOKEN_ADDRESS, supportedChains } from '../constants';
@@ -20,7 +20,7 @@ export async function executeSwapExactOut(
     { chainName, account, tokenInAddress, tokenOutAddress, humanReadableAmountOut, slippageAsPercentage }: Props,
     options: FunctionOptions,
 ): Promise<FunctionReturn> {
-    const chainId = getChainFromName(chainName);
+    const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
     if (!validateTokenPositiveDecimalAmount(humanReadableAmountOut)) return toResult(`Invalid swap amount: ${humanReadableAmountOut}`, true);
@@ -64,7 +64,7 @@ export async function executeSwapExactOut(
     // Check token balance against max amount in (including slippage)
     const maxAmountInInWei = minAmountOutOrMaxAmountIn.amount;
     const humanReadableMaxAmountIn = toHumanReadableAmount(maxAmountInInWei, minAmountOutOrMaxAmountIn.token.decimals);
-    const provider = options.getProvider(chainId);
+    const provider = options.evm.getProvider(chainId);
     let balance: bigint;
     if (tokenInAddress === NATIVE_TOKEN_ADDRESS) {
         balance = await provider.getBalance({
@@ -84,11 +84,11 @@ export async function executeSwapExactOut(
         );
     }
 
-    const transactions: TransactionParams[] = [];
+    const transactions: EVM.types.TransactionParams[] = [];
 
     // Should we approve the token spend?
     if (tokenInAddress !== NATIVE_TOKEN_ADDRESS) {
-        await checkToApprove({
+        await EVM.utils.checkToApprove({
             args: { account, target: tokenInAddress, spender: quote.quote.to, amount: maxAmountInInWei },
             provider,
             transactions,
@@ -113,7 +113,7 @@ export async function executeSwapExactOut(
     const { hashes, messages, receipts } = await sendTransactionsAndWaitForReceipts({
         publicClient: provider,
         transactions,
-        sendTransactions: options.sendTransactions,
+        sendTransactions: options.evm.sendTransactions,
         account,
         chainId,
     });

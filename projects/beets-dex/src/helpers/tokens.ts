@@ -4,7 +4,7 @@ import { Token as BalancerToken, NATIVE_ASSETS } from '@balancer/sdk';
 import { BeetsClient } from './beets/client';
 import { anonChainNameToGqlChain } from './chains';
 import { DEFAULT_PRECISION, EQUIVALENT_TOKENS, NATIVE_TOKEN_ADDRESS, TOKEN_SYNONYMS } from '../constants';
-import { getChainFromName } from '@heyanon/sdk';
+import { EVM, EvmChain } from '@heyanon/sdk';
 
 /**
  * Convert a Token from the GraphQL endpoint into a Token from
@@ -28,7 +28,7 @@ export async function getGqlTokenBySymbol(chainName: string, symbol: string, acc
         throw new Error(`Chain ${chainName} not supported by Beets backend`);
     }
     const allTokens = await client.getTokens([gqlChain]);
-    const chainId = getChainFromName(chainName);
+    const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (acceptSynonyms) {
         const synonyms = TOKEN_SYNONYMS[chainId as keyof typeof TOKEN_SYNONYMS];
         if (synonyms) {
@@ -39,7 +39,7 @@ export async function getGqlTokenBySymbol(chainName: string, symbol: string, acc
         }
     }
 
-    const token = allTokens.find(token => token.symbol.toLowerCase() === symbol.toLowerCase());
+    const token = allTokens.find((token) => token.symbol.toLowerCase() === symbol.toLowerCase());
     if (!token) return null;
 
     return token;
@@ -56,7 +56,7 @@ export async function getGqlTokenByAddress(chainName: string, address: Address):
         throw new Error(`Chain ${chainName} not supported by Beets backend`);
     }
     const allTokens = await client.getTokens([gqlChain]);
-    const token = allTokens.find(token => token.address.toLowerCase() === address.toLowerCase());
+    const token = allTokens.find((token) => token.address.toLowerCase() === address.toLowerCase());
     if (!token) return null;
     return token;
 }
@@ -138,14 +138,14 @@ export function to$$$(num: number, minFractionDigits: number | undefined = 2, ma
  * WETH and stETH depending on the chain configuration.
  */
 export async function getEquivalentTokenAddresses(chainName: string, token: BalancerToken): Promise<Address[]> {
-    const chainId = getChainFromName(chainName);
+    const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return [];
 
     const equivalentTokens = EQUIVALENT_TOKENS[chainId as keyof typeof EQUIVALENT_TOKENS];
     const equivalentSymbols = equivalentTokens?.[(token.symbol as string).toUpperCase() as keyof typeof equivalentTokens] || [];
 
     const addresses = await Promise.all(
-        equivalentSymbols.map(async symbol => {
+        equivalentSymbols.map(async (symbol) => {
             const token = await getBalancerTokenBySymbol(chainName, symbol);
             return token?.address;
         }),
@@ -160,7 +160,7 @@ export async function getEquivalentTokenAddresses(chainName: string, token: Bala
  * function will return the input token address.
  */
 export function getWrappedTokens(tokens: Address[], chainId: number): Address[] {
-    return tokens.map(token => getWrappedToken(token, chainId));
+    return tokens.map((token) => getWrappedToken(token, chainId));
 }
 
 /**

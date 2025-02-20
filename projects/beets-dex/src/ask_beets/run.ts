@@ -1,4 +1,3 @@
-import chalk from 'chalk';
 import { askBeets } from './askBeets';
 import dotenv from 'dotenv';
 

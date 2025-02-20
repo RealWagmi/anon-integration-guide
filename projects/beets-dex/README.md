@@ -58,7 +58,7 @@ Beets DEX allows you to swap instantly hundreds of tokens, leveraging Sonic Chai
 ## Installation
 
 ```bash
-yarn add @heyanon/beets-dex
+pnpm add @heyanon/beets-dex
 ```
 
 ## Test with the askBeets agent
@@ -67,7 +67,7 @@ I've built a simple agent called `askBeets` to test the integration. To run it, 
 
 ```bash
 cd projects/beets-dex
-yarn install
+pnpm install
 cp .env.example .env
 # insert test wallet private key into .env
 # insert OpenAI or DeepSeek key into .env
@@ -76,15 +76,15 @@ cp .env.example .env
 and then you can ask questions directly:
 
 ```bash
-yarn ask "Swap 100 USDC for BEETS"
-yarn ask "Add 100 USDC liquidity to Boosted Stable Rings"
-yarn ask "Remove half of my liquidity from Boosted Stable Rings"
+pnpm ask "Swap 100 USDC for BEETS"
+pnpm ask "Add 100 USDC liquidity to Boosted Stable Rings"
+pnpm ask "Remove half of my liquidity from Boosted Stable Rings"
 ```
 
 To debug the actual LLM responses, run `askBeets` with `--verbose` flag:
 
 ```bash
-yarn ask "Swap 100 USDC for BEETS" --verbose
+pnpm ask "Swap 100 USDC for BEETS" --verbose
 ```
 
 ## Future improvements

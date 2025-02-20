@@ -1,4 +1,4 @@
-import { AiTool, getChainName } from '@heyanon/sdk';
+import { AiTool, EVM } from '@heyanon/sdk';
 import { supportedChains } from './constants';
 
 export const tools: AiTool[] = [
@@ -10,7 +10,7 @@ export const tools: AiTool[] = [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
+                enum: supportedChains.map(EVM.utils.getChainName),
                 description: 'Chain name',
             },
             {
@@ -60,7 +60,7 @@ export const tools: AiTool[] = [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
+                enum: supportedChains.map(EVM.utils.getChainName),
                 description: 'Chain name',
             },
             {
@@ -95,7 +95,7 @@ export const tools: AiTool[] = [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
+                enum: supportedChains.map(EVM.utils.getChainName),
                 description: 'Chain name',
             },
             {
@@ -136,7 +136,7 @@ export const tools: AiTool[] = [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
+                enum: supportedChains.map(EVM.utils.getChainName),
                 description: 'Chain name',
             },
             {
@@ -176,7 +176,7 @@ export const tools: AiTool[] = [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
+                enum: supportedChains.map(EVM.utils.getChainName),
                 description: 'Chain name',
             },
             {
@@ -205,7 +205,7 @@ export const tools: AiTool[] = [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
+                enum: supportedChains.map(EVM.utils.getChainName),
                 description: 'Chain name',
             },
             {
@@ -234,7 +234,7 @@ export const tools: AiTool[] = [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
+                enum: supportedChains.map(EVM.utils.getChainName),
                 description: 'Chain name',
             },
             {
@@ -253,7 +253,7 @@ export const tools: AiTool[] = [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
+                enum: supportedChains.map(EVM.utils.getChainName),
                 description: 'Chain name',
             },
             {
@@ -272,7 +272,7 @@ export const tools: AiTool[] = [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
+                enum: supportedChains.map(EVM.utils.getChainName),
                 description: 'Chain name',
             },
             {
@@ -295,7 +295,7 @@ export const tools: AiTool[] = [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
+                enum: supportedChains.map(EVM.utils.getChainName),
                 description: 'Chain name',
             },
             {
@@ -313,7 +313,7 @@ export const tools: AiTool[] = [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
+                enum: supportedChains.map(EVM.utils.getChainName),
                 description: 'Chain name',
             },
             {
@@ -336,7 +336,7 @@ export const tools: AiTool[] = [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
+                enum: supportedChains.map(EVM.utils.getChainName),
                 description: 'Chain name',
             },
             {
@@ -359,7 +359,7 @@ export const tools: AiTool[] = [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
+                enum: supportedChains.map(EVM.utils.getChainName),
                 description: 'Chain name',
             },
             {

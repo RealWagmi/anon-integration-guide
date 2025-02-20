@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import { privateKeyToAccount } from 'viem/accounts';
 import { createPublicClient, http, createWalletClient } from 'viem';
 import { sonic } from 'viem/chains';
-import { FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
+import { EVM, FunctionOptions, FunctionReturn, SolanaFunctionOptions, toResult } from '@heyanon/sdk';
 import { tools } from '../tools';
 import { tools as askBeetsTools } from './tools';
 import * as functions from '../functions';
@@ -42,7 +42,7 @@ function getSystemPrompt(options: AskBeetsOptions | undefined, chainName: string
     }
 }
 
-function getSystemPromptMinimal(options: AskBeetsOptions | undefined, chainName: string, account: string) {
+function getSystemPromptMinimal(_options: AskBeetsOptions | undefined, chainName: string, account: string) {
     const basePrompt = `You will interact with the ${PROTOCOL_NAME} protocol via your tools. Given a request, you will need to determine which tools to call.`;
 
     const tokenPrompt = `\nYou WILL NOT modify token addresses, names or symbols, not even to make them plural.`;
@@ -52,7 +52,7 @@ function getSystemPromptMinimal(options: AskBeetsOptions | undefined, chainName:
     return basePrompt + tokenPrompt + toolConfigPrompt;
 }
 
-function getSystemPromptExtended(options: AskBeetsOptions | undefined, chainName: string, account: string) {
+function getSystemPromptExtended(_options: AskBeetsOptions | undefined, chainName: string, account: string) {
     const basePrompt = `You will interact with the ${PROTOCOL_NAME} protocol via your tools. Given a request, you will need to determine which tools to call.
 
 For operations that require multiple steps (like "withdraw all"), you should first get required information before executing actions.
@@ -122,46 +122,51 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
 
     // Create minimal FunctionOptions object
     const functionOptions: FunctionOptions = {
-        getProvider: () => provider,
-        sendTransactions: async ({ chainId, account, transactions }) => {
-            // Create wallet client
-            const walletClient = createWalletClient({
-                account: signer,
-                chain: provider.chain,
-                transport: http(),
-            });
-
-            const txsReturns = [];
-
-            // Send transactions sequentially
-            for (const tx of transactions) {
-                const hash = await walletClient.sendTransaction({
-                    to: tx.target,
-                    data: tx.data,
-                    value: tx.value || 0n,
+        evm: {
+            getProvider: () => provider,
+            getRecipient: () => Promise.resolve(signer.address),
+            sendTransactions: async (props: EVM.types.SendTransactionProps) => {
+                // Create wallet client
+                const walletClient = createWalletClient({
+                    account: signer,
+                    chain: provider.chain,
+                    transport: http(),
                 });
 
-                const receipt = await provider.waitForTransactionReceipt({ hash });
+                const txsReturns = [];
 
-                if (!receipt?.status || receipt.status !== 'success') {
-                    throw new Error(`Transaction failed with hash: ${receipt.transactionHash}`);
+                // Send transactions sequentially
+                for (const tx of props.transactions) {
+                    const hash = await walletClient.sendTransaction({
+                        to: tx.target,
+                        data: tx.data,
+                        value: tx.value || 0n,
+                    });
+
+                    const receipt = await provider.waitForTransactionReceipt({ hash });
+
+                    if (!receipt?.status || receipt.status !== 'success') {
+                        throw new Error(`Transaction failed with hash: ${receipt.transactionHash}`);
+                    }
+
+                    txsReturns.push({
+                        hash: receipt.transactionHash,
+                        message: `Transaction confirmed with hash: ${receipt.transactionHash}`,
+                    });
                 }
 
-                txsReturns.push({
-                    hash: receipt.transactionHash,
-                    message: `Transaction confirmed with hash: ${receipt.transactionHash}`,
-                });
-            }
-
-            return {
-                isMultisig: false,
-                data: txsReturns,
-            };
+                return {
+                    isMultisig: false,
+                    data: txsReturns,
+                };
+            },
+            signTypedDatas: async (typedDatas) => {
+                const signatures = await Promise.all(typedDatas.map((typedData) => signer.signTypedData(typedData)));
+                return signatures;
+            },
         },
-        signTypedDatas: async typedDatas => {
-            const signatures = await Promise.all(typedDatas.map(typedData => signer.signTypedData(typedData)));
-            return signatures;
-        },
+        // Placeholder for Solana options
+        solana: {} as SolanaFunctionOptions,
         notify,
     };
 
@@ -185,7 +190,7 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
         const completion = await llmClient.chat.completions.create({
             model: getLlmModel(),
             messages: messages as OpenAI.Chat.Completions.ChatCompletionMessageParam[],
-            tools: [...tools, ...askBeetsTools].map(tool => fromHeyAnonToolsToOpenAiTools(tool)),
+            tools: [...tools, ...askBeetsTools].map((tool) => fromHeyAnonToolsToOpenAiTools(tool)),
             tool_choice: 'auto',
         });
 
@@ -268,7 +273,7 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
     // Return all tool calls followed by the final comment of the assistant
     let combinedMessage = funcReturns
         .map((r, i) => {
-            const toolName = messages.find(m => m.role === 'tool' && m.content === r.data)?.name || 'Unknown Tool';
+            const toolName = messages.find((m) => m.role === 'tool' && m.content === r.data)?.name || 'Unknown Tool';
             const msg = chalk.underline.bold(`TOOL CALL ${i + 1}`) + `: ${toolName}`;
             return `${msg}\n${r.data}`;
         })

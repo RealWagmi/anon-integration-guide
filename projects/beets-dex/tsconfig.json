@@ -38,6 +38,6 @@
         // error out if import and file system have a casing mismatch. Recommended by TS
         "forceConsistentCasingInFileNames": true,
         // allow experimental decorators, used for memoization
-        "experimentalDecorators": true
+        "experimentalDecorators": true,
     }
 }

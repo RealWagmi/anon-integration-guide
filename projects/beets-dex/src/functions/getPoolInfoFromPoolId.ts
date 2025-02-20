@@ -1,8 +1,8 @@
 import { Address } from 'viem';
-import { FunctionReturn, toResult, FunctionOptions, getChainFromName } from '@heyanon/sdk';
-import { MAX_FETCH_POOLS, supportedChains } from '../constants';
+import { EVM, FunctionReturn, toResult, EvmChain } from '@heyanon/sdk';
+import { supportedChains } from '../constants';
 import { BeetsClient } from '../helpers/beets/client';
-import { GqlChain, GqlPoolOrderBy, GqlPoolOrderDirection } from '../helpers/beets/types';
+import { GqlChain } from '../helpers/beets/types';
 import { formatPoolMinimal } from '../helpers/pools';
 import { simplifyPool } from '../helpers/pools';
 import { anonChainNameToGqlChain } from '../helpers/chains';
@@ -14,8 +14,8 @@ interface Props {
     poolId: string;
 }
 
-export async function getPoolInfoFromPoolId({ chainName, account, poolId }: Props, { notify }: FunctionOptions): Promise<FunctionReturn> {
-    const chainId = getChainFromName(chainName);
+export async function getPoolInfoFromPoolId({ chainName, account, poolId }: Props): Promise<FunctionReturn> {
+    const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
     if (!validatePoolId(poolId)) return toResult(`Invalid pool ID: ${poolId}`, true);

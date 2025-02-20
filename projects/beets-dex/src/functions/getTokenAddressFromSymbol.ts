@@ -1,4 +1,4 @@
-import { FunctionReturn, toResult, FunctionOptions, getChainFromName } from '@heyanon/sdk';
+import { EVM, FunctionReturn, toResult, FunctionOptions, EvmChain } from '@heyanon/sdk';
 import { ALLOW_TOKEN_SYNONYMS, supportedChains } from '../constants';
 import { getGqlTokenBySymbol } from '../helpers/tokens';
 
@@ -8,7 +8,7 @@ interface Props {
 }
 
 export async function getTokenAddressFromSymbol({ chainName, symbol }: Props, { notify }: FunctionOptions): Promise<FunctionReturn> {
-    const chainId = getChainFromName(chainName);
+    const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Chain ${chainName} is not supported`, true);
 

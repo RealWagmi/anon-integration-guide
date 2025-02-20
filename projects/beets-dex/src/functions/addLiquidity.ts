@@ -1,5 +1,5 @@
 import { Address, parseUnits } from 'viem';
-import { FunctionReturn, FunctionOptions, getChainFromName, toResult, checkToApprove, TransactionParams } from '@heyanon/sdk';
+import { EVM, FunctionReturn, FunctionOptions, toResult, EvmChain } from '@heyanon/sdk';
 import {
     AddLiquidityKind,
     AddLiquidity,
@@ -40,7 +40,7 @@ export async function addLiquidity(
     { chainName, account, poolId, token0Address, token0Amount, token1Address, token1Amount, slippageAsPercentage }: Props,
     options: FunctionOptions,
 ): Promise<FunctionReturn> {
-    const chainId = getChainFromName(chainName);
+    const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
     if (token0Address === token1Address) return toResult(`Tokens cannot have the same address`, true);
@@ -83,7 +83,7 @@ export async function addLiquidity(
     const wethIsEth = token0Address === NATIVE_TOKEN_ADDRESS || token1Address === NATIVE_TOKEN_ADDRESS;
 
     // Check balances
-    const publicClient = options.getProvider(chainId);
+    const publicClient = options.evm.getProvider(chainId);
     const tokensToCheck = [{ address: token0Address, amount: token0Amount }];
     if (token1Address && token1Amount) tokensToCheck.push({ address: token1Address, amount: token1Amount });
     const [hasBalance, balanceError] = await validateTokenBalances(publicClient, account, tokensToCheck);
@@ -115,7 +115,7 @@ export async function addLiquidity(
 
     // BUILD ADD LIQUIDITY TRANSACTION
     let buildOutput: AddLiquidityBuildCallOutput;
-    const transactions: TransactionParams[] = [];
+    const transactions: EVM.types.TransactionParams[] = [];
     let addressToApprove: Address;
     let bptOut: bigint;
     let queryOutput: AddLiquidityQueryOutput | AddLiquidityBoostedQueryOutput;
@@ -164,14 +164,14 @@ export async function addLiquidity(
 
     // Build approval transactions (if needed)
     if (token0Address !== NATIVE_TOKEN_ADDRESS) {
-        await checkToApprove({
+        await EVM.utils.checkToApprove({
             args: { account, target: token0Address, spender: addressToApprove, amount: amount0InWei },
             provider: publicClient,
             transactions,
         });
     }
     if (token1Address && amount1InWei && token1Address !== NATIVE_TOKEN_ADDRESS) {
-        await checkToApprove({
+        await EVM.utils.checkToApprove({
             args: { account, target: token1Address, spender: addressToApprove, amount: amount1InWei },
             provider: publicClient,
             transactions,
@@ -196,7 +196,7 @@ export async function addLiquidity(
 
     // Send transactions
     await options.notify(transactions.length > 1 ? `Sending approve & add liquidity transactions...` : 'Sending add liquidity transaction...');
-    const result = await options.sendTransactions({ chainId, account, transactions });
+    const result = await options.evm.sendTransactions({ chainId, account, transactions });
     const message = result.data[result.data.length - 1].message;
     return toResult(`Successfully added liquidity to pool ${pool.name}. ${message}`);
 }

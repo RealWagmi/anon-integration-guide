@@ -1,4 +1,4 @@
-import { FunctionOptions, FunctionReturn, getChainFromName, toResult } from '@heyanon/sdk';
+import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { Address } from 'viem';
 import { MAX_FETCH_POOLS, MIN_TVL, supportedChains } from '../constants';
 import { BeetsClient } from '../helpers/beets/client';
@@ -15,7 +15,7 @@ interface Props {
 }
 
 export async function getPoolsWithTokenPair({ chainName, token0Address, token1Address }: Props, { notify }: FunctionOptions): Promise<FunctionReturn> {
-    const chainId = getChainFromName(chainName);
+    const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
     if (token0Address === token1Address) return toResult(`Tokens must be different`, true);

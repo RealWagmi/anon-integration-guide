@@ -1,5 +1,5 @@
 import { Address, parseUnits } from 'viem';
-import { FunctionReturn, FunctionOptions, getChainFromName, toResult, checkToApprove, TransactionParams } from '@heyanon/sdk';
+import { EVM, EvmChain, FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
 import {
     InputAmount,
     RemoveLiquidityInput,
@@ -31,7 +31,7 @@ interface Props {
 }
 
 export async function removeLiquidity({ chainName, account, poolId, removalPercentage, slippageAsPercentage }: Props, options: FunctionOptions): Promise<FunctionReturn> {
-    const chainId = getChainFromName(chainName);
+    const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
 
@@ -100,7 +100,7 @@ export async function removeLiquidity({ chainName, account, poolId, removalPerce
     // to minimze slippage
 
     const liquidityToRemoveAmount: InputAmount = { rawAmount: liquidityToRemoveInWei, decimals: 18, address: poolState.address };
-    const publicClient = options.getProvider(chainId);
+    const publicClient = options.evm.getProvider(chainId);
     const rpcUrl = getDefaultRpcUrl(publicClient);
     if (!rpcUrl) throw new Error(`Chain ${chainName} not supported by viem`);
     const removeLiquidityInput: RemoveLiquidityInput | RemoveLiquidityBoostedProportionalInput = {
@@ -112,7 +112,7 @@ export async function removeLiquidity({ chainName, account, poolId, removalPerce
 
     let queryOutput: RemoveLiquidityQueryOutput | RemoveLiquidityBoostedQueryOutput;
     let buildOutput: RemoveLiquidityBuildCallOutput;
-    const transactions: TransactionParams[] = [];
+    const transactions: EVM.types.TransactionParams[] = [];
     let addressToApprove: Address | null;
 
     // Handle special case: the user wants to add liquidity to a boosted token.
@@ -151,7 +151,7 @@ export async function removeLiquidity({ chainName, account, poolId, removalPerce
     }
 
     if (addressToApprove) {
-        await checkToApprove({
+        await EVM.utils.checkToApprove({
             args: { account, target: pool.address, spender: addressToApprove, amount: buildOutput.maxBptIn.amount },
             provider: publicClient,
             transactions,
@@ -188,7 +188,7 @@ export async function removeLiquidity({ chainName, account, poolId, removalPerce
 
     // Send transactions
     await options.notify(transactions.length > 1 ? `Sending approve & remove liquidity transactions...` : 'Sending remove liquidity transaction...');
-    const result = await options.sendTransactions({ chainId, account, transactions });
+    const result = await options.evm.sendTransactions({ chainId, account, transactions });
     const message = result.data[result.data.length - 1].message;
     return toResult(`Successfully removed liquidity from pool ${pool.name}. ${message}`);
 }

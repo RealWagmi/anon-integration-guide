@@ -1,5 +1,5 @@
 import { Address } from 'viem';
-import { FunctionReturn, toResult, FunctionOptions, getChainFromName } from '@heyanon/sdk';
+import { EVM, FunctionReturn, toResult, EvmChain } from '@heyanon/sdk';
 import { MAX_FETCH_POOLS, supportedChains } from '../constants';
 import { BeetsClient } from '../helpers/beets/client';
 import { GqlChain, GqlPoolOrderBy, GqlPoolOrderDirection } from '../helpers/beets/types';
@@ -12,8 +12,8 @@ interface Props {
     account: Address;
 }
 
-export async function getMyPositionsPortfolio({ chainName, account }: Props, { notify }: FunctionOptions): Promise<FunctionReturn> {
-    const chainId = getChainFromName(chainName);
+export async function getMyPositionsPortfolio({ chainName, account }: Props): Promise<FunctionReturn> {
+    const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
 

@@ -1,6 +1,8 @@
-import { ChainId } from '@heyanon/sdk';
+import { EVM } from '@heyanon/sdk';
 
-export const supportedChains = [ChainId.SONIC];
+const { ChainIds } = EVM.constants;
+
+export const supportedChains = [ChainIds.sonic];
 
 /**
  * The address used to identify the native token by Balancer,
@@ -27,7 +29,7 @@ export const MIN_TVL = 100_000;
  * Always use upper-case symbols as keys.
  */
 export const TOKEN_SYNONYMS = {
-    [ChainId.SONIC]: {
+    [ChainIds.sonic]: {
         SONIC: 'S',
         USDC: 'USDC.e',
         ETH: 'WETH',
@@ -48,7 +50,7 @@ export const TOKEN_SYNONYMS = {
  * Always use upper-case symbols as keys.
  */
 export const EQUIVALENT_TOKENS = {
-    [ChainId.SONIC]: {
+    [ChainIds.sonic]: {
         ETH: ['WETH', 'STETH'],
         WETH: ['STETH'],
         S: ['WS', 'STS'],
