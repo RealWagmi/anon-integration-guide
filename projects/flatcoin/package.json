@@ -1,29 +1,45 @@
 {
-    "name": "@projects/flatcoin",
+    "name": "@heyanon/flatcoin",
     "version": "1.0.0",
-    "scripts": {
-        "yarn": "yarn install",
-        "build": "tsc",
-        "test": "jest",
-        "test:watch": "jest --watch",
-        "test:integration": "ts-node test.ts"
+    "license": "MIT",
+    "main": "dist/index.js",
+    "typings": "dist/index.d.ts",
+    "module": "dist/index.mjs",
+    "files": [
+        "dist"
+    ],
+    "engines": {
+        "node": ">=18"
     },
-    "dependencies": {
-        "@heyanon/sdk": "^1.0.4",
-        "viem": "^2.22.9"
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "start": "tsup --watch",
+        "build": "tsup",
+        "test": "vitest --run",
+        "lint": "tsdx lint",
+        "prepare": "pnpm run build",
+        "size": "size-limit",
+        "analyze": "size-limit --why",
+        "format": "prettier --write \"*/**/*.ts\"",
+        "test:flatcoin": "tsx src/ask_flatcoin/run.ts"
     },
     "devDependencies": {
-        "typescript": "^5.0.0",
+        "@size-limit/preset-small-lib": "^9.0.0",
+        "@types/big.js": "^6.2.0",
         "@types/jest": "^29.5.12",
-        "@testing-library/jest-dom": "^6.4.2",
-        "jest": "^29.7.0",
-        "ts-jest": "^29.1.2",
-        "ts-node": "^10.9.2"
+        "@types/node": "^20.11.19",
+        "ts-node": "^10.9.2",
+        "tsdx": "^0.14.1",
+        "tslib": "^2.6.2",
+        "tsup": "^7.2.0",
+        "tsx": "^4.19.3",
+        "typescript": "^5.3.3"
     },
-    "license": "MIT",
-    "engines": {
-        "npm": "please-use-yarn",
-        "node": ">=18.x",
-        "yarn": ">=1.22"
+    "dependencies": {
+        "@heyanon/sdk": "^2.0.2",
+        "viem": "2.22.9",
+        "vitest": "^2.1.8"
     }
 }

@@ -1,16 +1,11 @@
 // functions/mintUnit.ts
-import { Address, encodeFunctionData } from "viem";
-import {
-    FunctionReturn,
-    FunctionOptions,
-    TransactionParams,
-    toResult,
-    getChainFromName,
-    checkToApprove
-} from "@heyanon/sdk";
-import { ADDRESSES } from "../constants";
-import { delayedOrderAbi } from "../abis/delayedOrder";
-import { getKeeperFee } from "./getKeeperFee";
+import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult, Chain } from '@heyanon/sdk';
+import { Address, encodeFunctionData } from 'viem';
+import { ADDRESSES } from '../constants';
+import { delayedOrderAbi } from '../abis/delayedOrder';
+import { getKeeperFee } from './getKeeperFee';
+
+const { checkToApprove, getChainFromName } = EVM.utils;
 
 interface Props {
     chainName: string;          // Network name (BASE)
@@ -26,35 +21,36 @@ interface Props {
  * @returns Transaction result
  */
 export async function mintUnit(
-    { chainName, rethAmount, slippageTolerance = "0.25", account }: Props,
-    { sendTransactions, notify, getProvider }: FunctionOptions
+    { chainName, rethAmount, slippageTolerance = '0.25', account }: Props,
+    { notify, evm: { getProvider, sendTransactions } }: FunctionOptions
 ): Promise<FunctionReturn> {
-    if (!account) return toResult("Wallet not connected", true);
+    if (!account) return toResult('Wallet not connected', true);
 
-    const chainId = getChainFromName(chainName);
+    const chainId = getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 
     try {
-        await notify("Preparing to mint UNIT tokens...");
+        await notify('Preparing to mint UNIT tokens...');
         const provider = getProvider(chainId);
+        const addresses = ADDRESSES[Chain.BASE];
 
         // Get keeper fee using the standalone function
         let keeperFee;
         try {
             keeperFee = await getKeeperFee(provider);
         } catch (feeError) {
-            return toResult("Failed to get keeper fee", true);
+            return toResult('Failed to get keeper fee', true);
         }
 
-        const transactions: TransactionParams[] = [];
+        const transactions: EVM.types.TransactionParams[] = [];
         const marginAmountBigInt = BigInt(rethAmount);
 
         // Check and prepare rETH approval if needed
         await checkToApprove({
             args: {
                 account,
-                target: ADDRESSES.RETH_TOKEN as `0x${string}`,
-                spender: ADDRESSES.DELAYED_ORDER as `0x${string}`,
+                target: addresses.RETH_TOKEN,
+                spender: addresses.DELAYED_ORDER,
                 amount: marginAmountBigInt
             },
             provider,
@@ -65,11 +61,11 @@ export async function mintUnit(
         const minAmountOut = calculateMinAmountOut(rethAmount, slippageTolerance);
 
         // Prepare mint transaction
-        const tx: TransactionParams = {
-            target: ADDRESSES.DELAYED_ORDER as `0x${string}`,
+        const tx: EVM.types.TransactionParams = {
+            target: addresses.DELAYED_ORDER,
             data: encodeFunctionData({
                 abi: delayedOrderAbi,
-                functionName: "announceStableDeposit",
+                functionName: 'announceStableDeposit',
                 args: [
                     marginAmountBigInt,  // Amount of rETH to deposit
                     minAmountOut,        // Minimum UNIT tokens to receive
@@ -80,7 +76,7 @@ export async function mintUnit(
 
         transactions.push(tx);
 
-        await notify("Waiting for transaction confirmation...");
+        await notify('Waiting for transaction confirmation...');
         
         const result = await sendTransactions({ chainId, account, transactions });
         

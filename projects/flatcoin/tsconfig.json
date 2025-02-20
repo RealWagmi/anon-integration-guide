@@ -1,13 +1,24 @@
 {
+    "include": ["src", "types"],
     "compilerOptions": {
+        "outDir": "./dist",
+        "module": "esnext",
+        "lib": ["dom", "esnext"],
+        "importHelpers": true,
         "target": "es2020",
-        "module": "commonjs",
+        "declaration": true,
+        "sourceMap": true,
+        "rootDir": "./src",
         "strict": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "moduleResolution": "node",
+        "jsx": "react",
         "esModuleInterop": true,
         "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true,
-        "outDir": "./dist"
+        "forceConsistentCasingInFileNames": true
     },
-    "include": ["./**/*"],
     "exclude": ["node_modules", "dist"]
 }

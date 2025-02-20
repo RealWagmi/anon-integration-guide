@@ -1,6 +1,6 @@
 // functions/getKeeperFee.ts
 import { encodeFunctionData, decodeAbiParameters } from "viem";
-import { FunctionReturn, toResult } from "@heyanon/sdk";
+import { FunctionReturn, toResult, Chain } from "@heyanon/sdk";
 import { ADDRESSES } from "../constants";
 
 export const keeperFeeAbi = [
@@ -20,13 +20,14 @@ export const keeperFeeAbi = [
  */
 export async function getKeeperFee(provider: any): Promise<bigint> {
     try {
+        const addresses = ADDRESSES[Chain.BASE];
         const keeperFeeData = encodeFunctionData({
             abi: keeperFeeAbi,
             functionName: "getKeeperFee"
         });
 
         const result = await provider.call({
-            to: ADDRESSES.KEEPER_FEE as `0x${string}`,
+            to: addresses.KEEPER_FEE,
             data: keeperFeeData
         });
 
