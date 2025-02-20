@@ -1,6 +1,5 @@
 import { AiTool } from '@heyanon/sdk';
 import OpenAI from 'openai';
-import { FunctionParameters } from 'openai/resources';
 
 /**
  * Convert a HeyAnon tools to an OpenAI tool.

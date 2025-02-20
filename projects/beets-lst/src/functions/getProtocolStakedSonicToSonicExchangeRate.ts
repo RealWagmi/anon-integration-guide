@@ -1,5 +1,5 @@
-import { Address, formatUnits } from 'viem';
-import { FunctionReturn, toResult, getChainFromName, FunctionOptions } from '@heyanon/sdk';
+import { formatUnits } from 'viem';
+import { FunctionReturn, toResult, EVM, FunctionOptions, EvmChain } from '@heyanon/sdk';
 import { supportedChains, STS_ADDRESS } from '../constants';
 import { stsAbi } from '../abis';
 
@@ -7,8 +7,8 @@ interface Props {
     chainName: string;
 }
 
-export async function getProtocolStakedSonicToSonicExchangeRate({ chainName }: Props, { notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
-    const chainId = getChainFromName(chainName);
+export async function getProtocolStakedSonicToSonicExchangeRate({ chainName }: Props, { notify, evm: { getProvider } }: FunctionOptions): Promise<FunctionReturn> {
+    const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
 

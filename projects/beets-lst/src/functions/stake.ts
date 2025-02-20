@@ -1,5 +1,5 @@
 import { Address, encodeFunctionData, parseUnits, formatUnits } from 'viem';
-import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName, checkToApprove } from '@heyanon/sdk';
+import { FunctionReturn, FunctionOptions, toResult, EVM, EvmChain } from '@heyanon/sdk';
 import { supportedChains, STS_ADDRESS, MIN_DEPOSIT_IN_WEI } from '../constants';
 import { stsAbi } from '../abis';
 
@@ -12,10 +12,10 @@ interface Props {
 /**
  * Stake Sonic tokens (S) in Beets.fi liquid staking module
  */
-export async function stake({ chainName, account, amount }: Props, { sendTransactions, getProvider, notify }: FunctionOptions): Promise<FunctionReturn> {
+export async function stake({ chainName, account, amount }: Props, { evm: { sendTransactions }, notify }: FunctionOptions): Promise<FunctionReturn> {
     if (!account) return toResult('Wallet not connected', true);
 
-    const chainId = getChainFromName(chainName);
+    const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
 
@@ -26,10 +26,10 @@ export async function stake({ chainName, account, amount }: Props, { sendTransac
     if (amountInWei < parseUnits('0.01', 18)) return toResult('Amount must be greater than 0.01 S', true);
     if (amountInWei < MIN_DEPOSIT_IN_WEI) return toResult(`Amount must be greater than ${formatUnits(MIN_DEPOSIT_IN_WEI, 18)} S`, true);
 
-    const transactions: TransactionParams[] = [];
+    const transactions: EVM.types.TransactionParams[] = [];
 
     // Prepare stake transaction
-    const tx: TransactionParams = {
+    const tx: EVM.types.TransactionParams = {
         target: STS_ADDRESS,
         data: encodeFunctionData({
             abi: stsAbi,

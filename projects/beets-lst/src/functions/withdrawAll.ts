@@ -1,5 +1,5 @@
 import { Address, encodeFunctionData } from 'viem';
-import { FunctionReturn, toResult, getChainFromName, FunctionOptions, TransactionParams } from '@heyanon/sdk';
+import { FunctionReturn, toResult, EVM, FunctionOptions, EvmChain } from '@heyanon/sdk';
 import { supportedChains, STS_ADDRESS } from '../constants';
 import { stsAbi } from '../abis';
 import { getOpenWithdrawRequests } from '../helpers/withdrawals';
@@ -9,8 +9,8 @@ interface Props {
     account: Address;
 }
 
-export async function withdrawAll({ chainName, account }: Props, { sendTransactions, notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
-    const chainId = getChainFromName(chainName);
+export async function withdrawAll({ chainName, account }: Props, { evm: { sendTransactions }, notify, evm: { getProvider } }: FunctionOptions): Promise<FunctionReturn> {
+    const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
 
@@ -27,8 +27,8 @@ export async function withdrawAll({ chainName, account }: Props, { sendTransacti
     const withdrawIds = claimableWithdrawals.map((w) => BigInt(w.id));
     const totalAmount = claimableWithdrawals.reduce((sum, w) => sum + Number(w.amount), 0);
 
-    const transactions: TransactionParams[] = [];
-    const tx: TransactionParams = {
+    const transactions: EVM.types.TransactionParams[] = [];
+    const tx: EVM.types.TransactionParams = {
         target: STS_ADDRESS,
         data: encodeFunctionData({
             abi: stsAbi,

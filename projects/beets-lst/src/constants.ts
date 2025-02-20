@@ -1,6 +1,8 @@
-import { ChainId } from '@heyanon/sdk';
+import { EVM } from '@heyanon/sdk';
 
-export const supportedChains = [ChainId.SONIC];
+const { ChainIds } = EVM.constants;
+
+export const supportedChains = [ChainIds.sonic];
 
 export const STS_ADDRESS = '0xe5da20f15420ad15de0fa650600afc998bbe3955';
 

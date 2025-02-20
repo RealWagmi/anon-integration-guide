@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import { privateKeyToAccount } from 'viem/accounts';
 import { createPublicClient, http, createWalletClient } from 'viem';
 import { sonic } from 'viem/chains';
-import { EVM, FunctionOptions, FunctionReturn, SolanaFunctionOptions, toResult } from '@heyanon/sdk';
+import { EVM, FunctionOptions, FunctionReturn, SolanaFunctionOptions, TonFunctionOptions, toResult } from '@heyanon/sdk';
 import { tools } from '../tools';
 import { tools as askBeetsTools } from './tools';
 import * as functions from '../functions';
@@ -167,6 +167,8 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
         },
         // Placeholder for Solana options
         solana: {} as SolanaFunctionOptions,
+        // Placeholder for Telegram TON options
+        ton: {} as TonFunctionOptions,
         notify,
     };
 

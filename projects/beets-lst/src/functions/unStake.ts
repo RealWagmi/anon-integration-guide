@@ -1,5 +1,5 @@
 import { Address, encodeFunctionData, formatUnits, parseUnits } from 'viem';
-import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName } from '@heyanon/sdk';
+import { FunctionReturn, FunctionOptions, toResult, EVM, EvmChain } from '@heyanon/sdk';
 import { supportedChains, STS_ADDRESS, MIN_UNDELEGATE_IN_WEI } from '../constants';
 import { stsAbi } from '../abis';
 import { fetchValidators, findHighestDelegatedValidator } from '../helpers/client';
@@ -19,10 +19,10 @@ interface Props {
  * After 14 days, the user will be able to withdraw their Sonic tokens (S)
  * using the `withdraw` function.
  */
-export async function unStake({ chainName, account, amount }: Props, { sendTransactions, notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
+export async function unStake({ chainName, account, amount }: Props, { evm: { sendTransactions }, notify, evm: { getProvider } }: FunctionOptions): Promise<FunctionReturn> {
     if (!account) return toResult('Wallet not connected', true);
 
-    const chainId = getChainFromName(chainName);
+    const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
 
@@ -58,8 +58,8 @@ export async function unStake({ chainName, account, amount }: Props, { sendTrans
             return toResult(`Validator does not have enough staked assets. Maximum available: ${targetValidator.assetsDelegated}`, true);
         }
 
-        const transactions: TransactionParams[] = [];
-        const tx: TransactionParams = {
+        const transactions: EVM.types.TransactionParams[] = [];
+        const tx: EVM.types.TransactionParams = {
             target: STS_ADDRESS,
             data: encodeFunctionData({
                 abi: stsAbi,
