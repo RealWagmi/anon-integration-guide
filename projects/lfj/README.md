@@ -1,32 +1,38 @@
-# lfg
+# lfj.gg
 
-integration with lfg
-
-## Supported Networks
-
-- AVALANCHE
-- BASE
-- BSC
-- ETHEREUM
-
-## Common Tasks
-
-1. Basic Operations
-   - "Swap 2 USDC to USDT on AVALANCHE"
-   - "Swap all my USDC for 50 USDT on AVALANCHE"
-   - "Swap all my USDC for 50 USDT on AVALANCHE and send it to vitalik.eth"
-   - "Swap 2 USDC to USDT on AVALANCHE with a maximum slippage of 0.1%"
-
-## Available Functions
-
-- swapTokens
+Lfj.gg Dex Integration
 
 ## Installation
 
 ```bash
-yarn add @heyanon/lfj
+pnpm add @heyanon/lfj.gg
 ```
+
+## Supported Functions
+
+List of available functions will be added here.
 
 ## Usage
 
 Example usage will be added here.
+
+## Development
+
+1. Install dependencies:
+```bash
+pnpm install
+```
+
+2. Build the project:
+```bash
+pnpm run build
+```
+
+3. Run tests:
+```bash
+pnpm test
+```
+
+## Documentation
+
+Detailed documentation will be added here.

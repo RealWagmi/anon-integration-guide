@@ -1,5 +1,7 @@
-import { AiTool, getChainName } from '@heyanon/sdk';
+import { AiTool, EVM } from '@heyanon/sdk';
 import { supportedChains } from './constants';
+
+const { getChainName } = EVM.utils;
 
 export const tools: AiTool[] = [
     {
