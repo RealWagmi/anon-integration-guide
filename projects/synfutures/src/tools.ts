@@ -1,6 +1,8 @@
 // tools.ts
-import { getChainName } from "@heyanon/sdk";
 import { supportedChains } from "./constants";
+
+// Helper function to get chain names
+const getChainNames = () => ["BASE"];
 
 export const tools = [
     // Trading Functions
@@ -16,7 +18,7 @@ export const tools = [
             {
                 name: "chainName",
                 type: "string",
-                enum: supportedChains.map(getChainName),
+                enum: getChainNames(),
                 description: "Name of the blockchain network (BASE)"
             },
             {
@@ -56,7 +58,7 @@ export const tools = [
             {
                 name: "chainName",
                 type: "string",
-                enum: supportedChains.map(getChainName),
+                enum: getChainNames(),
                 description: "Name of the blockchain network (BASE)"
             },
             {
@@ -109,7 +111,7 @@ export const tools = [
             {
                 name: "chainName",
                 type: "string",
-                enum: supportedChains.map(getChainName),
+                enum: getChainNames(),
                 description: "Name of the blockchain network (BASE)"
             },
             {
@@ -168,7 +170,7 @@ export const tools = [
             {
                 name: "chainName",
                 type: "string",
-                enum: supportedChains.map(getChainName),
+                enum: getChainNames(),
                 description: "Name of the blockchain network (BASE)"
             },
             {
@@ -218,7 +220,7 @@ export const tools = [
             {
                 name: "chainName",
                 type: "string",
-                enum: supportedChains.map(getChainName),
+                enum: getChainNames(),
                 description: "Name of the blockchain network (BASE)"
             },
             {
@@ -259,7 +261,7 @@ export const tools = [
             {
                 name: "chainName",
                 type: "string",
-                enum: supportedChains.map(getChainName),
+                enum: getChainNames(),
                 description: "Name of the blockchain network (BASE)"
             },
             {
@@ -305,7 +307,7 @@ export const tools = [
             {
                 name: "chainName",
                 type: "string",
-                enum: supportedChains.map(getChainName),
+                enum: getChainNames(),
                 description: "Name of the blockchain network (BASE)"
             },
             {

@@ -1,6 +1,6 @@
 import { Address } from "viem";
 import { FunctionReturn, FunctionOptions, TransactionParams } from "../types";
-import { getChainFromName, toResult } from "../constants";
+import { toResult } from "../constants";
 import { SynFuturesClient } from "../client";
 
 /**
@@ -36,9 +36,26 @@ export async function marketOrder(
     // Validate wallet connection
     if (!account) return toResult("Wallet not connected", true);
 
-    // Validate chain
-    const chainId = getChainFromName(chainName);
-    if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
+    // Validate amount
+    const numericAmount = parseFloat(amount);
+    if (isNaN(numericAmount) || numericAmount <= 0) {
+        return toResult("Amount must be a positive number", true);
+    }
+
+    // Validate trading pair
+    const supportedPairs = ["ETH-USDC", "BTC-USDC"]; // Add your supported pairs here
+    if (!supportedPairs.includes(tradingPair)) {
+        return toResult(`Unsupported trading pair: ${tradingPair}. Supported pairs: ${supportedPairs.join(", ")}`, true);
+    }
+
+    // Validate slippage tolerance
+    const slippageValue = parseFloat(slippageTolerance);
+    if (isNaN(slippageValue) || slippageValue < 0 || slippageValue > 100) {
+        return toResult("Slippage tolerance must be between 0 and 100", true);
+    }
+
+    // Get chain ID for BASE network
+    const chainId = 8453; // BASE mainnet
 
     try {
         // Notify user that order preparation is starting
@@ -57,14 +74,14 @@ export async function marketOrder(
             pair: tradingPair,
             side,
             amount,
-            slippage: parseFloat(slippageTolerance) / 100
+            slippage: slippageValue / 100
         });
 
         // Prepare transaction parameters
         const transactions: TransactionParams[] = [{
-            target: tx.data.slice(0, 42) as `0x${string}`, // Extract target address from tx data
-            data: tx.data as `0x${string}`,
-            value: tx.value || "0"
+            target: tx.to,
+            data: tx.data,
+            value: BigInt(tx.value || 0)
         }];
 
         // Notify user that transaction is being processed

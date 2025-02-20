@@ -20,6 +20,9 @@ export { removeLiquidity } from './removeLiquidity';
 export { adjustRange } from './adjustRange';
 export { claimFees } from './claimFees';
 
+// Protocol information
+export { getDescriptionSynFutures } from './getDescriptionSynFutures';
+
 // Types
 export type { Props as MarketOrderProps } from './marketOrder';
 export type { Props as LimitOrderProps } from './limitOrder';

@@ -9,7 +9,11 @@ export interface FunctionReturn {
 export interface TransactionParams {
     target: `0x${string}`;
     data: `0x${string}`;
-    value?: string;
+    value?: bigint;
+    gasLimit?: bigint;
+    maxFeePerGas?: bigint;
+    maxPriorityFeePerGas?: bigint;
+    nonce?: number;
 }
 
 export interface TransactionReturnData {
