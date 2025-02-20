@@ -115,7 +115,7 @@ export async function executeSwapExactIn(
 
     // Send the transactions and wait for confirmation
     await options.notify(transactions.length > 1 ? `Sending approve & swap transactions...` : 'Sending swap transaction...');
-    const { hashes, messages, receipts } = await sendTransactionsAndWaitForReceipts({
+    const { hashes, messages, isMultisig, receipts } = await sendTransactionsAndWaitForReceipts({
         publicClient: provider,
         transactions,
         sendTransactions: options.evm.sendTransactions,
@@ -146,6 +146,8 @@ export async function executeSwapExactIn(
         );
     }
     return toResult(
-        `Successfully swapped ${formatUnits(tokenInAmountInWei, tokenIn.decimals)} ${tokenIn.symbol} for ${formatUnits(tokenOutAmountInWei, tokenOut.decimals)} ${tokenOut.symbol}. ${messages.at(-1)}`,
+        isMultisig
+            ? messages.at(-1)
+            : `Successfully swapped ${formatUnits(tokenInAmountInWei, tokenIn.decimals)} ${tokenIn.symbol} for ${formatUnits(tokenOutAmountInWei, tokenOut.decimals)} ${tokenOut.symbol}. ${messages.at(-1)}`,
     );
 }

@@ -215,5 +215,5 @@ export async function addLiquidity(
     await options.notify(transactions.length > 1 ? `Sending approve & add liquidity transactions...` : 'Sending add liquidity transaction...');
     const result = await options.evm.sendTransactions({ chainId, account, transactions });
     const message = result.data[result.data.length - 1].message;
-    return toResult(`Successfully added liquidity to pool ${pool.name}. ${message}`);
+    return toResult(result.isMultisig ? message : `Successfully added liquidity to pool ${pool.name}. ${message}`);
 }

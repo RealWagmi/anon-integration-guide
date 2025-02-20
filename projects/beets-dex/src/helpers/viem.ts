@@ -13,6 +13,7 @@ export interface SendTransactionsAndWaitForReceiptsProps {
 export interface SendTransactionsAndWaitForReceiptsResult {
     hashes: Hex[];
     messages: string[];
+    isMultisig: boolean;
     receipts: TransactionReceipt[];
 }
 
@@ -51,6 +52,7 @@ export async function sendTransactionsAndWaitForReceipts({
     return {
         hashes: result.data.map((tx) => tx.hash),
         messages: result.data.map((tx) => tx.message),
+        isMultisig: result.isMultisig,
         receipts,
     };
 }

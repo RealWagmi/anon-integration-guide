@@ -204,5 +204,5 @@ export async function removeLiquidity({ chainName, account, poolId, removalPerce
     await options.notify(transactions.length > 1 ? `Sending approve & remove liquidity transactions...` : 'Sending remove liquidity transaction...');
     const result = await options.evm.sendTransactions({ chainId, account, transactions });
     const message = result.data[result.data.length - 1].message;
-    return toResult(`Successfully removed liquidity from pool ${pool.name}. ${message}`);
+    return toResult(result.isMultisig ? message : `Successfully removed liquidity from pool ${pool.name}. ${message}`);
 }
