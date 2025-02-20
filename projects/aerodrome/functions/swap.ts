@@ -37,14 +37,8 @@ export async function swap(props: Props, { sendTransactions, notify }: FunctionO
     const { swap } = swapWithInput.data;
 
     // build command and input bytecode
-    let commandBytecode: Hex;
-    let encodedInputs: Hex[];
-
-    // build command bytecode from command codes
-    commandBytecode = '0x' + swap.commandCode;
-
-    // store encoded inputs for commands
-    encodedInputs.push(encodeV3SwapExactIn(swap));
+    let commandBytecode: Hex = '0x' + swap.commandCode;
+    let encodedInputs: Hex[] = [encodeV3SwapExactIn(swap)];
 
     // prepare tx
     const { account, chainId } = wallet.data;
@@ -64,5 +58,5 @@ export async function swap(props: Props, { sendTransactions, notify }: FunctionO
     const message = result.data[result.data.length - 1];
 
     // return
-    return toResult(result.isMultisig ? message.message : `Successfully executed commands ${commandBytecode} through Universal Router. ${message.message}`);
+    return toResult(result.isMultisig ? message.message : `Successfully executed swap through Universal Router. ${message.message}`);
 }

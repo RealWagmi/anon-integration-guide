@@ -48,6 +48,6 @@ export async function getPath(props: Props, {}: FunctionOptions): Promise<Functi
     }
 
     return new Promise((resolve, reject) => {
-        resolve(`Path of liquidity pool for tokens ${tokens} at fees ${fees}: ${path}`);
+        resolve(`Path for tokens ${tokens} at fees ${fees}: ${path}`);
     });
 }

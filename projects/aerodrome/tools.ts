@@ -386,5 +386,18 @@ export const tools: AiTool[] = [
                     'List of fees between each consecutive tokens. The fees are ordered and apply to each consecutive token pair fe. `fee[0]` would apply to pair of `tokens[0]` and `tokens[1]`',
             },
         ],
-    }
+    },
+    {
+        name: 'getTickSpacing',
+        description: 'Retrieve and return tick spacing for pool addrress',
+        required: [...walletRequiredProps, 'poolAddress'],
+        props: [
+            ...walletProps,
+            {
+                name: 'poolAddress',
+                type: 'string',
+                description: 'Pool address to determine tick spacing for.',
+            },
+        ],
+    },
 ];
