@@ -23,7 +23,6 @@ interface Props {
   chainName: string;
   account: Address;
   amount: string;
-  receiver: Address | null;
   slippageTolerance: string | null;
 
   inputToken: Address;
@@ -39,7 +38,6 @@ export async function postSwapOrder(
     amount,
     inputToken,
     outputToken,
-    receiver = account,
     slippageTolerance,
   }: Props,
   options: FunctionOptions,
@@ -126,7 +124,6 @@ export async function postSwapOrder(
     buyToken: outputToken,
     buyTokenDecimals: outputTokenInfo.decimals,
     amount: amountParsed.toString(),
-    receiver,
     slippageBps: slippageToleranceToBipsResult.result,
   };
 

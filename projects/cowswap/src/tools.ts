@@ -95,7 +95,6 @@ export const tools: AiTool[] = [
       "amount",
       "inputToken",
       "outputToken",
-      "receiver",
       "slippageTolerance",
     ],
     props: [
@@ -120,12 +119,6 @@ export const tools: AiTool[] = [
         type: ["string", "null"],
         description:
           "The amount of `inputToken` that will be used to buy `ouputToken`s",
-      },
-      {
-        name: "receiver",
-        type: "string",
-        description:
-          "Optional address to specify the receiver of the outputToken this defaults to `account` if not specified.",
       },
       {
         name: "inputToken",
