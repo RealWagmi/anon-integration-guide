@@ -11,3 +11,4 @@ export { getProtocolSonicToStakedSonicExchangeRate } from './getProtocolSonicToS
 export { getOpenWithdrawRequests } from './getOpenWithdrawRequests';
 export { getNextWithdrawal } from './getNextWithdrawal';
 export { getStakingApr } from './getStakingApr';
+export { getBeetsCapabilities } from './getBeetsCapabilities';

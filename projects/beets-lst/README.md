@@ -26,9 +26,9 @@ Beets LST allows you to access Sonic staking rewards while maintaining full liqu
     - How much do I have staked in @beets-lst?
     - Show my position in @beets-lst
 1. **Unstaking**
-    - Unstake all of my stS from @beets-lst
     - Unstake 100 stS from @beets-lst
-    - Unstake 100 S worth of stS from @beets-lst
+    - Unstake half of my stS from @beets-lst
+    - Unstake all from @beets-lst
 1. **Withdrawing**
     - Withdraw all from @beets-lst
     - Withdraw <withdraw_id> from @beets-lst
@@ -37,8 +37,8 @@ Beets LST allows you to access Sonic staking rewards while maintaining full liqu
 1. **Info and alerts**
     - What is the APR of staking Sonic on @beets-lst?
     - Alert me when my withdrawal is ready @beets-lst
-    - How much Sonic is in the protocol @beets-lst?
-    - How much is worth my staked Sonic in @beets-lst?
+    - How much Sonic does @beets-lst hold?
+    - How much is worth my staked Sonic on @beets-lst?
 
 ## Available Functions
 
@@ -57,7 +57,7 @@ Beets LST allows you to access Sonic staking rewards while maintaining full liqu
 ## Installation
 
 ```bash
-yarn add @heyanon/beets-lst
+pnpm add @heyanon/beets-lst
 ```
 
 ## Usage
