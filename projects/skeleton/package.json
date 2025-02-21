@@ -1,11 +1,13 @@
 {
-	"name": "@heyanon/project-sky",
+	"name": "@heyanon/project-skeleton",
 	"version": "1.0.0",
 	"license": "MIT",
 	"main": "dist/index.js",
 	"typings": "dist/index.d.ts",
 	"module": "dist/index.mjs",
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"engines": {
 		"node": ">=18"
 	},
