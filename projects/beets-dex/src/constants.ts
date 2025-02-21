@@ -73,7 +73,7 @@ export const ALLOW_TOKEN_SYNONYMS = true;
 
 /**
  * The default precision used to show token amounts,
- * expressed as a number of decimal places.
+ * expressed as a number of significant digits.
  */
 export const DEFAULT_PRECISION = 6;
 

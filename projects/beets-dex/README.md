@@ -78,6 +78,7 @@ cp .env.example .env
 and then you can ask questions directly:
 
 ```bash
+pnpm ask "What can I do on Beets DEX?"
 pnpm ask "Swap 100 USDC for BEETS"
 pnpm ask "Add 100 USDC liquidity to Boosted Stable Rings"
 pnpm ask "Remove half of my liquidity from Boosted Stable Rings"
