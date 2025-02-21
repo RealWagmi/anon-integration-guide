@@ -11,13 +11,15 @@ interface Props {
 }
 
 /**
- * Unstake staked Sonic tokens (stS)
+ * Initiates the process of unstaking (undelegating) the specified amount of staked Sonic tokens (stS).
+ * The corresponding Sonic tokens will be ready to be withdrawn after a 14-day waiting period.
  *
- * This action will initiate the undelegation of staked Sonic tokens (stS)
- * from the Beets.fi liquid staking module, which will take 14 days to complete.
- *
- * After 14 days, the user will be able to withdraw their Sonic tokens (S)
- * using the `withdraw` function.
+ * @param {Object} props - The function input parameters
+ * @param {string} props.chainName - Name of the blockchain network
+ * @param {Address} props.account - The user's address that will unstake tokens
+ * @param {string} props.amount - The amount of stS to unstake, in decimal format
+ * @param {FunctionOptions} context - Holds EVM utilities and a notifier
+ * @returns {Promise<FunctionReturn>} A message confirming initiation of unstaking or an error message
  */
 export async function unStake({ chainName, account, amount }: Props, { evm: { sendTransactions }, notify, evm: { getProvider } }: FunctionOptions): Promise<FunctionReturn> {
     if (!account) return toResult('Wallet not connected', true);

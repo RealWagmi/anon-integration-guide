@@ -7,6 +7,14 @@ interface Props {
     chainName: string;
 }
 
+/**
+ * Fetches the total amount of Sonic tokens (S) the liquid staking protocol currently holds.
+ *
+ * @param {Object} props - The function input parameters
+ * @param {string} props.chainName - Name of the blockchain network
+ * @param {FunctionOptions} context - Holds EVM utilities and a notifier
+ * @returns {Promise<FunctionReturn>} A message summarizing the total Sonic in the protocol
+ */
 export async function getTotalSonicInProtocol({ chainName }: Props, { notify, evm: { getProvider } }: FunctionOptions): Promise<FunctionReturn> {
     const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);

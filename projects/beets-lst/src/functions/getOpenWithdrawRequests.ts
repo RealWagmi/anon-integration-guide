@@ -1,6 +1,6 @@
 import { Address } from 'viem';
 import { FunctionReturn, toResult, EVM, FunctionOptions, EvmChain } from '@heyanon/sdk';
-import { supportedChains } from '../constants';
+import { MAX_WITHDRAWALS_IN_RESULTS, supportedChains } from '../constants';
 import { getOpenWithdrawRequests as getOpenWithdrawRequestsHelper } from '../helpers/withdrawals';
 
 interface Props {
@@ -8,6 +8,15 @@ interface Props {
     account: Address;
 }
 
+/**
+ * Retrieves all open (pending or ready) withdrawal requests for a user.
+ *
+ * @param {Object} props - The function input parameters
+ * @param {string} props.chainName - Name of the blockchain network
+ * @param {Address} props.account - The user account address whose withdrawal requests to check
+ * @param {FunctionOptions} context - Holds EVM utilities and a notifier
+ * @returns {Promise<FunctionReturn>} A formatted message listing withdrawals or an error message
+ */
 export async function getOpenWithdrawRequests({ chainName, account }: Props, { notify, evm: { getProvider } }: FunctionOptions): Promise<FunctionReturn> {
     const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
@@ -33,7 +42,13 @@ export async function getOpenWithdrawRequests({ chainName, account }: Props, { n
     });
 
     // Format the response with withdraw IDs
-    const withdrawalsList = withdraws.map((w) => `- Withdraw ID ${w.id} of amount ${w.amount} S (${w.timeRemaining})`).join('\n');
+    const withdrawalsList = withdraws
+        .slice(0, MAX_WITHDRAWALS_IN_RESULTS)
+        .map((w) => `- Withdraw ID ${w.id} of amount ${w.amount} S (${w.timeRemaining})`)
+        .join('\n');
 
-    return toResult(`Pending withdrawals:\n${withdrawalsList}`);
+    if (withdraws.length > MAX_WITHDRAWALS_IN_RESULTS) {
+        return toResult(`${withdraws.length} pending withdrawal(s) found:\n${withdrawalsList}\n\nNote: Only the first ${MAX_WITHDRAWALS_IN_RESULTS} withdrawals are shown.`);
+    }
+    return toResult(`${withdraws.length} pending withdrawal(s) found:\n${withdrawalsList}`);
 }

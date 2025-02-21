@@ -7,6 +7,14 @@ interface Props {
     chainName: string;
 }
 
+/**
+ * Fetches the conversion rate that determines how many Sonic tokens (S) each stS token is worth.
+ *
+ * @param {Object} props - The function input parameters
+ * @param {string} props.chainName - Name of the blockchain network
+ * @param {FunctionOptions} context - Holds EVM utilities and a notifier
+ * @returns {Promise<FunctionReturn>} A message indicating the number of Sonic tokens (S) per stS token
+ */
 export async function getProtocolStakedSonicToSonicExchangeRate({ chainName }: Props, { notify, evm: { getProvider } }: FunctionOptions): Promise<FunctionReturn> {
     const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);

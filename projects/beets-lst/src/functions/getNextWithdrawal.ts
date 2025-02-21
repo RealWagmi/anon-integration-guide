@@ -8,6 +8,16 @@ interface Props {
     account: Address;
 }
 
+/**
+ * Retrieves details about the closest-to-withdrawal request for the specified user,
+ * including how long until it can be claimed.
+ *
+ * @param {Object} props - The function input parameters
+ * @param {string} props.chainName - Name of the blockchain network
+ * @param {Address} props.account - The user account address whose withdrawal requests to check
+ * @param {FunctionOptions} context - Holds EVM utilities and a notifier
+ * @returns {Promise<FunctionReturn>} A message about the next withdrawal request or an error message
+ */
 export async function getNextWithdrawal({ chainName, account }: Props, { notify, evm: { getProvider } }: FunctionOptions): Promise<FunctionReturn> {
     const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);

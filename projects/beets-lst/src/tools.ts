@@ -27,7 +27,8 @@ export const tools: AiTool[] = [
     },
     {
         name: 'unStake',
-        description: 'Initiate undelegation of staked Sonic tokens (stS). Tokens can be withdrawn after 14 days.',
+        description:
+            'Initiate the undelegation process for staked Sonic tokens (stS). This action effectively "surrenders" stS tokens from the user to the protocol and locks them for a 14-day waiting period. After 14 days, a separate "withdraw" call is required to reclaim the corresponding Sonic tokens.',
         required: ['chainName', 'account', 'amount'],
         props: [
             {
@@ -180,8 +181,7 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getOpenWithdrawRequests',
-        description:
-            'Get the list of open withdrawals for the user.  A withdrawal is open if it is either ready to be withdrawn or waiting for the 14-day period to elapse.  The withdrawal ID will be shown for each withdrawal.',
+        description: `Get the list of open withdrawals for the user.  A withdrawal is open if it is either ready to be withdrawn or waiting for the 14-day period to elapse.  The withdrawal ID will be shown for each withdrawal.`,
         required: ['chainName', 'account'],
         props: [
             {
@@ -227,5 +227,11 @@ export const tools: AiTool[] = [
                 description: 'Chain name',
             },
         ],
+    },
+    {
+        name: 'getBeetsCapabilities',
+        description: 'Get information about what Beets DEX can do and example prompts.',
+        required: [],
+        props: [],
     },
 ];

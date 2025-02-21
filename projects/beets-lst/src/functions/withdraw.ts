@@ -10,6 +10,16 @@ interface Props {
     withdrawId: string;
 }
 
+/**
+ * Claims Sonic tokens (S) from a ready-to-claim withdraw request.
+ *
+ * @param {Object} props - The function input parameters
+ * @param {string} props.chainName - Name of the blockchain network
+ * @param {Address} props.account - The user address that owns the withdraw request
+ * @param {string} props.withdrawId - The identifier for the withdraw request to claim
+ * @param {FunctionOptions} context - Holds EVM utilities and a notifier
+ * @returns {Promise<FunctionReturn>} A message confirming a successful withdrawal or an error
+ */
 export async function withdraw({ chainName, account, withdrawId }: Props, { evm: { sendTransactions }, notify, evm: { getProvider } }: FunctionOptions): Promise<FunctionReturn> {
     const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);

@@ -9,6 +9,16 @@ interface Props {
     account: Address;
 }
 
+/**
+ * Withdraws Sonic tokens (S) for every withdrawal request that is ready to be claimed,
+ * in one single transaction.
+ *
+ * @param {Object} props - The function input parameters
+ * @param {string} props.chainName - Name of the blockchain network
+ * @param {Address} props.account - The user address whose claimable requests will be withdrawn
+ * @param {FunctionOptions} context - Holds EVM utilities and a notifier
+ * @returns {Promise<FunctionReturn>} A message detailing the result of withdrawing all claimable requests
+ */
 export async function withdrawAll({ chainName, account }: Props, { evm: { sendTransactions }, notify, evm: { getProvider } }: FunctionOptions): Promise<FunctionReturn> {
     const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);

@@ -7,6 +7,15 @@ interface Props {
     account: Address;
 }
 
+/**
+ * Shows the native Sonic (S) balance of the specified address.
+ *
+ * @param {Object} props - The function input parameters
+ * @param {string} props.chainName - Name of the blockchain network
+ * @param {Address} props.account - The account address whose balance is retrieved
+ * @param {FunctionOptions} context - Holds EVM utilities and a notifier
+ * @returns {Promise<FunctionReturn>} A message indicating the user's Sonic balance or an error
+ */
 export async function getSonicBalance({ chainName, account }: Props, { notify, evm: { getProvider } }: FunctionOptions): Promise<FunctionReturn> {
     const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);

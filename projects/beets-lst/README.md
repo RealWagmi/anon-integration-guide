@@ -20,25 +20,25 @@ Beets LST allows you to access Sonic staking rewards while maintaining full liqu
 
 ## Common Tasks
 
-- **Staking**
-    - "Stake 100 S in @beets-lst"
-    - "Stake half of my Sonic in @beets-lst"
-    - "How many stS do I have in @beets-lst?"
-    - "Show my position in @beets-lst"
-- **Unstaking**
-    - "Unstake 100 stS from @beets-lst"
-    - "Unstake all of my stS from @beets-lst"
-    - "Unstake 100 S worth of stS from @beets-lst"
-- **Withdrawing**
-    - "Withdraw <withdraw_id> from @beets-lst"
-    - "Withdraw all from @beets-lst"
-    - "How long before I can withdraw from @beets-lst?"
-    - "Show my open withdrawals from @beets-lst"
-- **Info and alerts**
-    - "Alert me when my withdrawal is ready @beets-lst"
-    - "How much is worth 1 stS in @beets-lst?"
-    - "How much is worth 1 S in @beets-lst?"
-    - "How much Sonic is in the protocol @beets-lst?"
+1. **Staking**
+    - Stake 100 S in @beets-lst
+    - Stake half of my Sonic in @beets-lst
+    - How much do I have staked in @beets-lst?
+    - Show my position in @beets-lst
+1. **Unstaking**
+    - Unstake all of my stS from @beets-lst
+    - Unstake 100 stS from @beets-lst
+    - Unstake 100 S worth of stS from @beets-lst
+1. **Withdrawing**
+    - Withdraw all from @beets-lst
+    - Withdraw <withdraw_id> from @beets-lst
+    - How long before I can withdraw from @beets-lst?
+    - Show my pending withdrawals on @beets-lst
+1. **Info and alerts**
+    - What is the APR of staking Sonic on @beets-lst?
+    - Alert me when my withdrawal is ready @beets-lst
+    - How much Sonic is in the protocol @beets-lst?
+    - How much is worth my staked Sonic in @beets-lst?
 
 ## Available Functions
 
@@ -79,26 +79,29 @@ I've built a simple agent called `askBeets` to test the integration. To run it, 
 
 ```bash
 cd projects/beets-lst
-yarn install
+pnpm install
 cp .env.example .env
 # insert test wallet private key into .env
-# insert OpenAI API key into .env
+# insert OpenAI or DeepSeek key into .env
 ```
 
 and then you can ask questions directly:
 
 ```bash
-yarn run ask "Stake 0.1 S and show my staked balance"
-yarn run ask "Unstake all of my stS"
-yarn run ask "How long before I can withdraw?"
+pnpm ask "What can I do on Beets LST?"
+pnpm ask "Stake 100 S in @beets-lst"
+pnpm ask "Unstake all of my stS from @beets-lst"
+pnpm ask "How long before I can withdraw from @beets-lst?"
 ```
 
-The agent will perform one or more tasks to execute your request; see for example this GIF where I asked to bot to unstake all of my stS:
-
-https://github.com/user-attachments/assets/2ce0d109-85b5-4548-8bad-2c4bfadaeacf
-
-To debug the actual OpenAI responses, run `askBeets` with `--verbose` flag:
+To debug the actual LLM responses, run `askBeets` with `--verbose` flag:
 
 ```bash
-yarn run ask "What is my stS balance?" --verbose
+pnpm ask "Stake 100 S in @beets-lst" --verbose
 ```
+
+## Future improvements
+
+- Warn the user if swapping is more convenient than unstaking and staking.
+- Getter to show the dollar value of the user position.
+- Getter to show the user's position: Sonic Balance, stS balance, staking APR, pending withdrawals, dollar value.

@@ -10,7 +10,15 @@ interface Props {
 }
 
 /**
- * Stake Sonic tokens (S) in Beets.fi liquid staking module
+ * Stakes the specified amount of Sonic tokens (S) into the Beets protocol by sending them
+ * to the staking contract in exchange for staked Sonic (stS).
+ *
+ * @param {Object} props - The function input parameters
+ * @param {string} props.chainName - Name of the blockchain network
+ * @param {Address} props.account - The user's address that will stake tokens
+ * @param {string} props.amount - The amount of Sonic (S) to stake, in decimal format
+ * @param {FunctionOptions} context - Holds EVM utilities and a notifier
+ * @returns {Promise<FunctionReturn>} A message confirming the stakes or an error description
  */
 export async function stake({ chainName, account, amount }: Props, { evm: { sendTransactions }, notify }: FunctionOptions): Promise<FunctionReturn> {
     if (!account) return toResult('Wallet not connected', true);
