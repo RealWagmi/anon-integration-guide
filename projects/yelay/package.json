@@ -17,8 +17,9 @@
   "scripts": {
     "start": "tsup --watch",
     "build": "tsup",
-    "test": "vitest --run",
+    "test": "jest",
     "lint": "tsdx lint",
+    "lint:fix": "tsdx lint --fix",
     "prepare": "pnpm run build",
     "size": "size-limit",
     "analyze": "size-limit --why",
@@ -38,8 +39,7 @@
     "tsdx": "^0.14.1",
     "tslib": "^2.6.2",
     "tsup": "^7.2.0",
-    "typescript": "^5.7.3",
-    "vitest": "^2.1.9"
+    "typescript": "^5.7.3"
   },
   "dependencies": {
     "@ethersproject/providers": "^5.7.2",

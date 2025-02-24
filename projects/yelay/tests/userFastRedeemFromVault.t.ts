@@ -16,11 +16,11 @@ describe('userFastRedeemFromVault test', () => {
     let hardhatNode: ChildProcess;
 
     beforeAll(async () => {
-        hardhatNode = await setupMainnetFork(config[1]!.providerUrl);
+        hardhatNode = await setupMainnetFork(config[1]!.providerUrl, 8546);
 
         // change config to point to hardhat mainnet fork
         const mainnetForkConfig = structuredClone(config);
-        mainnetForkConfig[1]!.providerUrl = 'http://127.0.0.1:8545/';
+        mainnetForkConfig[1]!.providerUrl = 'http://127.0.0.1:8546/';
         jest.replaceProperty(constants, 'config', mainnetForkConfig);
 
         // patch hardhat node to return mainnet

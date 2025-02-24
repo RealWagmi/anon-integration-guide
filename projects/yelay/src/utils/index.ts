@@ -1,6 +1,7 @@
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { getMainnetConfig, SpoolSdk } from '@spool.fi/spool-v2-sdk';
 import { config } from '../constants';
+import { Hex } from 'viem';
 
 export function getChainConfig(chainId: number) {
     if (config[chainId] === undefined) {
@@ -39,7 +40,7 @@ export function wrapWithResult<T extends (...args: any[]) => any>(
     };
 }
 
-export function validateAddress(s: string): `0x${string}` {
+export function validateAddress(s: string): Hex {
     if (!s.startsWith('0x')) throw new Error('Invalid address');
-    return s as `0x${string}`;
+    return s as Hex;
 }

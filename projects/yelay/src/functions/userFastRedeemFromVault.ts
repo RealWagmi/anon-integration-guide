@@ -68,7 +68,7 @@ export async function userFastRedeemFromVault(
     );
     if (!vaultDetails.success) return toResult(`Failed to get vault asset types`, true);
 
-    if (vaultDetails.result.assetGroup.tokens.length != 1) {
+    if (vaultDetails.result.assetGroup.tokens.length !== 1) {
         return toResult(`Only vaults with one asset are supported`, true);
     }
     const vaultTokenType = vaultDetails.result.assetGroup.tokens[0];
@@ -153,7 +153,9 @@ async function redeemFast(
     }
     const response = await fetch(
         new URL(
-            `/${chaiName}/${receiver}/${redeem.smartVault}/${redeem.shares.toString()}/${latestBlock}/${nftInfoPaths}`,
+            `/${chaiName}/${receiver}/${
+                redeem.smartVault
+            }/${redeem.shares.toString()}/${latestBlock}/${nftInfoPaths}`,
             fastRedeemApiUrl,
         ).toString(),
     );

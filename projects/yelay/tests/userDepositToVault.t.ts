@@ -11,7 +11,7 @@ describe('userDepositToVault test', () => {
     let hardhatNode: ChildProcess;
 
     beforeAll(async () => {
-        hardhatNode = await setupMainnetFork(config[1]!.providerUrl);
+        hardhatNode = await setupMainnetFork(config[1]!.providerUrl, 8545);
 
         // change config to point to hardhat mainnet fork
         const mainnetForkConfig = structuredClone(config);

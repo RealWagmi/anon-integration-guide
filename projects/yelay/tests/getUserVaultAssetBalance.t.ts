@@ -1,17 +1,12 @@
 import { GetUserSvtBalanceProps } from '../src/functions/getUserVaultSvtBalance';
-import { FunctionOptions } from '@heyanon/sdk';
 import { getUserVaultAssetBalance } from '../src/functions/getUserVaultAssetBalance';
+import { mockedFunctionOptions } from './_testUtils';
 
 jest.setTimeout(10000);
 
 describe('getUserVaultSvtBalance', () => {
     it('happy path', async () => {
         // arrange
-        const mockedFunctionOptions = {
-            getProvider: jest.fn(),
-            sendTransactions: jest.fn(),
-            notify: jest.fn(),
-        } as jest.Mocked<FunctionOptions>;
 
         // act
         const props: GetUserSvtBalanceProps = {

@@ -1,16 +1,11 @@
-import { FunctionOptions } from '@heyanon/sdk';
 import { getVaultBaseApy, GetVaultBaseApyProps } from '../src/functions/getVaultBaseApy';
+import { mockedFunctionOptions } from './_testUtils';
 
 jest.setTimeout(20000);
 
 describe('getVaultBaseApy', () => {
     it('happy path', async () => {
         // arrange
-        const mockedFunctionOptions = {
-            getProvider: jest.fn(),
-            sendTransactions: jest.fn(),
-            notify: jest.fn(),
-        } as jest.Mocked<FunctionOptions>;
 
         // act
         const props: GetVaultBaseApyProps = {

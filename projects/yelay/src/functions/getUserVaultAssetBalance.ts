@@ -39,8 +39,9 @@ export async function getUserVaultAssetBalance(
         vaultAddresses: [vaultAddress],
         userAddress: account,
     };
-    const assetBalances =
-        await sdk.result.views.userInfo.getUserVaultsBalances(userBalancesInfoQuery);
+    const assetBalances = await sdk.result.views.userInfo.getUserVaultsBalances(
+        userBalancesInfoQuery,
+    );
     if (!assetBalances[vaultAddress] || assetBalances[vaultAddress].length === 0) {
         return toResult(`No balances for account ${account} found in vault ${vaultAddress}`);
     }
@@ -53,7 +54,7 @@ export async function getUserVaultAssetBalance(
     );
     if (!vaultDetails.success) return toResult(`Failed fetch vault asset balance`, true);
 
-    const tokenSymbol = vaultDetails.result.assetGroup.tokens.map((it) => it.symbol);
+    const tokenSymbol = vaultDetails.result.assetGroup.tokens.map(it => it.symbol);
 
     if (assetBalances[vaultAddress].length !== tokenSymbol.length) {
         return toResult(`Error calculating vault asset balances`);

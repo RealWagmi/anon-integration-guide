@@ -72,7 +72,7 @@ export async function userDepositToVault(
     );
     if (!vaultDetails.success) return toResult(`Failed to get vault asset types`, true);
 
-    if (vaultDetails.result.assetGroup.tokens.length != 1) {
+    if (vaultDetails.result.assetGroup.tokens.length !== 1) {
         return toResult(`Only vaults with one asset are supported`, true);
     }
     const vaultTokenType = vaultDetails.result.assetGroup.tokens[0];
@@ -126,8 +126,9 @@ export async function userDepositToVault(
         'deposit',
         [depositBag],
     );
-    const depositAssetsToVaultDataValidation =
-        await wrapWithResult(validateAddress)(depositAssetsToVaultData);
+    const depositAssetsToVaultDataValidation = await wrapWithResult(validateAddress)(
+        depositAssetsToVaultData,
+    );
     if (!depositAssetsToVaultDataValidation.success) {
         return toResult(`Failed to create tx to deposit: invalid deposit tx data`, true);
     }

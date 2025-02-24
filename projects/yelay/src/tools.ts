@@ -120,7 +120,8 @@ export const tools: AiTool[] = [
             },
             {
                 name: 'amount',
-                type: 'the amount to be withdrawn from the vault, the token type is defined by the vault',
+                type:
+                    'the amount to be withdrawn from the vault, the token type is defined by the vault',
                 description: 'Vault address',
             },
         ],

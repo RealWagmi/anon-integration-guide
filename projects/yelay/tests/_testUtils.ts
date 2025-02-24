@@ -1,6 +1,5 @@
 import { spawn } from 'child_process';
-import { FunctionOptions, SendTransactionProps } from '@heyanon/sdk';
-import { TransactionReturn } from '@heyanon/sdk/dist/blockchain';
+import { FunctionOptions } from '@heyanon/sdk';
 import {
     impersonateAccount,
     setBalance,
@@ -10,11 +9,21 @@ import { getContractAt, getSigner } from '@nomiclabs/hardhat-ethers/internal/hel
 import hre from 'hardhat';
 import { parseUnits } from 'viem';
 import ERC20 from '../src/abis/ERC20.json';
+import { SendTransactionProps, TransactionReturn } from '@heyanon/sdk/dist/blockchain/evm/types';
 
-export async function setupMainnetFork(providerUrl: string) {
+export async function setupMainnetFork(providerUrl: string, port: number) {
     const hardhatNode = spawn(
         'npx',
-        ['hardhat', 'node', '--fork', `${providerUrl}`, '--fork-block-number', '21767852'],
+        [
+            'hardhat',
+            'node',
+            '--fork',
+            `${providerUrl}`,
+            '--fork-block-number',
+            '21767852',
+            '--port',
+            `${port}`,
+        ],
         {
             detached: true,
             stdio: 'ignore',
@@ -28,31 +37,44 @@ export async function setupMainnetFork(providerUrl: string) {
 }
 
 export const mockedFunctionOptions = {
-    getProvider: jest.fn(),
-    sendTransactions: jest.fn(async (props: SendTransactionProps): Promise<TransactionReturn> => {
-        await impersonateAccount(props.account);
+    evm: {
+        getProvider: jest.fn(),
+        sendTransactions: jest.fn(
+            async (props: SendTransactionProps): Promise<TransactionReturn> => {
+                await impersonateAccount(props.account);
 
-        const userSigner = await getSigner(hre, props.account);
-        for (const tx of props.transactions) {
-            const sentTx = await userSigner.sendTransaction({
-                to: tx.target,
-                data: tx.data,
-            });
-            await sentTx.wait();
-        }
+                const userSigner = await getSigner(hre, props.account);
+                for (const tx of props.transactions) {
+                    const sentTx = await userSigner.sendTransaction({
+                        to: tx.target,
+                        data: tx.data,
+                    });
+                    await sentTx.wait();
+                }
 
-        await stopImpersonatingAccount(props.account);
+                await stopImpersonatingAccount(props.account);
 
-        return {
-            isMultisig: false,
-            data: [
-                {
-                    message: 'mock approved',
-                    hash: '0x00',
-                },
-            ],
-        };
-    }),
+                return {
+                    isMultisig: false,
+                    data: [
+                        {
+                            message: 'mock approved',
+                            hash: '0x00',
+                        },
+                    ],
+                };
+            },
+        ),
+        getRecipient: jest.fn(),
+        signMessages: jest.fn(),
+        signTypedDatas: jest.fn(),
+    },
+    solana: {
+        getConnection: jest.fn(),
+        getRecipient: jest.fn(),
+        getPublicKey: jest.fn(),
+        sendTransactions: jest.fn(),
+    },
     notify: jest.fn(async (message: string): Promise<any> => {
         console.info(`Notification message to user: ${message}`);
     }),
