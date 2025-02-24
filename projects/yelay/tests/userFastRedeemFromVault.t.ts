@@ -1,13 +1,13 @@
-import * as constants from '../constants';
-import { config } from '../constants';
+import * as constants from '../src/constants';
+import { config } from '../src/constants';
 import { ChildProcess } from 'child_process';
 import {
     userFastRedeemFromVault,
     UserFastRedeemFromVaultProps,
-} from '../functions/userFastRedeemFromVault';
+} from '../src/functions/userFastRedeemFromVault';
 import { fundAddressWithEth, mockedFunctionOptions, setupMainnetFork } from './_testUtils';
 import { Network, StaticJsonRpcProvider } from '@ethersproject/providers';
-import * as utils from '../utils';
+import * as utils from '../src/utils';
 import { getMainnetConfig, SpoolSdk } from '@spool.fi/spool-v2-sdk';
 
 jest.setTimeout(20000);

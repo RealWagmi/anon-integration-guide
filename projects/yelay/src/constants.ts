@@ -1,6 +1,4 @@
-import { ChainId } from '@heyanon/sdk';
-
-export const supportedChains = [ChainId.ETHEREUM];
+export const supportedChains = [1];
 
 export type ChainConfig = {
     providerUrl: string;
@@ -20,7 +18,7 @@ export type ChainConfig = {
     };
 };
 
-export const config: Partial<Record<ChainId, ChainConfig>> = {
+export const config: Record<number, ChainConfig> = {
     // mainnet
     1: {
         providerUrl: 'https://mainnet.infura.io/v3/fa1bf2cea12147559c9634e80be76d61',

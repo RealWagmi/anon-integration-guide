@@ -1,14 +1,13 @@
 import { Address, parseUnits } from 'viem';
-import {
-    FunctionReturn,
-    FunctionOptions,
-    toResult,
-    getChainFromName,
-    TransactionParams,
-    ChainId,
-} from '@heyanon/sdk';
+import { EVM, FunctionReturn, FunctionOptions, toResult, EvmChain } from '@heyanon/sdk';
 import { supportedChains } from '../constants';
-import { getChainConfig, getSdk, getProvider, validateAddress, wrapWithResult } from '../utils';
+import {
+    getChainConfig,
+    getSdk,
+    getEthersProvider,
+    validateAddress,
+    wrapWithResult,
+} from '../utils';
 import { MinimumBurnRedeemBag, RedeemBagStruct, VaultDetailsQuery } from '@spool.fi/spool-v2-sdk';
 
 export interface UserFastRedeemFromVaultProps {
@@ -26,13 +25,13 @@ export interface UserFastRedeemFromVaultProps {
  */
 export async function userFastRedeemFromVault(
     { chainName, account, vaultAddress, amount }: UserFastRedeemFromVaultProps,
-    { sendTransactions, notify }: FunctionOptions,
+    { notify, evm: { sendTransactions } }: FunctionOptions,
 ): Promise<FunctionReturn> {
     // Check wallet connection
     if (!account) return toResult('Wallet not connected', true);
 
     // Validate chain
-    const chainId = getChainFromName(chainName);
+    const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId))
         return toResult(`Protocol is not supported on ${chainName}`, true);
@@ -57,7 +56,7 @@ export async function userFastRedeemFromVault(
     const sdk = await wrapWithResult(getSdk)(chainId);
     if (!sdk.success) return toResult(`Failed to setup SDK`, true);
 
-    const ethersProvider = await wrapWithResult(getProvider)(chainId);
+    const ethersProvider = await wrapWithResult(getEthersProvider)(chainId);
     if (!ethersProvider.success) return toResult(`Failed to get ethers provider`, true);
 
     // Get vault token type
@@ -90,7 +89,6 @@ export async function userFastRedeemFromVault(
     }
 
     // Fast Redeem
-    const network = await ethersProvider.result.getBlockNumber();
     const latestBlock = await wrapWithResult(
         ethersProvider.result.getBlockNumber.bind(ethersProvider.result),
     )();
@@ -115,7 +113,7 @@ export async function userFastRedeemFromVault(
         return toResult(`Failed fast redeem: invalid tx data`, true);
     }
 
-    const userFastRedeemFromVaultTxParams: TransactionParams = {
+    const userFastRedeemFromVaultTxParams: EVM.types.TransactionParams = {
         target: vaultAddressValidation.result,
         data: redeemFastDataValidation.result,
     };
@@ -125,7 +123,7 @@ export async function userFastRedeemFromVault(
         `Fast redeeming ${amount} ${vaultTokenType.symbol} from vault ${vaultAddressValidation.result} for account ${account}...`,
     );
 
-    const transactions: Array<TransactionParams> = [userFastRedeemFromVaultTxParams];
+    const transactions: Array<EVM.types.TransactionParams> = [userFastRedeemFromVaultTxParams];
     await sendTransactions({ chainId, account, transactions });
 
     return toResult(
@@ -135,7 +133,7 @@ export async function userFastRedeemFromVault(
 
 async function redeemFast(
     fastRedeemApiUrl: string,
-    chainId: ChainId,
+    chainId: number,
     redeem: RedeemBagStruct,
     receiver: string,
     latestBlock: number,

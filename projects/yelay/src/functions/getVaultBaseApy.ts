@@ -1,4 +1,4 @@
-import { FunctionReturn, FunctionOptions, toResult, getChainFromName } from '@heyanon/sdk';
+import { FunctionReturn, FunctionOptions, toResult, EVM, EvmChain } from '@heyanon/sdk';
 import { supportedChains } from '../constants';
 import { getSdk, wrapWithResult } from '../utils';
 import { VaultAPYInfoQuery } from '@spool.fi/spool-v2-sdk';
@@ -19,7 +19,7 @@ export async function getVaultBaseApy(
     { notify }: FunctionOptions,
 ): Promise<FunctionReturn> {
     // Validate chain
-    const chainId = getChainFromName(chainName);
+    const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId))
         return toResult(`Protocol is not supported on ${chainName}`, true);

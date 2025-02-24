@@ -1,9 +1,10 @@
+import { GetUserSvtBalanceProps } from '../src/functions/getUserVaultSvtBalance';
 import { FunctionOptions } from '@heyanon/sdk';
-import { getVaultBaseApy, GetVaultBaseApyProps } from '../functions/getVaultBaseApy';
+import { getUserVaultAssetBalance } from '../src/functions/getUserVaultAssetBalance';
 
-jest.setTimeout(20000);
+jest.setTimeout(10000);
 
-describe('getVaultBaseApy', () => {
+describe('getUserVaultSvtBalance', () => {
     it('happy path', async () => {
         // arrange
         const mockedFunctionOptions = {
@@ -13,12 +14,13 @@ describe('getVaultBaseApy', () => {
         } as jest.Mocked<FunctionOptions>;
 
         // act
-        const props: GetVaultBaseApyProps = {
+        const props: GetUserSvtBalanceProps = {
             chainName: 'ethereum',
             vaultAddress: '0x44d55292f05b345dd9517b435c70a5f3420ebfd8',
+            account: '0x005e991137f4785d6bfa82ff0dcbea69e67146bb',
         };
 
-        const result = await getVaultBaseApy(props, mockedFunctionOptions);
+        const result = await getUserVaultAssetBalance(props, mockedFunctionOptions);
 
         // assert
         console.log(result);

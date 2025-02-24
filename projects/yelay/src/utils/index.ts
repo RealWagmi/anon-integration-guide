@@ -1,9 +1,8 @@
-import { ChainId } from '@heyanon/sdk';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { getMainnetConfig, SpoolSdk } from '@spool.fi/spool-v2-sdk';
 import { config } from '../constants';
 
-export function getChainConfig(chainId: ChainId) {
+export function getChainConfig(chainId: number) {
     if (config[chainId] === undefined) {
         throw new Error(`Unsupported chain id: ${chainId}`);
     }
@@ -11,14 +10,14 @@ export function getChainConfig(chainId: ChainId) {
     return config[chainId];
 }
 
-export function getProvider(chainId: ChainId) {
+export function getEthersProvider(chainId: number) {
     const chainConfig = getChainConfig(chainId);
     return new StaticJsonRpcProvider(chainConfig.providerUrl);
 }
 
-export function getSdk(chainId: ChainId) {
+export function getSdk(chainId: number) {
     const chainConfig = getChainConfig(chainId);
-    const rpc = getProvider(chainId);
+    const rpc = getEthersProvider(chainId);
     return new SpoolSdk(getMainnetConfig(chainConfig.subGraphUrl), rpc);
 }
 

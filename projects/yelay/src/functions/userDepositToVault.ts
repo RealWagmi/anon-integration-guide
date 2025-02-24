@@ -1,13 +1,13 @@
 import { Address, parseUnits } from 'viem';
-import {
-    FunctionReturn,
-    FunctionOptions,
-    toResult,
-    getChainFromName,
-    TransactionParams,
-} from '@heyanon/sdk';
+import { EVM, FunctionReturn, FunctionOptions, toResult, EvmChain } from '@heyanon/sdk';
 import { supportedChains } from '../constants';
-import { getChainConfig, getSdk, getProvider, validateAddress, wrapWithResult } from '../utils';
+import {
+    getChainConfig,
+    getSdk,
+    getEthersProvider,
+    validateAddress,
+    wrapWithResult,
+} from '../utils';
 
 import {
     DepositBagStruct,
@@ -31,13 +31,13 @@ export interface UserDepositToVaultProps {
  */
 export async function userDepositToVault(
     { chainName, account, vaultAddress, amount }: UserDepositToVaultProps,
-    { sendTransactions, notify }: FunctionOptions,
+    { notify, evm: { sendTransactions } }: FunctionOptions,
 ): Promise<FunctionReturn> {
     // Check wallet connection
     if (!account) return toResult('Wallet not connected', true);
 
     // Validate chain
-    const chainId = getChainFromName(chainName);
+    const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId))
         return toResult(`Protocol is not supported on ${chainName}`, true);
@@ -60,7 +60,7 @@ export async function userDepositToVault(
     const sdk = await wrapWithResult(getSdk)(chainId);
     if (!sdk.success) return toResult(`Failed to setup SDK`, true);
 
-    const ethersProvider = await wrapWithResult(getProvider)(chainId);
+    const ethersProvider = await wrapWithResult(getEthersProvider)(chainId);
     if (!ethersProvider.success) return toResult(`Failed to get ethers provider`, true);
 
     // Get vault token type
@@ -103,7 +103,7 @@ export async function userDepositToVault(
         return toResult(`Failed to create tx to approve: invalid approve tx data`, true);
     }
 
-    const approveTxParams: TransactionParams = {
+    const approveTxParams: EVM.types.TransactionParams = {
         target: vaultTokenAddressValidation.result,
         data: approveTokenToVaultAmountDataValidation.result,
     };
@@ -132,7 +132,7 @@ export async function userDepositToVault(
         return toResult(`Failed to create tx to deposit: invalid deposit tx data`, true);
     }
 
-    const depositToVaultTxParams: TransactionParams = {
+    const depositToVaultTxParams: EVM.types.TransactionParams = {
         target: vaultAddressValidation.result,
         data: depositAssetsToVaultDataValidation.result,
     };
@@ -142,7 +142,10 @@ export async function userDepositToVault(
         `Approving and depositing ${amount} ${vaultTokenType.symbol} in vault ${vaultAddressValidation.result} for account ${account}...`,
     );
 
-    const transactions: Array<TransactionParams> = [approveTxParams, depositToVaultTxParams];
+    const transactions: Array<EVM.types.TransactionParams> = [
+        approveTxParams,
+        depositToVaultTxParams,
+    ];
     await sendTransactions({ chainId, account, transactions });
 
     return toResult(

@@ -1,5 +1,5 @@
 import { Address } from 'viem';
-import { FunctionReturn, FunctionOptions, toResult, getChainFromName } from '@heyanon/sdk';
+import { FunctionReturn, FunctionOptions, toResult, EVM, EvmChain } from '@heyanon/sdk';
 import { supportedChains } from '../constants';
 import { getSdk, wrapWithResult } from '../utils';
 
@@ -23,7 +23,7 @@ export async function getUserVaultSvtBalance(
     if (!account) return toResult('Wallet not connected', true);
 
     // Validate chain
-    const chainId = getChainFromName(chainName);
+    const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId))
         return toResult(`Protocol is not supported on ${chainName}`, true);

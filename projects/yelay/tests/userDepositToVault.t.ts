@@ -1,7 +1,7 @@
-import { userDepositToVault } from '../functions';
-import { UserDepositToVaultProps } from '../functions/userDepositToVault';
-import * as constants from '../constants';
-import { config } from '../constants';
+import { userDepositToVault } from '../src/functions';
+import { UserDepositToVaultProps } from '../src/functions/userDepositToVault';
+import * as constants from '../src/constants';
+import { config } from '../src/constants';
 import { ChildProcess } from 'child_process';
 import { mockedFunctionOptions, setupMainnetFork, transferUSDC } from './_testUtils';
 

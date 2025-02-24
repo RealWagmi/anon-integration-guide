@@ -9,7 +9,7 @@ import {
 import { getContractAt, getSigner } from '@nomiclabs/hardhat-ethers/internal/helpers';
 import hre from 'hardhat';
 import { parseUnits } from 'viem';
-import ERC20 from '../abis/ERC20.json';
+import ERC20 from '../src/abis/ERC20.json';
 
 export async function setupMainnetFork(providerUrl: string) {
     const hardhatNode = spawn(

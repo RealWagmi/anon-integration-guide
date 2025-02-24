@@ -1,6 +1,8 @@
-import { GetUserSvtBalanceProps } from '../functions/getUserVaultSvtBalance';
+import {
+    GetUserSvtBalanceProps,
+    getUserVaultSvtBalance,
+} from '../src/functions/getUserVaultSvtBalance';
 import { FunctionOptions } from '@heyanon/sdk';
-import { getUserVaultAssetBalance } from '../functions/getUserVaultAssetBalance';
 
 jest.setTimeout(10000);
 
@@ -20,7 +22,7 @@ describe('getUserVaultSvtBalance', () => {
             account: '0x005e991137f4785d6bfa82ff0dcbea69e67146bb',
         };
 
-        const result = await getUserVaultAssetBalance(props, mockedFunctionOptions);
+        const result = await getUserVaultSvtBalance(props, mockedFunctionOptions);
 
         // assert
         console.log(result);
