@@ -37,8 +37,8 @@ node scripts/create-module.js uniswap-v3 "Uniswap V3 DEX integration"
 After running the script:
 1. Navigate to your new project directory
 2. Install dependencies and build:
-# If you don't have pnpm installed globally, install it first:
-# Option 1 (requires admin privileges):
+## If you don't have pnpm installed globally, install it first:
+### Option 1 (requires admin privileges):
 npm install -g pnpm
 ```bash
 cd projects/project-name
