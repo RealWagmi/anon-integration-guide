@@ -1,0 +1,18 @@
+{
+    "name": "@projects/lido",
+    "version": "1.0.0",
+    "scripts": {
+        "yarn": "yarn install"
+    },
+    "dependencies": {
+        "@heyanon/sdk": "^2.0.2",
+		"vitest": "^2.1.8",
+		"viem": "2.22.9"
+    },
+    "license": "MIT",
+    "engines": {
+        "npm": "please-use-yarn",
+        "node": ">=18.x",
+        "yarn": ">=1.22"
+    }
+}
