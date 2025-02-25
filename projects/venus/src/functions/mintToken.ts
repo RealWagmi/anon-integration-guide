@@ -1,6 +1,3 @@
-# Action Function Example
-
-```typescript
 import { EVM, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { Address, encodeFunctionData, erc20Abi, formatUnits, parseEther, parseEventLogs, parseUnits } from 'viem';
 import { vBNBAbi } from '../abis/vBNBAbi';
@@ -156,15 +153,3 @@ export async function mintToken({ chainName, account, amount, tokenSymbol, pool 
 		return toResult(`Failed to mint token: ${error instanceof Error ? error.message : 'Unknown error'}`, true);
 	}
 }
-```
-
-**Key Points**:
-
-- Validates input arguments.
-- Add additional checks of smart contract requirements (check for proper balance, time of invoke function) and return to user proper error if check failed.
-- Uses `notify` to inform the user.
-- Calls `sendTransactions` only once with the transaction array.
-- Returns the result using `toResult`.
-- Make sure that you not miss crucial info in events. For example if this function "stake" and it's not return anything except amount which static as user input - then read event doesn't necessary. But if "Stake" event show time when lock of stake will ends - it will be nice show it to user.
-- Includes JSDoc comments.
-  </code_block_to_apply_changes_from>
