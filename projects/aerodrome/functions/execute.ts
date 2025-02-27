@@ -44,12 +44,14 @@ type Props = {
  * @returns Transaction result
  */
 export async function execute(props: Props, { sendTransactions, notify }: FunctionOptions): Promise<FunctionReturn> {
+    // get wallet
     const wallet = parseWallet(props);
-
     if (!wallet.success) {
         return toResult(wallet.errorMessage, true);
     }
+    const { account, chainId } = wallet.data;
 
+    // get commands
     const commandsWithInput = parseCommandList(props);
     if (!commandsWithInput.success) {
         return toResult(commandsWithInput.errorMessage, true);
@@ -91,7 +93,6 @@ export async function execute(props: Props, { sendTransactions, notify }: Functi
     }
 
     // prepare tx
-    const { account, chainId } = wallet.data;
     await notify('Preparing execute transaction...');
     const tx: TransactionParams = {
         target: UNIVERSAL_ROUTER_ADDRESS,

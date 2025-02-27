@@ -32,20 +32,17 @@ type Props = {
  */
 export async function quoteExactInput(props: Props, { getProvider }: FunctionOptions): Promise<FunctionReturn> {
     const wallet = parseWallet(props);
-
     if (!wallet.success) {
         return toResult(wallet.errorMessage, true);
     }
 
     const tokensAndFees = parseTokensAndFees(props);
-
     if (!tokensAndFees.success) {
         return toResult(tokensAndFees.errorMessage, true);
     }
 
     const { tokens, fees } = tokensAndFees.data;
     let path: Hex;
-
     try {
         path = encodePath(tokens, fees);
     } catch (error) {
@@ -53,9 +50,7 @@ export async function quoteExactInput(props: Props, { getProvider }: FunctionOpt
     }
 
     const { chainId } = wallet.data;
-
     const provider = getProvider(chainId);
-
     const [tokenInDecimals, tokenOutDecimals, tokenOutSymbol] = await provider.multicall({
         contracts: [
             {
@@ -75,18 +70,14 @@ export async function quoteExactInput(props: Props, { getProvider }: FunctionOpt
             },
         ],
     });
-
     if (tokenInDecimals.status !== 'success') return toResult(tokenInDecimals.error.message, true);
-
     if (tokenOutDecimals.status !== 'success') return toResult(tokenOutDecimals.error.message, true);
-
     if (tokenOutSymbol.status !== 'success') return toResult(tokenOutSymbol.error.message, true);
 
     const amount = parseAmount({
         amount: props.amountIn,
         decimals: tokenInDecimals.result,
     });
-
     if (!amount.success) {
         return toResult(amount.errorMessage, true);
     }

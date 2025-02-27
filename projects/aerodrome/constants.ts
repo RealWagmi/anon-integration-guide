@@ -1,5 +1,5 @@
 import { ChainId } from '@heyanon/sdk';
-import { Address } from "viem";
+import { Address, Hex } from "viem";
 
 export const supportedChains = [ChainId.BASE];
 
@@ -49,18 +49,18 @@ export const enum CommandCode {
 export type V3SwapExactIn = {
     commandCode: CommandCode.V3_SWAP_EXACT_IN
     recipient: Address;
-    amountIn: string;
-    amountOutMin: string;
-    path: string;
+    amountIn: bigint;
+    amountOutMin: bigint;
+    path: Hex;
     payerIsUser: boolean;
 }
 
 export type V3SwapExactOut = {
     commandCode: CommandCode.V3_SWAP_EXACT_OUT;
     recipient: Address;
-    amountOut: string;
-    amountInMax: string;
-    path: string;
+    amountOut: bigint;
+    amountInMax: bigint;
+    path: Hex;
     payerIsUser: boolean;
 }
 
@@ -68,42 +68,47 @@ export type Permit2TransferFrom = {
     commandCode: CommandCode.PERMIT2_TRANSFER_FROM;
     token: Address;
     recipient: Address;
-    amount: string;
+    amount: bigint;
 }
 
 export type Permit = {
     token: Address;
-    amount: string;
-    expiration: string;
-    nonce: string;
+    amount: bigint;
+    expiration: bigint;
+    nonce: bigint;
+}
+
+export type PermitBatch = {
+    permits: Permit[];
+    spender: Address;
+    sigDeadline: bigint;
 }
 
 export type Permit2PermitBatch = {
     commandCode: CommandCode.PERMIT2_PERMIT_BATCH;
-    permits: Permit[];
-    spender: Address;
-    sigDeadline: string;
+    batch: PermitBatch;
+    signature: Hex;
 }
 
 export type Sweep = {
     commandCode: CommandCode.SWEEP;
     token: Address;
     recipient: Address;
-    amountMin: string;
+    amountMin: bigint;
 }
 
 export type Transfer = {
     commandCode: CommandCode.TRANSFER;
     token: Address;
     recipient: Address;
-    value: string;
+    value: bigint;
 }
 
 export type PayPortion = {
     commandCode: CommandCode.PAY_PORTION;
     token: Address;
     recipient: Address;
-    bips: string;
+    bips: bigint;
 }
 
 export type Route = {
@@ -115,8 +120,8 @@ export type Route = {
 export type V2SwapExactIn = {
     commandCode: CommandCode.V2_SWAP_EXACT_IN;
     recipient: Address;
-    amountIn: string;
-    amountOutMin: string;
+    amountIn: bigint;
+    amountOutMin: bigint;
     routes: Route[];
     payerIsUser: boolean;
 }
@@ -124,35 +129,40 @@ export type V2SwapExactIn = {
 export type V2SwapExactOut = {
     commandCode: CommandCode.V2_SWAP_EXACT_OUT;
     recipient: Address;
-    amountOut: string;
-    amountInMax: string;
+    amountOut: bigint;
+    amountInMax: bigint;
     routes: Route[];
     payerIsUser: boolean;
 }
 
-export type Permit2Permit = {
-    commandCode: CommandCode.PERMIT2_PERMIT;
+export type PermitSingle = {
     permit: Permit;
     spender: Address;
-    sigDeadline: string;
+    sigDeadline: bigint;
+}
+
+export type Permit2Permit = {
+    commandCode: CommandCode.PERMIT2_PERMIT;
+    single: PermitSingle;
+    signature: Hex;
 }
 
 export type WrapEth = {
     commandCode: CommandCode.WRAP_ETH;
     recipient: Address;
-    amountMin: string;
+    amountMin: bigint;
 }
 
 export type UnwrapWeth = {
     commandCode: CommandCode.UNWRAP_WETH;
     recipient: Address;
-    amountMin: string;
+    amountMin: bigint;
 }
 
 export type AllowanceTransfer = {
     from: Address;
     to: Address;
-    amount: string;
+    amount: bigint;
     token: Address;
 }
 
@@ -165,37 +175,37 @@ export type BalanceCheckErc20 = {
     commandCode: CommandCode.BALANCE_CHECK_ERC20;
     owner: Address;
     token: Address;
-    minBalance: string;
+    minBalance: bigint;
 }
 
 export type OwnerCheck721 = {
     commandCode: CommandCode.OWNER_CHECK_721;
     owner: Address;
     token: Address;
-    id: string;
+    id: bigint;
 }
 
 export type OwnerCheck1155 = {
     commandCode: CommandCode.OWNER_CHECK_1155;
     owner: Address;
     token: Address;
-    id: string;
-    minBalance: string;
+    id: bigint;
+    minBalance: bigint;
 }
 
 export type SweepErc721 = {
     commandCode: CommandCode.SWEEP_ERC721;
     token: Address;
     recipient: Address;
-    id: string;
+    id: bigint;
 }
 
 export type SweepErc1155 = {
     commandCode: CommandCode.SWEEP_ERC1155;
     token: Address;
     recipient: Address;
-    id: string;
-    amount: string;
+    id: bigint;
+    amount: bigint;
 }
 
 export type ApproveErc20 = {

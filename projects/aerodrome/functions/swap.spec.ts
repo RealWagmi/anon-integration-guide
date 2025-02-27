@@ -1,10 +1,10 @@
-import { encodeFunctionData, Hex } from 'viem';
+import { encodeFunctionData, Hex, parseUnits } from 'viem';
 import { describe, expect, it, vi } from 'vitest';
 import universalRouter from '../abis/universalRouter';
-import { swap } from './swap';
-import { CommandCode, UNIVERSAL_ROUTER_ADDRESS } from "../constants";
+import { CommandCode, UNIVERSAL_ROUTER_ADDRESS, V3SwapExactIn } from "../constants";
 import { encodePath } from "../utils/path";
 import { encodeV3SwapExactIn } from "../utils/encode";
+import { swap } from "./swap";
 
 vi.mock('@heyanon/sdk');
 
@@ -13,21 +13,32 @@ describe('swap', () => {
         const props: Parameters<typeof swap>[0] = {
             account: '0x1234567890123456789012345678901234567890',
             chainName: 'Base',
-            swap: {
-                commandCode: CommandCode.V3_SWAP_EXACT_IN,
-                recipient: '0x1234567890123456789012345678901234567891',
-                amountIn: '1',
-                amountOutMin: '3500',
-                path: encodePath([
-                    '0x4200000000000000000000000000000000000006',
-                    '0x940181a94a35a4569e4529a3cdfb74e38fd98631'
-                ], ['V3_LOW']),
-                payerIsUser: true
-            }
+            amountIn: '1',
+            amountOutMin: '3500',
+            tokens: [
+                '0x4200000000000000000000000000000000000006',
+                '0x940181a94a35a4569e4529a3cdfb74e38fd98631'
+            ],
+            fees: ['V3_LOW'],
         };
+        const swapObj: V3SwapExactIn = {
+            commandCode: CommandCode.V3_SWAP_EXACT_IN,
+            recipient: props.account,
+            amountIn: parseUnits('1', 18),
+            amountOutMin: parseUnits('3500', 18),
+            path: encodePath([
+                '0x4200000000000000000000000000000000000006',
+                '0x940181a94a35a4569e4529a3cdfb74e38fd98631'
+            ], ['V3_LOW']),
+            payerIsUser: true
+        }
+
+        const token0Decimals = {status: 'success', result: 18};
+        const token1Decimals = {status: 'success', result: 18};
 
         const provider = {
             readContract: vi.fn(),
+            multicall: vi.fn().mockReturnValue(Promise.resolve([token0Decimals, token1Decimals])),
         };
 
         const tools: Parameters<typeof swap>[1] = {
@@ -40,7 +51,7 @@ describe('swap', () => {
 
         // build command and input bytecode
         let commandBytecode: Hex = '0x00';
-        let encodedInputs: Hex[] = [encodeV3SwapExactIn(props.swap)];
+        let encodedInputs: Hex[] = [encodeV3SwapExactIn(swapObj)];
 
         expect(tools.sendTransactions).toHaveBeenCalledWith(
             expect.objectContaining({
