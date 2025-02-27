@@ -13,23 +13,22 @@ type Props = {
  * Returns tick spacing for given pool address.
  */
 export async function getTickSpacing(props: Props, { getProvider }: FunctionOptions): Promise<FunctionReturn> {
+    // get wallet
     const wallet = parseWallet(props);
-
     if (!wallet.success) {
         return toResult(wallet.errorMessage, true);
     }
+    const { chainId } = wallet.data;
 
+    // get pool
     const poolData = parsePoolAddress(props);
     if (!poolData.success) {
         return toResult(poolData.errorMessage, true);
     }
-
     const { poolAddress } = poolData.data;
 
-    const { chainId } = wallet.data;
-
+    // get tick spacing
     const provider = getProvider(chainId);
-
     const tickSpacing = await provider.readContract({
         abi: pool,
         address: poolAddress,
@@ -37,5 +36,6 @@ export async function getTickSpacing(props: Props, { getProvider }: FunctionOpti
         args: [],
     });
 
+    // return
     return toResult(`Tick spacing for pool address ${poolAddress}: ${tickSpacing}`);
 }

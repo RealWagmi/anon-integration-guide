@@ -26,28 +26,27 @@ type Props = {
  * @returns Transaction result
  */
 export async function getPath(props: Props, {}: FunctionOptions): Promise<FunctionReturn> {
+    // get wallet
     const wallet = parseWallet(props);
-
     if (!wallet.success) {
         return toResult(wallet.errorMessage, true);
     }
 
+    // get tokens and fees
     const tokensAndFees = parseTokensAndFees(props);
-
     if (!tokensAndFees.success) {
         return toResult(tokensAndFees.errorMessage, true);
     }
-
     const { tokens, fees } = tokensAndFees.data;
-    let path: Hex;
 
+    // encode path
+    let path: Hex;
     try {
         path = encodePath(tokens, fees);
     } catch (error) {
         return toResult(`Unable to encode path: ${error?.message}`, true);
     }
 
-    return new Promise((resolve, reject) => {
-        resolve(`Path for tokens ${tokens} at fees ${fees}: ${path}`);
-    });
+    // return
+    return toResult(`Path for tokens ${tokens} at fees ${fees}: ${path}`);
 }

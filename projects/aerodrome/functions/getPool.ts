@@ -16,24 +16,22 @@ type Props = {
  * Returns pool address for swap from tokens and fee.
  */
 export async function getPool(props: Props, { getProvider }: FunctionOptions): Promise<FunctionReturn> {
+    // get wallet
     const wallet = parseWallet(props);
-
     if (!wallet.success) {
         return toResult(wallet.errorMessage, true);
     }
+    const { chainId } = wallet.data;
 
     // default to V3_LOW
     const tokensAndFee = parseTokensAndFee(props);
     if (!tokensAndFee.success) {
         return toResult(tokensAndFee.errorMessage, true);
     }
-
     const { token0, token1, fee } = tokensAndFee.data;
 
-    const { chainId } = wallet.data;
-
+    // get pool
     const provider = getProvider(chainId);
-
     const poolAddress = await provider.readContract({
         abi: poolFactory,
         address: POOL_FACTORY_ADDRESS,
@@ -41,5 +39,6 @@ export async function getPool(props: Props, { getProvider }: FunctionOptions): P
         args: [token0, token1, fee],
     });
 
+    // return
     return toResult(`Found liquidity pool for pair of tokens: ${token0}:${token1} at fee ${fee}: ${poolAddress}`);
 }

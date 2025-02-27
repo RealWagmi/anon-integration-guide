@@ -25,7 +25,7 @@ type Props = {
     tokens: Address[];
     /**
      * @description List of fees between each consecutive tokens. The fees are ordered and apply
-     * to each consecutive token pair fe. `fee[0]` would apply to pair of `tokens[0]` and `tokens[1]`
+     * to each consecutive token pair fe. `fee[0]` would apply to a pair of `tokens[0]` and `tokens[1]`
      */
     fees: FeeAmount[];
 };

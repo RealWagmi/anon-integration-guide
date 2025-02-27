@@ -26,7 +26,7 @@ describe('getPath', () => {
         const response = await getPath(props, tools);
 
         const _path = `${tokens[0]}${FEE_AMOUNTS[fees[0]].toString(16).padStart(2 * FEE_SIZE, '0')}${tokens[1].slice(2)}`;
-        expect(response).toMatch(
+        expect(response.data).toMatch(
             `Path for tokens ${tokens} at fees ${fees}: ${_path}`
         );
     });

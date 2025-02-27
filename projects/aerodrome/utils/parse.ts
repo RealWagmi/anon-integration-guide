@@ -1,6 +1,6 @@
 import { getChainFromName } from '@heyanon/sdk';
-import { Address, Hex, isAddress, parseUnits } from 'viem';
-import { CommandCode, CommandList, FeeAmount, supportedChains, V3SwapExactIn } from '../constants';
+import { Address, isAddress, parseUnits } from 'viem';
+import { CommandList, FeeAmount, supportedChains } from '../constants';
 
 export type Result<Data> =
     | {
@@ -81,29 +81,8 @@ export const parseCommandList = <Props extends { commandList: CommandList }>({ c
     }
 }
 
-export const parseSwap = <
-    Props extends {
-        account: Address,
-        amountIn: string,
-        amountOutMin: string,
-    }>({ account, amountIn, amountOutMin }: Props, path: Hex): Result<{ swap: V3SwapExactIn }
-> => {
-    return {
-        success: true,
-        data: {
-            swap: {
-                commandCode: CommandCode.V3_SWAP_EXACT_IN,
-                recipient: account,
-                amountIn,
-                amountOutMin,
-                path,
-                payerIsUser: true,
-            }
-        }
-    }
-}
-
 export const parsePoolAddress = <Props extends { poolAddress: Address }>({ poolAddress }: Props): Result<{ poolAddress: Address }> => {
+    if (!poolAddress) return { success: false, errorMessage: 'Pool does not exist' };
     return {
         success: true,
         data: {
