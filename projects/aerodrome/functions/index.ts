@@ -10,8 +10,11 @@ export { getPath } from './getPath';
 // estimate swap result
 export { quoteExactInput } from './quoteExactInput';
 
-// execute swap
-export { swap } from './swap';
+// execute swap with V3
+export { swapV3 } from './swapV3';
+
+// execute swap with V2
+export { swapV2 } from './swapV2';
 
 // execute command combination
 export { execute } from './execute';

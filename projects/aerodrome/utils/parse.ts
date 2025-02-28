@@ -51,7 +51,8 @@ export const parseTokensAndFee = <Props extends { token0: Address, token1: Addre
             fee: fee ?? "V3_LOW"
         }
     }
-}
+};
+
 export const parseTokensAndFees = <Props extends { tokens: Address[]; fees: FeeAmount[] }>({ tokens, fees }: Props): Result<{ tokens: Address[]; fees: FeeAmount[] }> => {
     if (!Array.isArray(tokens)) return { success: false, errorMessage: 'Expected tokens to be an array' };
 
@@ -72,6 +73,26 @@ export const parseTokensAndFees = <Props extends { tokens: Address[]; fees: FeeA
     };
 };
 
+export const parseTokensAndStables = <Props extends { tokens: Address[]; stables: boolean[] }>({ tokens, stables }: Props): Result<{ tokens: Address[]; stables: boolean[] }> => {
+    if (!Array.isArray(tokens)) return { success: false, errorMessage: 'Expected tokens to be an array' };
+
+    if (!Array.isArray(stables)) return { success: false, errorMessage: 'Expected stables to be an array' };
+
+    if (tokens.length < 2) return { success: false, errorMessage: 'Expected at least two tokens' };
+
+    if (stables.length < 1) return { success: false, errorMessage: 'Expected at least one stable info' };
+
+    if (tokens.length !== stables.length + 1) return { success: false, errorMessage: 'Incorrect amount of stables in relation to tokens' };
+
+    return {
+        success: true,
+        data: {
+            tokens,
+            stables,
+        },
+    };
+};
+
 export const parseCommandList = <Props extends { commandList: CommandList }>({ commandList }: Props): Result<{ commandList: CommandList }> => {
     return {
         success: true,
@@ -79,7 +100,7 @@ export const parseCommandList = <Props extends { commandList: CommandList }>({ c
             commandList
         }
     }
-}
+};
 
 export const parsePoolAddress = <Props extends { poolAddress: Address }>({ poolAddress }: Props): Result<{ poolAddress: Address }> => {
     if (!poolAddress) return { success: false, errorMessage: 'Pool does not exist' };
@@ -89,4 +110,4 @@ export const parsePoolAddress = <Props extends { poolAddress: Address }>({ poolA
             poolAddress
         }
     }
-}
+};

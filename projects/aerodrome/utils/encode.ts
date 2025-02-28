@@ -76,16 +76,6 @@ export const encodeV3SwapExactOut = (inputs: V3SwapExactOut): Hex => {
 }
 
 export const encodePermit2TransferFrom = (inputs: Permit2TransferFrom): Hex => {
-    // parse amount in max
-    // const amount = parseAmount({
-    //     amount: inputs.amount,
-    //     decimals: decimals.decimals,
-    // });
-    // if (!amount.success) return {
-    //     success: false,
-    //     errorMessage: amount.errorMessage,
-    // };
-
     // encode
     let encoded = encodeAbiParameters(
         parseAbiParameters('address token, address recipient, uint160 amount'),

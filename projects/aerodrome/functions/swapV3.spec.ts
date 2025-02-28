@@ -4,13 +4,13 @@ import universalRouter from '../abis/universalRouter';
 import { CommandCode, UNIVERSAL_ROUTER_ADDRESS, V3SwapExactIn } from "../constants";
 import { encodePath } from "../utils/path";
 import { encodeV3SwapExactIn } from "../utils/encode";
-import { swap } from "./swap";
+import { swapV3 } from "./swapV3";
 
 vi.mock('@heyanon/sdk');
 
-describe('swap', () => {
-    it('should swap wETH for AERO', async () => {
-        const props: Parameters<typeof swap>[0] = {
+describe('swapV3', () => {
+    it('should swap wETH for AERO using V3', async () => {
+        const props: Parameters<typeof swapV3>[0] = {
             account: '0x1234567890123456789012345678901234567890',
             chainName: 'Base',
             amountIn: '1',
@@ -41,13 +41,13 @@ describe('swap', () => {
             multicall: vi.fn().mockReturnValue(Promise.resolve([token0Decimals, token1Decimals])),
         };
 
-        const tools: Parameters<typeof swap>[1] = {
+        const tools: Parameters<typeof swapV3>[1] = {
             sendTransactions: vi.fn().mockReturnValue(Promise.resolve({ data: ['Result'], isMultisig: false })),
             notify: vi.fn(),
             getProvider: vi.fn().mockReturnValue(provider),
         };
 
-        const result = await swap(props, tools);
+        const result = await swapV3(props, tools);
 
         // build command and input bytecode
         let commandBytecode: Hex = '0x00';
@@ -67,6 +67,6 @@ describe('swap', () => {
                 ],
             }),
         );
-        expect(result.data).toMatch(`Successfully executed swap through Universal Router.`);
+        expect(result.data).toMatch(`Successfully executed swap using Aerodrome V3 through Universal Router.`);
     });
 });

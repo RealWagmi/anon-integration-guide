@@ -25,7 +25,7 @@ type Props = {
     tokens: Address[];
     /**
      * @description List of fees between each consecutive tokens. The fees are ordered and apply
-     * to each consecutive token pair fe. `fee[0]` would apply to a pair of `tokens[0]` and `tokens[1]`
+     * to each consecutive token pair fee. `fees[0]` would apply to a pair of `tokens[0]` and `tokens[1]`
      */
     fees: FeeAmount[];
 };
@@ -36,7 +36,7 @@ type Props = {
  * @param tools - System tools for blockchain interactions
  * @returns Transaction result
  */
-export async function swap(props: Props, { sendTransactions, notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
+export async function swapV3(props: Props, { sendTransactions, notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
     // get wallet
     const wallet = parseWallet(props);
     if (!wallet.success) {
@@ -49,9 +49,9 @@ export async function swap(props: Props, { sendTransactions, notify, getProvider
     if (!tokensAndFees.success) {
         return toResult(tokensAndFees.errorMessage, true);
     }
+    const { tokens, fees } = tokensAndFees.data;
 
     // get path
-    const { tokens, fees } = tokensAndFees.data;
     let path: Hex;
     try {
         path = encodePath(tokens, fees);
@@ -135,5 +135,5 @@ export async function swap(props: Props, { sendTransactions, notify, getProvider
     const message = result.data[result.data.length - 1];
 
     // return
-    return toResult(result.isMultisig ? message.message : `Successfully executed swap through Universal Router. ${message.message}`);
+    return toResult(result.isMultisig ? message.message : `Successfully executed swap using Aerodrome V3 through Universal Router. ${message.message}`);
 }

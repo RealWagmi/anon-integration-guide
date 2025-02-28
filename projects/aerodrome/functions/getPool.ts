@@ -1,7 +1,7 @@
 import { FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { Address } from 'viem';
 import poolFactory from '../abis/poolFactory';
-import { POOL_FACTORY_ADDRESS } from '../constants';
+import { FeeAmount, POOL_FACTORY_ADDRESS } from '../constants';
 import { parseTokensAndFee, parseWallet } from '../utils/parse';
 
 type Props = {
@@ -9,7 +9,7 @@ type Props = {
     account: Address;
     token0: Address;
     token1: Address;
-    fee?: string;
+    fee?: FeeAmount;
 };
 
 /**
