@@ -17,25 +17,6 @@ const walletProps = [
 
 const walletRequiredProps = ['chainName', 'account'];
 
-const swapObject = {
-    description: 'Command: V3 swap exact in',
-    type: 'object',
-    properties: {
-        commandCode: { const: '00' },
-        recipient: { type: 'string' },
-        amountIn: { type: 'string' },
-        amountOutMin: { type: 'string' },
-        path: { type: 'string' },
-        payerIsUser: { type: 'boolean' }
-    },
-    required: ['commandCode', 'recipient', 'amountIn', 'amountOutMin', 'path', 'payerIsUser'],
-}
-
-const swapProps = {
-    name: 'swap',
-    ...swapObject,
-}
-
 const permitObject = {
     description: 'Low level object defining permit',
     type: 'object',
@@ -89,7 +70,7 @@ export const tools: AiTool[] = [
                 type: 'array',
                 items: { type: 'string' },
                 description:
-                    'List of fees between each consecutive tokens. The fees are ordered and apply to each consecutive token pair fe. `fee[0]` would apply to pair of `tokens[0]` and `tokens[1]`',
+                    'List of fees between each consecutive tokens. The fees are ordered and apply to each consecutive token pair fe. `fees[0]` would apply to pair of `tokens[0]` and `tokens[1]`',
             },
             {
                 name: 'amountIn',
@@ -112,7 +93,19 @@ export const tools: AiTool[] = [
                         type: 'array',
                         items: {
                             oneOf: [
-                                swapObject,
+                                {
+                                    description: 'Command: V3 swap exact in',
+                                    type: 'object',
+                                    properties: {
+                                        commandCode: { const: '00' },
+                                        recipient: { type: 'string' },
+                                        amountIn: { type: 'string' },
+                                        amountOutMin: { type: 'string' },
+                                        path: { type: 'string' },
+                                        payerIsUser: { type: 'boolean' }
+                                    },
+                                    required: ['commandCode', 'recipient', 'amountIn', 'amountOutMin', 'path', 'payerIsUser'],
+                                },
                                 {
                                     description: 'Command: V3 swap exact out',
                                     type: 'object',
@@ -338,15 +331,71 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'swap',
-        description: 'Performs token swap on given path. Uses path from `getPath` for tokens and fees.',
-        required: [...walletRequiredProps, 'swap'],
-        props: [...walletProps, swapProps],
+        name: 'swapV3',
+        description: 'Performs token swap using V3 version of protocol. Can use token pools from V3 and V2.',
+        required: [...walletRequiredProps, 'amountIn', 'tokens', 'fees'],
+        props: [
+            ...walletProps,
+            {
+                name: 'amountIn',
+                type: 'string',
+                description: 'Amount in of tokens to swap',
+            },
+            {
+                name: 'amountOutMin',
+                type: 'string',
+                description: 'Expected amount out of tokens from swap',
+            },
+            {
+                name: 'tokens',
+                type: 'array',
+                items: { type: 'string' },
+                description: 'List of tokens between which you want to swap. There should be at least 2. Between each consecutive tokens there should be a pool.',
+            },
+            {
+                name: 'fees',
+                type: 'array',
+                items: { type: 'string' },
+                description:
+                    'List of fees between each consecutive tokens. The fees are ordered and apply to each consecutive token pair fe. `fees[0]` would apply to pair of `tokens[0]` and `tokens[1]`',
+            },
+        ],
+    },
+    {
+        name: 'swapV2',
+        description: 'Performs token swap using V2. Can use token pools only from V2.',
+        required: [...walletRequiredProps, 'amountIn', 'tokens', 'stables'],
+        props: [
+            ...walletProps,
+            {
+                name: 'amountIn',
+                type: 'string',
+                description: 'Amount in of tokens to swap',
+            },
+            {
+                name: 'amountOutMin',
+                type: 'string',
+                description: 'Expected amount out of tokens from swap',
+            },
+            {
+                name: 'tokens',
+                type: 'array',
+                items: { type: 'string' },
+                description: 'List of tokens between which you want to swap. There should be at least 2. Between each consecutive tokens there should be a pool.',
+            },
+            {
+                name: 'stables',
+                type: 'array',
+                items: { type: 'boolean' },
+                description:
+                    'List of flags between each consecutive tokens denoting if pool is stable. The stables are ordered and apply to each consecutive token pair fe. `stables[0]` would apply to pair of `tokens[0]` and `tokens[1]`',
+            },
+        ],
     },
     {
         name: 'getPool',
-        description: 'Retrieve and return pool address for tokens and fee',
-        required: [...walletRequiredProps, 'token0', 'token1', 'fee'],
+        description: 'Retrieve and return pool address for tokens and fee. Lowest fee as default is assumed when no fee provided.',
+        required: [...walletRequiredProps, 'token0', 'token1'],
         props: [
             ...walletProps,
             {
@@ -368,7 +417,7 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getPath',
-        description: 'Builds and returns path for swaps. Should be build from tokens and fees',
+        description: 'Builds and returns path for swaps. Should be build from tokens and fees.',
         required: [...walletRequiredProps, 'tokens', 'fees'],
         props: [
             ...walletProps,
@@ -383,13 +432,13 @@ export const tools: AiTool[] = [
                 type: 'array',
                 items: { type: 'string' },
                 description:
-                    'List of fees between each consecutive tokens. The fees are ordered and apply to each consecutive token pair fe. `fee[0]` would apply to pair of `tokens[0]` and `tokens[1]`',
+                    'List of fees between each consecutive tokens. The fees are ordered and apply to each consecutive token pair fe. `fees[0]` would apply to pair of `tokens[0]` and `tokens[1]`',
             },
         ],
     },
     {
         name: 'getTickSpacing',
-        description: 'Retrieve and return tick spacing for pool addrress',
+        description: 'Retrieve and return tick spacing for pool address',
         required: [...walletRequiredProps, 'poolAddress'],
         props: [
             ...walletProps,
