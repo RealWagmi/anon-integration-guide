@@ -35,6 +35,7 @@
   },
   "dependencies": {
     "@heyanon/sdk": "^2.0.2",
+    "@msgpack/msgpack": "2.8.0",
     "axios": "^1.8.1",
     "viem": "2.22.9",
     "vitest": "^2.1.8"
