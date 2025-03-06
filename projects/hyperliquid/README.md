@@ -1,38 +1,114 @@
-# hyperliquid
+# Hyperliquid
 
-Hyperliquid is Layer 1 blockchain providing CEX-like trading experience through on-chain order books. Enables USDC bridging and supports both spot/perpetual trading with full position management.
+Integration with Hyperliquid
+
+## Overview
+
+Hyperliquid is a performant L1 optimized from the ground up. The vision is a fully onchain open financial system with user built applications interfacing with performant native components, all without compromising end user experience. The Hyperliquid L1 is performant enough to operate an entire ecosystem of permissionless financial applications – every order, cancel, trade, and liquidation happens transparently on-chain with block latency <1 second. The chain currently supports 100k orders / second.
+
+The Hyperliquid L1 uses a custom consensus algorithm called HyperBFT which is heavily inspired by Hotstuff and its successors. Both the algorithm and networking stack are optimized from the ground up to support the L1. The flagship native application is a fully onchain order book perpetuals exchange, the Hyperliquid DEX. Further developments include a native token standard, spot trading, permissionless liquidity, etc.
+
+## Supported Networks
+
+-   ARBITRUM
+
+## Common Tasks
+
+-   "Bridge 100 USDC to Hyperliquid from Arbitrum network"
+-   "Move 50 USDC from Arbitrum network to Hyperliquid"
+-   "Send 25.5 USDC to Hyperliquid bridge on Arbitrum network"
+-   "Withdraw 20 USDC from Hyperliquid to Arbitrum"
+-   "Move 10.5 USDC from Hyperliquid back to Arbitrum"
+-   "Move 100USDC from my spot to my perp balance on Hyperliquid"
+-   "I need you to transfer 55.5 USD from perps to spot on Hyperliquid"
+-   "Open a long on 12$ of BTC with no leverage on Hyperliquid"
+-   "Short me 1 BTC with 50x leverage on Hyperliquid"
+-   "Close my ARB position on Hyperliquid"
+-   "Close my Bitcoin position on Hyperliquid"
+
+## Available Functions
+
+-   Bridging to Hyperliquid (minimum 5 USDC)
+-   Withdrawing from Hyperliquid (minimum 2 USDC)
+-   Moving USDC between spot and perp balances on Hyperliquid
+-   Opening and closing perp positions on Hyperliquid
+
+## Tests
+
+To run tests:
+
+```bash
+npm test
+```
+
+To check test coverage:
+
+```bash
+npm run test:coverage
+```
 
 ## Installation
 
 ```bash
-pnpm add @heyanon/hyperliquid
+yarn add @heyanon/hyperliquid
 ```
-
-## Supported Functions
-
-List of available functions will be added here.
 
 ## Usage
 
-Example usage will be added here.
+### Bridging USDC to Hyperliquid
 
-## Development
-
-1. Install dependencies:
-```bash
-pnpm install
+```typescript
+// Bridge USDC from Arbitrum to Hyperliquid
+await bridgeToHyperliquid({
+    chainName: 'arbitrum',
+    account: '0x...',
+    amount: '10', // Amount in USDC
+});
 ```
 
-2. Build the project:
-```bash
-pnpm run build
+### Withdrawing USDC from Hyperliquid
+
+```typescript
+// Withdraw USDC from Hyperliquid to Arbitrum
+await withdrawFromHyperliquid({
+    chainName: 'hyperliquid',
+    account: '0x...',
+    amount: '5', // Amount in USDC
+});
 ```
 
-3. Run tests:
-```bash
-pnpm test
+### Moving USDC from spot to perp balance on Hyperliquid
+
+```typescript
+// Move funds from spot to perp account
+await transferToPerpetual({
+    amount: '5', // Amount in USDC
+});
 ```
 
-## Documentation
+### Moving USDC from perp to spot balance on Hyperliquid
 
-Detailed documentation will be added here.
+```typescript
+// Move funds from perp to spot account
+await transferToSpot({
+    amount: '900', // Amount in USDC
+});
+```
+
+### Opening a perp position
+
+```typescript
+// Shorts 1000$ of BTC at 50x leverage on Hyperliquid
+await openPerp({ account: '0xYourAddress', asset: 'BTC', size: '1000', sizeUnit: 'USD', leverage: 50, short: true });
+```
+
+### Closing a perp position
+
+```typescript
+// Closes the open ETH perp position on Hyperliquid
+await closePerp({ account: '0xYourAddress', asset: 'ETH' });
+```
+
+## Note
+
+Trading functionality development is in progress. Next features will include order management, position tracking, and advanced trading operations.
