@@ -2,7 +2,7 @@ import axios from 'axios';
 import { GameAgent, GameWorker, ExecutableGameFunctionResponse, ExecutableGameFunctionStatus, GameFunction } from '@virtuals-protocol/game';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
-import { CMC_API_KEY, CMC_API_URL, GEMINI_API_KEY, VIRTUALS_API_KEY } from '../constants';
+import { CMC_API_KEY, CMC_API_URL } from '../constants';
 
 let result = '';
 let price_data = '';
@@ -92,7 +92,7 @@ const analyzeTokenPriceFunction = new GameFunction({
     ] as const,
     executable: async (args, logger) => {
         try {
-            const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+            const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
             const model = genAI.getGenerativeModel({
                 model: 'gemini-1.5-flash',
@@ -167,10 +167,10 @@ const worker = new GameWorker({
     },
 });
 
-const agent = new GameAgent(VIRTUALS_API_KEY, {
+const agent = new GameAgent(process.env.VIRTUALS_API_KEY!, {
     name: 'Crypto assistant Bot',
     goal: 'Get instruction from user according to crypto market and respond properly',
-    description: 'A crypto multi-purpose bot that receives an instruction from the user and use its functions to do the task',
+    description: 'Your are a crypto multi-purpose AI agent with ability to perform different actions. You will receive an instruction from the user and choose the proper function repond to the task',
     workers: [worker],
     getAgentState: async () => {
         return {};
