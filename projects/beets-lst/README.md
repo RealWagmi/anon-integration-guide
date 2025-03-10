@@ -42,17 +42,17 @@ Beets LST allows you to access Sonic staking rewards while maintaining full liqu
 
 ## Available Functions
 
-- [stake](functions/stake.ts)
-- [unStake](functions/unStake.ts)
-- [withdraw](functions/withdraw.ts)
-- [withdrawAll](functions/withdrawAll.ts)
-- [getSonicBalance](functions/getSonicBalance.ts)
-- [getStakedSonicBalance](functions/getStakedSonicBalance.ts)
-- [getOpenWithdrawRequests](functions/getOpenWithdrawRequests.ts)
-- [getProtocolSonicToStakedSonicExchangeRate](functions/getProtocolSonicToStakedSonicExchangeRate.ts)
-- [getProtocolStakedSonicToSonicExchangeRate](functions/getProtocolStakedSonicToSonicExchangeRate.ts)
-- [getTotalSonicInProtocol](functions/getTotalSonicInProtocol.ts)
-- [getTotalStakedSonicInProtocol](functions/getTotalStakedSonicInProtocol.ts)
+- [stake](src/functions/stake.ts)
+- [unStake](src/functions/unStake.ts)
+- [withdraw](src/functions/withdraw.ts)
+- [withdrawAll](src/functions/withdrawAll.ts)
+- [getSonicBalance](src/functions/getSonicBalance.ts)
+- [getStakedSonicBalance](src/functions/getStakedSonicBalance.ts)
+- [getOpenWithdrawRequests](src/functions/getOpenWithdrawRequests.ts)
+- [getProtocolSonicToStakedSonicExchangeRate](src/functions/getProtocolSonicToStakedSonicExchangeRate.ts)
+- [getProtocolStakedSonicToSonicExchangeRate](src/functions/getProtocolStakedSonicToSonicExchangeRate.ts)
+- [getTotalSonicInProtocol](src/functions/getTotalSonicInProtocol.ts)
+- [getTotalStakedSonicInProtocol](src/functions/getTotalStakedSonicInProtocol.ts)
 
 ## Installation
 
