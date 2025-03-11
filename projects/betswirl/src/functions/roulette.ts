@@ -1,7 +1,18 @@
 import { FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
-import { formatUnits, Hex } from 'viem';
-import { CASINO_GAME_TYPE, RouletteNumber, Roulette, getPlacedBetFromReceipt, getTransactionReceiptWithRetry, initViemBetSwirlClient, slugById } from '@betswirl/sdk-core';
-import { getBetToken, getBetAmountInWei, getPlaceBetTransactionParams, validateWallet, getChainId, hasEnoughBalance, CommonProps } from '../utils';
+import { Hex } from 'viem';
+import { CASINO_GAME_TYPE, RouletteNumber, Roulette, initViemBetSwirlClient } from '@betswirl/sdk-core';
+import {
+    getBetToken,
+    getBetAmountInWei,
+    getPlaceBetTransactionParams,
+    validateWallet,
+    getChainId,
+    hasEnoughBalance,
+    CommonProps,
+    isGameLive,
+    waitRolledBet,
+    getResult,
+} from '../utils';
 
 interface Props extends CommonProps {
     numbers: RouletteNumber[];
@@ -27,7 +38,7 @@ interface Props extends CommonProps {
 export async function roulette({ chainName, account, tokenSymbol, betAmount, numbers }: Props, options: FunctionOptions): Promise<FunctionReturn> {
     const {
         evm: { getProvider, sendTransactions },
-        notify
+        notify,
     } = options;
 
     try {
@@ -36,8 +47,10 @@ export async function roulette({ chainName, account, tokenSymbol, betAmount, num
         // Create the BetSwirl SDK client
         const provider = getProvider(chainId);
         const betswirlClient = initViemBetSwirlClient(provider, undefined, {
-            chainId: chainId
+            chainId: chainId,
         });
+        // Check if the game is live
+        await isGameLive(betswirlClient, CASINO_GAME_TYPE.ROULETTE);
         // Validate the account
         validateWallet(account);
         // Validate the token
@@ -59,7 +72,7 @@ export async function roulette({ chainName, account, tokenSymbol, betAmount, num
                 betCount: 1,
                 receiver: account as Hex,
                 stopGain: 0n,
-                stopLoss: 0n
+                stopLoss: 0n,
             }
         );
         // Validate the balance
@@ -68,29 +81,13 @@ export async function roulette({ chainName, account, tokenSymbol, betAmount, num
         const { data } = await sendTransactions({
             chainId,
             account,
-            transactions: [placeBetTransactionParams]
+            transactions: [placeBetTransactionParams],
         });
 
         await notify('The roulette is spinning...');
-        const receipt = await getTransactionReceiptWithRetry(betswirlClient.betSwirlWallet, data[0].hash);
-        const bet = await getPlacedBetFromReceipt(betswirlClient.betSwirlWallet, receipt, CASINO_GAME_TYPE.ROULETTE);
-        if (!bet) {
-            throw new Error('Roulette bet cannot be retrieved');
-        }
-        const { rolledBet } = await betswirlClient.waitRoulette(
-            {
-                ...bet,
-                numbers,
-                encodedNumbers: Roulette.encodeInput(numbers)
-            },
-            {}
-        );
+        const rolledBet = await waitRolledBet(betswirlClient, data[0].hash, CASINO_GAME_TYPE.ROULETTE);
 
-        return toResult(
-            `You ${rolledBet.isWin ? 'Won' : 'Lost'}. Rolled number: ${rolledBet.rolled}. Payout: ${formatUnits(rolledBet.payout, token.decimals)} ${
-                token.symbol
-            }. See on BetSwirl: https://www.betswirl.com/${slugById[chainId]}/casino/${CASINO_GAME_TYPE.ROULETTE}/${rolledBet.id}.`
-        );
+        return toResult(getResult(rolledBet, chainId));
     } catch (error) {
         return toResult(error instanceof Error ? error.message : 'Unknown error', true);
     }

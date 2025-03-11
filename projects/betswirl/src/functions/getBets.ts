@@ -1,6 +1,6 @@
 import { EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { Address } from 'viem';
-import { formatTxnUrl, initViemBetSwirlClient, slugById } from '@betswirl/sdk-core';
+import { formatTxnUrl, getBetSwirlBetUrl, initViemBetSwirlClient, slugById } from '@betswirl/sdk-core';
 import { validateWallet, getChainId } from '../utils';
 
 interface Props {
@@ -23,7 +23,7 @@ interface Props {
 export async function getBets({ chainName, account }: Props, options: FunctionOptions): Promise<FunctionReturn> {
     const {
         evm: { getProvider },
-        notify
+        notify,
     } = options;
 
     try {
@@ -32,7 +32,7 @@ export async function getBets({ chainName, account }: Props, options: FunctionOp
         // Create the BetSwirl SDK client
         const provider = getProvider(chainId);
         const betswirlClient = initViemBetSwirlClient(provider, undefined, {
-            chainId: chainId
+            chainId: chainId,
         });
         // Validate the account
         validateWallet(account);
@@ -41,7 +41,7 @@ export async function getBets({ chainName, account }: Props, options: FunctionOp
         const bets = await betswirlClient.fetchBets(
             chainId,
             {
-                bettor: account
+                bettor: account,
             },
             undefined,
             5
@@ -52,7 +52,7 @@ export async function getBets({ chainName, account }: Props, options: FunctionOp
         return toResult(
             JSON.stringify({
                 message: `Last 5 bets. Visit your profile here: https://www.betswirl.com/${slugById[chainId]}/profile/${account}/casino.`,
-                bets: bets.bets.map(bet => ({
+                bets: bets.bets.map((bet) => ({
                     id: String(bet.id),
                     input: bet.decodedInput,
                     betTxnHash: bet.betTxnHash,
@@ -60,13 +60,13 @@ export async function getBets({ chainName, account }: Props, options: FunctionOp
                     betAmount: bet.formattedBetAmount,
                     token: bet.token.symbol,
                     isWin: bet.isWin,
-                    payoutMultiplier: bet.payoutMultiplier,
+                    payoutMultiplier: bet.formattedPayoutMultiplier,
                     rolled: bet.decodedRolled,
                     payout: bet.formattedPayout,
                     rollTxnHash: bet.rollTxnHash,
                     rollTxnLink: bet.rollTxnHash ? formatTxnUrl(bet.rollTxnHash, chainId) : null,
-                    linkOnBetSwirl: `https://www.betswirl.com/${slugById[chainId]}/casino/${bet.game}/${bet.id}`
-                }))
+                    linkOnBetSwirl: getBetSwirlBetUrl(bet.id, bet.game, chainId),
+                })),
             })
         );
     } catch (error) {

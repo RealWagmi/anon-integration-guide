@@ -1,4 +1,4 @@
-import { Hex, Address, parseUnits, PublicClient, formatUnits } from 'viem';
+import { Hex, Address, parseUnits, PublicClient } from 'viem';
 import { EVM, EvmChain } from '@heyanon/sdk';
 
 import {
@@ -9,8 +9,32 @@ import {
     chainNativeCurrencyToToken,
     getPlaceBetFunctionData,
     ViemBetSwirlClient,
-    casinoChainIds
+    casinoChainIds,
+    formatRawAmount,
+    chainById,
+    getCasinoGamePaused,
+    getTransactionReceiptWithRetry,
+    getPlacedBetFromReceipt,
+    CasinoRolledBet,
+    formatTxnUrl,
+    getBetSwirlBetUrl,
 } from '@betswirl/sdk-core';
+
+/**
+ * Checks if a casino game is live by querying the BetSwirl client.
+ * If the game is paused, an error is thrown.
+ *
+ * @param betswrilClient - The BetSwirl client instance used to query the game status.
+ * @param game - The type of the casino game to check.
+ * @throws Will throw an error if the game is paused.
+ * @returns A promise that resolves if the game is live, otherwise throws an error.
+ */
+export async function isGameLive(betswirlClient: ViemBetSwirlClient, game: CASINO_GAME_TYPE) {
+    const paused = await getCasinoGamePaused(betswirlClient.betSwirlWallet, game);
+    if (paused) {
+        throw new Error(`The game ${game} is paused`);
+    }
+}
 
 /**
  * Retrieves the bet token based on the provided token symbol input.
@@ -21,10 +45,8 @@ import {
  * @throws {Error} - Throws an error if no chain is found on the provider or if the token symbol input does not match the native currency symbol.
  */
 export async function getBetToken(betswirlClient: ViemBetSwirlClient, tokenSymbolInput?: string): Promise<Token> {
-    const chain = betswirlClient.publicClient.chain;
-    if (!chain) {
-        throw new Error('No chain found on this provider');
-    }
+    const chainId = betswirlClient.betSwirlWallet.getChainId();
+    const chain = chainById[chainId as CasinoChainId];
     let selectedToken: Token;
     if (tokenSymbolInput && tokenSymbolInput !== chain.nativeCurrency.symbol) {
         // For now accept bets only with the native token.
@@ -96,10 +118,8 @@ export async function getPlaceBetTransactionParams(
     data: Hex;
     value: bigint;
 }> {
-    const chain = betswirlClient.publicClient.chain;
-    if (!chain) {
-        throw new Error('No chain found on this provider');
-    }
+    const chainId = betswirlClient.betSwirlWallet.getChainId();
+    const chain = chainById[chainId as CasinoChainId];
     const betRequirements = await betswirlClient.getBetRequirements(casinoGameParams.betToken, gameMultiplier, game);
 
     if (!betRequirements.isAllowed) {
@@ -122,7 +142,7 @@ export async function getPlaceBetTransactionParams(
             betCount: casinoGameParams.betCount,
             tokenAddress: casinoGameParams.betToken.address,
             stopGain: casinoGameParams.stopGain,
-            stopLoss: casinoGameParams.stopLoss
+            stopLoss: casinoGameParams.stopLoss,
         },
         chain.id as CasinoChainId
     );
@@ -133,12 +153,58 @@ export async function getPlaceBetTransactionParams(
         return {
             target: functionData.data.to,
             data: functionData.encodedData,
-            value: functionData.extraData.getValue(vrfCost)
+            value: functionData.extraData.getValue(vrfCost),
             // gas: 0n
         };
     } catch (error) {
         throw new Error(`An error occured while placing the bet: ${error}`);
     }
+}
+
+/**
+ * Waits for a bet to be rolled and returns the rolled bet.
+ *
+ * @param {ViemBetSwirlClient} betswrilClient - The BetSwirl client instance.
+ * @param {Hex} betTxnHash - The transaction hash of the bet.
+ * @param {CASINO_GAME_TYPE} game - The type of the casino game.
+ * @returns {Promise<RolledBet>} A promise that resolves to the rolled bet.
+ * @throws {Error} If the bet cannot be retrieved.
+ */
+export async function waitRolledBet(betswirlClient: ViemBetSwirlClient, betTxnHash: Hex, game: CASINO_GAME_TYPE): Promise<CasinoRolledBet> {
+    const receipt = await getTransactionReceiptWithRetry(betswirlClient.betSwirlWallet, betTxnHash);
+    const bet = await getPlacedBetFromReceipt(betswirlClient.betSwirlWallet, receipt, game);
+    if (!bet) {
+        throw new Error('Coin Toss bet cannot be retrieved');
+    }
+    const { rolledBet } = await betswirlClient.waitRolledBet(bet, { timeout: 120000 });
+    return rolledBet;
+}
+
+/**
+ * Generates a JSON string representing the result of a casino bet.
+ *
+ * @param bet - The casino bet object containing details of the bet.
+ * @param chainId - The chain ID of the casino.
+ * @returns A JSON string containing the result of the bet.
+ */
+export function getResult(bet: CasinoRolledBet, chainId: CasinoChainId) {
+    return JSON.stringify({
+        message: `${bet.game} bet rolled!`,
+        bet: {
+            id: String(bet.id),
+            betTxnHash: bet.betTxnHash,
+            betTxnLink: formatTxnUrl(bet.betTxnHash, chainId),
+            betAmount: bet.formattedBetAmount,
+            token: bet.token.symbol,
+            isWin: bet.isWin,
+            payoutMultiplier: bet.formattedPayoutMultiplier,
+            rolled: bet.decodedRolled,
+            payout: bet.formattedPayout,
+            rollTxnHash: bet.rollTxnHash,
+            rollTxnLink: formatTxnUrl(bet.rollTxnHash, chainId),
+            linkOnBetSwirl: getBetSwirlBetUrl(bet.id, bet.game, chainId),
+        },
+    });
 }
 
 /**
@@ -182,10 +248,10 @@ export function getChainId(chainName: EvmChain) {
  */
 export async function hasEnoughBalance(provider: PublicClient, token: Token, account: Address, required: bigint) {
     const balance = await provider.getBalance({
-        address: account
+        address: account,
     });
     if (balance < required) {
-        throw new Error(`Not enough funds, ${formatUnits(required, token.decimals)} ${token.symbol} required`);
+        throw new Error(`Not enough funds, ${formatRawAmount(required, token.decimals)} ${token.symbol} required`);
     }
 }
 

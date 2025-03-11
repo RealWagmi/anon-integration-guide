@@ -1,7 +1,18 @@
 import { FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
-import { formatUnits, Hex } from 'viem';
-import { CASINO_GAME_TYPE, CoinToss, COINTOSS_FACE, getPlacedBetFromReceipt, getTransactionReceiptWithRetry, initViemBetSwirlClient, slugById } from '@betswirl/sdk-core';
-import { getBetToken, getBetAmountInWei, getPlaceBetTransactionParams, validateWallet, getChainId, hasEnoughBalance, CommonProps } from '../utils';
+import { Hex } from 'viem';
+import { CASINO_GAME_TYPE, CoinToss, COINTOSS_FACE, initViemBetSwirlClient } from '@betswirl/sdk-core';
+import {
+    getBetToken,
+    getBetAmountInWei,
+    getPlaceBetTransactionParams,
+    validateWallet,
+    getChainId,
+    hasEnoughBalance,
+    CommonProps,
+    isGameLive,
+    waitRolledBet,
+    getResult,
+} from '../utils';
 
 interface Props extends CommonProps {
     face: COINTOSS_FACE;
@@ -23,7 +34,7 @@ interface Props extends CommonProps {
 export async function coinToss({ chainName, account, tokenSymbol, betAmount, face }: Props, options: FunctionOptions): Promise<FunctionReturn> {
     const {
         evm: { getProvider, sendTransactions },
-        notify
+        notify,
     } = options;
 
     try {
@@ -32,8 +43,10 @@ export async function coinToss({ chainName, account, tokenSymbol, betAmount, fac
         // Create the BetSwirl SDK client
         const provider = getProvider(chainId);
         const betswirlClient = initViemBetSwirlClient(provider, undefined, {
-            chainId: chainId
+            chainId: chainId,
         });
+        // Check if the game is live
+        await isGameLive(betswirlClient, CASINO_GAME_TYPE.COINTOSS);
         // Validate the account
         validateWallet(account);
         // Validate the token
@@ -52,7 +65,7 @@ export async function coinToss({ chainName, account, tokenSymbol, betAmount, fac
             betCount: 1,
             receiver: account as Hex,
             stopGain: 0n,
-            stopLoss: 0n
+            stopLoss: 0n,
         });
         // Validate the balance
         await hasEnoughBalance(provider, token, account, placeBetTransactionParams.value);
@@ -60,29 +73,13 @@ export async function coinToss({ chainName, account, tokenSymbol, betAmount, fac
         const { data } = await sendTransactions({
             chainId,
             account,
-            transactions: [placeBetTransactionParams]
+            transactions: [placeBetTransactionParams],
         });
 
         await notify('The coin is flipping...');
-        const receipt = await getTransactionReceiptWithRetry(betswirlClient.betSwirlWallet, data[0].hash);
-        const bet = await getPlacedBetFromReceipt(betswirlClient.betSwirlWallet, receipt, CASINO_GAME_TYPE.COINTOSS);
-        if (!bet) {
-            throw new Error('Coin Toss bet cannot be retrieved');
-        }
-        const { rolledBet } = await betswirlClient.waitCoinToss(
-            {
-                ...bet,
-                face,
-                encodedFace: CoinToss.encodeInput(face)
-            },
-            {}
-        );
+        const rolledBet = await waitRolledBet(betswirlClient, data[0].hash, CASINO_GAME_TYPE.COINTOSS);
 
-        return toResult(
-            `You ${rolledBet.isWin ? 'Won' : 'Lost'}. Rolled face: ${rolledBet.rolled}. Payout: ${formatUnits(rolledBet.payout, token.decimals)} ${
-                token.symbol
-            }. See on BetSwirl: https://www.betswirl.com/${slugById[chainId]}/casino/${CASINO_GAME_TYPE.COINTOSS}/${rolledBet.id}.`
-        );
+        return toResult(getResult(rolledBet, chainId));
     } catch (error) {
         return toResult(error instanceof Error ? error.message : 'Unknown error', true);
     }

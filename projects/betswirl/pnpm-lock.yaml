@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@betswirl/sdk-core':
-        specifier: ^0.0.4
-        version: 0.0.4(@apollo/client@3.13.3(graphql@16.10.0))(graphql@16.10.0)(typescript@5.8.2)(viem@2.22.9(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)(zod@3.24.2))
+        specifier: ^0.0.5
+        version: 0.0.5(@apollo/client@3.13.3(graphql@16.10.0))(graphql@16.10.0)(typescript@5.8.2)(viem@2.22.9(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)(zod@3.24.2))
       '@heyanon/sdk':
         specifier: ^2.0.2
         version: 2.1.6(@ton/crypto@3.3.0)(@types/node@22.13.10)(bufferutil@4.0.9)(jsdom@15.2.1(bufferutil@4.0.9)(utf-8-validate@5.0.10))(typescript@5.8.2)(utf-8-validate@5.0.10)(zod@3.24.2)
@@ -625,8 +625,8 @@ packages:
   '@bcoe/v8-coverage@0.2.3':
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
 
-  '@betswirl/sdk-core@0.0.4':
-    resolution: {integrity: sha512-l8ZXDCTQ5Wne+QIjnMfkLSpWvk8avLw2HvqI2UxmUmndGDCPBbEptKclIkQ5VYDq8xQJ2HjYMa7XX8Y2d92q3Q==}
+  '@betswirl/sdk-core@0.0.5':
+    resolution: {integrity: sha512-5/PSLFlqZ9uJWoqtZVvqj7wnK+QPeXG+6etMQhRZiQ0DA/ha6OY0q8No/jWCzAx73NuxPrS96rLcHX+OX3NpEw==}
     peerDependencies:
       '@apollo/client': '>=3.12.11'
       typescript: '>=5.0.4'
@@ -5883,7 +5883,7 @@ snapshots:
 
   '@bcoe/v8-coverage@0.2.3': {}
 
-  '@betswirl/sdk-core@0.0.4(@apollo/client@3.13.3(graphql@16.10.0))(graphql@16.10.0)(typescript@5.8.2)(viem@2.22.9(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)(zod@3.24.2))':
+  '@betswirl/sdk-core@0.0.5(@apollo/client@3.13.3(graphql@16.10.0))(graphql@16.10.0)(typescript@5.8.2)(viem@2.22.9(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)(zod@3.24.2))':
     dependencies:
       '@apollo/client': 3.13.3(graphql@16.10.0)
       decimal.js: 10.5.0
