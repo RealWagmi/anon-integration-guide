@@ -1,4 +1,4 @@
-import { FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
+import { EVM, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { Hex } from 'viem';
 import { CASINO_GAME_TYPE, CoinToss, COINTOSS_FACE, initViemBetSwirlClient } from '@betswirl/sdk-core';
 import {
@@ -12,6 +12,7 @@ import {
     isGameLive,
     waitRolledBet,
     getResult,
+    approveERC20,
 } from '../utils';
 
 interface Props extends CommonProps {
@@ -59,6 +60,7 @@ export async function coinToss({ chainName, account, tokenSymbol, betAmount, fac
         // }
 
         await notify('Flipping the coin...');
+        const transactions: EVM.types.TransactionParams[] = [];
         const placeBetTransactionParams = await getPlaceBetTransactionParams(betswirlClient, CASINO_GAME_TYPE.COINTOSS, CoinToss.encodeInput(face), CoinToss.getMultiplier(face), {
             betAmount: betAmountInWei,
             betToken: token,
@@ -68,16 +70,19 @@ export async function coinToss({ chainName, account, tokenSymbol, betAmount, fac
             stopLoss: 0n,
         });
         // Validate the balance
-        await hasEnoughBalance(provider, token, account, placeBetTransactionParams.value);
+        await hasEnoughBalance(provider, token, account, placeBetTransactionParams.value, betAmountInWei);
+        // Optionally approve ERC20 token
+        await approveERC20(betswirlClient, account, CASINO_GAME_TYPE.COINTOSS, token, betAmountInWei, transactions);
 
+        transactions.push(placeBetTransactionParams);
         const { data } = await sendTransactions({
             chainId,
             account,
-            transactions: [placeBetTransactionParams],
+            transactions,
         });
 
         await notify('The coin is flipping...');
-        const rolledBet = await waitRolledBet(betswirlClient, data[0].hash, CASINO_GAME_TYPE.COINTOSS);
+        const rolledBet = await waitRolledBet(betswirlClient, data[1].hash, CASINO_GAME_TYPE.COINTOSS);
 
         return toResult(getResult(rolledBet, chainId));
     } catch (error) {

@@ -1,4 +1,4 @@
-import { Hex, Address, parseUnits, PublicClient } from 'viem';
+import { Hex, Address, parseUnits, PublicClient, parseAbi } from 'viem';
 import { EVM, EvmChain } from '@heyanon/sdk';
 
 import {
@@ -18,6 +18,7 @@ import {
     CasinoRolledBet,
     formatTxnUrl,
     getBetSwirlBetUrl,
+    casinoChainById,
 } from '@betswirl/sdk-core';
 
 /**
@@ -37,30 +38,64 @@ export async function isGameLive(betswirlClient: ViemBetSwirlClient, game: CASIN
 }
 
 /**
- * Retrieves the bet token based on the provided token symbol input.
+ * Retrieves a token based on the provided symbol or the native currency of the chain.
  *
- * @param {ViemBetSwirlClient} betswirlClient - The BetSwirl client instance.
- * @param {string} [tokenSymbolInput] - The optional token symbol input. If provided, it must match the native currency symbol of the chain.
- * @returns {Promise<Token>} - A promise that resolves to the selected token or undefined if no token is selected.
- * @throws {Error} - Throws an error if no chain is found on the provider or if the token symbol input does not match the native currency symbol.
+ * @param {ViemBetSwirlClient} betswirlClient - The client instance used to interact with the BetSwirl platform.
+ * @param {string} [tokenSymbolInput] - The symbol of the token to retrieve. If not provided or if it matches the native currency symbol, the native currency token will be returned.
+ * @returns {Promise<Token>} A promise that resolves to the selected token.
+ * @throws {Error} If the provided token symbol is not valid or not found in the list of casino tokens.
  */
 export async function getBetToken(betswirlClient: ViemBetSwirlClient, tokenSymbolInput?: string): Promise<Token> {
     const chainId = betswirlClient.betSwirlWallet.getChainId();
     const chain = chainById[chainId as CasinoChainId];
-    let selectedToken: Token;
+    let selectedToken;
     if (tokenSymbolInput && tokenSymbolInput !== chain.nativeCurrency.symbol) {
-        // For now accept bets only with the native token.
-        throw new Error(`The token symbol must be ${chain.nativeCurrency.symbol}`);
-        // const casinoTokens = await betswirlClient.getCasinoTokens(true);
-        // // Validate the token
-        // selectedToken = casinoTokens.find((casinoToken) => casinoToken.symbol === tokenSymbolInput);
-        // if (!selectedToken) {
-        //     throw new Error(`The token must be one of ${casinoTokens.map((casinoToken) => casinoToken.symbol).join(', ')}`);
-        // }
+        const casinoTokens = await betswirlClient.getCasinoTokens(true);
+        // Validate the token
+        selectedToken = casinoTokens.find((casinoToken) => casinoToken.symbol === tokenSymbolInput);
+        if (!selectedToken) {
+            throw new Error(`The token must be one of ${casinoTokens.map((casinoToken) => casinoToken.symbol).join(', ')}`);
+        }
     } else {
         selectedToken = chainNativeCurrencyToToken(chain.nativeCurrency);
     }
     return selectedToken;
+}
+
+/**
+ * Approves the specified amount of an ERC20 token for a given casino game.
+ *
+ * @param betswirlClient - The BetSwirl client instance.
+ * @param account - The address of the account to approve the token from.
+ * @param game - The type of casino game.
+ * @param token - The token to be approved.
+ * @param amount - The amount of the token to approve.
+ * @param transactions - The list of transaction parameters.
+ *
+ * @returns A promise that resolves when the approval transaction is complete.
+ */
+export async function approveERC20(
+    betswirlClient: ViemBetSwirlClient,
+    account: Address,
+    game: CASINO_GAME_TYPE,
+    token: Token,
+    amount: bigint,
+    transactions: EVM.types.TransactionParams[]
+) {
+    if (token.symbol !== betswirlClient.publicClient.chain?.nativeCurrency.symbol) {
+        const chainId = betswirlClient.betSwirlWallet.getChainId();
+        const casinoChain = casinoChainById[chainId as CasinoChainId];
+        await EVM.utils.checkToApprove({
+            args: {
+                account,
+                target: token.address,
+                spender: casinoChain.contracts.games[game]!.address,
+                amount,
+            },
+            provider: betswirlClient.publicClient,
+            transactions,
+        });
+    }
 }
 
 /**
@@ -238,20 +273,32 @@ export function getChainId(chainName: EvmChain) {
 }
 
 /**
- * Checks if the given account has enough balance of the specified token.
+ * Checks if the account has enough balance to cover the required value and bet amount.
  *
- * @param provider - The public client used to fetch the balance.
- * @param token - The token for which the balance is being checked.
- * @param account - The address of the account to check the balance of.
- * @param required - The required balance amount in the smallest unit of the token.
- * @throws Will throw an error if the account balance is less than the required amount.
+ * @param provider - The public client provider to interact with the blockchain.
+ * @param token - The token object containing details about the token.
+ * @param account - The address of the account to check the balance for.
+ * @param valueRequired - The minimum amount of gas token required.
+ * @param betAmount - The amount of the token required for the bet.
+ * @throws Will throw an error if the account does not have enough gas token or token balance.
  */
-export async function hasEnoughBalance(provider: PublicClient, token: Token, account: Address, required: bigint) {
+export async function hasEnoughBalance(provider: PublicClient, token: Token, account: Address, valueRequired: bigint, betAmount: bigint) {
     const balance = await provider.getBalance({
         address: account,
     });
-    if (balance < required) {
-        throw new Error(`Not enough funds, ${formatRawAmount(required, token.decimals)} ${token.symbol} required`);
+    if (balance < valueRequired) {
+        throw new Error(`Not enough gas token, ${formatRawAmount(valueRequired, token.decimals)} ${token.symbol} required`);
+    }
+    if (token.symbol !== provider.chain?.nativeCurrency.symbol) {
+        const balance = await provider.readContract({
+            address: token.address,
+            abi: parseAbi(['function balanceOf(address owner) view returns (uint256)']),
+            functionName: 'balanceOf',
+            args: [account],
+        });
+        if (balance < betAmount) {
+            throw new Error(`Not enough funds, ${formatRawAmount(betAmount, token.decimals)} ${token.symbol} required`);
+        }
     }
 }
 

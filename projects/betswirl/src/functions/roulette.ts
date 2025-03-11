@@ -1,4 +1,4 @@
-import { FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
+import { EVM, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { Hex } from 'viem';
 import { CASINO_GAME_TYPE, RouletteNumber, Roulette, initViemBetSwirlClient } from '@betswirl/sdk-core';
 import {
@@ -12,6 +12,7 @@ import {
     isGameLive,
     waitRolledBet,
     getResult,
+    approveERC20,
 } from '../utils';
 
 interface Props extends CommonProps {
@@ -61,6 +62,7 @@ export async function roulette({ chainName, account, tokenSymbol, betAmount, num
         // TODO
 
         await notify('Spinning the roulette...');
+        const transactions: EVM.types.TransactionParams[] = [];
         const placeBetTransactionParams = await getPlaceBetTransactionParams(
             betswirlClient,
             CASINO_GAME_TYPE.ROULETTE,
@@ -76,16 +78,19 @@ export async function roulette({ chainName, account, tokenSymbol, betAmount, num
             }
         );
         // Validate the balance
-        await hasEnoughBalance(provider, token, account, placeBetTransactionParams.value);
+        await hasEnoughBalance(provider, token, account, placeBetTransactionParams.value, betAmountInWei);
+        // Optionally approve ERC20 token
+        await approveERC20(betswirlClient, account, CASINO_GAME_TYPE.ROULETTE, token, betAmountInWei, transactions);
 
+        transactions.push(placeBetTransactionParams);
         const { data } = await sendTransactions({
             chainId,
             account,
-            transactions: [placeBetTransactionParams],
+            transactions,
         });
 
         await notify('The roulette is spinning...');
-        const rolledBet = await waitRolledBet(betswirlClient, data[0].hash, CASINO_GAME_TYPE.ROULETTE);
+        const rolledBet = await waitRolledBet(betswirlClient, data[1].hash, CASINO_GAME_TYPE.ROULETTE);
 
         return toResult(getResult(rolledBet, chainId));
     } catch (error) {

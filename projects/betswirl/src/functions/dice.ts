@@ -1,4 +1,4 @@
-import { FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
+import { EVM, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { Hex } from 'viem';
 import { CASINO_GAME_TYPE, DiceNumber, Dice, initViemBetSwirlClient } from '@betswirl/sdk-core';
 import {
@@ -12,6 +12,7 @@ import {
     isGameLive,
     waitRolledBet,
     getResult,
+    approveERC20,
 } from '../utils';
 
 interface Props extends CommonProps {
@@ -61,6 +62,7 @@ export async function dice({ chainName, account, tokenSymbol, betAmount, number 
         // TODO
 
         await notify('Rolling the dice...');
+        const transactions: EVM.types.TransactionParams[] = [];
         const placeBetTransactionParams = await getPlaceBetTransactionParams(betswirlClient, CASINO_GAME_TYPE.DICE, Dice.encodeInput(number), Dice.getMultiplier(number), {
             betAmount: betAmountInWei,
             betToken: token,
@@ -70,16 +72,19 @@ export async function dice({ chainName, account, tokenSymbol, betAmount, number 
             stopLoss: 0n,
         });
         // Validate the balance
-        await hasEnoughBalance(provider, token, account, placeBetTransactionParams.value);
+        await hasEnoughBalance(provider, token, account, placeBetTransactionParams.value, betAmountInWei);
+        // Optionally approve ERC20 token
+        await approveERC20(betswirlClient, account, CASINO_GAME_TYPE.DICE, token, betAmountInWei, transactions);
 
+        transactions.push(placeBetTransactionParams);
         const { data } = await sendTransactions({
             chainId,
             account,
-            transactions: [placeBetTransactionParams],
+            transactions,
         });
 
         await notify('The dice is rolling...');
-        const rolledBet = await waitRolledBet(betswirlClient, data[0].hash, CASINO_GAME_TYPE.DICE);
+        const rolledBet = await waitRolledBet(betswirlClient, data[1].hash, CASINO_GAME_TYPE.DICE);
 
         return toResult(getResult(rolledBet, chainId));
     } catch (error) {
