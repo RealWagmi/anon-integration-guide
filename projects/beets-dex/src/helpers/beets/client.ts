@@ -3,7 +3,7 @@ import { GqlChain, GqlPoolFilter, GqlPoolMinimal, GqlPoolOrderBy, GqlPoolOrderDi
 
 // Constants for configuration
 const DEFAULT_TIMEOUT = 30000; // 30 seconds
-const DEFAULT_RETRY_ATTEMPTS = 0;
+const DEFAULT_RETRY_ATTEMPTS = 3;
 const DEFAULT_RETRY_DELAY = 1000; // 1 second
 
 interface BeetsClientConfig {
