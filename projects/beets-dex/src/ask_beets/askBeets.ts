@@ -13,7 +13,6 @@ import { fromHeyAnonToolsToOpenAiTools } from '../helpers/openai';
 // AI configuration
 const OPENAI_MODEL = 'gpt-4o';
 const DEEPSEEK_MODEL = 'deepseek-reasoner';
-const PROMPT_TYPE: 'minimal' | 'extended' = 'minimal';
 
 // Protocol & chain configuration
 const CHAIN_NAME = 'sonic';
@@ -35,43 +34,12 @@ interface ConversationMessage {
     name?: string;
 }
 
-function getSystemPrompt(options: AskBeetsOptions | undefined, chainName: string, account: string) {
-    if (PROMPT_TYPE === 'minimal') {
-        return getSystemPromptMinimal(options, chainName, account);
-    } else {
-        return getSystemPromptExtended(options, chainName, account);
-    }
-}
-
-function getSystemPromptMinimal(_options: AskBeetsOptions | undefined, chainName: string, account: string) {
-    const basePrompt = `You will interact with the ${PROTOCOL_NAME} protocol via your tools. Given a request, you will need to determine which tools to call.`;
-
-    const tokenPrompt = `\nYou WILL NOT modify token addresses, names or symbols, not even to make them plural.`;
-
-    const toolConfigPrompt = `\nAll tools that require the chainName and account arguments will need the following default values: chainName: "${chainName}", account: "${account}".`;
-
-    return basePrompt + tokenPrompt + toolConfigPrompt;
-}
-
-function getSystemPromptExtended(_options: AskBeetsOptions | undefined, chainName: string, account: string) {
-    const basePrompt = `You will interact with the ${PROTOCOL_NAME} protocol via your tools. Given a request, you will need to determine which tools to call.
-
-For operations that require multiple steps (like "withdraw all"), you should first get required information before executing actions.
-For example, to withdraw all liquidity positions:
-1. First call getMyPositionsPortfolio to get a list of all the positions
-2. Then use the ID of each position to withdraw it`;
-
-    const rawResponsePrompt = `
-IMPORTANT: For all tool responses:
-1. Return the EXACT tool response without ANY modifications or analysis
-2. Do not reformat, summarize, or add explanatory text
-3. Do not interpret or process the data in any way`;
-
-    const toolConfigPrompt = `\nAll tools that require the chainName and account arguments will need the following default values: chainName: "${chainName}", account: "${account}".`;
-
-    const nextStepsPrompt = `\nAfter each tool response, determine if additional steps are needed.`;
-
-    return basePrompt + rawResponsePrompt + toolConfigPrompt + nextStepsPrompt;
+function getSystemPrompt(_options: AskBeetsOptions | undefined, chainName: string, account: string) {
+    return `You will interact with the ${PROTOCOL_NAME} protocol via your tools.
+ You MUST ALWAYS call a tool to get information. 
+ NEVER try to guess pool addresses or token addresses without calling the appropriate tool.
+ You WILL NOT modify token addresses, names or symbols, not even to make them plural.
+ All tools that require the 'chainName' and 'account' arguments will need the following default values: chainName: "${chainName}", account: "${account}".`;
 }
 
 function getLlmClient() {
