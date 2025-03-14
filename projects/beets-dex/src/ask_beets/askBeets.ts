@@ -21,9 +21,9 @@ const CHAIN_VIEM = sonic;
 const PROTOCOL_NAME = 'Beets';
 
 interface AskBeetsOptions {
-    verbose?: boolean;
+    debugLlm?: boolean;
+    debugTools?: boolean;
     notify?: (message: string) => Promise<void>;
-    analysis?: boolean;
 }
 
 interface ConversationMessage {
@@ -141,6 +141,7 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
                         to: tx.target,
                         data: tx.data,
                         value: tx.value || 0n,
+                        gas: GAS_LIMIT,
                     });
 
                     const receipt = await provider.waitForTransactionReceipt({ hash });
@@ -181,7 +182,7 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
     const funcReturns: FunctionReturn[] = [];
     let isComplete = false;
 
-    if (options?.verbose) {
+    if (options?.debugLlm) {
         console.log('System prompt:', util.inspect(messages[0], { depth: null, colors: true }));
     }
 
@@ -202,7 +203,7 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
             tool_calls: assistantMessage.tool_calls,
         });
 
-        if (options?.verbose) {
+        if (options?.debugLlm) {
             console.log('LLM says:', util.inspect(messages[messages.length - 1], { depth: null, colors: true }));
         }
 
@@ -233,11 +234,13 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
             try {
                 const funcReturn = await func(functionArgs, functionOptions);
                 funcReturns.push(funcReturn);
-                console.log(chalk.gray(`[Debug] Function returned ${funcReturn.success ? 'success' : 'failure'}`));
+                if (!funcReturn.success) {
+                    console.log(chalk.gray(`[Debug] Function returned failure`));
+                }
 
                 if (!funcReturn.success) {
                     return funcReturn;
-                } else {
+                } else if (options?.debugTools) {
                     console.log(chalk.gray(`[Debug] Function output: ${funcReturn.data}`));
                 }
 
@@ -249,7 +252,7 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
                     content: funcReturn.data,
                 });
 
-                if (options?.verbose) {
+                if (options?.debugLlm) {
                     console.log(`Tool '${functionName}' message:`, util.inspect(messages[messages.length - 1], { depth: null, colors: true }));
                 }
             } catch (error) {
@@ -270,17 +273,24 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
     }
     const assistantFinalComment = finalMessage.content;
 
-    // Return all tool calls followed by the final comment of the assistant
-    let combinedMessage = funcReturns
-        .map((r, i) => {
-            const toolName = messages.find((m) => m.role === 'tool' && m.content === r.data)?.name || 'Unknown Tool';
-            const msg = chalk.underline.bold(`TOOL CALL ${i + 1}`) + `: ${toolName}`;
-            return `${msg}\n${r.data}`;
-        })
-        .join('\n');
+    // If the user asked to show the tool calls, add them to the message;
+    // otherwise, show only the result of the final tool call
+    let combinedMessage = '';
+    if (options?.debugTools) {
+        combinedMessage += funcReturns
+            .map((r, i) => {
+                const toolName = messages.find((m) => m.role === 'tool' && m.content === r.data)?.name || 'Unknown Tool';
+                let msg = chalk.underline.bold(`TOOL CALL ${i + 1}`) + `: ${toolName}`;
+                if (options?.debugTools) msg += `\n${r.data}`;
+                return msg;
+            })
+            .join('\n');
+    } else {
+        combinedMessage += funcReturns[funcReturns.length - 1].data;
+    }
 
-    // Add the final comment of the assistant
-    if (assistantFinalComment) {
+    // Optionally add the final comment of the assistant
+    if (assistantFinalComment && options?.debugLlm) {
         combinedMessage += `\n${chalk.underline.bold('ASSISTANT FINAL COMMENT')}\n${assistantFinalComment}`;
     }
 

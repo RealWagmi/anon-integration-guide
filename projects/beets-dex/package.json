@@ -23,7 +23,7 @@
         "size": "size-limit",
         "analyze": "size-limit --why",
         "format": "prettier --write \"*/**/*.ts\"",
-        "ask": "tsup src/ask_beets/run.ts && node dist/run.js"
+        "ask": "tsup src/ask_beets/run.ts > /dev/null && node dist/run.js"
     },
     "dependencies": {
         "@balancer/sdk": "^2.1.3",

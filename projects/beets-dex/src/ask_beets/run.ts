@@ -9,11 +9,11 @@ if (!question) {
     process.exit(1);
 }
 
-const verbose = process.argv.includes('--verbose');
-const analysis = process.argv.includes('--analysis');
+const debugLlm = process.argv.includes('--debug-llm');
+const debugTools = process.argv.includes('--debug-tools');
 
 async function main() {
-    const result = await askBeets(question, { verbose, analysis });
+    const result = await askBeets(question, { debugLlm, debugTools });
     if (!result.success) {
         console.error(`${result.data}`);
         process.exit(0);

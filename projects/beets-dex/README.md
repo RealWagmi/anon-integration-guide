@@ -84,10 +84,16 @@ pnpm ask "Add 100 USDC liquidity to Boosted Stable Rings"
 pnpm ask "Remove half of my liquidity from Boosted Stable Rings"
 ```
 
-To debug the actual LLM responses, run `askBeets` with `--verbose` flag:
+To show the actual LLM responses, run `askBeets` with `--debug-llm` flag:
 
 ```bash
-pnpm ask "Swap 100 USDC for BEETS" --verbose
+pnpm ask "Swap 100 USDC for BEETS" --debug-llm
+```
+
+To show the output of every tool call, run `askBeets` with `--debug-tools` flag:
+
+```bash
+pnpm ask "Swap 100 USDC for BEETS" --debug-tools
 ```
 
 ## Future improvements
