@@ -19,6 +19,7 @@ const PROMPT_TYPE: 'minimal' | 'extended' = 'minimal';
 const CHAIN_NAME = 'sonic';
 const CHAIN_VIEM = sonic;
 const PROTOCOL_NAME = 'Beets';
+const GAS_LIMIT = 2_000_000n; // hardcoded for simplicity
 
 interface AskBeetsOptions {
     debugLlm?: boolean;
