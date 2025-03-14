@@ -100,6 +100,7 @@ export async function addLiquidity(
     const wethIsEth = token0Address === NATIVE_TOKEN_ADDRESS || token1Address === NATIVE_TOKEN_ADDRESS;
 
     // Check balances
+    options.notify('Checking balances...');
     const publicClient = options.evm.getProvider(chainId);
     const tokensToCheck = [{ address: token0Address, amount: token0Amount }];
     if (token1Address && token1Amount) tokensToCheck.push({ address: token1Address, amount: token1Amount });
@@ -144,7 +145,10 @@ export async function addLiquidity(
     // the underlying token is USDC.e.  To provide liquidity in the underlying
     // we need a special flow.  For reference, see:
     // https://github.com/balancer/b-sdk/blob/516070ac7b2b16127e8c78be20354874c52548bf/test/v3/addLiquidityBoosted/addLiquidityBoosted.integration.test.ts#L477-L505
-    if (isBoostedPoolToken(pool, token0Address) || (token1Address && isBoostedPoolToken(pool, token1Address))) {
+    // Please note that `isBoostedPoolToken` needs to check the amountsIn token
+    // address, rather than the input token addresses, because the former takes
+    // into account the wethIsEth flag (see above)
+    if (isBoostedPoolToken(pool, amountsIn[0].address) || (token1Address && isBoostedPoolToken(pool, amountsIn[1].address))) {
         options.notify(`Boosted pool token detected`);
         addressToApprove = PERMIT2[balancerChainId];
         const addLiquidityBoosted = new AddLiquidityBoostedV3();
