@@ -32,10 +32,16 @@ export const MAX_POOLS_IN_RESULTS = 10;
 export const MAX_FETCH_POOLS = 100;
 
 /**
+ * Will prevent to add liquidity to pools with less than
+ * this amount of liquidity.
+ */
+export const MIN_LIQUIDITY_FOR_ADD_LIQUIDITY = 1_000;
+
+/**
  * Minimum TVL in dollars that pools must have to be included
  * in search results.
  */
-export const MIN_TVL = 100_000;
+export const MIN_TVL_FOR_SEARCH_RESULTS = 100_000;
 
 /**
  * Token synonyms, used to accept multiple spellings or slight variants

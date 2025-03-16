@@ -16,9 +16,9 @@ import {
     AddLiquidityBoostedProportionalInput,
     AddLiquidityBoostedUnbalancedInput,
 } from '@balancer/sdk';
-import { APPROVE_AMOUNT_IN_EXCESS, DEFAULT_SLIPPAGE_AS_PERCENTAGE, NATIVE_TOKEN_ADDRESS, supportedChains } from '../constants';
+import { APPROVE_AMOUNT_IN_EXCESS, DEFAULT_SLIPPAGE_AS_PERCENTAGE, MIN_LIQUIDITY_FOR_ADD_LIQUIDITY, NATIVE_TOKEN_ADDRESS, supportedChains } from '../constants';
 import { validatePercentage, validateTokenPositiveDecimalAmount, validateTokenBalances, validateTokensAreInPool } from '../helpers/validation';
-import { toHumanReadableAmount, getBalancerTokenByAddress, getWrappedToken, multiplyTokenAmount } from '../helpers/tokens';
+import { toHumanReadableAmount, getBalancerTokenByAddress, getWrappedToken, multiplyTokenAmount, to$$$ } from '../helpers/tokens';
 import { AddLiquidityBuildCallOutput } from '@balancer/sdk';
 import { Slippage } from '@balancer/sdk';
 import { anonChainNameToBalancerChainId, anonChainNameToGqlChain, getDefaultRpcUrl } from '../helpers/chains';
@@ -91,6 +91,13 @@ export async function addLiquidity(
     if (!pool) return toResult(`Could not find pool with ID ${poolId}`, true);
     options.notify(`Pool info: "${pool.name}" of type ${formatPoolType(pool.type)}`);
     const poolState = await fromGqlPoolMinimalToBalancerPoolStateWithUnderlyings(pool);
+
+    // Prevent adding liquidity to a pool that has too little liquidity
+    // This does not apply to proportional pools, as adding liquidity
+    // to them is not affected by slippage.
+    if (!isProportionalPool(pool) && Number(pool.dynamicData.totalLiquidity) < MIN_LIQUIDITY_FOR_ADD_LIQUIDITY) {
+        return toResult(`Pool ${pool.name} has too little liquidity: ${to$$$(Number(pool.dynamicData.totalLiquidity))}`, true);
+    }
 
     // Validate that the tokens are in the pool
     const tokensToValidate = [token0Address];

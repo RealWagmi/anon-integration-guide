@@ -98,8 +98,6 @@ pnpm ask "Swap 100 USDC for BEETS" --debug-tools
 
 ## Future improvements
 
-- Remove liq from proportional pools
-- Prevent adding liquidity to a pool with less than $1000 of TVL
 - Action: Claim incentive rewards
 - Action: Stake liquidity
 - Action: Unstake liquidity

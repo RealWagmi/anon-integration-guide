@@ -1,5 +1,5 @@
 import { AiTool, EVM } from '@heyanon/sdk';
-import { MAX_POOLS_IN_RESULTS, MIN_TVL, supportedChains } from './constants';
+import { MAX_POOLS_IN_RESULTS, MIN_TVL_FOR_SEARCH_RESULTS, supportedChains } from './constants';
 
 export const tools: AiTool[] = [
     {
@@ -245,7 +245,7 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getBestAprForToken',
-        description: `Show the top ${MAX_POOLS_IN_RESULTS} pools with the best APR yield for the given token, sorted by APR. Only includes pools with TVL > ${MIN_TVL}.  Will include also pools with tokens equivalent to the given token, e.g. if you ask for Sonic, pools with stS (staked Sonic) will be included too.`,
+        description: `Show the top ${MAX_POOLS_IN_RESULTS} pools with the best APR yield for the given token, sorted by APR. Only includes pools with TVL > ${MIN_TVL_FOR_SEARCH_RESULTS}.  Will include also pools with tokens equivalent to the given token, e.g. if you ask for Sonic, pools with stS (staked Sonic) will be included too.`,
         required: ['chainName', 'tokenAddress'],
         props: [
             {
@@ -263,7 +263,7 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getBestAprForTokenPair',
-        description: `Show the top ${MAX_POOLS_IN_RESULTS} pools with the best APR yield for the given pair of tokens, sorted by APR.  Only includes pools with TVL > ${MIN_TVL}.  Will include also pools with tokens equivalent to the given ones, e.g. if you ask for Sonic, pools with stS (staked Sonic) will be included too.`,
+        description: `Show the top ${MAX_POOLS_IN_RESULTS} pools with the best APR yield for the given pair of tokens, sorted by APR.  Only includes pools with TVL > ${MIN_TVL_FOR_SEARCH_RESULTS}.  Will include also pools with tokens equivalent to the given ones, e.g. if you ask for Sonic, pools with stS (staked Sonic) will be included too.`,
         required: ['chainName', 'token0Address', 'token1Address'],
         props: [
             {
@@ -286,7 +286,7 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getPoolsWithToken',
-        description: `Show the top ${MAX_POOLS_IN_RESULTS} pools with the given token, sorted by TVL. Only includes pools with TVL > ${MIN_TVL}.`,
+        description: `Show the top ${MAX_POOLS_IN_RESULTS} pools with the given token, sorted by TVL. Only includes pools with TVL > ${MIN_TVL_FOR_SEARCH_RESULTS}.`,
         required: ['chainName', 'tokenAddress'],
         props: [
             {
@@ -304,7 +304,7 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getPoolsWithTokenPair',
-        description: `Show the top ${MAX_POOLS_IN_RESULTS} pools with the given pair of tokens, sorted by TVL.  Only includes pools with TVL > ${MIN_TVL}`,
+        description: `Show the top ${MAX_POOLS_IN_RESULTS} pools with the given pair of tokens, sorted by TVL.  Only includes pools with TVL > ${MIN_TVL_FOR_SEARCH_RESULTS}`,
         required: ['chainName', 'token0Address', 'token1Address'],
         props: [
             {
