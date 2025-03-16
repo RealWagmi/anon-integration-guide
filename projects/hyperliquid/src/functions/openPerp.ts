@@ -153,8 +153,8 @@ export async function openPerp({ account, asset, size, sizeUnit, leverage, short
         //
         const slippageAmount = 0.03 * midPrice;
         const executionPrice = short ? midPrice - slippageAmount : midPrice + slippageAmount;
-        const formattedExecutionPrice = _formatPrice(executionPrice, perpInfo.decimals).replace(/\.?0+$/, '');
-        const formattedSize = _formatSize(sizeAsset, perpInfo.nSigFigs);
+        const formattedExecutionPrice = _formatPrice(executionPrice, perpInfo.szDecimals).replace(/\.?0+$/, '');
+        const formattedSize = _formatSize(sizeAsset, perpInfo.szDecimals);
 
         const action = {
             type: 'order',
@@ -207,7 +207,9 @@ export async function openPerp({ account, asset, size, sizeUnit, leverage, short
 
         if (totalSz == '0') throw new Error('Could not open order');
 
-        return toResult(`Successfully ${short ? 'sold' : 'bought'} ${size} ${asset} with ${leverage}x leverage, for average price of $${avgPx}!`);
+        return toResult(
+            `Successfully ${short ? 'sold' : 'bought'} ${size} ${sizeUnit == 'ASSET' ? '' : 'USD of'} ${asset} with ${leverage}x leverage, for average price of $${avgPx}!`,
+        );
     } catch (error) {
         console.log(error);
         return toResult('Failed to open position on Hyperliquid. Please try again.', true);
