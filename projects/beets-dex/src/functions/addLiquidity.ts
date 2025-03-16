@@ -11,7 +11,9 @@ import {
     AddLiquidityBoostedBuildCallInput,
     AddLiquidityQueryOutput,
     AddLiquidityBoostedQueryOutput,
-    AddLiquidityUnbalancedInput,
+    AddLiquidityBoostedInput,
+    AddLiquidityInput,
+    AddLiquidityBoostedProportionalInput,
     AddLiquidityBoostedUnbalancedInput,
 } from '@balancer/sdk';
 import { DEFAULT_SLIPPAGE_AS_PERCENTAGE, NATIVE_TOKEN_ADDRESS, supportedChains } from '../constants';
@@ -22,7 +24,7 @@ import { Slippage } from '@balancer/sdk';
 import { anonChainNameToBalancerChainId, anonChainNameToGqlChain, getDefaultRpcUrl } from '../helpers/chains';
 import { BeetsClient } from '../helpers/beets/client';
 import { GqlChain } from '../helpers/beets/types';
-import { formatPoolType, fromGqlPoolMinimalToBalancerPoolStateWithUnderlyings, isBoostedPoolToken } from '../helpers/pools';
+import { formatPoolType, fromGqlPoolMinimalToBalancerPoolStateWithUnderlyings, isBoostedPoolToken, isProportionalPool } from '../helpers/pools';
 import { getMockPublicWalletClient } from '../helpers/viem';
 
 interface Props {
@@ -76,7 +78,7 @@ export async function addLiquidity(
     // Get token information
     const token0 = await getBalancerTokenByAddress(chainName, token0Address);
     if (!token0) return toResult(`Could not find info on first token (${token0Address})`, true);
-    const token1 = token1Address ? await getBalancerTokenByAddress(chainName, token1Address) : null;
+    let token1 = token1Address ? await getBalancerTokenByAddress(chainName, token1Address) : null;
     if (token1Address && !token1) return toResult(`Could not find info on second token (${token1Address})`, true);
 
     // Get balancer chain ID
@@ -107,29 +109,50 @@ export async function addLiquidity(
     const [hasBalance, balanceError] = await validateTokenBalances(publicClient, account, tokensToCheck);
     if (!hasBalance) return toResult(balanceError!, true);
 
+    // Some pools require tokens to be added proportionally to
+    // the current ratio of tokens in the pool.
+    if (isProportionalPool(pool)) {
+        options.notify(`Proportional pool detected`);
+        if (pool.poolTokens.length > 2) {
+            return toResult(`Proportional pools with more than 2 tokens are not supported yet`, true);
+        }
+        if (token1Amount !== null) {
+            return toResult(`Do not specify amount for ${token1?.symbol}: it will be computed automatically in a proportional manner`, true);
+        }
+    }
+
     // Parse amounts to wei (now that we know the amounts are valid)
     const amount0InWei = parseUnits(token0Amount, token0.decimals);
-    const amount1InWei = token1Amount && token1 ? parseUnits(token1Amount, token1.decimals) : null;
+    let amount1InWei = token1Amount && token1 ? parseUnits(token1Amount, token1.decimals) : null;
 
     // Prepare input amounts for SDK
-    const amountsIn: InputAmount[] = [{ address: token0Address, decimals: token0.decimals, rawAmount: amount0InWei }];
-    if (token1Address && amount1InWei && token1) amountsIn.push({ address: token1Address, decimals: token1.decimals, rawAmount: amount1InWei });
-
-    // If the token is the native token, wrap it, otherwise the SDK query will fail
-    if (wethIsEth) {
-        if (token0Address === NATIVE_TOKEN_ADDRESS) amountsIn[0].address = getWrappedToken(token0Address, chainId);
-        if (token1Address === NATIVE_TOKEN_ADDRESS) amountsIn[1].address = getWrappedToken(token1Address, chainId);
-    }
+    const amountsIn: InputAmount[] = [{ address: getWrappedToken(token0Address, chainId), decimals: token0.decimals, rawAmount: amount0InWei }];
+    if (token1Address && amount1InWei && token1) amountsIn.push({ address: getWrappedToken(token1Address, chainId), decimals: token1.decimals, rawAmount: amount1InWei });
 
     // Construct the AddLiquidityInput
     const rpcUrl = getDefaultRpcUrl(publicClient);
     if (!rpcUrl) throw new Error(`Chain ${chainName} not supported by viem`);
-    const addLiquidityInput: AddLiquidityUnbalancedInput | AddLiquidityBoostedUnbalancedInput = {
-        amountsIn,
-        chainId,
-        rpcUrl,
-        kind: AddLiquidityKind.Unbalanced,
-    };
+    let addLiquidityInput: AddLiquidityBoostedInput | AddLiquidityInput;
+    if (isProportionalPool(pool)) {
+        // Proportional pools require that liquidity is added in the same proportion
+        // as the current token balances in the pool.  This means that only one
+        // token amount needs to be specified: the reference amount.
+        addLiquidityInput = {
+            referenceAmount: amountsIn[0],
+            chainId,
+            rpcUrl,
+            kind: AddLiquidityKind.Proportional,
+        };
+    } else {
+        // For non-proportional pools, one can add liquidity using arbitrary amounts
+        // for each token.
+        addLiquidityInput = {
+            amountsIn,
+            chainId,
+            rpcUrl,
+            kind: AddLiquidityKind.Unbalanced,
+        };
+    }
 
     // BUILD ADD LIQUIDITY TRANSACTION
     let buildOutput: AddLiquidityBuildCallOutput;
@@ -145,14 +168,20 @@ export async function addLiquidity(
     // the underlying token is USDC.e.  To provide liquidity in the underlying
     // we need a special flow.  For reference, see:
     // https://github.com/balancer/b-sdk/blob/516070ac7b2b16127e8c78be20354874c52548bf/test/v3/addLiquidityBoosted/addLiquidityBoosted.integration.test.ts#L477-L505
-    // Please note that `isBoostedPoolToken` needs to check the amountsIn token
-    // address, rather than the input token addresses, because the former takes
-    // into account the wethIsEth flag (see above)
-    if (isBoostedPoolToken(pool, amountsIn[0].address) || (token1Address && isBoostedPoolToken(pool, amountsIn[1].address))) {
+    if (isBoostedPoolToken(pool, token0Address, chainId) || (token1Address && isBoostedPoolToken(pool, token1Address, chainId))) {
         options.notify(`Boosted pool token detected`);
+        let addLiquidityBoostedInput: AddLiquidityBoostedInput;
+        if (isProportionalPool(pool)) {
+            // When adding proportionally to boosted pools, we need to explicitly
+            // specify that you want to automatically wrap the token.
+            addLiquidityBoostedInput = { ...addLiquidityInput, tokensIn: [token0Address] } as AddLiquidityBoostedProportionalInput;
+        } else {
+            // Otherwise, it's the same input as for non-boosted pools.
+            addLiquidityBoostedInput = { ...addLiquidityInput } as AddLiquidityBoostedUnbalancedInput;
+        }
         addressToApprove = PERMIT2[balancerChainId];
         const addLiquidityBoosted = new AddLiquidityBoostedV3();
-        queryOutput = await addLiquidityBoosted.query(addLiquidityInput, poolState);
+        queryOutput = await addLiquidityBoosted.query(addLiquidityBoostedInput, poolState);
         const buildInput = { ...queryOutput, slippage, wethIsEth } as AddLiquidityBoostedBuildCallInput;
         // Sign the permit2 approvals
         const permit2 = await Permit2Helper.signAddLiquidityBoostedApproval({ ...buildInput, client: getMockPublicWalletClient(publicClient, options), owner: account });
@@ -182,6 +211,20 @@ export async function addLiquidity(
         }
     }
     bptOut = queryOutput.bptOut.amount;
+
+    // For proportional pools, a certain amount of token1 will always be added,
+    // even if token1Amount is not specified.  This amount was computed
+    // automatically by the query.
+    if (isProportionalPool(pool)) {
+        // Find the position of token1 in the query output (this works because we
+        // ensure that the pool has at most 2 tokens).
+        const token1IndexInQuery = queryOutput.amountsIn.findIndex((el) => el.token.address.toLowerCase() !== token0Address.toLowerCase());
+        token1Address = queryOutput.amountsIn[token1IndexInQuery].token.address;
+        token1 = await getBalancerTokenByAddress(chainName, token1Address);
+        if (!token1) return toResult(`Could not find info on second token (${token1Address})`, true);
+        token1Amount = toHumanReadableAmount(queryOutput.amountsIn[token1IndexInQuery].amount, token1.decimals);
+        amount1InWei = parseUnits(token1Amount, token1.decimals); // lest token1 is not approved
+    }
 
     // Build approval transactions (if needed)
     if (token0Address !== NATIVE_TOKEN_ADDRESS) {

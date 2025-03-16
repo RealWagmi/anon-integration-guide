@@ -98,6 +98,8 @@ pnpm ask "Swap 100 USDC for BEETS" --debug-tools
 
 ## Future improvements
 
+- Remove liq from proportional pools
+- Prevent adding liquidity to a pool with less than $1000 of TVL
 - Action: Claim incentive rewards
 - Action: Stake liquidity
 - Action: Unstake liquidity
@@ -105,4 +107,3 @@ pnpm ask "Swap 100 USDC for BEETS" --debug-tools
 - Tell user exact amount received after remove liquidity event
 - Allow to remove liquidity to a single token
 - Price impact estimation for swaps
-- Add liq support for GyroE pools

@@ -1,6 +1,6 @@
 import { Address, Hex, mapPoolType, PoolStateWithUnderlyings, PoolTokenWithUnderlying, Token } from '@balancer/sdk';
-import { GqlPoolAprItemType, GqlPoolBase, GqlPoolMinimal } from './beets/types';
-import { getEquivalentTokenAddresses, to$$$ } from './tokens';
+import { GqlPoolAprItemType, GqlPoolBase, GqlPoolMinimal, GqlPoolType } from './beets/types';
+import { getEquivalentTokenAddresses, getWrappedToken, to$$$ } from './tokens';
 
 /**
  * Types of APR items returned by the API that we should consider
@@ -159,7 +159,9 @@ export async function fromGqlPoolMinimalToBalancerPoolStateWithUnderlyings(pool:
  * is a Boosted Stable Rings pool, and the user wants to add USDC.e,
  * then this will be true.
  */
-export function isBoostedPoolToken(pool: GqlPoolMinimal, underlyingTokenAddress: string): boolean {
+export function isBoostedPoolToken(pool: GqlPoolMinimal, underlyingTokenAddress: string, chainId: number): boolean {
+    // Allow to specify the native token address
+    underlyingTokenAddress = getWrappedToken(underlyingTokenAddress as Address, chainId);
     return pool.poolTokens.some((token) => {
         return token.underlyingToken?.address.toLowerCase() === underlyingTokenAddress.toLowerCase();
     });
@@ -178,6 +180,15 @@ export function isBoostedPool(pool: GqlPoolMinimal): boolean {
     return pool.poolTokens.some((token) => {
         return !!token.underlyingToken?.address;
     });
+}
+
+/**
+ * Return true if the given GqlPoolMinimal is a pool that requires the tokens
+ * to be added in a proportional manner, false otherwise.
+ */
+export function isProportionalPool(pool: GqlPoolMinimal): boolean {
+    const proportionalPoolTypes = [GqlPoolType.Gyro, GqlPoolType.Gyro3, GqlPoolType.Gyroe, GqlPoolType.CowAmm];
+    return proportionalPoolTypes.includes(pool.type);
 }
 
 /**
