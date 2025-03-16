@@ -131,4 +131,40 @@ export const tools: AiTool[] = [
             },
         ],
     },
+    {
+        name: 'getPerpPositions',
+        description: "Retrieves user's perpetual positions on Hyperliquid.",
+        required: ['account'],
+        props: [
+            {
+                name: 'account',
+                type: 'string',
+                description: 'User wallet address to check for perpetual positions.',
+            },
+        ],
+    },
+    {
+        name: 'getSpotBalances',
+        description: "Retrieves user's spot balances on Hyperliquid.",
+        required: ['account'],
+        props: [
+            {
+                name: 'account',
+                type: 'string',
+                description: 'User wallet address to check for spot balances.',
+            },
+        ],
+    },
+    {
+        name: 'getPerpBalances',
+        description: "Retrieves user's available balance in their Hyperliquid perpetual account.",
+        required: ['account'],
+        props: [
+            {
+                name: 'account',
+                type: 'string',
+                description: 'User wallet address to check for perpetual balance.',
+            },
+        ],
+    },
 ];
