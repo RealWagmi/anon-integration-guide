@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import { privateKeyToAccount } from 'viem/accounts';
 import { createPublicClient, http, createWalletClient } from 'viem';
 import { sonic } from 'viem/chains';
-import { EVM, FunctionOptions, FunctionReturn, SolanaFunctionOptions, toResult } from '@heyanon/sdk';
+import { EVM, FunctionOptions, FunctionReturn, SolanaFunctionOptions, TonFunctionOptions, toResult } from '@heyanon/sdk';
 import { tools } from '../tools';
 import { tools as askBeetsTools } from './tools';
 import * as functions from '../functions';
@@ -93,7 +93,6 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
     const functionOptions: FunctionOptions = {
         evm: {
             getProvider: () => provider,
-            getRecipient: () => Promise.resolve(signer.address),
             sendTransactions: async (props: EVM.types.SendTransactionProps) => {
                 // Create wallet client
                 const walletClient = createWalletClient({
@@ -135,9 +134,12 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
                 return signatures;
             },
         },
+        notify,
+        getRecipient: () => Promise.resolve(signer.address),
         // Placeholder for Solana options
         solana: {} as SolanaFunctionOptions,
-        notify,
+        // Placeholder for Telegram TON options
+        ton: {} as TonFunctionOptions,
     };
 
     const messages: ConversationMessage[] = [
