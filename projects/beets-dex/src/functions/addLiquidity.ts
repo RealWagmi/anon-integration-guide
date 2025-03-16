@@ -16,9 +16,9 @@ import {
     AddLiquidityBoostedProportionalInput,
     AddLiquidityBoostedUnbalancedInput,
 } from '@balancer/sdk';
-import { DEFAULT_SLIPPAGE_AS_PERCENTAGE, NATIVE_TOKEN_ADDRESS, supportedChains } from '../constants';
+import { APPROVE_AMOUNT_IN_EXCESS, DEFAULT_SLIPPAGE_AS_PERCENTAGE, NATIVE_TOKEN_ADDRESS, supportedChains } from '../constants';
 import { validatePercentage, validateTokenPositiveDecimalAmount, validateTokenBalances, validateTokensAreInPool } from '../helpers/validation';
-import { toHumanReadableAmount, getBalancerTokenByAddress, getWrappedToken } from '../helpers/tokens';
+import { toHumanReadableAmount, getBalancerTokenByAddress, getWrappedToken, multiplyTokenAmount } from '../helpers/tokens';
 import { AddLiquidityBuildCallOutput } from '@balancer/sdk';
 import { Slippage } from '@balancer/sdk';
 import { anonChainNameToBalancerChainId, anonChainNameToGqlChain, getDefaultRpcUrl } from '../helpers/chains';
@@ -228,18 +228,28 @@ export async function addLiquidity(
 
     // Build approval transactions (if needed)
     if (token0Address !== NATIVE_TOKEN_ADDRESS) {
+        const approveAmount = multiplyTokenAmount(amount0InWei, APPROVE_AMOUNT_IN_EXCESS);
+        const length = transactions.length;
         await EVM.utils.checkToApprove({
-            args: { account, target: token0Address, spender: addressToApprove, amount: amount0InWei },
+            args: { account, target: token0Address, spender: addressToApprove, amount: approveAmount },
             provider: publicClient,
             transactions,
         });
+        if (transactions.length > length) {
+            await options.notify(`Will approve spending of ${toHumanReadableAmount(approveAmount, token0.decimals)} ${token0.symbol}`);
+        }
     }
-    if (token1Address && amount1InWei && token1Address !== NATIVE_TOKEN_ADDRESS) {
+    if (token1Address && token1 && amount1InWei && token1Address !== NATIVE_TOKEN_ADDRESS) {
+        const approveAmount = multiplyTokenAmount(amount1InWei, APPROVE_AMOUNT_IN_EXCESS);
+        const length = transactions.length;
         await EVM.utils.checkToApprove({
-            args: { account, target: token1Address, spender: addressToApprove, amount: amount1InWei },
+            args: { account, target: token1Address, spender: addressToApprove, amount: approveAmount },
             provider: publicClient,
             transactions,
         });
+        if (transactions.length > length) {
+            await options.notify(`Will approve spending of ${toHumanReadableAmount(approveAmount, token1.decimals)} ${token1.symbol}`);
+        }
     }
 
     // Add the join transaction

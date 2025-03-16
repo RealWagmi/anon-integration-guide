@@ -11,6 +11,15 @@ export const supportedChains = [ChainIds.sonic];
 export const NATIVE_TOKEN_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
 
 /**
+ * How much to approve for spending a token, as a multiple of the
+ * amount needed to add liquidity.  Choose a value larger
+ * than 1 to account for the fact that sometimes, by the time the
+ * final swap or add liquidity transaction is sent, the needed amount
+ * has changed.
+ */
+export const APPROVE_AMOUNT_IN_EXCESS = 1.3;
+
+/**
  * Maximum number of pools to show in the search results,
  * important to avoid the 500 token limit for getters.
  */

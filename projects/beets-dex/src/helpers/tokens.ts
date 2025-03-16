@@ -1,6 +1,6 @@
 import { Address, formatUnits, decodeEventLog, Log, TransactionReceipt, erc20Abi } from 'viem';
 import { GqlToken } from './beets/types';
-import { Token as BalancerToken, NATIVE_ASSETS } from '@balancer/sdk';
+import { Token as BalancerToken, NATIVE_ASSETS, WAD } from '@balancer/sdk';
 import { BeetsClient } from './beets/client';
 import { anonChainNameToGqlChain } from './chains';
 import { DEFAULT_PRECISION, EQUIVALENT_TOKENS, NATIVE_TOKEN_ADDRESS, TOKEN_SYNONYMS } from '../constants';
@@ -246,4 +246,11 @@ export function getTokenTransferAmounts(
     });
 
     return { tokenInAmountInWei, tokenOutAmountInWei };
+}
+
+/**
+ * Multiply a token amount in wei by a floating point number
+ */
+export function multiplyTokenAmount(amountInWei: bigint, multiplier: number): bigint {
+    return (amountInWei * BigInt(Number(WAD) * multiplier)) / WAD;
 }
