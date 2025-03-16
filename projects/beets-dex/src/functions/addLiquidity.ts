@@ -231,6 +231,9 @@ export async function addLiquidity(
         if (!token1) return toResult(`Could not find info on second token (${token1Address})`, true);
         token1Amount = toHumanReadableAmount(queryOutput.amountsIn[token1IndexInQuery].amount, token1.decimals);
         amount1InWei = parseUnits(token1Amount, token1.decimals); // lest token1 is not approved
+        // Check that the user has enough of token1
+        const [hasBalance, balanceError] = await validateTokenBalances(publicClient, account, [{ address: token1Address, amount: token1Amount }]);
+        if (!hasBalance) return toResult(balanceError!, true);
     }
 
     // Build approval transactions (if needed)
