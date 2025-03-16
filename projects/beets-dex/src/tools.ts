@@ -4,7 +4,8 @@ import { MAX_POOLS_IN_RESULTS, MIN_TVL_FOR_SEARCH_RESULTS, supportedChains } fro
 export const tools: AiTool[] = [
     {
         name: 'addLiquidity',
-        description: 'Tokens do not need to be proportional as the protocol will automatically zap them for the correct proportions',
+        description:
+            'Add liquidity to a pool. Supports both regular and Concentrated Liquidity (Gyro) pools. For regular pools, you can provide any combination of amounts for the tokens; you can even provide only one token, and it will be zapped in the pool alone. For Gyro pools, you must always provide just one token; the other token will be transferred from your wallet to the pool in the same proportion as the pool tokens.',
         required: ['chainName', 'account', 'poolId', 'token0Address', 'token0Amount', 'token1Address', 'token1Amount', 'slippageAsPercentage'],
         props: [
             {
@@ -36,7 +37,8 @@ export const tools: AiTool[] = [
             {
                 name: 'token1Address',
                 type: ['string', 'null'],
-                description: 'Optional: Address of the second token to add, starting with "0x". If not provided, the first token will be zapped alone in the pool.',
+                description:
+                    'Optional: Address of the second token to add, starting with "0x".  Not needed for Gyro pools.  For regular pools, it is optional; if not provided, the first token will be zapped alone in the pool.',
             },
             {
                 name: 'token1Amount',

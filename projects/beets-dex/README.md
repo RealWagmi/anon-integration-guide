@@ -43,7 +43,7 @@ Beets DEX is a decentralized exchange that allows you to swap tokens and earn yi
 ## Available Functions
 
 - `getBeetsCapabilities`: Get information about what Beets DEX can do and example prompts.
-- `addLiquidity`: Add liquidity to a pool. Tokens do not need to be proportional as the protocol will automatically zap them for the correct proportions. If you provide one token amount, it will be zapped in the pool alone.
+- `addLiquidity`: Add liquidity to a pool. Supports both regular and Concentrated Liquidity (Gyro) pools. For regular pools, you can provide any combination of amounts for the tokens; you can even provide only one token, and it will be zapped in the pool alone. For Gyro pools, you must always provide just one token; the other token will be transferred from your wallet to the pool in the same proportion as the pool tokens.
 - `removeLiquidity`: Remove liquidity from a pool and return the tokens to the user. The amount of liquidity to be removed is specified as a percentage of the user liquidity (default is 100%). The liquidity will be removed in the same proportions as the pool tokens.
 - `executeSwapExactIn`: Get a quote for and then execute a swap where you specify the EXACT AMOUNT YOU WANT TO SEND in order to buy a token. For example: "Swap 1 X for Y", "Sell 1 X for Y", "Buy Y with 1 X".
 - `executeSwapExactOut`: Get a quote for and then execute a swap where you specify the EXACT AMOUNT YOU WANT TO RECEIVE of the token you want to buy. For example: "Swap X for 1000 Y", "Sell X for 1000 Y", "Buy 1000 Y with X".
