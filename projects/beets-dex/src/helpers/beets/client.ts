@@ -1,8 +1,18 @@
 import axios, { AxiosInstance } from 'axios';
 import { GqlChain, GqlPoolFilter, GqlPoolMinimal, GqlPoolOrderBy, GqlPoolOrderDirection, GqlSorGetSwapsResponse, GqlSorSwapType, GqlToken } from './types';
 
+/**
+ * Custom error class for errors that should not be retried
+ */
+class NoRetryError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'NoRetryError';
+    }
+}
+
 // Constants for configuration
-const DEFAULT_TIMEOUT = 30000; // 30 seconds
+const DEFAULT_TIMEOUT = 15000; // 15 seconds
 const DEFAULT_RETRY_ATTEMPTS = 3;
 const DEFAULT_RETRY_DELAY = 1000; // 1 second
 
@@ -45,8 +55,13 @@ export class BeetsClient {
                 variables,
             });
 
+            if (response.data?.errors && response.data?.errors?.length > 0) {
+                // Use NoRetryError to signal that this error should not be retried
+                throw new NoRetryError(`${response.data.errors[0].message}`);
+            }
+
             if (!response.data?.data) {
-                throw new Error('Invalid response format from API');
+                throw new Error('Empty response from subgraph');
             }
 
             return response.data.data as T;
@@ -54,6 +69,11 @@ export class BeetsClient {
             // Don't retry on 4xx errors as they're typically client errors
             if (axios.isAxiosError(error) && error.response?.status && error.response.status < 500) {
                 console.error('GraphQL Error:', error.response.data);
+                throw new Error(`GraphQL query failed: ${error.message}`);
+            }
+
+            // Don't retry on GraphQL errors (identified by NoRetryError)
+            if (error instanceof NoRetryError) {
                 throw new Error(`GraphQL query failed: ${error.message}`);
             }
 
