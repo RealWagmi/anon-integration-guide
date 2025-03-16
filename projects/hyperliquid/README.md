@@ -25,6 +25,9 @@ The Hyperliquid L1 uses a custom consensus algorithm called HyperBFT which is he
 -   "Short me 1 BTC with 50x leverage on Hyperliquid"
 -   "Close my ARB position on Hyperliquid"
 -   "Close my Bitcoin position on Hyperliquid"
+-   "Check my perpetual positions on Hyperliquid"
+-   "Show my spot balances on Hyperliquid"
+-   "What's my available balance in my Hyperliquid perpetual account?"
 
 ## Available Functions
 
@@ -32,25 +35,27 @@ The Hyperliquid L1 uses a custom consensus algorithm called HyperBFT which is he
 -   Withdrawing from Hyperliquid (minimum 2 USDC)
 -   Moving USDC between spot and perp balances on Hyperliquid
 -   Opening and closing perp positions on Hyperliquid
+-   Retrieving perpetual positions and balances
+-   Checking spot balances on Hyperliquid
 
 ## Tests
 
 To run tests:
 
 ```bash
-npm test
+pnpm test
 ```
 
 To check test coverage:
 
 ```bash
-npm run test:coverage
+pnpm run test:coverage
 ```
 
 ## Installation
 
 ```bash
-yarn add @heyanon/hyperliquid
+pnpm add @heyanon/hyperliquid
 ```
 
 ## Usage
@@ -109,6 +114,23 @@ await openPerp({ account: '0xYourAddress', asset: 'BTC', size: '1000', sizeUnit:
 await closePerp({ account: '0xYourAddress', asset: 'ETH' });
 ```
 
-## Note
+### Getting perp positions
 
-Trading functionality development is in progress. Next features will include order management, position tracking, and advanced trading operations.
+```typescript
+// Retrieves all open perpetual positions
+await getPerpPositions({ account: '0xYourAddress' });
+```
+
+### Getting spot balances
+
+```typescript
+// Retrieves all spot balances
+await getSpotBalances({ account: '0xYourAddress' });
+```
+
+### Getting perp balance
+
+```typescript
+// Retrieves available balance in perpetual trading account
+await getPerpBalance({ account: '0xYourAddress' });
+```
