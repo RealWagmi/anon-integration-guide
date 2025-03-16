@@ -41,7 +41,6 @@ export async function getPerpPositions({ account }: Props, _options: FunctionOpt
             return toResult(`No open positions on Hyperliquid.\n\n📊 Account Summary:\n• Account Value: $${accountValue}\n• Withdrawable: $${withdrawable}`);
         }
 
-        // Format each position with better structure
         const formattedPositions = data.assetPositions
             .map((assetPosition: any, index: number) => {
                 const { position } = assetPosition;
@@ -64,7 +63,6 @@ export async function getPerpPositions({ account }: Props, _options: FunctionOpt
             })
             .join('\n\n');
 
-        // Create a more structured overall response
         const response =
             `=== HYPERLIQUID PERPETUAL POSITIONS ===\n\n` +
             `${formattedPositions}\n\n` +

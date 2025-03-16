@@ -97,7 +97,7 @@ describe('openPerp', () => {
         const result = await openPerp(defaultProps, functionOptions as any);
 
         expect(result.success).toBe(true);
-        expect(result.data).toContain(`Successfully bought ${defaultProps.size} ${defaultProps.asset} with ${defaultProps.leverage}x leverage`);
+        expect(result.data).toContain(`Successfully bought ${defaultProps.size} USD of ${defaultProps.asset} with ${defaultProps.leverage}x leverage`);
     });
 
     it('should handle signature without v parameter', async () => {
@@ -334,7 +334,7 @@ describe('openPerp', () => {
         const result = await openPerp(assetUnitProps, functionOptions as any);
 
         expect(result.success).toBe(true);
-        expect(result.data).toContain(`Successfully bought ${assetUnitProps.size} ${assetUnitProps.asset}`);
+        expect(result.data).toContain(`Successfully bought ${assetUnitProps.size}  ${assetUnitProps.asset} with ${assetUnitProps.leverage}x leverage`);
     });
 
     it('should handle response with no filled data in any statuses', async () => {
