@@ -29,8 +29,7 @@ export async function _updateLeverage(leverageAmount: number, assetIndex: number
             }),
         });
         const json = await result.json();
-        
-        return json?.success;
+        return json?.status == 'ok';
     } catch (e) {
         return false;
     }

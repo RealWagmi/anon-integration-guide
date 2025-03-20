@@ -180,7 +180,7 @@ export async function openPerp({ account, asset, size, sizeUnit, leverage, short
 
         if (!closing) {
             const leverageUpdateSuccessful = await _updateLeverage(leverage, perpInfo.assetIndex, agentWallet);
-            if (!leverageUpdateSuccessful) return toResult('Failed to open position on Hyperliquid. Please try again.', true);
+            if (!leverageUpdateSuccessful) return toResult('Invalid leverage.', true);
         }
 
         const res = await axios.post(
