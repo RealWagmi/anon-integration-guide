@@ -178,7 +178,10 @@ export async function openPerp({ account, asset, size, sizeUnit, leverage, short
 
         const signature = await _signL1Action(action, nonce, true, agentWallet);
 
-        await _updateLeverage(leverage, perpInfo.assetIndex, agentWallet);
+        if (!closing) {
+            const leverageUpdateSuccessful = await _updateLeverage(leverage, perpInfo.assetIndex, agentWallet);
+            if (!leverageUpdateSuccessful) return toResult('Failed to open position on Hyperliquid. Please try again.', true);
+        }
 
         const res = await axios.post(
             'https://api.hyperliquid.xyz/exchange',
