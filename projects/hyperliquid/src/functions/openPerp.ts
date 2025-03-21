@@ -17,6 +17,7 @@ interface Props {
     leverage: number;
     short: boolean;
     closing?: boolean;
+    updating?: boolean;
 }
 
 /**
@@ -30,7 +31,10 @@ interface Props {
  * @param options - SDK function options
  * @returns Promise resolving to function execution result
  */
-export async function openPerp({ account, asset, size, sizeUnit, leverage, short, closing }: Props, { evm: { signTypedDatas } }: FunctionOptions): Promise<FunctionReturn> {
+export async function openPerp(
+    { account, asset, size, sizeUnit, leverage, short, closing, updating }: Props,
+    { evm: { signTypedDatas } }: FunctionOptions,
+): Promise<FunctionReturn> {
     try {
         //
         // Check if user has already opened the position
@@ -46,10 +50,14 @@ export async function openPerp({ account, asset, size, sizeUnit, leverage, short
         );
         const { assetPositions, withdrawable } = resultClearingHouseState.data;
 
+        let openPosition;
         for (const { position } of assetPositions) {
             const { coin } = position;
-            if (coin == asset && !closing) {
+            if (coin == asset && !closing && !updating) {
                 return toResult('You already have a perp in that asset, close it in order to open a new one.', true);
+            }
+            if (coin == asset) {
+                openPosition = position;
             }
         }
 
@@ -80,9 +88,12 @@ export async function openPerp({ account, asset, size, sizeUnit, leverage, short
             sizeUsd = sizeAsset * midPrice;
         }
 
-        if (!closing && sizeUsd < MIN_HYPERLIQUID_TRADE_SIZE) return toResult(`Minimum order size is ${MIN_HYPERLIQUID_TRADE_SIZE}$`, true);
-        if (!closing && sizeUsd / leverage > Number(withdrawable)) return toResult('Not enough USD on Hyperliquid', true);
-
+        if (!closing && Math.abs(sizeUsd) < MIN_HYPERLIQUID_TRADE_SIZE) return toResult(`Minimum order size is ${MIN_HYPERLIQUID_TRADE_SIZE}$`, true);
+        if (!(updating && Number(size) < 0) && !closing && sizeUsd / leverage > Number(withdrawable)) return toResult('Not enough USD on Hyperliquid', true);
+        if (updating && Number(size) < 0 && openPosition) {
+            if (Math.abs(openPosition.positionValue) < -sizeUsd || Math.abs(openPosition.szi) < -sizeAsset)
+                return toResult('Specified amount is larger than size of the opened position.', true);
+        }
         //
         // Creating the agent wallet
         //
@@ -152,16 +163,16 @@ export async function openPerp({ account, asset, size, sizeUnit, leverage, short
         // Preparing, signing and sending the action to Hyperliquid
         //
         const slippageAmount = 0.03 * midPrice;
-        const executionPrice = short ? midPrice - slippageAmount : midPrice + slippageAmount;
+        const executionPrice = (Number(sizeAsset) < 0 ? !short : short) ? midPrice - slippageAmount : midPrice + slippageAmount;
         const formattedExecutionPrice = _formatPrice(executionPrice, perpInfo.szDecimals).replace(/\.?0+$/, '');
-        const formattedSize = _formatSize(sizeAsset, perpInfo.szDecimals);
+        const formattedSize = _formatSize(Math.abs(sizeAsset), perpInfo.szDecimals);
 
         const action = {
             type: 'order',
             orders: [
                 {
                     a: perpInfo.assetIndex,
-                    b: !short,
+                    b: Number(sizeAsset) < 0 ? short : !short,
                     p: formattedExecutionPrice,
                     s: formattedSize,
                     r: false,
@@ -178,7 +189,7 @@ export async function openPerp({ account, asset, size, sizeUnit, leverage, short
 
         const signature = await _signL1Action(action, nonce, true, agentWallet);
 
-        if (!closing) {
+        if (!closing && !updating) {
             const leverageUpdateSuccessful = await _updateLeverage(leverage, perpInfo.assetIndex, agentWallet);
             if (!leverageUpdateSuccessful) return toResult('Invalid leverage.', true);
         }

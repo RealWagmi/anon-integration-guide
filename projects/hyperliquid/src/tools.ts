@@ -114,6 +114,100 @@ export const tools: AiTool[] = [
         ],
     },
     {
+        name: 'modifyPerpPositionByUSD',
+        description:
+            'Increses or decreases the size of the Hyperliquid perp position by the specified USD amount. In case that position size needs to be increased, "size" argument is positive, and otherwise it is negative. ',
+        required: ['account', 'asset', 'size'],
+        props: [
+            {
+                name: 'account',
+                type: 'string',
+                description: 'User wallet address that will have its perp position modified.',
+            },
+            {
+                name: 'asset',
+                type: 'string',
+                enum: Object.keys(hyperliquidPerps),
+                description: 'Name of the underlying asset of the perp position.',
+            },
+            {
+                name: 'size',
+                type: 'string',
+                description: 'How many USD the position needs to be increased for. Positive for size increase and negative for size decrease.',
+            },
+        ],
+    },
+    {
+        name: 'modifyPerpPositionByTokenAmount',
+        description:
+            'Increses or decreases the size of the Hyperliquid perpetual position by the specified asset token amount. In case that position size needs to be increased, "size" argument is positive, and otherwise it is negative. ',
+        required: ['account', 'asset', 'size'],
+        props: [
+            {
+                name: 'account',
+                type: 'string',
+                description: 'User wallet address that will have its perp position modified.',
+            },
+            {
+                name: 'asset',
+                type: 'string',
+                enum: Object.keys(hyperliquidPerps),
+                description: 'Name of the underlying asset of the perp position.',
+            },
+            {
+                name: 'size',
+                type: 'string',
+                description: 'Amount of underlying token that the position needs to be increased for.  Positive for size increase and negative for size decrease. ',
+            },
+        ],
+    },
+    {
+        name: 'increasePerpPositionByMultiplying',
+        description: 'When user wants the position size to be increased by a percentage, this function gets called. ',
+        required: ['account', 'asset', 'sizeMultiplier'],
+        props: [
+            {
+                name: 'account',
+                type: 'string',
+                description: 'User wallet address that will have its perp position increased.',
+            },
+            {
+                name: 'asset',
+                type: 'string',
+                enum: Object.keys(hyperliquidPerps),
+                description: 'Name of the underlying asset of the perp position.',
+            },
+            {
+                name: 'sizeMultiplier',
+                type: 'string',
+                description: 'Multiplier that determines how much of the position needs to be increased. (e.g. 3 if user wants to triple the position size, or 1.5 if it needs to be increased by 50%)',
+            },
+        ],
+    },
+    {
+        name: 'decreasePerpPositionByMultiplying',
+        description: 'When user wants the position size to be decreased by a percentage, this function gets called. ',
+        required: ['account', 'asset', 'sizeMultiplier'],
+        props: [
+            {
+                name: 'account',
+                type: 'string',
+                description: 'User wallet address that will have its perp position decreased.',
+            },
+            {
+                name: 'asset',
+                type: 'string',
+                enum: Object.keys(hyperliquidPerps),
+                description: 'Name of the underlying asset of the perp position.',
+            },
+            {
+                name: 'sizeMultiplier',
+                type: 'string',
+                description: 'Multiplier that determines how much of the position needs to be decreased. (e.g. 0.5 if it needs to be halved, 0.3 if it needs to be reduced by 70%, and 0.7 if it needs to be lowered to 70%)',
+            },
+        ],
+    },
+    {
         name: 'closePerp',
         description: 'Closes an existing perp position on Hyperliquid.',
         required: ['account', 'asset'],
@@ -133,7 +227,8 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getPerpPositions',
-        description: "Retrieves user's perpetual positions on Hyperliquid.",
+        description:
+            "Retrieves user's perpetual positions on Hyperliquid. This function is only used for retreiving data, and it does not modify any of the positions. This function should be called only if it has been explicitly stated that list of user's perp positions is needed. Don't call this function if some change is explicitly asked for. ",
         required: ['account'],
         props: [
             {
@@ -145,7 +240,8 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getSpotBalances',
-        description: "Retrieves user's spot balances on Hyperliquid.",
+        description:
+            "Retrieves user's spot balances on Hyperliquid. This function is only used for retreiving data, and it does not modify any of the spot balances. This function should be called only if it has been explicitly stated that list of user's spot assets is needed. Don't call this function if some change is explicitly asked for.  ",
         required: ['account'],
         props: [
             {
@@ -157,7 +253,8 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getPerpBalances',
-        description: "Retrieves user's available balance in their Hyperliquid perpetual account.",
+        description:
+            "Retrieves user's available balance in their Hyperliquid perpetual account. This function is only used for retreiving data, and it does not modify the perpetual account balance. This function should be called only if it has been explicitly stated that his balance of hyperliquid perp account is needed. Don't call this function if some change is explicitly asked for.  ",
         required: ['account'],
         props: [
             {
