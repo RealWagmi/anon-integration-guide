@@ -1,11 +1,14 @@
 import axios from 'axios';
-import { Address } from 'viem';
+import { Address, isAddress } from 'viem';
 import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
 import { openPerp } from './openPerp';
+import { hyperliquidPerps } from '../constants';
+import { _getUsersVaultAddress } from './utils/_getUsersVaultAddress';
 
 interface Props {
     account: Address;
-    asset: 'ETH' | 'BTC' | 'HYPE' | 'PURR' | 'LINK' | 'ARB';
+    asset: keyof typeof hyperliquidPerps;
+    vault?: string;
 }
 
 /**
@@ -13,17 +16,22 @@ interface Props {
  * @param account - User's wallet address
  * @param asset - The asset to trade on Hyperliquid.
  * @param options - SDK function options
+ * @param vault - Add this if you want to do this action as the vault. Can be vault name or address.
  * @returns Promise resolving to function execution result
  */
-export async function closePerp({ account, asset }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+export async function closePerp({ account, asset, vault }: Props, options: FunctionOptions): Promise<FunctionReturn> {
     const { notify } = options;
     try {
+        if (vault && !isAddress(vault)) {
+            vault = await _getUsersVaultAddress(account, vault);
+            if (!vault) return toResult('Invalid vault specified', true);
+        }
         //
         // Firstly, check if user has the position in that asset
         //
         const resultClearingHouseState = await axios.post(
             'https://api.hyperliquid.xyz/info',
-            { type: 'clearinghouseState', user: account },
+            { type: 'clearinghouseState', user: vault || account },
             {
                 headers: {
                     'Content-Type': 'application/json',
@@ -39,7 +47,16 @@ export async function closePerp({ account, asset }: Props, options: FunctionOpti
                 // Close the perp by opening an opposite position (long to close short, short to close long)
                 //
                 const result = await openPerp(
-                    { account, asset, size: Math.abs(Number(szi)).toString(), sizeUnit: 'ASSET', leverage: leverage.value, short: Number(szi) > 0 ? true : false, closing: true },
+                    {
+                        account,
+                        asset,
+                        size: Math.abs(Number(szi)).toString(),
+                        sizeUnit: 'ASSET',
+                        leverage: leverage.value,
+                        short: Number(szi) > 0 ? true : false,
+                        closing: true,
+                        vault,
+                    },
                     options,
                 );
                 if (!result.success) {

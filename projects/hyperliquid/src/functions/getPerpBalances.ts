@@ -1,25 +1,32 @@
 import axios from 'axios';
-import { Address } from 'viem';
+import { Address, isAddress } from 'viem';
 import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
+import { _getUsersVaultAddress } from './utils/_getUsersVaultAddress';
 
 interface Props {
     account: Address;
+    vault?: string;
 }
 
 /**
  * Gets the user's available balance (withdrawable amount) in their Hyperliquid perpetual account.
  *
  * @param account - User's wallet address
+ * @param vault - Add this if you want to do this for the vault. Can be vault name or address.
  * @param options - SDK function options
  * @returns Promise resolving to function execution result with available perpetual balance
  */
-export async function getPerpBalances({ account }: Props, _options: FunctionOptions): Promise<FunctionReturn> {
+export async function getPerpBalances({ account, vault }: Props, _options: FunctionOptions): Promise<FunctionReturn> {
     try {
+        if (vault && !isAddress(vault)) {
+            vault = await _getUsersVaultAddress(account, vault);
+            if (!vault) return toResult('Invalid vault specified', true);
+        }
         console.log('Getting perpetual balance for account:', account);
 
         const res = await axios.post(
             'https://api.hyperliquid.xyz/info',
-            { type: 'clearinghouseState', user: account },
+            { type: 'clearinghouseState', user: vault || account },
             {
                 headers: {
                     'Content-Type': 'application/json',

@@ -1,12 +1,15 @@
 import axios from 'axios';
-import { Address } from 'viem';
+import { Address, isAddress } from 'viem';
 import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
 import { openPerp } from './openPerp';
+import { hyperliquidPerps } from '../constants';
+import { _getUsersVaultAddress } from './utils/_getUsersVaultAddress';
 
 interface Props {
     account: Address;
-    asset: 'ETH' | 'BTC' | 'HYPE' | 'PURR' | 'LINK' | 'ARB';
+    asset: keyof typeof hyperliquidPerps;
     sizeMultiplier: string;
+    vault?: string;
 }
 
 /**
@@ -14,18 +17,23 @@ interface Props {
  * @param account - User's wallet address
  * @param asset - The asset to trade on Hyperliquid.
  * @param size - Percentage as decimal number >1
+ * @param vault - Add this if you want to do this action as the vault. Can be vault name or address.
  * @param options - SDK function options
  * @returns Promise resolving to function execution result
  */
-export async function increasePerpPositionByMultiplying({ account, asset, sizeMultiplier }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+export async function increasePerpPositionByMultiplying({ account, asset, sizeMultiplier, vault }: Props, options: FunctionOptions): Promise<FunctionReturn> {
     const { notify } = options;
     try {
+        if (vault && !isAddress(vault)) {
+            vault = await _getUsersVaultAddress(account, vault);
+            if (!vault) return toResult('Invalid vault specified', true);
+        }
         //
         // Firstly, check if user has the position in that asset
         //
         const resultClearingHouseState = await axios.post(
             'https://api.hyperliquid.xyz/info',
-            { type: 'clearinghouseState', user: account },
+            { type: 'clearinghouseState', user: vault || account },
             {
                 headers: {
                     'Content-Type': 'application/json',
@@ -42,7 +50,6 @@ export async function increasePerpPositionByMultiplying({ account, asset, sizeMu
                 //
                 // Update the position
                 //
-
                 const result = await openPerp(
                     {
                         account,
@@ -52,6 +59,7 @@ export async function increasePerpPositionByMultiplying({ account, asset, sizeMu
                         leverage: leverage.value,
                         short: false, // Because szi is negative for shorts
                         updating: true,
+                        vault,
                     },
                     options,
                 );

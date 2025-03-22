@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Address, parseSignature, zeroAddress } from 'viem';
+import { Address, isAddress, parseSignature, zeroAddress } from 'viem';
 import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
 import { ARBITRUM_CHAIN_ID, ARBITRUM_CHAIN_ID_HEX, hyperliquidPerps, MIN_HYPERLIQUID_TRADE_SIZE } from '../constants';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
@@ -8,6 +8,7 @@ import { _formatSize } from './utils/_formatSize';
 import { _actionHash } from './utils/_actionHash';
 import { _signL1Action } from './utils/_signL1Action';
 import { _updateLeverage } from './utils/_updateLeverage';
+import { _getUsersVaultAddress } from './utils/_getUsersVaultAddress';
 
 interface Props {
     account: Address;
@@ -18,6 +19,7 @@ interface Props {
     short: boolean;
     closing?: boolean;
     updating?: boolean;
+    vault?: string;
 }
 
 /**
@@ -28,20 +30,25 @@ interface Props {
  * @param sizeUnit - Whether `size` is specified in asset units or in USD.
  * @param leverage - The leverage (multiplier) for the position.
  * @param short - Set to `true` for a short position, `false` for a long position.
+ * @param vault - Add this if you want to do this action as the vault. Can be vault name or address.
  * @param options - SDK function options
  * @returns Promise resolving to function execution result
  */
 export async function openPerp(
-    { account, asset, size, sizeUnit, leverage, short, closing, updating }: Props,
+    { account, asset, size, sizeUnit, leverage, short, closing, updating, vault }: Props,
     { evm: { signTypedDatas } }: FunctionOptions,
 ): Promise<FunctionReturn> {
     try {
+        if (vault && !isAddress(vault)) {
+            vault = await _getUsersVaultAddress(account, vault);
+            if (!vault) return toResult('Invalid vault specified', true);
+        }
         //
         // Check if user has already opened the position
         //
         const resultClearingHouseState = await axios.post(
             'https://api.hyperliquid.xyz/info',
-            { type: 'clearinghouseState', user: account },
+            { type: 'clearinghouseState', user: vault || account },
             {
                 headers: {
                     'Content-Type': 'application/json',
@@ -144,7 +151,7 @@ export async function openPerp(
             } else {
                 signatureSerializable = { r: signature.r, s: signature.s, yParity: signature.yParity };
             }
-            await axios.post(
+            const agentResult = await axios.post(
                 'https://api.hyperliquid.xyz/exchange',
                 {
                     action,
@@ -186,27 +193,25 @@ export async function openPerp(
             grouping: 'na',
         };
         const nonce = Date.now();
-
-        const signature = await _signL1Action(action, nonce, true, agentWallet);
+        const signature = await _signL1Action(action, nonce, true, agentWallet, (vault || undefined) as Address | undefined);
 
         if (!closing && !updating) {
-            const leverageUpdateSuccessful = await _updateLeverage(leverage, perpInfo.assetIndex, agentWallet);
+            const leverageUpdateSuccessful = await _updateLeverage(leverage, perpInfo.assetIndex, agentWallet, (vault || undefined) as Address | undefined);
             if (!leverageUpdateSuccessful) return toResult('Invalid leverage.', true);
         }
 
-        const res = await axios.post(
-            'https://api.hyperliquid.xyz/exchange',
-            {
-                action,
-                nonce,
-                signature,
+        const payload = {
+            action,
+            nonce,
+            signature,
+        };
+        // @ts-ignore
+        if (vault) payload.vaultAddress = vault;
+        const res = await axios.post('https://api.hyperliquid.xyz/exchange', payload, {
+            headers: {
+                'Content-Type': 'application/json',
             },
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            },
-        );
+        });
 
         if (res.data.status === 'err') throw new Error(res?.data?.response);
 
@@ -222,7 +227,9 @@ export async function openPerp(
         if (totalSz == '0') throw new Error('Could not open order');
 
         return toResult(
-            `Successfully ${short ? 'sold' : 'bought'} ${size} ${sizeUnit == 'ASSET' ? '' : 'USD of'} ${asset} with ${leverage}x leverage, for average price of $${avgPx}!`,
+            `Successfully ${short ? 'sold' : 'bought'} ${sizeUnit == 'ASSET' ? formattedSize : sizeUsd} ${asset} ${
+                sizeUnit == 'ASSET' ? '' : 'USD of'
+            } ${asset} with ${leverage}x leverage, for average price of $${avgPx}!`,
         );
     } catch (error) {
         console.log(error);
