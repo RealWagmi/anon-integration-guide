@@ -9,6 +9,7 @@ import { _actionHash } from './utils/_actionHash';
 import { _signL1Action } from './utils/_signL1Action';
 import { _updateLeverage } from './utils/_updateLeverage';
 import { _getUsersVaultAddress } from './utils/_getUsersVaultAddress';
+import { _getVaultAddress } from './utils/_getVaultAddress';
 
 interface Props {
     account: Address;
@@ -26,8 +27,11 @@ interface Props {
  */
 export async function depositIntoVault({ account, vault, usd }: Props, { evm: { signTypedDatas } }: FunctionOptions): Promise<FunctionReturn> {
     try {
+        if (usd < 10) {
+            return toResult(`Minimum deposit value is 10$`, true);
+        }
         if (vault && !isAddress(vault)) {
-            vault = await _getUsersVaultAddress(account, vault);
+            vault = await _getVaultAddress(vault);
             if (!vault) return toResult('Invalid vault specified', true);
         }
 
@@ -43,11 +47,8 @@ export async function depositIntoVault({ account, vault, usd }: Props, { evm: { 
 
         const data = res2.data;
 
-        if (usd < 10) {
-            return toResult(`Minimum deposit value is 10$`, true);
-        }
         if (usd > data.withdrawable) {
-            return toResult(`Your balance is is ${data.withdrawable}$`, true);
+            return toResult(`Your balance is ${data.withdrawable}$`, true);
         }
         const privateKey = generatePrivateKey();
         const agentWallet = privateKeyToAccount(privateKey);
@@ -114,11 +115,10 @@ export async function depositIntoVault({ account, vault, usd }: Props, { evm: { 
         const nonce = Date.now();
         const action = {
             type: 'vaultTransfer',
-            vaultAddress: "0x490b54a52506db8a44a66d89352c4c06f37d64e6",
+            vaultAddress: vault,
             isDeposit: true,
             usd: Math.round(usd * 1000000),
         };
-        console.log(action);
 
         const signature = await _signL1Action(action, nonce, true, agentWallet);
 

@@ -24,6 +24,8 @@ interface Props {
 export async function increasePerpPositionByMultiplying({ account, asset, sizeMultiplier, vault }: Props, options: FunctionOptions): Promise<FunctionReturn> {
     const { notify } = options;
     try {
+        if (parseFloat(sizeMultiplier) <= 1) return toResult('Position needs to be larger when you increase it.', true);
+        
         if (vault && !isAddress(vault)) {
             vault = await _getUsersVaultAddress(account, vault);
             if (!vault) return toResult('Invalid vault specified', true);
@@ -41,8 +43,6 @@ export async function increasePerpPositionByMultiplying({ account, asset, sizeMu
             },
         );
         const { assetPositions } = resultClearingHouseState.data;
-
-        if (parseFloat(sizeMultiplier) <= 1) return toResult('Position needs to be larger when you increase it.', true);
 
         for (const { position } of assetPositions) {
             const { coin, szi, leverage } = position;

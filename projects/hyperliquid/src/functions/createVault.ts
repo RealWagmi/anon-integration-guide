@@ -27,6 +27,8 @@ interface Props {
  */
 export async function createVault({ account, description, initialUsd, name }: Props, { evm: { signTypedDatas } }: FunctionOptions): Promise<FunctionReturn> {
     try {
+        if (!name || !description || description.length < 10 || name.length < 3) return toResult('Provide name (min 3 characters) and description (min 10 characters)', true);
+        if (initialUsd < 100) return toResult('Minimum vault size is 100$', true);
         const resultClearingHouseState = await axios.post(
             'https://api.hyperliquid.xyz/info',
             { type: 'clearinghouseState', user: account },
@@ -38,8 +40,6 @@ export async function createVault({ account, description, initialUsd, name }: Pr
         );
         const { withdrawable } = resultClearingHouseState.data;
 
-        if (!name || !description || description.length < 10 || name.length < 3) return toResult('Provide name and description (min 10 characters)', true);
-        if (initialUsd < 100) return toResult('Minimum vault size is 100$', true);
         if (initialUsd > withdrawable) return toResult('Not enough money', true);
 
         const privateKey = generatePrivateKey();
@@ -112,7 +112,6 @@ export async function createVault({ account, description, initialUsd, name }: Pr
             initialUsd: initialUsd * 1e6,
             nonce,
         };
-        console.log(action);
 
         const signature = await _signL1Action(action, nonce, true, agentWallet);
 

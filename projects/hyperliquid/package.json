@@ -38,7 +38,8 @@
     "@msgpack/msgpack": "2.8.0",
     "axios": "^1.8.1",
     "viem": "2.22.9",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.8",
+    "ws": "^8.18.1"
   },
   "description": "Hyperliquid is Layer 1 blockchain providing CEX-like trading experience through on-chain order books. Enables USDC bridging and supports both spot/perpetual trading with full position management."
 }

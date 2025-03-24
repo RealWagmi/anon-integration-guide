@@ -26,6 +26,10 @@ interface Props {
  */
 export async function distributeVault({ account, vault, usd }: Props, { evm: { signTypedDatas } }: FunctionOptions): Promise<FunctionReturn> {
     try {
+        if (usd < 10) {
+            return toResult(`Minimum distribute value is 10$`, true);
+        }
+        
         if (vault && !isAddress(vault)) {
             vault = await _getUsersVaultAddress(account, vault);
             if (!vault) return toResult('Invalid vault specified', true);
@@ -43,9 +47,6 @@ export async function distributeVault({ account, vault, usd }: Props, { evm: { s
 
         const data = res2.data;
 
-        if (usd < 10) {
-            return toResult(`Minimum distribute value is 10$`, true);
-        }
         if (usd > Math.min(data.marginSummary.accountValue - 100, data.withdrawable)) {
             return toResult(`Maximum distribute amount is ${Math.min(data.marginSummary.accountValue - 100, data.withdrawable)}$`, true);
         }
@@ -117,7 +118,6 @@ export async function distributeVault({ account, vault, usd }: Props, { evm: { s
             vaultAddress: vault,
             usd: Math.round(usd * 1000000),
         };
-        console.log(action);
 
         const signature = await _signL1Action(action, nonce, true, agentWallet);
 

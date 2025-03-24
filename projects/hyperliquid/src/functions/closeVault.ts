@@ -115,7 +115,6 @@ export async function closeVault({ account, vault }: Props, { evm: { signTypedDa
             vaultAddress: vault,
             usd: 0,
         };
-        console.log(action);
 
         const signature = await _signL1Action(action, nonce, true, agentWallet);
 

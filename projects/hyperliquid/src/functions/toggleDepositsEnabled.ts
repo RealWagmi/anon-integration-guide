@@ -114,7 +114,6 @@ export async function toggleDepositsEnabled({ account, vault, value }: Props, { 
             allowDeposits: value,
             alwaysCloseOnWithdraw: null,
         };
-        console.log(action);
         const signature = await _signL1Action(action, nonce, true, agentWallet);
 
         const res = await axios.post(

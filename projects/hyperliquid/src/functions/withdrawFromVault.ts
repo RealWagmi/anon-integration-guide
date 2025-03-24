@@ -9,6 +9,7 @@ import { _actionHash } from './utils/_actionHash';
 import { _signL1Action } from './utils/_signL1Action';
 import { _updateLeverage } from './utils/_updateLeverage';
 import { _getUsersVaultAddress } from './utils/_getUsersVaultAddress';
+import { _getVaultAddress } from './utils/_getVaultAddress';
 
 interface Props {
     account: Address;
@@ -26,7 +27,7 @@ interface Props {
 export async function withdrawFromVault({ account, vault, usd }: Props, { evm: { signTypedDatas } }: FunctionOptions): Promise<FunctionReturn> {
     try {
         if (vault && !isAddress(vault)) {
-            vault = await _getUsersVaultAddress(account, vault);
+            vault = await _getVaultAddress(vault);
             if (!vault) return toResult('Invalid vault specified', true);
         }
 
@@ -117,7 +118,6 @@ export async function withdrawFromVault({ account, vault, usd }: Props, { evm: {
             isDeposit: false,
             usd: Math.round(usd * 1000000),
         };
-        console.log(action);
 
         const signature = await _signL1Action(action, nonce, true, agentWallet);
 
@@ -135,13 +135,18 @@ export async function withdrawFromVault({ account, vault, usd }: Props, { evm: {
             },
         );
 
-        if (res.data.status === 'err') throw new Error(res?.data?.response);
+        if (res.data.status === 'err') {
+            if (res?.data?.response == 'Cannot withdraw during lockup period after depositing.') {
+                return toResult('Cannot withdraw during lockup period after depositing.', true);
+            }
+            throw new Error(res?.data?.response);
+        }
 
         const errorMessage = res.data.response?.data?.statuses && (res.data.response.data.statuses[0]?.error || res.data.response.data.statuses[1]?.error);
 
         if (errorMessage) throw new Error(res?.data?.response);
 
-        return toResult(`Successfully withdrew vault!`);
+        return toResult(`Successfully withdrew from vault!`);
     } catch (error) {
         console.log(error);
         return toResult('Failed to withdraw from vault on Hyperliquid. Please try again.', true);

@@ -2,6 +2,7 @@ import axios from 'axios';
 import { Address, isAddress } from 'viem';
 import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
 import { _getUsersVaultAddress } from './utils/_getUsersVaultAddress';
+import { _getVaultAddress } from './utils/_getVaultAddress';
 
 interface Props {
     account: Address;
@@ -19,10 +20,10 @@ interface Props {
 export async function getPerpPositions({ account, vault }: Props, _options: FunctionOptions): Promise<FunctionReturn> {
     try {
         if (vault && !isAddress(vault)) {
-            vault = await _getUsersVaultAddress(account, vault);
+            vault = await _getVaultAddress(vault);
             if (!vault) return toResult('Invalid vault specified', true);
         }
-        console.log('Getting perpetual positions for account:', account);
+        console.log('Getting perpetual positions for account:', vault || account);
 
         const res = await axios.post(
             'https://api.hyperliquid.xyz/info',
