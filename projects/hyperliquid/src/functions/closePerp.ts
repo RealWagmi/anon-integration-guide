@@ -15,8 +15,8 @@ interface Props {
  * Closes a perpetual position on Hyperliquid by signing and submitting a typed data transaction.
  * @param account - User's wallet address
  * @param asset - The asset to trade on Hyperliquid.
- * @param options - SDK function options
  * @param vault - Add this if you want to do this action as the vault. Can be vault name or address.
+ * @param options - SDK function options
  * @returns Promise resolving to function execution result
  */
 export async function closePerp({ account, asset, vault }: Props, options: FunctionOptions): Promise<FunctionReturn> {

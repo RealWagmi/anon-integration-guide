@@ -17,11 +17,11 @@ interface Props {
 }
 
 /**
- * Opens a perpetual position on Hyperliquid by signing and submitting a typed data transaction.
- * @param account - User's wallet address
- * @param description - The asset to trade on Hyperliquid.
- * @param initialUsd - The size of the order; interpreted as asset units or USD depending on `sizeUnit`.
- * @param name - Whether `size` is specified in asset units or in USD.
+ * Create a new vault for perpetual trading
+ * @param account - Creator's wallet address
+ * @param description - Description of the vault
+ * @param initialUsd - How many usd to deposit into vault initially
+ * @param name - Name of the newly created vault
  * @param options - SDK function options
  * @returns Promise resolving to function execution result
  */

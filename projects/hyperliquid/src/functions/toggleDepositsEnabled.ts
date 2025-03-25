@@ -17,7 +17,7 @@ interface Props {
 }
 
 /**
- * Distributes a vault.
+ * Toggles whether users are allowed to deposit into the vault.
  * @param account - User's wallet address
  * @param vault - Vault name or address
  * @param value - true or false

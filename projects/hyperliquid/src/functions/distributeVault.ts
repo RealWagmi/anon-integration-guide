@@ -17,7 +17,7 @@ interface Props {
 }
 
 /**
- * Distributes the vault's perp balance to its depositors.
+ * Distributes some of the vault's perpetual USD balance to the holders (depositors) proportionally to their share of the vault.
  * @param account - Vault manager's wallet address
  * @param name - Vault name or address
  * @param usd - USD amount that needs to be distributed
@@ -29,7 +29,7 @@ export async function distributeVault({ account, vault, usd }: Props, { evm: { s
         if (usd < 10) {
             return toResult(`Minimum distribute value is 10$`, true);
         }
-        
+
         if (vault && !isAddress(vault)) {
             vault = await _getUsersVaultAddress(account, vault);
             if (!vault) return toResult('Invalid vault specified', true);

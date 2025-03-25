@@ -18,7 +18,7 @@ interface Props {
 }
 
 /**
- * Distributes a vault.
+ * Withdraws funds from the vault that user has deposited into previously.
  * @param account - User's wallet address
  * @param vault - Vault that needs to be withdrawn from
  * @param usd - USD amount that should be withdrawn

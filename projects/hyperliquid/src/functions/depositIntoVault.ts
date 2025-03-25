@@ -18,10 +18,9 @@ interface Props {
 }
 
 /**
- * Distributes a vault.
+ * Deposits funds from user's perpetual balance into the vault.
  * @param account - User's wallet address
  * @param vault - Vault name or address
- * @param name - Vault name
  * @param usd - Amount to deposit (in USD)
  * @returns Promise resolving to function execution result
  */

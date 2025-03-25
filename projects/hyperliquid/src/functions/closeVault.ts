@@ -18,7 +18,7 @@ interface Props {
 /**
  * Closes a vault.
  * @param account - User's wallet address
- * @param name - Vault name
+ * @param vault - Vault name
  * @param options - SDK function options
  * @returns Promise resolving to function execution result
  */

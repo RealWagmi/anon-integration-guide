@@ -17,7 +17,7 @@ interface Props {
 }
 
 /**
- * Distributes a vault.
+ * Toggles vault's positions should get automatically closed on withdrawal .
  * @param account - User's wallet address
  * @param vault - Vault name or address
  * @param value - true or false
