@@ -16,6 +16,8 @@ interface Props {
     name: string;
 }
 
+const VAULT_CREATION_FEE = 100;
+
 /**
  * Create a new vault for perpetual trading
  * @param account - Creator's wallet address
@@ -41,6 +43,7 @@ export async function createVault({ account, description, initialUsd, name }: Pr
         const { withdrawable } = resultClearingHouseState.data;
 
         if (initialUsd > withdrawable) return toResult('Not enough money', true);
+        if (initialUsd + VAULT_CREATION_FEE > withdrawable) return toResult('Not enough funds to cover the vault creation fee of 100$ (non-refundable)', true);
 
         const privateKey = generatePrivateKey();
         const agentWallet = privateKeyToAccount(privateKey);
