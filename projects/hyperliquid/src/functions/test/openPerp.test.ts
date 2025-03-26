@@ -20,9 +20,13 @@ vi.mock('viem/accounts', () => ({
     })),
 }));
 
+vi.mock('../utils/_updateLeverage', ()=>({
+    _updateLeverage: vi.fn(()=>true)
+}))
 global.fetch = vi.fn();
 
 import axios from 'axios';
+import { _updateLeverage } from '../utils/_updateLeverage';
 const mockedAxios = axios as unknown as { post: ReturnType<typeof vi.fn> };
 
 const account = '0x92CC36D66e9d739D50673d1f27929a371FB83a67' as Address;

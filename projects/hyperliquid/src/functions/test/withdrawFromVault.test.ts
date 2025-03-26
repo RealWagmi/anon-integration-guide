@@ -63,7 +63,7 @@ describe('withdrawFromVault', () => {
         const result = await withdrawFromVault(defaultProps, functionOptions as any);
 
         expect(result.success).toBe(true);
-        expect(result.data).toContain('Successfully withdrew vault');
+        expect(result.data).toContain('Successfully withdrew from vault');
     });
 
     it('should return error if vault name is invalid', async () => {

@@ -66,6 +66,16 @@ describe('createVault', () => {
         expect(result.data).toBe('Successfully created vault!');
     });
 
+    it('should fail if not enough funds to cover fee', async () => {
+        mockedAxios.post
+            .mockResolvedValueOnce({ data: { withdrawable: 550 } });
+
+        const result = await createVault(defaultProps, functionOptions as any);
+
+        expect(result.success).toBe(false);
+        expect(result.data).toBe('ERROR: Not enough funds to cover the vault creation fee of 100$ (non-refundable)');
+    });
+
     it('should return error if required fields are missing or invalid', async () => {
         const badProps = {
             ...defaultProps,

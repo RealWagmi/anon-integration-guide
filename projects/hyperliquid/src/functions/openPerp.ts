@@ -227,7 +227,7 @@ export async function openPerp(
         if (totalSz == '0') throw new Error('Could not open order');
 
         return toResult(
-            `Successfully ${short ? 'sold' : 'bought'} ${sizeUnit == 'ASSET' ? formattedSize : sizeUsd} ${asset} ${
+            `Successfully ${short ? 'sold' : 'bought'} ${sizeUnit == 'ASSET' ? formattedSize : sizeUsd} ${
                 sizeUnit == 'ASSET' ? '' : 'USD of'
             } ${asset} with ${leverage}x leverage, for average price of $${avgPx}!`,
         );
