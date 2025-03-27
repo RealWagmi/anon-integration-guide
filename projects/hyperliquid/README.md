@@ -58,12 +58,6 @@ To run tests:
 pnpm test
 ```
 
-To check test coverage:
-
-```bash
-pnpm run test:coverage
-```
-
 ## Installation
 
 ```bash
