@@ -2,7 +2,7 @@ import { Address } from 'viem';
 import WebSocket from 'ws';
 
 export async function _getUsersVaults(userAddress: Address): Promise<any> {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
         const ws = new WebSocket('wss://api.hyperliquid.xyz/ws');
 
         const subscriptionMessage = {
@@ -17,7 +17,7 @@ export async function _getUsersVaults(userAddress: Address): Promise<any> {
             ws.send(JSON.stringify(subscriptionMessage));
         });
 
-        ws.on('message', data => {
+        ws.on('message', (data: WebSocket.Data) => {
             try {
                 const parsedData = JSON.parse(data.toString());
                 if (parsedData?.data && parsedData?.channel == 'webData2') {
@@ -31,7 +31,7 @@ export async function _getUsersVaults(userAddress: Address): Promise<any> {
             }
         });
 
-        ws.on('error', err => {
+        ws.on('error', (err: Error) => {
             console.error('WebSocket error:', err);
             resolve(null);
         });

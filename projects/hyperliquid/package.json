@@ -28,6 +28,7 @@
     "@size-limit/preset-small-lib": "^9.0.0",
     "@types/big.js": "^6.2.0",
     "@types/jest": "^29.5.12",
+    "@types/ws": "^8.18.0",
     "tsdx": "^0.14.1",
     "tslib": "^2.6.2",
     "tsup": "^7.2.0",
