@@ -21,8 +21,8 @@ import axios from 'axios';
 import { openPerp } from '../openPerp';
 import { _getUsersVaultAddress } from '../utils/_getUsersVaultAddress';
 
-const mockedAxios = (axios as unknown) as { post: ReturnType<typeof vi.fn> };
-const mockedOpenPerp = (openPerp as unknown) as ReturnType<typeof vi.fn>;
+const mockedAxios = axios as unknown as { post: ReturnType<typeof vi.fn> };
+const mockedOpenPerp = openPerp as unknown as ReturnType<typeof vi.fn>;
 
 const defaultProps = {
     account: '0x1234567890123456789012345678901234567890' as Address,

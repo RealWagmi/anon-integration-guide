@@ -20,9 +20,9 @@ vi.mock('viem/accounts', () => ({
     })),
 }));
 
-vi.mock('../utils/_updateLeverage', ()=>({
-    _updateLeverage: vi.fn(()=>true)
-}))
+vi.mock('../utils/_updateLeverage', () => ({
+    _updateLeverage: vi.fn(() => true),
+}));
 global.fetch = vi.fn();
 
 import axios from 'axios';
@@ -47,7 +47,7 @@ const perpInfo = hyperliquidPerps['ETH'] || {
 };
 
 describe('openPerp', () => {
-    const mockNotify = vi.fn((message: string) => Promise.resolve());
+    const mockNotify = vi.fn(() => Promise.resolve());
     const mockSignTypedDatas = vi
         .fn()
         .mockResolvedValue([
@@ -99,7 +99,6 @@ describe('openPerp', () => {
         });
 
         const result = await openPerp(defaultProps, functionOptions as any);
-
         expect(result.success).toBe(true);
         expect(result.data).toContain(`Successfully bought ${defaultProps.size} USD of ${defaultProps.asset} with ${defaultProps.leverage}x leverage`);
     });

@@ -12,7 +12,7 @@ import axios from 'axios';
 const mockedAxios = axios as unknown as { post: ReturnType<typeof vi.fn> };
 
 describe('transferToSpot', () => {
-    const mockNotify = vi.fn((message: string) => Promise.resolve());
+    const mockNotify = vi.fn(() => Promise.resolve());
     const mockSignTypedDatas = vi.fn();
 
     const functionOptions = {

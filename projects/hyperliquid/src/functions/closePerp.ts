@@ -22,6 +22,7 @@ interface Props {
 export async function closePerp({ account, asset, vault }: Props, options: FunctionOptions): Promise<FunctionReturn> {
     const { notify } = options;
     try {
+        await notify('Preparing to close perpetual position...');
         if (vault && !isAddress(vault)) {
             vault = await _getUsersVaultAddress(account, vault);
             if (!vault) return toResult('Invalid vault specified', true);

@@ -24,6 +24,7 @@ interface Props {
 export async function decreasePerpPositionByMultiplying({ account, asset, sizeMultiplier, vault }: Props, options: FunctionOptions): Promise<FunctionReturn> {
     const { notify } = options;
     try {
+        await notify('Preparing to decrease position by specified percentage...');
         if (parseFloat(sizeMultiplier) >= 1) return toResult('Position needs to be smaller when you decrease it.', true);
 
         if (vault && !isAddress(vault)) {

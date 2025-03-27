@@ -24,8 +24,9 @@ interface Props {
 export async function increasePerpPositionByMultiplying({ account, asset, sizeMultiplier, vault }: Props, options: FunctionOptions): Promise<FunctionReturn> {
     const { notify } = options;
     try {
+        await notify('Preparing to increase perpetual position...');
         if (parseFloat(sizeMultiplier) <= 1) return toResult('Position needs to be larger when you increase it.', true);
-        
+
         if (vault && !isAddress(vault)) {
             vault = await _getUsersVaultAddress(account, vault);
             if (!vault) return toResult('Invalid vault specified', true);

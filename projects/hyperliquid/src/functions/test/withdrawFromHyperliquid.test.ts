@@ -36,7 +36,7 @@ vi.mock('@heyanon/sdk', async (importOriginal) => {
 });
 
 describe('withdrawFromHyperliquid', () => {
-    const mockNotify = vi.fn((message: string) => Promise.resolve());
+    const mockNotify = vi.fn(() => Promise.resolve());
     const mockSignTypedDatas = vi.fn();
 
     const functionOptions = {

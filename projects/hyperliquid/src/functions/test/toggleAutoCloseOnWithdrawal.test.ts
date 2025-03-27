@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { toggleAutoCloseOnWithdrawal } from '../toggleAutoCloseOnWithdrawal';
 import axios from 'axios';
-import { parseSignature } from 'viem';
 
 vi.mock('axios', () => ({
     default: {
@@ -24,7 +23,7 @@ vi.mock('../utils/_getUsersVaultAddress', () => ({
     _getUsersVaultAddress: vi.fn(async (_addr, name) => (name === 'Sifu' ? '0xf967239debef10dbc78e9bbbb2d8a16b72a614eb' : undefined)),
 }));
 
-const mockedAxios = (axios as unknown) as { post: ReturnType<typeof vi.fn> };
+const mockedAxios = axios as unknown as { post: ReturnType<typeof vi.fn> };
 const mockSignTypedDatas = vi
     .fn()
     .mockResolvedValue(['0x9f8f577823132326a0b55dea300f5b2427f3affe5b9c11eeef1ebf969238038b56bf4176fd974312f8d074eb4a5250480c088897c416098decf89a0ceaaf7cc51c']);

@@ -23,7 +23,7 @@ describe('closePerp', () => {
     const account = '0x92CC36D66e9d739D50673d1f27929a371FB83a67' as Address;
     const asset = 'ETH';
 
-    const mockNotify = vi.fn((message: string) => Promise.resolve());
+    const mockNotify = vi.fn(() => Promise.resolve());
     const mockSignTypedDatas = vi.fn();
 
     const functionOptions = {
@@ -90,6 +90,7 @@ describe('closePerp', () => {
             },
             functionOptions,
         );
+        expect(mockNotify).toHaveBeenCalledWith('Preparing to close perpetual position...');
     });
 
     it('should successfully close a short position', async () => {
