@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { parseSignature, zeroAddress } from 'viem';
-import { FunctionReturn, FunctionOptions, toResult, EVM } from '@heyanon/sdk';
+import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
 import { ARBITRUM_CHAIN_ID, ARBITRUM_CHAIN_ID_HEX } from '../constants';
 
 interface Props {

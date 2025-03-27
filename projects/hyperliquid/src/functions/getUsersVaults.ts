@@ -1,5 +1,4 @@
-import axios from 'axios';
-import { Address, isAddress } from 'viem';
+import { Address } from 'viem';
 import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
 import { _getUsersVaultAddress } from './utils/_getUsersVaultAddress';
 import { _getUsersVaults } from './utils/_getUsersVaults';

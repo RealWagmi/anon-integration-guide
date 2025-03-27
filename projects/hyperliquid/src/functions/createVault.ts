@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Address, parseSignature, zeroAddress } from 'viem';
 import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
-import { ARBITRUM_CHAIN_ID, ARBITRUM_CHAIN_ID_HEX, hyperliquidPerps, MIN_HYPERLIQUID_TRADE_SIZE } from '../constants';
+import { ARBITRUM_CHAIN_ID, ARBITRUM_CHAIN_ID_HEX } from '../constants';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import { _formatPrice } from './utils/_formatPrice';
 import { _formatSize } from './utils/_formatSize';

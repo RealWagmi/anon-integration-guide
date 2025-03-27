@@ -151,7 +151,7 @@ export async function openPerp(
             } else {
                 signatureSerializable = { r: signature.r, s: signature.s, yParity: signature.yParity };
             }
-            const agentResult = await axios.post(
+            await axios.post(
                 'https://api.hyperliquid.xyz/exchange',
                 {
                     action,
