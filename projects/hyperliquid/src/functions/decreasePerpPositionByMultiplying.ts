@@ -52,20 +52,26 @@ export async function decreasePerpPositionByMultiplying({ account, asset, sizeMu
                 // Update the position
                 //
 
+                const sz = Number(szi) * (1 - Number(sizeMultiplier));
+
+                // We want the size to be negative when we are decreasing the position, so the checks in openPerp work as expected
+                // If your position is short, you are going to short the negative value (resulting in long)
+                // If your position is long, you are going to long the negative value (resulting in short)
                 const result = await openPerp(
                     {
                         account,
                         asset,
-                        size: (Number(szi) * (1 - Number(sizeMultiplier))).toString(),
+                        size: (-Math.abs(sz)).toString(),
                         sizeUnit: 'ASSET',
                         leverage: leverage.value,
-                        short: true,
+                        short: sz < 0,
                         updating: true,
                         vault,
                     },
                     options,
                 );
                 if (!result.success) {
+                    notify(result.data);
                     return toResult('Failed to modify position on Hyperliquid. ', true);
                 }
                 return toResult('Successfully modified position.');

@@ -51,20 +51,27 @@ export async function increasePerpPositionByMultiplying({ account, asset, sizeMu
                 //
                 // Update the position
                 //
+
+                const sz = Number(szi) * (Number(sizeMultiplier) - 1);
+
+                // We want the size to be positive when we are increasing the position, so the checks in openPerp work as expected
+                // If your position is short, you are going to short the positive value (resulting in short)
+                // If your position is long, you are going to long the positive value (resulting in long)
                 const result = await openPerp(
                     {
                         account,
                         asset,
-                        size: (Number(szi) * (Number(sizeMultiplier) - 1)).toString(),
+                        size: Math.abs(sz).toString(),
                         sizeUnit: 'ASSET',
                         leverage: leverage.value,
-                        short: false, // Because szi is negative for shorts
+                        short: sz < 0, // Because szi is negative for shorts
                         updating: true,
                         vault,
                     },
                     options,
                 );
                 if (!result.success) {
+                    notify(result.data);
                     return toResult('Failed to modify position on Hyperliquid. ', true);
                 }
                 return toResult('Successfully modified position.');
