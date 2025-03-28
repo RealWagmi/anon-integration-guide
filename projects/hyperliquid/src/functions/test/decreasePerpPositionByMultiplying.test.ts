@@ -62,8 +62,8 @@ describe('decreasePerpPositionByMultiplying', () => {
         expect(result.data).toContain('Successfully modified position');
         expect(mockedOpenPerp).toHaveBeenCalledWith(
             expect.objectContaining({
-                size: '1',
-                short: true,
+                size: '-1',
+                short: false,
                 updating: true,
                 sizeUnit: 'ASSET',
             }),
