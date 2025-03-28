@@ -15,6 +15,13 @@ export const MAX_DECIMALS = 6;
 export const MAX_SIGNIFICANT_DIGITS = 5;
 export const MIN_HYPERLIQUID_TRADE_SIZE = 11;
 
+// Time constants
+export const ONE_HOUR_MS = 60 * 60 * 1000; // 1 hour
+export const ONE_DAY_MS = 24 * ONE_HOUR_MS; // 1 day
+export const ONE_WEEK_MS = 7 * ONE_DAY_MS; // 1 week
+export const ONE_MONTH_MS = 30 * ONE_DAY_MS; // 1 month (approximated as 30 days)
+export const DEFAULT_FUNDING_RATE_RANGE_MS = ONE_DAY_MS; // Default 24h
+
 interface TokenInfo {
     tokenAddress: string;
     decimals: number;
