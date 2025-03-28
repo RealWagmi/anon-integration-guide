@@ -256,7 +256,8 @@ export const tools: AiTool[] = [
     },
     {
         name: 'distributeVault',
-        description: "Distributes (or shares) a portion of the vault's perpetual USD balance to its depositors (shareholders, guys who deposited/invested in vault), proportionally to their share.",
+        description:
+            "Distributes (or shares) a portion of the vault's perpetual USD balance to its depositors (shareholders, guys who deposited/invested in vault), proportionally to their share.",
         required: ['account', 'vault', 'usd'],
         props: [
             {
@@ -351,6 +352,54 @@ export const tools: AiTool[] = [
                 name: 'value',
                 type: 'boolean',
                 description: 'Set to true to enable deposits into the vault; false to disable.',
+            },
+        ],
+    },
+    {
+        name: 'getFundingRate',
+        description:
+            'Fetches the current funding rate for one specific asset on Hyperliquid. Use this tool ONLY when a user explicitly asks for the current funding rate of a single asset (e.g., "What’s the current funding rate for ETH?"). Do NOT use for historical rates or multiple assets.',
+        required: ['asset'],
+        props: [
+            {
+                name: 'asset',
+                type: 'string',
+                enum: Object.keys(hyperliquidPerps),
+                description: 'The asset to get the current funding rate for (e.g., "BTC", "ETH"). Must be a valid Hyperliquid perpetual asset.',
+            },
+        ],
+    },
+    {
+        name: 'getHistoricalFundingRates',
+        description:
+            'Fetches past funding rates for one specific asset on Hyperliquid over a time range. Use this tool ONLY when a user explicitly asks for the historical funding rate history of a single asset (e.g., "Show me BTC funding rates for the last week"). Do NOT use for current rates or multiple assets.',
+        required: ['asset'],
+        props: [
+            {
+                name: 'asset',
+                type: 'string',
+                enum: Object.keys(hyperliquidPerps),
+                description: 'The asset to get historical funding rates for (e.g., "BTC", "ETH"). Must be a valid Hyperliquid perpetual asset.',
+            },
+            {
+                name: 'timeRange',
+                type: 'string',
+                description:
+                    'Optional. Time range for the rates in the format "<number><unit>" (e.g., "1h" for 1 hour, "8h" for 8 hours, "1w" for 1 week, "1m" for 1 month). Defaults to "24h" if omitted.',
+            },
+        ],
+    },
+    {
+        name: 'getSortedHistoricalFundingRates',
+        description:
+            'Fetches and sorts average funding rates for ALL Hyperliquid assets over a time range. Use this tool ONLY when a user explicitly asks for a sorted list of average funding rates across all assets (e.g., "List all funding rates sorted for the last day"). Do NOT use for a single asset or current rates.',
+        required: [],
+        props: [
+            {
+                name: 'timeRange',
+                type: 'string',
+                description:
+                    'Optional. Time range for the rates in the format "<number><unit>" (e.g., "1h" for 1 hour, "8h" for 8 hours, "1w" for 1 week, "1m" for 1 month). Defaults to "24h" if omitted.',
             },
         ],
     },
