@@ -149,7 +149,7 @@ export const tools: AiTool[] = [
             {
                 name: 'asset',
                 type: 'string',
-                enum: ['ETH', 'BTC', 'HYPE', 'PURR', 'LINK', 'ARB'],
+                enum: Object.keys(hyperliquidPerps),
                 description: 'Name of the underlying asset whose perp position should be closed.',
             },
             { name: 'vault', type: 'string', description: 'Optional. Vault name or address.' },
@@ -186,6 +186,77 @@ export const tools: AiTool[] = [
         props: [
             { name: 'account', type: 'string', description: 'User wallet address to check for perpetual balance.' },
             { name: 'vault', type: 'string', description: 'Optional. Vault name or address.' },
+        ],
+    },
+    {
+        name: 'addMargin',
+        description:
+            'If word "margin" has not been mentioned in the prompt text, this function should not be called. Increases the position margin by adding funds to it. It decreases the liquidation risk. NEVER CALL THIS FUNCTION IF WORD "MARGIN" IS NOT EXPLICITLY MENTIONED!!! Please do not call this function if word "margin" is not in the prompt.',
+        required: ['account', 'asset', 'amount'],
+        props: [
+            {
+                name: 'account',
+                type: 'string',
+                description: 'If word "margin" has not been mentioned in the prompt text, this function should not be called. The address of the user who is adding the margin.',
+            },
+            {
+                name: 'asset',
+                type: 'string',
+                description: 'If word "margin" has not been mentioned in the prompt text, this function should not be called. Asset identifier of the position that user wants to add margin to.',
+            },
+            {
+                name: 'amount',
+                type: 'string',
+                description: 'If word "margin" has not been mentioned in the prompt text, this function should not be called. Amount of USD to add to the margin.',
+            },
+            {
+                name: 'vault',
+                type: 'string',
+                description: 'If word "margin" has not been mentioned in the prompt text, this function should not be called. Optional. Vault name or address.',
+            },
+            {
+                name: 'word_margin_explicitly_mentioned',
+                type: 'string',
+                enum: ['yes', 'no'],
+                description:
+                    'If word "Margin" was not explicitly mentioned, this function should not be executed. Explicitly means that in lowercase version of the prompt, there is a substring "margin". This should not be "yes" if the user wants USD added to position (see that the word "margin" was not specified there). If this would be "no", this functions should not be called. ',
+            },
+        ],
+    },
+    {
+        name: 'removeMargin',
+        description:
+            'If word "margin" has not been mentioned in the prompt text, this function should not be called. Decreases the position margin by removing funds from it so they can be used someplace else. NEVER CALL THIS FUNCTION IF WORD "MARGIN" IS NOT EXPLICITLY MENTIONED!!! Please do not call this function if word "margin" is not in the prompt.',
+        required: ['account', 'asset', 'amount'],
+        props: [
+            {
+                name: 'account',
+                type: 'string',
+                description: 'If word "margin" has not been mentioned in the prompt text, this function should not be called. The address of the user who is removing the margin.',
+            },
+            {
+                name: 'asset',
+                type: 'string',
+                enum: Object.keys(hyperliquidPerps),
+                description: 'If word "margin" has not been mentioned in the prompt text, this function should not be called. Asset identifier of the position that user wants to remove margin from.',
+            },
+            {
+                name: 'amount',
+                type: 'string',
+                description: 'If word "margin" has not been mentioned in the prompt text, this function should not be called. Amount of USD to remove from the margin.',
+            },
+            {
+                name: 'vault',
+                type: 'string',
+                description: 'If word "margin" has not been mentioned in the prompt text, this function should not be called. Optional. Vault name or address.',
+            },
+            {
+                name: 'word_margin_explicitly_mentioned',
+                type: 'string',
+                enum: ['yes', 'no'],
+                description:
+                    'If word "Margin" was not explicitly mentioned, this function should not be executed. Explicitly means that in lowercase version of the prompt, there is a substring "margin. "This should not be "yes" if the user wants USD added to position (see that the word "margin" was not specified there). If this would be "no", this functions should not be called. ',
+            },
         ],
     },
     {
