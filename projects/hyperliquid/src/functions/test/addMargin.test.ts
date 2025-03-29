@@ -21,10 +21,10 @@ vi.mock('../utils/_signL1Action', () => ({
 }));
 
 vi.mock('../utils/_getUsersVaultAddress', () => ({
-    _getUsersVaultAddress: vi.fn(async (account, vaultName) => (vaultName === 'Sifu' ? '0xf967239debef10dbc78e9bbbb2d8a16b72a614eb' : undefined)),
+    _getUsersVaultAddress: vi.fn(async (vaultName) => (vaultName === 'Sifu' ? '0xf967239debef10dbc78e9bbbb2d8a16b72a614eb' : undefined)),
 }));
 
-const mockedAxios = (axios as unknown) as { post: ReturnType<typeof vi.fn> };
+const mockedAxios = axios as unknown as { post: ReturnType<typeof vi.fn> };
 
 const mockSignTypedDatas = vi
     .fn()
