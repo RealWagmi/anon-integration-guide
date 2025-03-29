@@ -46,6 +46,8 @@ The Hyperliquid L1 uses a custom consensus algorithm called HyperBFT which is he
 -   "What's the average funding rate across all assets for last month?"
 -   "Which asset has had the highest funding rate over the past week?"
 -   "Has BTC funding been positive or negative over the last 24 hours?"
+-   "Add 10 USDC to margin of my ETH position on Hyperliquid?"
+-   "Remove 100 USDC from margin of the hyperliquid BTC position of my vault 'MyVault'?"
 
 ## Available Functions
 
@@ -62,6 +64,7 @@ The Hyperliquid L1 uses a custom consensus algorithm called HyperBFT which is he
 -   Retrieving perpetual positions, balances, spot balances, and managed vaults
 -   Getting current and historical funding rates
 -   Comparing funding rates across assets
+-   Managing the margin of your positions
 
 ## Tests
 
@@ -254,4 +257,15 @@ await getHistoricalFundingRates({ asset: 'ETH', timeRange: '3d' });
 
 // Get historical funding rates for LINK over the past 8 hours
 await getHistoricalFundingRates({ asset: 'LINK', timeRange: '8h' });
+```
+
+### Margin management
+
+```typescript
+
+// Adds 10 USD margin to 0xYourAddress's LINK position
+await addMargin({ account: '0xYourAddress', asset: 'LINK', amount: '10' });
+
+// Removes 41 USD margin from BTC position of MyVault (managed by 0xYourAddress)
+await removeMargin({ account: '0xYourAddress', asset: 'BTC', amount: '41', vault: 'MyVault' });
 ```
