@@ -117,3 +117,67 @@ Integration with Amped Finance
 ```bash
 yarn add @heyanon/amped
 ```
+
+## Function Call Tool
+
+The project includes a utility script to directly call any function defined in the tools.ts file. This provides an easy way to test and interact with the Amped Finance protocol without having to create separate test scripts for each function.
+
+### Usage
+
+```bash
+npm run function -- <functionName> [parameters]
+```
+
+Parameters can be provided in two formats:
+
+1. As JSON:
+```bash
+npm run function -- functionName '{"param1": "value1", "param2": 123}'
+```
+
+2. As key-value pairs:
+```bash
+npm run function -- functionName param1=value1 param2=123
+```
+
+### Examples
+
+List all available functions:
+```bash
+npm run function
+```
+
+Get detailed information about a specific function:
+```bash
+npm run function -- getPoolLiquidity
+```
+
+Get protocol information:
+```bash
+npm run function -- getPoolLiquidity chainName=sonic
+```
+
+Get user token balances:
+```bash
+npm run function -- getUserTokenBalances chainName=sonic account=0xYourAddress
+```
+
+Check ALP APR:
+```bash
+npm run function -- getALPAPR chainName=sonic account=0xYourAddress tokenAddress=0xfb0e5aabfac2f946d6f45fcd4303ff721a4e3237
+```
+
+### Environment Variables
+
+The script requires the following environment variables to be set in a .env file:
+
+```
+PRIVATE_KEY=your_private_key_without_0x_prefix
+DRY_RUN=false  # Set to true to simulate transactions without execution
+```
+
+### Security Notice
+
+- Never share your private key or commit it to version control
+- Use with caution when executing functions that perform actual transactions
+- Always test with small amounts first when adding or removing liquidity

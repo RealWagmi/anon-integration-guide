@@ -1,5 +1,5 @@
 import { AiTool, getChainName } from '@heyanon/sdk';
-import { supportedChains } from './constants.js';
+import { NETWORKS, supportedChains } from './constants.js';
 import { addLiquidity } from './functions/liquidity/addLiquidity.js';
 import { removeLiquidity } from './functions/liquidity/removeLiquidity.js';
 import { getPerpsLiquidity } from './functions/trading/leverage/getPerpsLiquidity.js';
@@ -16,11 +16,19 @@ import { getSwapsLiquidity } from './functions/trading/swaps/getSwapsLiquidity.j
 import { openPosition } from './functions/trading/leverage/openPosition.js';
 import { getAllOpenPositions } from './functions/trading/leverage/getAllOpenPositions.js';
 
+// Helper to generate enum based on supported chains
+const supportedChainNames = supportedChains.map(chainId => getChainName(chainId));
+
+// Define token lists for descriptions
+const sonicTokens = '(S, WETH, ANON, USDC)';
+const baseTokens = ' (ETH, WETH, CBBTC, USDC, VIRTUAL)'; // Added VIRTUAL
+const allTokens = sonicTokens + baseTokens;
+
 // Internal interface for our implementation needs
 interface Tool extends AiTool {
     name: string;
     description: string;
-  function: Function;
+    function: Function;
     // Props is used internally by our SDK
     props: Array<{
         name: string;
@@ -52,8 +60,8 @@ export const tools: Tool[] = [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Name of the blockchain network',
+                enum: supportedChainNames,
+                description: 'Name of the blockchain network (sonic or base)',
             },
             {
                 name: 'account',
@@ -63,7 +71,7 @@ export const tools: Tool[] = [
             {
                 name: 'tokenSymbol',
                 type: 'string',
-                description: 'Symbol of the token to provide as liquidity (S, WETH, ANON, USDC, EURC)',
+                description: `Symbol of the token to provide as liquidity. Sonic: ${sonicTokens}, Base: ${baseTokens}`,
             },
             {
                 name: 'amount',
@@ -92,8 +100,8 @@ export const tools: Tool[] = [
             properties: {
                 chainName: {
                     type: 'string',
-                    enum: supportedChains.map(getChainName),
-                    description: 'Name of the blockchain network',
+                    enum: supportedChainNames,
+                    description: 'Name of the blockchain network (sonic or base)',
                 },
                 account: {
                     type: 'string',
@@ -101,7 +109,7 @@ export const tools: Tool[] = [
                 },
                 tokenSymbol: {
                     type: 'string',
-                    description: 'Symbol of the token to provide as liquidity (S, WETH, ANON, USDC, EURC)',
+                    description: `Symbol of the token to provide as liquidity. Sonic: ${sonicTokens}, Base: ${baseTokens}`,
                 },
                 amount: {
                     type: 'string',
@@ -127,13 +135,13 @@ export const tools: Tool[] = [
     {
         name: 'removeLiquidity',
         description:
-            'Remove liquidity from the protocol by redeeming GLP for tokens. For native token (S) redemption, use the NATIVE_TOKEN address from CONTRACT_ADDRESSES. The minimum output amount is calculated automatically based on current prices and slippage tolerance.',
+            'Remove liquidity from the protocol by redeeming GLP for tokens. For native token (Sonic: S, Base: ETH) redemption, use the NATIVE_TOKEN address from CONTRACT_ADDRESSES for the respective chain. The minimum output amount is calculated automatically based on current prices and slippage tolerance.',
         props: [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Name of the blockchain network',
+                enum: supportedChainNames,
+                description: 'Name of the blockchain network (sonic or base)',
             },
             {
                 name: 'account',
@@ -143,7 +151,7 @@ export const tools: Tool[] = [
             {
                 name: 'tokenOut',
                 type: 'string',
-                description: 'Address of the token to receive when removing liquidity. Use NATIVE_TOKEN address for native token (S) redemption.',
+                description: 'Address of the token to receive when removing liquidity. Use NATIVE_TOKEN address for native token (S/ETH) redemption.',
             },
             {
                 name: 'amount',
@@ -168,8 +176,8 @@ export const tools: Tool[] = [
             properties: {
                 chainName: {
                     type: 'string',
-                    enum: supportedChains.map(getChainName),
-                    description: 'Name of the blockchain network',
+                    enum: supportedChainNames,
+                    description: 'Name of the blockchain network (sonic or base)',
                 },
                 account: {
                     type: 'string',
@@ -177,7 +185,7 @@ export const tools: Tool[] = [
                 },
                 tokenOut: {
                     type: 'string',
-                    description: 'Address of the token to receive when removing liquidity. Use NATIVE_TOKEN address for native token (S) redemption.',
+                    description: 'Address of the token to receive when removing liquidity. Use NATIVE_TOKEN address for native token (S/ETH) redemption.',
                 },
                 amount: {
                     type: 'string',
@@ -203,8 +211,8 @@ export const tools: Tool[] = [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Name of the blockchain network',
+                enum: supportedChainNames,
+                description: 'Name of the blockchain network (sonic or base)',
             },
             {
                 name: 'account',
@@ -233,8 +241,8 @@ export const tools: Tool[] = [
             properties: {
                 chainName: {
                     type: 'string',
-                    enum: supportedChains.map(getChainName),
-                    description: 'Name of the blockchain network',
+                    enum: supportedChainNames,
+                    description: 'Name of the blockchain network (sonic or base)',
                 },
                 account: {
                     type: 'string',
@@ -264,8 +272,8 @@ export const tools: Tool[] = [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Name of the blockchain network (only "sonic" is supported)',
+                enum: supportedChainNames,
+                description: 'Name of the blockchain network (currently likely Sonic only)',
             },
             {
                 name: 'account',
@@ -284,8 +292,8 @@ export const tools: Tool[] = [
             properties: {
                 chainName: {
                     type: 'string',
-                    enum: supportedChains.map(getChainName),
-                    description: 'Name of the blockchain network (only "sonic" is supported)',
+                    enum: supportedChainNames,
+                    description: 'Name of the blockchain network (currently likely Sonic only)',
                 },
                 account: {
                     type: 'string',
@@ -307,8 +315,8 @@ export const tools: Tool[] = [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Name of the blockchain network (only "sonic" is supported)',
+                enum: supportedChainNames,
+                description: 'Name of the blockchain network (sonic or base)',
             },
             {
                 name: 'account',
@@ -322,8 +330,8 @@ export const tools: Tool[] = [
             properties: {
                 chainName: {
                     type: 'string',
-                    enum: supportedChains.map(getChainName),
-                    description: 'Name of the blockchain network (only "sonic" is supported)',
+                    enum: supportedChainNames,
+                    description: 'Name of the blockchain network (sonic or base)',
                 },
                 account: {
                     type: 'string',
@@ -341,8 +349,8 @@ export const tools: Tool[] = [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Name of the blockchain network (only "sonic" is supported)',
+                enum: supportedChainNames,
+                description: 'Name of the blockchain network (currently likely Sonic only)',
             },
             {
                 name: 'account',
@@ -356,8 +364,8 @@ export const tools: Tool[] = [
             properties: {
                 chainName: {
                     type: 'string',
-                    enum: supportedChains.map(getChainName),
-                    description: 'Name of the blockchain network (only "sonic" is supported)',
+                    enum: supportedChainNames,
+                    description: 'Name of the blockchain network (currently likely Sonic only)',
                 },
                 account: {
                     type: 'string',
@@ -375,8 +383,8 @@ export const tools: Tool[] = [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Name of the blockchain network (only "sonic" is supported)',
+                enum: supportedChainNames,
+                description: 'Name of the blockchain network (sonic or base)',
             },
         ],
         required: ['chainName'],
@@ -385,8 +393,8 @@ export const tools: Tool[] = [
             properties: {
                 chainName: {
                     type: 'string',
-                    enum: supportedChains.map(getChainName),
-                    description: 'Name of the blockchain network (only "sonic" is supported)',
+                    enum: supportedChainNames,
+                    description: 'Name of the blockchain network (sonic or base)',
                 },
             },
             required: ['chainName'],
@@ -400,8 +408,8 @@ export const tools: Tool[] = [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Name of the blockchain network (only "sonic" is supported)',
+                enum: supportedChainNames,
+                description: 'Name of the blockchain network (sonic or base)',
             },
             {
                 name: 'account',
@@ -430,8 +438,8 @@ export const tools: Tool[] = [
             properties: {
                 chainName: {
                     type: 'string',
-                    enum: supportedChains.map(getChainName),
-                    description: 'Name of the blockchain network (only "sonic" is supported)',
+                    enum: supportedChainNames,
+                    description: 'Name of the blockchain network (sonic or base)',
                 },
                 account: {
                     type: 'string',
@@ -461,8 +469,8 @@ export const tools: Tool[] = [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Name of the blockchain network (only "sonic" is supported)',
+                enum: supportedChainNames,
+                description: 'Name of the blockchain network (sonic or base)',
             },
             {
                 name: 'account',
@@ -501,7 +509,7 @@ export const tools: Tool[] = [
             {
                 name: 'withdrawETH',
                 type: 'boolean',
-                description: 'Whether to withdraw in native token (S) instead of wrapped token. Defaults to false.',
+                description: 'Whether to withdraw in native token (S/ETH) instead of wrapped token. Defaults to false.',
                 optional: true,
             },
         ],
@@ -511,8 +519,8 @@ export const tools: Tool[] = [
             properties: {
                 chainName: {
                     type: 'string',
-                    enum: supportedChains.map(getChainName),
-                    description: 'Name of the blockchain network (only "sonic" is supported)',
+                    enum: supportedChainNames,
+                    description: 'Name of the blockchain network (sonic or base)',
                 },
                 account: {
                     type: 'string',
@@ -540,7 +548,7 @@ export const tools: Tool[] = [
                 },
                 withdrawETH: {
                     type: 'boolean',
-                    description: 'Whether to withdraw in native token (S) instead of wrapped token. Defaults to false.',
+                    description: 'Whether to withdraw in native token (S/ETH) instead of wrapped token. Defaults to false.',
                 },
             },
             required: ['chainName', 'account', 'slippageBps'],
@@ -554,8 +562,8 @@ export const tools: Tool[] = [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Name of the blockchain network (only "sonic" is supported)',
+                enum: supportedChainNames,
+                description: 'Name of the blockchain network (currently likely Sonic only)',
             },
             {
                 name: 'account',
@@ -569,8 +577,8 @@ export const tools: Tool[] = [
             properties: {
                 chainName: {
                     type: 'string',
-                    enum: supportedChains.map(getChainName),
-                    description: 'Name of the blockchain network (only "sonic" is supported)',
+                    enum: supportedChainNames,
+                    description: 'Name of the blockchain network (currently likely Sonic only)',
                 },
                 account: {
                     type: 'string',
@@ -588,8 +596,8 @@ export const tools: Tool[] = [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Name of the blockchain network (only "sonic" is supported)',
+                enum: supportedChainNames,
+                description: 'Name of the blockchain network (currently likely Sonic only)',
             },
             {
                 name: 'account',
@@ -603,8 +611,8 @@ export const tools: Tool[] = [
             properties: {
                 chainName: {
                     type: 'string',
-                    enum: supportedChains.map(getChainName),
-                    description: 'Name of the blockchain network (only "sonic" is supported)',
+                    enum: supportedChainNames,
+                    description: 'Name of the blockchain network (currently likely Sonic only)',
                 },
                 account: {
                     type: 'string',
@@ -622,8 +630,8 @@ export const tools: Tool[] = [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Name of the blockchain network (only "sonic" is supported)',
+                enum: supportedChainNames,
+                description: 'Name of the blockchain network (sonic or base)',
             },
             {
                 name: 'account',
@@ -633,12 +641,12 @@ export const tools: Tool[] = [
             {
                 name: 'tokenIn',
                 type: 'string',
-                description: 'Token symbol to swap from (S, WETH, ANON, USDC, EURC)',
+                description: `Token symbol to swap from. Sonic: ${sonicTokens}, Base: ${baseTokens}`,
             },
             {
                 name: 'tokenOut',
                 type: 'string',
-                description: 'Token symbol to swap to (S, WETH, ANON, USDC, EURC)',
+                description: `Token symbol to swap to. Sonic: ${sonicTokens}, Base: ${baseTokens}`,
             },
             {
                 name: 'amountIn',
@@ -657,8 +665,8 @@ export const tools: Tool[] = [
             properties: {
                 chainName: {
                     type: 'string',
-                    enum: supportedChains.map(getChainName),
-                    description: 'Name of the blockchain network (only "sonic" is supported)',
+                    enum: supportedChainNames,
+                    description: 'Name of the blockchain network (sonic or base)',
                 },
                 account: {
                     type: 'string',
@@ -666,11 +674,11 @@ export const tools: Tool[] = [
                 },
                 tokenIn: {
                     type: 'string',
-                    description: 'Token symbol to swap from (S, WETH, ANON, USDC, EURC)',
+                    description: `Token symbol to swap from. Sonic: ${sonicTokens}, Base: ${baseTokens}`,
                 },
                 tokenOut: {
                     type: 'string',
-                    description: 'Token symbol to swap to (S, WETH, ANON, USDC, EURC)',
+                    description: `Token symbol to swap to. Sonic: ${sonicTokens}, Base: ${baseTokens}`,
                 },
                 amountIn: {
                     type: 'string',
@@ -692,8 +700,8 @@ export const tools: Tool[] = [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Name of the blockchain network (only "sonic" is supported)',
+                enum: supportedChainNames,
+                description: 'Name of the blockchain network (sonic or base)',
             },
             {
                 name: 'account',
@@ -707,8 +715,8 @@ export const tools: Tool[] = [
             properties: {
                 chainName: {
                     type: 'string',
-                    enum: supportedChains.map(getChainName),
-                    description: 'Name of the blockchain network (only "sonic" is supported)',
+                    enum: supportedChainNames,
+                    description: 'Name of the blockchain network (sonic or base)',
                 },
                 account: {
                     type: 'string',
@@ -726,8 +734,8 @@ export const tools: Tool[] = [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Name of the blockchain network (only "sonic" is supported)',
+                enum: supportedChainNames,
+                description: 'Name of the blockchain network (sonic or base)',
             },
             {
                 name: 'account',
@@ -777,8 +785,8 @@ export const tools: Tool[] = [
             properties: {
                 chainName: {
                     type: 'string',
-                    enum: supportedChains.map(getChainName),
-                    description: 'Name of the blockchain network (only "sonic" is supported)',
+                    enum: supportedChainNames,
+                    description: 'Name of the blockchain network (sonic or base)',
                 },
                 account: {
                     type: 'string',
@@ -824,8 +832,8 @@ export const tools: Tool[] = [
             {
                 name: 'chainName',
                 type: 'string',
-                enum: supportedChains.map(getChainName),
-                description: 'Name of the blockchain network (must be "sonic")',
+                enum: supportedChainNames,
+                description: 'Name of the blockchain network (sonic or base)',
             },
             {
                 name: 'account',
@@ -844,8 +852,8 @@ export const tools: Tool[] = [
             properties: {
                 chainName: {
                     type: 'string',
-                    enum: supportedChains.map(getChainName),
-                    description: 'Name of the blockchain network (must be "sonic")',
+                    enum: supportedChainNames,
+                    description: 'Name of the blockchain network (sonic or base)',
                 },
                 account: {
                     type: 'string',
