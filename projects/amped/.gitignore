@@ -1,1 +1,21 @@
-node_modules
+# Node
+node_modules/
+
+# Environment variables
+.env*
+
+# Build output
+dist/
+
+# Logs
+*.log
+
+# OS specific
+.DS_Store
+
+# Editor specific
+.vscode/
+.cursor/
+
+# Test coverage
+coverage/
