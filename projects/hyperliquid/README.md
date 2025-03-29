@@ -35,6 +35,17 @@ The Hyperliquid L1 uses a custom consensus algorithm called HyperBFT which is he
 -   "Increase my ETH perp position by 50% on Hyperliquid"
 -   "Decrease my BTC perp position by 25% on Hyperliquid"
 -   "Toggle deposits off for MyVault on Hyperliquid"
+-   "What's the current funding rate for ETH on Hyperliquid?"
+-   "Can you tell me the current BTC funding rate?"
+-   "What is LINK funding on Hyperliquid currently?"
+-   "Can you show me BTC funding rate history for the past week?"
+-   "What were ETH funding rates over the last 3 days?"
+-   "I'd like to see LINK's funding rate history for the last 8 hours"
+-   "List all Hyperliquid funding rates from best to worst for the last day"
+-   "Can you rank all the funding rates on Hyperliquid for the past week?"
+-   "What's the average funding rate across all assets for last month?"
+-   "Which asset has had the highest funding rate over the past week?"
+-   "Has BTC funding been positive or negative over the last 24 hours?"
 
 ## Available Functions
 
@@ -49,6 +60,8 @@ The Hyperliquid L1 uses a custom consensus algorithm called HyperBFT which is he
 -   Distributing vault funds to depositors
 -   Toggling vault deposit and auto-close settings
 -   Retrieving perpetual positions, balances, spot balances, and managed vaults
+-   Getting current and historical funding rates
+-   Comparing funding rates across assets
 
 ## Tests
 
@@ -221,4 +234,24 @@ await getUsersVaults({ account: '0xYourAddress' });
 ```typescript
 // Disables deposits for MyVault
 await toggleDepositsEnabled({ account: '0xYourAddress', vault: 'MyVault', value: false });
+```
+
+### Getting current funding rate for an asset
+
+```typescript
+// Get the current funding rate for ETH
+await getFundingRate({ asset: 'ETH' });
+```
+
+### Getting historical funding rates for an asset
+
+```typescript
+// Get historical funding rates for BTC over the past week
+await getHistoricalFundingRates({ asset: 'BTC', timeRange: '1w' });
+
+// Get historical funding rates for ETH over the past 3 days
+await getHistoricalFundingRates({ asset: 'ETH', timeRange: '3d' });
+
+// Get historical funding rates for LINK over the past 8 hours
+await getHistoricalFundingRates({ asset: 'LINK', timeRange: '8h' });
 ```
