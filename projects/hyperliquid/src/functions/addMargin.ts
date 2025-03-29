@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { Address, isAddress, parseSignature, zeroAddress } from 'viem';
 import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
-import { openPerp } from './openPerp';
 import { ARBITRUM_CHAIN_ID, ARBITRUM_CHAIN_ID_HEX, hyperliquidPerps } from '../constants';
 import { _getUsersVaultAddress } from './utils/_getUsersVaultAddress';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
@@ -53,7 +52,7 @@ export async function addMargin({ account, asset, amount, vault }: Props, option
         }
 
         for (const { position } of assetPositions) {
-            const { coin, szi, leverage } = position;
+            const { coin } = position;
             if (coin == asset) {
                 //
                 // Creating the Agent wallet
