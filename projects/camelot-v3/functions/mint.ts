@@ -16,8 +16,10 @@ import {
     SUPPORTED_CHAINS,
     ZERO_ADDRESS,
 } from '../constants';
-import { amountToWei, convertPriceToTick, convertTickToPrice, getDecimals, getSymbol, weiToAmount } from '../utils';
+import { amountToWei, getDecimals, getSymbol, weiToAmount } from '../utils';
 import { algebraFactoryAbi, algebraPoolAbi, algebraPoolEventsAbi, nonFungiblePositionManagerAbi } from '../abis';
+import { Price, Token } from '@uniswap/sdk-core';
+import { priceToClosestTick, tickToPrice } from '@uniswap/v3-sdk';
 
 interface Props {
     chainName: string;
@@ -28,22 +30,22 @@ interface Props {
     amountB: string;
     amountAMin?: string;
     amountBMin?: string;
-    lowerPrice?: string; // Assuming price is calculated as tokenB / tokenA (on DEX price is denominated as token1 / token0)
-    upperPrice?: string; // Assuming price is calculated as tokenB / tokenA (on DEX price is denominated as token1 / token0)
+    lowerPrice?: string;
+    upperPrice?: string;
     lowerPricePercentage?: number;
     upperPricePercentage?: number;
     recipient?: Address;
     slippage?: number;
+    baseToken?: Address;
+    quoteToken?: Address;
 }
 
-// TODO: How can we detect if user has input wrong lowerPrice? We can inverse it if necessary (i.e. tokenA != token0)
-// TODO: How can we detect if user has input wrong upperPrice? We can inverse it if necessary (i.e. tokenA != token0)
 // TODO: How to determine min amount?
 // TODO: Need to call refundETH() if adding liquidity with native asset
 // TODO:     /// @dev Call this when the pool does exist and is initialized. Note that if the pool is created but not initialized
 //     /// a method does not exist, i.e. the pool is assumed to be initialized.
 export async function mint(
-    { chainName, account, tokenA, tokenB, amountA, amountB, amountAMin, amountBMin, lowerPrice, upperPrice, lowerPricePercentage, upperPricePercentage, recipient, slippage }: Props,
+    { chainName, account, tokenA, tokenB, amountA, amountB, amountAMin, amountBMin, lowerPrice, upperPrice, lowerPricePercentage, upperPricePercentage, recipient, slippage, baseToken, quoteToken }: Props,
     { sendTransactions, notify, getProvider }: FunctionOptions,
 ): Promise<FunctionReturn> {
     try {
@@ -68,6 +70,22 @@ export async function mint(
         // Validate upperPricePercentage
         if (upperPricePercentage && (!Number.isInteger(upperPricePercentage) || upperPricePercentage < 0 || upperPricePercentage > PERCENTAGE_BASE)) {
             return toResult(`Invalid upper price percentage: ${upperPricePercentage}, please provide a whole non-negative number in bps [0, ${PERCENTAGE_BASE}]`, true);
+        }
+
+        if (baseToken && baseToken !== tokenA && baseToken !== tokenB) {
+            return toResult(`Invalid baseToken: ${baseToken}, please provide tokenA or tokenB as baseToken`, true);
+        }
+
+        if (quoteToken && quoteToken !== tokenA && quoteToken !== tokenB) {
+            return toResult(`Invalid quoteToken: ${quoteToken}, please provide tokenA or tokenB as quoteToken`, true);
+        }
+
+        if (baseToken && quoteToken && baseToken == quoteToken) {
+            return toResult(`Invalid baseToken and quoteToken, they cannot be the same`, true);
+        }
+
+        if ((lowerPrice || upperPrice) && (!baseToken || !quoteToken)) {
+            return toResult(`Invalid price units. Please provide both baseToken and quoteToken when defining price`, true);
         }
 
         await notify(`Preparing to add liquidity on Camelot V3...`);
@@ -99,8 +117,8 @@ export async function mint(
 
         // Convert prices to ticks
         const [token0Decimals, token1Decimals] = await Promise.all([getDecimals(provider, token0), getDecimals(provider, token1)]);
-        let tickLower = priceToTick(lowerPrice, lowerPricePercentage, token0Decimals, token1Decimals, tickSpacing, currentTick, true);
-        let tickUpper = priceToTick(upperPrice, upperPricePercentage, token0Decimals, token1Decimals, tickSpacing, currentTick, false);
+        let tickLower = priceToTick(chainId, token0, token1, lowerPrice, baseToken, quoteToken, lowerPricePercentage, token0Decimals, token1Decimals, tickSpacing, currentTick, true);
+        let tickUpper = priceToTick(chainId, token0, token1, upperPrice, baseToken, quoteToken, upperPricePercentage, token0Decimals, token1Decimals, tickSpacing, currentTick, false);
 
         if (tickLower > tickUpper) {
             return toResult('Lower price should be less than upper price.', true);
@@ -352,7 +370,12 @@ async function getPoolState(provider: PublicClient, pool: Address): Promise<[Add
 }
 
 function priceToTick(
+    chainId: number,
+    token0: Address,
+    token1: Address,
     price: string | undefined,
+    baseToken: Address | undefined,
+    quoteToken: Address | undefined,
     pricePercentage: number | undefined,
     token0Decimals: number,
     token1Decimals: number,
@@ -368,9 +391,25 @@ function priceToTick(
     }
 
     if (price) {
-        tick = convertPriceToTick(parseUnits(price, token1Decimals), token0Decimals, tickSpacing, isLower);
+        let baseTokenDecimals;
+        let quoteTokenDecimals;
+         if (baseToken == token0) {
+            baseTokenDecimals = token0Decimals;
+            quoteTokenDecimals = token1Decimals;
+        } else {
+             baseTokenDecimals = token1Decimals;
+            quoteTokenDecimals = token0Decimals;
+        }
+
+        let baseTokenUniswap = new Token(chainId, baseToken!, baseTokenDecimals);
+        let quoteTokenUniswap = new Token(chainId, quoteToken!, quoteTokenDecimals);
+        let priceUniswap = new Price(baseTokenUniswap, quoteTokenUniswap, parseUnits("1", baseTokenDecimals).toString(), parseUnits(price, quoteTokenDecimals).toString());
+
+        tick = priceToClosestTick(priceUniswap);
     } else if (pricePercentage) {
-        const currentPrice = convertTickToPrice(currentTick, token0Decimals, token1Decimals);
+        let baseTokenUniswap = new Token(chainId, token0!, token0Decimals);
+        let quoteTokenUniswap = new Token(chainId, token1!, token1Decimals);
+        const currentPrice = tickToPrice(baseTokenUniswap, quoteTokenUniswap, currentTick);
 
         let percentageMultiplier: number;
         if (isLower) {
@@ -379,8 +418,10 @@ function priceToTick(
             percentageMultiplier = Number(PERCENTAGE_BASE) + pricePercentage;
         }
 
-        const adjustedPrice = (currentPrice * percentageMultiplier) / Number(PERCENTAGE_BASE);
-        tick = convertPriceToTick(parseUnits(adjustedPrice.toString(), token1Decimals), token0Decimals, tickSpacing, isLower);
+        const adjustedPrice = (Number(currentPrice.toFixed(36)) * percentageMultiplier) / Number(PERCENTAGE_BASE);
+        const adjustedPriceUniswap = new Price(baseTokenUniswap, quoteTokenUniswap, parseUnits("1", token0Decimals).toString(), parseUnits(adjustedPrice.toString(), token1Decimals).toString());
+
+        tick = priceToClosestTick(adjustedPriceUniswap);
     }
 
     return tick;

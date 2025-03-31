@@ -101,7 +101,7 @@ export const tools: AiTool[] = [
     {
         name: 'mint',
         description:
-            'Add liquidity to a pool using tokens A and B by specifying the amounts of each token to provide with at most Z slippage tolerance. Optionally, you can define the liquidity range, either as absolute prices or as percentages relative to the current price. You can also choose to send the position NFT to another recipient. In certain cases, this functionality can be leveraged to place a limit order at a specific price or within a defined price range.',
+            'Add liquidity to a pool using tokens A and B by specifying the amounts of each token to provide with at most Z slippage tolerance. Optionally, you can define the liquidity range, either as absolute prices or as percentages relative to the current price. While specifying price you should define price unit in BASE token / QUOTE token format. You can also choose to send the position NFT to another recipient. In certain cases, this functionality can be leveraged to place a limit order at a specific price or within a defined price range.',
         required: ['chainName', 'account', 'tokenA', 'tokenB', 'amountA', 'amountB', 'amountAMin', 'amountBMin', 'lowerPrice', 'upperPrice', 'lowerPricePercentage', 'upperPricePercentage', 'recipient', 'slippage'],
         props: [
             {
@@ -174,6 +174,16 @@ export const tools: AiTool[] = [
                 name: 'slippage',
                 type: ['number', 'null'],
                 description: 'Slippage tolerance in percentage. 10000 is 100%. Default is 0.2%',
+            },
+            {
+                name: 'baseToken',
+                type: ['string', 'null'],
+                description: 'Base token unit for price range',
+            },
+            {
+                name: 'quoteToken',
+                type: ['string', 'null'],
+                description: 'Quote token unit for price range',
             },
         ],
     },

@@ -121,6 +121,8 @@ describe('mint', () => {
         lowerPrice: lowerPrice,
         upperPrice: upperPrice,
         slippage: 250,
+        baseToken: tokenA,
+        quoteToken: tokenB,
     };
 
     it('should prepare and send transactions correctly', async () => {
