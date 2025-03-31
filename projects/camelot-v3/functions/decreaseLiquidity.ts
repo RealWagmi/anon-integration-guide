@@ -1,6 +1,6 @@
 import { FunctionOptions, FunctionReturn, getChainFromName, toResult, TransactionParams } from '@heyanon/sdk';
 import { Address, encodeFunctionData, Hex, parseEventLogs, PublicClient } from 'viem';
-import { ADDRESSES, PERCENTAGE_BASE, SUPPORTED_CHAINS, ZERO_ADDRESS } from '../constants';
+import { ADDRESSES, DEFAULT_SLIPPAGE, PERCENTAGE_BASE, SUPPORTED_CHAINS, ZERO_ADDRESS } from '../constants';
 import { algebraFactoryAbi, algebraPoolAbi, nonFungiblePositionManagerAbi } from '../abis';
 import { amountToWei, getSymbol, weiToAmount } from '../utils';
 import { queryLPPositions } from './getLPPositions';
@@ -15,10 +15,11 @@ interface Props {
     tokenId?: number;
     amountAMin?: string;
     amountBMin?: string;
+    slippage?: number;
 }
 
 export async function decreaseLiquidity(
-    { chainName, account, tokenA, tokenB, decreasePercentage, tokenId, amountAMin, amountBMin }: Props,
+    { chainName, account, tokenA, tokenB, decreasePercentage, tokenId, amountAMin, amountBMin, slippage }: Props,
     { sendTransactions, notify, getProvider }: FunctionOptions,
 ): Promise<FunctionReturn> {
     // Check wallet connection
@@ -37,6 +38,11 @@ export async function decreaseLiquidity(
     // Validate decreasePercentage
     if(decreasePercentage && (!Number.isInteger(decreasePercentage) || decreasePercentage < 0)) {
         return toResult(`Invalid decrease percentage: ${decreasePercentage}, please provide a whole non-negative number`, true);
+    }
+
+    // Validate slippage
+    if (slippage && (!Number.isInteger(slippage) || slippage < 0 || slippage > 300)) {
+        return toResult(`Invalid slippage tolerance: ${slippage}, please provide a whole non-negative number, max 3% got ${slippage / 100} %`, true);
     }
 
     await notify(`Preparing to decrease liquidity on Camelot V3...`);
@@ -79,16 +85,21 @@ export async function decreaseLiquidity(
     // Simulate decrease liquidity amounts if amount0Min and/or amount1Min are not provided
     if (amount0MinWei == 0n || amount1MinWei == 0n) {
         const [simulatedAmount0, simulatedAmount1] = await simulateDecreaseLiquidityAmounts(chainId, provider, positionId, liquidityToRemove);
-
-        // Set 0.2% slippage tolerance
-        if (amount0MinWei == 0n) {
-            amount0MinWei = (simulatedAmount0 * 9998n) / 10000n;
-        }
-
-        if (amount1MinWei == 0n) {
-            amount1MinWei = (simulatedAmount1 * 9998n) / 10000n;
-        }
+        amount0MinWei = simulatedAmount0;
+        amount1MinWei = simulatedAmount1;
     }
+
+    // Set slippage tolerance
+    let slippageMultiplier
+    if(slippage) {
+        slippageMultiplier = PERCENTAGE_BASE - BigInt(slippage);
+    } else {
+        // Set default 0.2% slippage tolerance
+        slippageMultiplier = PERCENTAGE_BASE - DEFAULT_SLIPPAGE;
+    }
+
+    amount0MinWei = (amount0MinWei * slippageMultiplier) / PERCENTAGE_BASE;
+    amount1MinWei = (amount1MinWei * slippageMultiplier) / PERCENTAGE_BASE;
 
     // Validate amounts
     const tickLower = positionData[4];

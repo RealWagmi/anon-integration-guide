@@ -1,4 +1,4 @@
-import { collect, decreaseLiquidity } from '../functions';
+import { decreaseLiquidity } from '../functions';
 import { Address, decodeFunctionData } from 'viem';
 import { ChainId, SendTransactionProps, toResult, TransactionReturn } from '@heyanon/sdk';
 import { TransactionParams } from '@heyanon/sdk/dist/blockchain/types';
@@ -339,6 +339,46 @@ describe('decreaseLiquidity', () => {
         );
 
         expect(result).toEqual(toResult(`Invalid decrease percentage: ${decreasePercentage}, please provide a whole non-negative number`, true));
+    });
+
+    it('should return an error if slippage is decimal', async () => {
+        let slippage = 10.01;
+        const result = await decreaseLiquidity({ ...props, slippage: slippage }, {
+            notify: mockNotify,
+            sendTransactions: jest.fn(),
+            getProvider: mockProvider,
+        },);
+        expect(result).toEqual(toResult('Invalid slippage tolerance: 10.01, please provide a whole non-negative number, max 3% got 0.1001 %', true));
+    });
+
+    it('should return an error if slippage is negative', async () => {
+        let slippage = -10;
+        const result = await decreaseLiquidity({ ...props, slippage: slippage }, {
+            notify: mockNotify,
+            sendTransactions: jest.fn(),
+            getProvider: mockProvider,
+        },);
+        expect(result).toEqual(toResult('Invalid slippage tolerance: -10, please provide a whole non-negative number, max 3% got -0.1 %', true));
+    });
+
+    it('should return an error if slippage is decimal', async () => {
+        let slippage = 10.01;
+        const result = await decreaseLiquidity({ ...props, slippage: slippage }, {
+            notify: mockNotify,
+            sendTransactions: jest.fn(),
+            getProvider: mockProvider,
+        },);
+        expect(result).toEqual(toResult('Invalid slippage tolerance: 10.01, please provide a whole non-negative number, max 3% got 0.1001 %', true));
+    });
+
+    it('should return an error if slippage is above threshold', async () => {
+        let slippage = 500;
+        const result = await decreaseLiquidity({ ...props, slippage: slippage }, {
+            notify: mockNotify,
+            sendTransactions: jest.fn(),
+            getProvider: mockProvider,
+        },);
+        expect(result).toEqual(toResult('Invalid slippage tolerance: 500, please provide a whole non-negative number, max 3% got 5 %', true));
     });
 
     it('should return failed to receive tx message if transaction hash is not received', async () => {

@@ -328,7 +328,6 @@ describe('increaseLiquidity', () => {
         expect(result).toEqual(toResult(`Invalid token ID: ${tokenId}, please provide a whole non-negative number`, true));
     });
 
-
     it('should return an error if slippage is decimal', async () => {
         let slippage = 10.01;
         const result = await increaseLiquidity({ ...props, slippage: slippage }, {

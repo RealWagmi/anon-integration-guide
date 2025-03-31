@@ -232,7 +232,7 @@ export const tools: AiTool[] = [
     },
     {
         name: 'decreaseLiquidity',
-        description: 'Decrease the percentage of liquidity from a position on Camelot V3. If you have multiple positions, ensure you specify the position ID to decrease liquidity from the correct one. You can also optionally define the minimum amounts to receive.',
+        description: 'Decrease the percentage of liquidity from a position on Camelot V3 with at most Z slippage tolerance. If you have multiple positions, ensure you specify the position ID to decrease liquidity from the correct one. You can also optionally define the minimum amounts to receive.',
         required: ['chainName', 'account', 'tokenA', 'tokenB', 'decreasePercentage', 'tokenId', 'amountAMin', 'amountBMin'],
         props: [
             {
@@ -275,6 +275,11 @@ export const tools: AiTool[] = [
                 name: 'amountBMin',
                 type: ['string', 'null'],
                 description: 'Minimum amount of token B to receive in decimal format',
+            },
+            {
+                name: 'slippage',
+                type: ['number', 'null'],
+                description: 'Slippage tolerance in percentage. 10000 is 100%. Default is 0.2%',
             },
         ],
     },
