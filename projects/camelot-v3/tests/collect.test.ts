@@ -313,7 +313,7 @@ describe('collect', () => {
             },
         );
 
-        expect(result).toEqual(toResult(`Invalid collect percentage: ${collectPercentage}, please provide a whole non-negative number`, true));
+        expect(result).toEqual(toResult(`Invalid collect percentage: ${collectPercentage}, please provide a whole non-negative number in bps [0, 10000]`, true));
     });
 
     it('should return error if collectPercentage is negative', async () => {
@@ -327,7 +327,7 @@ describe('collect', () => {
             },
         );
 
-        expect(result).toEqual(toResult(`Invalid collect percentage: ${collectPercentage}, please provide a whole non-negative number`, true));
+        expect(result).toEqual(toResult(`Invalid collect percentage: ${collectPercentage}, please provide a whole non-negative number in bps [0, 10000]`, true));
     });
 
     it('should return failed to receive tx message if transaction hash is not received', async () => {

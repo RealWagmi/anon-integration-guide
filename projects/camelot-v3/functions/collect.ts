@@ -36,8 +36,8 @@ export async function collect(
         }
 
         // Validate collectPercentage
-        if (collectPercentage && (!Number.isInteger(collectPercentage) || collectPercentage < 0)) {
-            return toResult(`Invalid collect percentage: ${collectPercentage}, please provide a whole non-negative number`, true);
+        if (collectPercentage && (!Number.isInteger(collectPercentage) || collectPercentage < 0 || collectPercentage > PERCENTAGE_BASE)) {
+            return toResult(`Invalid collect percentage: ${collectPercentage}, please provide a whole non-negative number in bps [0, ${PERCENTAGE_BASE}]`, true);
         }
 
         await notify(`Collecting fees on Camelot V3...`);

@@ -36,8 +36,8 @@ export async function decreaseLiquidity(
     }
 
     // Validate decreasePercentage
-    if(decreasePercentage && (!Number.isInteger(decreasePercentage) || decreasePercentage < 0)) {
-        return toResult(`Invalid decrease percentage: ${decreasePercentage}, please provide a whole non-negative number`, true);
+    if(decreasePercentage && (!Number.isInteger(decreasePercentage) || decreasePercentage < 0 || decreasePercentage > PERCENTAGE_BASE)) {
+        return toResult(`Invalid decrease percentage: ${decreasePercentage}, please provide a whole non-negative number in bps [0, ${PERCENTAGE_BASE}]`, true);
     }
 
     // Validate slippage

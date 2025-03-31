@@ -35,6 +35,15 @@ const mockProvider = jest.fn().mockReturnValue({
                     default:
                         throw new Error(`Invalid token ${readContractProps.address}`);
                 }
+            case 'symbol':
+                switch (readContractProps.address) {
+                    case tokenA:
+                        return Promise.resolve('weETH');
+                    case tokenB:
+                        return Promise.resolve('WETH');
+                    default:
+                        throw new Error(`Invalid token ${readContractProps.address}`);
+                }
             case 'positions':
                 const nonce = 0n;
                 const operator = '0x0000000000000000000000000000000000000000';
@@ -105,6 +114,23 @@ const mockProvider = jest.fn().mockReturnValue({
             default:
                 throw new Error(`Invalid function ${simulateContractProps.functionName}`);
         }
+    }),
+    getTransactionReceipt: jest.fn(() => {
+        return Promise.resolve({
+            logs: [
+                {
+                    address: '0x00c7f3082833e796A5b3e4Bd59f6642FF44DCD15',
+                    topics: ['0x8a82de7fe9b33e0e6bca0e26f5bd14a74f1164ffe236d50e0a36c3ea70f2b814', '0x0000000000000000000000000000000000000000000000000000000000036add'],
+                    data: '0x0000000000000000000000000000000000000000000007366b73e073768b222a0000000000000000000000000000000000000000000007366b73e073768b222a0000000000000000000000000000000000000000000000002df85b9f83a8dead0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000293dfd996d5cd72bed712b0eeab96dbe400c0416',
+                    blockNumber: 0,
+                    transactionHash: '0x',
+                    transactionIndex: 0,
+                    blockHash: '0x',
+                    logIndex: 0,
+                    removed: false,
+                },
+            ],
+        });
     }),
 });
 

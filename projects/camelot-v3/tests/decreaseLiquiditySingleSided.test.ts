@@ -15,7 +15,7 @@ const tokenB = '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8' as Address; // USDC.
 const tokenADecimals = 6;
 const tokenBDecimals = 6;
 const deadline = 1738401280;
-const decreasePercentage = 10;
+const decreasePercentage = 1000; // 10 %
 
 jest.mock('../functions/getLPPositions');
 
@@ -146,7 +146,7 @@ describe('decreaseLiquidity Single Sided ABOVE', () => {
         tokenA: tokenA,
         tokenB: tokenB,
         decreasePercentage: decreasePercentage,
-        tokenId: 223898,
+        tokenId: Number(2n * tokenId), // Artificial ID
         amountAMin: '0',
         amountBMin: '0',
     };

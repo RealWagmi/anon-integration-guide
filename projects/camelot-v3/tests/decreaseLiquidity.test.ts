@@ -324,7 +324,7 @@ describe('decreaseLiquidity', () => {
             },
         );
 
-        expect(result).toEqual(toResult(`Invalid decrease percentage: ${decreasePercentage}, please provide a whole non-negative number`, true));
+        expect(result).toEqual(toResult(`Invalid decrease percentage: ${decreasePercentage}, please provide a whole non-negative number in bps [0, 10000]`, true));
     });
 
     it('should return error if decreasePercentage is negative', async () => {
@@ -338,7 +338,7 @@ describe('decreaseLiquidity', () => {
             },
         );
 
-        expect(result).toEqual(toResult(`Invalid decrease percentage: ${decreasePercentage}, please provide a whole non-negative number`, true));
+        expect(result).toEqual(toResult(`Invalid decrease percentage: ${decreasePercentage}, please provide a whole non-negative number in bps [0, 10000]`, true));
     });
 
     it('should return an error if slippage is decimal', async () => {

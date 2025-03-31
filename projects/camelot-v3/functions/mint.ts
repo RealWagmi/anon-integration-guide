@@ -60,6 +60,16 @@ export async function mint(
             return toResult(`Invalid slippage tolerance: ${slippage}, please provide a whole non-negative number, max 3% got ${slippage / 100} %`, true);
         }
 
+        // Validate lowerPricePercentage
+        if (lowerPricePercentage && (!Number.isInteger(lowerPricePercentage) || lowerPricePercentage < 0 || lowerPricePercentage > PERCENTAGE_BASE)) {
+            return toResult(`Invalid lower price percentage: ${lowerPricePercentage}, please provide a whole non-negative number in bps [0, ${PERCENTAGE_BASE}]`, true);
+        }
+
+        // Validate upperPricePercentage
+        if (upperPricePercentage && (!Number.isInteger(upperPricePercentage) || upperPricePercentage < 0 || upperPricePercentage > PERCENTAGE_BASE)) {
+            return toResult(`Invalid upper price percentage: ${upperPricePercentage}, please provide a whole non-negative number in bps [0, ${PERCENTAGE_BASE}]`, true);
+        }
+
         await notify(`Preparing to add liquidity on Camelot V3...`);
 
         const provider = getProvider(chainId);

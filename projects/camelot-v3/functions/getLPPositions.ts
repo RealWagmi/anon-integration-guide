@@ -37,7 +37,7 @@ export async function getLPPositions({ chainName, account, tokenA, tokenB }: Pro
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!SUPPORTED_CHAINS.includes(chainId)) return toResult(`Camelot V3 is not supported on ${chainName}`, true);
 
-    await notify(`Querying LP positions  on Camelot V3...`);
+    await notify(`Querying LP positions on Camelot V3...`);
 
     // Get LP positions
     const positions = await queryLPPositions(chainId, account, tokenA, tokenB);
