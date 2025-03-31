@@ -14,7 +14,7 @@ const tokenB = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831' as Address; // USDC
 const tokenADecimals = 18;
 const tokenBDecimals = 6;
 const deadline = 1738399977;
-const decreasePercentage = 100;
+const decreasePercentage = 10000; // 100%
 
 jest.mock('../functions/getLPPositions');
 
@@ -32,6 +32,15 @@ const mockProvider = jest.fn().mockReturnValue({
                         return Promise.resolve(tokenADecimals);
                     case tokenB:
                         return Promise.resolve(tokenBDecimals);
+                    default:
+                        throw new Error(`Invalid token ${readContractProps.address}`);
+                }
+            case 'symbol':
+                switch (readContractProps.address) {
+                    case tokenA:
+                        return Promise.resolve('USDe');
+                    case tokenB:
+                        return Promise.resolve('USDC');
                     default:
                         throw new Error(`Invalid token ${readContractProps.address}`);
                 }
@@ -97,6 +106,23 @@ const mockProvider = jest.fn().mockReturnValue({
             default:
                 throw new Error(`Invalid function ${simulateContractProps.functionName}`);
         }
+    }),
+    getTransactionReceipt: jest.fn(() => {
+        return Promise.resolve({
+            logs: [
+                {
+                    address: '0x00c7f3082833e796A5b3e4Bd59f6642FF44DCD15',
+                    topics: ['0x26f6a048ee9138f2c0ce266f322cb99228e8d619ae2bff30c67f8dcf9d2377b4', '0x0000000000000000000000000000000000000000000000000000000000036972'],
+                    data: '0x00000000000000000000000000000000000000000000000bcdd1a4c337d2e10700000000000000000000000000000000000000000000195b5e80c4e7cdb431390000000000000000000000000000000000000000000000000000000000000000',
+                    blockNumber: 0,
+                    transactionHash: '0x',
+                    transactionIndex: 0,
+                    blockHash: '0x',
+                    logIndex: 0,
+                    removed: false,
+                },
+            ],
+        });
     }),
 });
 

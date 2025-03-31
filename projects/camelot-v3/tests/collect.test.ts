@@ -36,6 +36,15 @@ const mockProvider = jest.fn().mockReturnValue({
                     default:
                         throw new Error(`Invalid token ${readContractProps.address}`);
                 }
+            case 'symbol':
+                switch (readContractProps.address) {
+                    case tokenA:
+                        return Promise.resolve('USDe');
+                    case tokenB:
+                        return Promise.resolve('USDC');
+                    default:
+                        throw new Error(`Invalid token ${readContractProps.address}`);
+                }
             case 'positions':
                 if (readContractProps.args[0] < 100000n) {
                     throw new Error('Invalid tokenId');
@@ -90,6 +99,23 @@ const mockProvider = jest.fn().mockReturnValue({
             default:
                 throw new Error(`Invalid function ${simulateContractProps.functionName}`);
         }
+    }),
+    getTransactionReceipt: jest.fn(() => {
+        return Promise.resolve({
+            logs: [
+                {
+                    address: '0x00c7f3082833e796A5b3e4Bd59f6642FF44DCD15',
+                    topics: ['0x40d0efd1a53d60ecbf40971b9daf7dc90178c3aadc7aab1765632738fa8b8f01', '0x0000000000000000000000000000000000000000000000000000000000036972'],
+                    data: '0x000000000000000000000000c06caedbbb5d3c8e71a210cbe9bfa13cf73e0d5f00000000000000000000000000000000000000000000195d3b0d3c85a4c0878100000000000000000000000000000000000000000000000000000000018d5797',
+                    blockNumber: 0,
+                    transactionHash: '0x',
+                    transactionIndex: 0,
+                    blockHash: '0x',
+                    logIndex: 0,
+                    removed: false,
+                },
+            ],
+        });
     }),
 });
 
@@ -302,5 +328,22 @@ describe('collect', () => {
         );
 
         expect(result).toEqual(toResult(`Invalid collect percentage: ${collectPercentage}, please provide a whole non-negative number`, true));
+    });
+
+    it('should return failed to receive tx message if transaction hash is not received', async () => {
+        const mockSendTransactions = jest.fn((props: SendTransactionProps): Promise<TransactionReturn> => {
+            return Promise.resolve({
+                isMultisig: false,
+                data: [{ message: 'Transaction successful' }],
+            }) as Promise<any>;
+        });
+
+        const result = await collect(props, {
+            notify: mockNotify,
+            sendTransactions: mockSendTransactions,
+            getProvider: mockProvider,
+        });
+
+        expect(result).toEqual(toResult(`Tried to collect fees on Camelot V3, but failed to receive tx hash. Transaction successful`, false));
     });
 });

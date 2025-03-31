@@ -45,7 +45,7 @@ export const tools: AiTool[] = [
             },
             {
                 name: 'slippage',
-                type: 'number',
+                type: ['number', 'null'],
                 description: 'Slippage tolerance in percentage. 10000 is 100%. Default is 0.2%, maximum 3%',
             },
         ],
@@ -93,7 +93,7 @@ export const tools: AiTool[] = [
             },
             {
                 name: 'slippage',
-                type: 'number',
+                type: ['number', 'null'],
                 description: 'Slippage tolerance in percentage. 10000 is 100%. Default is 0.2%, maximum 3%',
             },
         ],
@@ -172,7 +172,7 @@ export const tools: AiTool[] = [
             },
             {
                 name: 'slippage',
-                type: 'number',
+                type: ['number', 'null'],
                 description: 'Slippage tolerance in percentage. 10000 is 100%. Default is 0.2%',
             },
         ],
@@ -331,7 +331,7 @@ export const tools: AiTool[] = [
             },
             {
                 name: 'slippage',
-                type: 'number',
+                type: ['number', 'null'],
                 description: 'Slippage tolerance in percentage. 10000 is 100%. Default is 0.2%',
             },
         ],

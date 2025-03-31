@@ -1,8 +1,21 @@
-import { Address, encodeFunctionData } from 'viem';
-import { checkToApprove, FunctionOptions, FunctionReturn, getChainFromName, toResult, TransactionParams } from '@heyanon/sdk';
+import { Address, encodeFunctionData, parseEventLogs, PublicClient } from 'viem';
+import {
+    checkToApprove,
+    FunctionOptions,
+    FunctionReturn,
+    getChainFromName,
+    toResult,
+    TransactionParams,
+} from '@heyanon/sdk';
 import { ADDRESSES, DEFAULT_SLIPPAGE, PERCENTAGE_BASE, SUPPORTED_CHAINS } from '../constants';
-import { swapRouterAbi } from '../abis';
-import { amountToWei } from '../utils';
+import {
+    algebraFactoryAbi,
+    algebraPoolAbi,
+    algebraPoolEventsAbi,
+    nonFungiblePositionManagerAbi,
+    swapRouterAbi,
+} from '../abis';
+import { amountToWei, getSymbol, weiToAmount } from '../utils';
 import { callQuoteExactInputSingle } from './quoteExactInputSingle';
 
 interface Props {
@@ -51,8 +64,8 @@ export async function exactInputSingle(
         }
 
         // Set slippage tolerance
-        let slippageMultiplier
-        if(slippage) {
+        let slippageMultiplier;
+        if (slippage) {
             slippageMultiplier = PERCENTAGE_BASE - BigInt(slippage);
         } else {
             // Set default 0.2% slippage tolerance
@@ -108,10 +121,64 @@ export async function exactInputSingle(
         const result = await sendTransactions({ chainId, account, transactions });
         const swapMessage = result.data[result.data.length - 1];
 
-        return toResult(result.isMultisig ? swapMessage.message : `Successfully swapped tokens on Camelot V3. ${swapMessage.message}`);
+        if (result.isMultisig) {
+            return toResult(swapMessage.message);
+        }
+
+        if (!swapMessage.hash) {
+            return toResult(`Tried to execute swap on Camelot V3, but failed to receive tx hash. ${swapMessage.message}`);
+        }
+
+        const receipt = await provider.getTransactionReceipt({ hash: swapMessage.hash });
+
+        const swapEvents = parseEventLogs({
+            logs: receipt.logs,
+            abi: algebraPoolEventsAbi,
+            eventName: 'Swap',
+        });
+
+        const pool = await getPool(chainId, provider, tokenIn, tokenOut);
+        const swapEvent = swapEvents.find((log) => log.address == pool);
+        if (!swapEvent) {
+            return toResult(`Executed swap on Camelot V3, but couldn't verify swapped amounts. ${JSON.stringify(swapEvents)}`);
+        }
+
+        const [token0, token1] = await getToken0Token1(provider, pool!);
+
+        const [amount0Flipped, amount1Flipped] = [BigInt(-1) * swapEvent.args.amount0, BigInt(-1) * swapEvent.args.amount1];
+        const [symbol0, symbol1, amount0, amount1] = await Promise.all([getSymbol(provider, token0), getSymbol(provider, token1), weiToAmount(provider, token0, amount0Flipped), weiToAmount(provider, token1, amount1Flipped)]);
+
+        return toResult(`Successfully swapped tokens [${amount0} ${symbol0}, ${amount1} ${symbol1}] on Camelot V3. ${swapMessage.message}`);
     } catch (error) {
         console.error(error);
         const errorMessage = error instanceof Error ? error.message : String(error);
         return toResult(errorMessage, true);
     }
+}
+
+async function getPool(chainId: number, provider: PublicClient, tokenA: Address, tokenB: Address): Promise<Address | undefined> {
+    try {
+        return await provider.readContract({
+            address: ADDRESSES[chainId].ALGEBRA_FACTORY_ADDRESS,
+            abi: algebraFactoryAbi,
+            functionName: 'poolByPair',
+            args: [tokenA, tokenB],
+        });
+    } catch (error) {
+        return undefined;
+    }
+}
+
+async function getToken0Token1(provider: PublicClient, pool: Address) {
+    return await Promise.all([provider.readContract({
+        address: pool,
+        abi: algebraPoolAbi,
+        functionName: 'token0',
+        args: [],
+    }), provider.readContract({
+        address: pool,
+        abi: algebraPoolAbi,
+        functionName: 'token1',
+        args: [],
+    })]);
 }

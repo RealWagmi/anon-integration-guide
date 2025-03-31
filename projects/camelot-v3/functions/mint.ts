@@ -6,7 +6,7 @@ import {
     toResult,
     TransactionParams,
 } from '@heyanon/sdk';
-import { Address, encodeFunctionData, parseUnits, PublicClient } from 'viem';
+import { Address, encodeFunctionData, parseEventLogs, parseUnits, PublicClient } from 'viem';
 import {
     ADDRESSES,
     DEFAULT_SLIPPAGE,
@@ -16,8 +16,8 @@ import {
     SUPPORTED_CHAINS,
     ZERO_ADDRESS,
 } from '../constants';
-import { amountToWei, convertPriceToTick, convertTickToPrice, getDecimals } from '../utils';
-import { algebraFactoryAbi, algebraPoolAbi, nonFungiblePositionManagerAbi } from '../abis';
+import { amountToWei, convertPriceToTick, convertTickToPrice, getDecimals, getSymbol, weiToAmount } from '../utils';
+import { algebraFactoryAbi, algebraPoolAbi, algebraPoolEventsAbi, nonFungiblePositionManagerAbi } from '../abis';
 
 interface Props {
     chainName: string;
@@ -220,7 +220,30 @@ export async function mint(
         const result = await sendTransactions({ chainId, account, transactions });
         const mintMessage = result.data[result.data.length - 1];
 
-        return toResult(result.isMultisig ? mintMessage.message : `Successfully added liquidity on Camelot V3. ${mintMessage.message}`);
+        if (result.isMultisig) {
+            return toResult(mintMessage.message);
+        }
+
+        if (!mintMessage.hash) {
+            return toResult(`Tried to add liquidity on Camelot V3, but failed to receive tx hash. ${mintMessage.message}`);
+        }
+
+        const receipt = await provider.getTransactionReceipt({ hash: mintMessage.hash });
+
+        const mintEvents = parseEventLogs({
+            logs: receipt.logs,
+            abi: algebraPoolEventsAbi,
+            eventName: 'Mint',
+        });
+
+        const mintEvent = mintEvents.find((log) => log.address == pool);
+        if (!mintEvent) {
+            return toResult(`Added liquidity on Camelot V3, but couldn't verify amounts. ${JSON.stringify(mintMessage)}`);
+        }
+
+        const [symbol0, symbol1, amount0, amount1] = await Promise.all([getSymbol(provider, token0), getSymbol(provider, token1), weiToAmount(provider, token0, mintEvent.args.amount0), weiToAmount(provider, token1, mintEvent.args.amount1)]);
+
+        return toResult(`Successfully added liquidity [${amount0} ${symbol0}, ${amount1} ${symbol1}] on Camelot V3. ${mintMessage.message}`);
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         return toResult(errorMessage, true);

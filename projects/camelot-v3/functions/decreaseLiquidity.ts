@@ -1,8 +1,8 @@
 import { FunctionOptions, FunctionReturn, getChainFromName, toResult, TransactionParams } from '@heyanon/sdk';
-import { Address, encodeFunctionData, Hex, PublicClient } from 'viem';
+import { Address, encodeFunctionData, Hex, parseEventLogs, PublicClient } from 'viem';
 import { ADDRESSES, PERCENTAGE_BASE, SUPPORTED_CHAINS, ZERO_ADDRESS } from '../constants';
 import { algebraFactoryAbi, algebraPoolAbi, nonFungiblePositionManagerAbi } from '../abis';
-import { amountToWei } from '../utils';
+import { amountToWei, getSymbol, weiToAmount } from '../utils';
 import { queryLPPositions } from './getLPPositions';
 import { prepareCollectTxData } from './collect';
 
@@ -162,7 +162,30 @@ export async function decreaseLiquidity(
     const result = await sendTransactions({ chainId, account, transactions });
     const decreaseLiquidity = result.data[result.data.length - 1];
 
-    return toResult(result.isMultisig ? decreaseLiquidity.message : `Successfully decreased liquidity on Camelot V3. ${decreaseLiquidity.message}`);
+    if (result.isMultisig) {
+        return toResult(decreaseLiquidity.message);
+    }
+
+    if (!decreaseLiquidity.hash) {
+        return toResult(`Tried to decrease liquidity on Camelot V3, but failed to receive tx hash. ${decreaseLiquidity.message}`);
+    }
+
+    const receipt = await provider.getTransactionReceipt({ hash: decreaseLiquidity.hash });
+
+    const decreaseLiquidityEvents = parseEventLogs({
+        logs: receipt.logs,
+        abi: nonFungiblePositionManagerAbi,
+        eventName: 'DecreaseLiquidity',
+    });
+
+    const decreaseLiquidityEvent = decreaseLiquidityEvents.find((log) => log.args.tokenId == positionId);
+    if (!decreaseLiquidityEvent) {
+        return toResult(`Decreased liquidity on Camelot V3, but couldn't verify collected amounts. ${JSON.stringify(decreaseLiquidity)}`);
+    }
+
+    const [symbol0, symbol1, amount0, amount1] = await Promise.all([getSymbol(provider, token0), getSymbol(provider, token1), weiToAmount(provider, token0, decreaseLiquidityEvent.args.amount0), weiToAmount(provider, token1, decreaseLiquidityEvent.args.amount1)]);
+
+    return toResult(`Successfully decreased liquidity [-${amount0} ${symbol0}, -${amount1} ${symbol1}] on Camelot V3. ${decreaseLiquidity.message}`);
 }
 
 async function getPositionData(chainId: number, provider: PublicClient, positionId: bigint): Promise<any | undefined> {

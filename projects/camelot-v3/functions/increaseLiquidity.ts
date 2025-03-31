@@ -1,7 +1,7 @@
 import { FunctionOptions, FunctionReturn, getChainFromName, toResult, TransactionParams } from '@heyanon/sdk';
-import { Address, encodeFunctionData, PublicClient } from 'viem';
+import { Address, encodeFunctionData, parseEventLogs, PublicClient } from 'viem';
 import { ADDRESSES, DEFAULT_SLIPPAGE, PERCENTAGE_BASE, SUPPORTED_CHAINS, ZERO_ADDRESS } from '../constants';
-import { amountToWei } from '../utils';
+import { amountToWei, getSymbol, weiToAmount } from '../utils';
 import { algebraFactoryAbi, algebraPoolAbi, nonFungiblePositionManagerAbi } from '../abis';
 import { queryLPPositions } from './getLPPositions';
 
@@ -161,7 +161,30 @@ export async function increaseLiquidity(
     const result = await sendTransactions({ chainId, account, transactions });
     const increaseLiquidity = result.data[result.data.length - 1];
 
-    return toResult(result.isMultisig ? increaseLiquidity.message : `Successfully increased liquidity on Camelot V3. ${increaseLiquidity.message}`);
+    if (result.isMultisig) {
+        return toResult(increaseLiquidity.message);
+    }
+
+    if (!increaseLiquidity.hash) {
+        return toResult(`Tried to increase liquidity on Camelot V3, but failed to receive tx hash. ${increaseLiquidity.message}`);
+    }
+
+    const receipt = await provider.getTransactionReceipt({ hash: increaseLiquidity.hash });
+
+    const increaseLiquidityEvents = parseEventLogs({
+        logs: receipt.logs,
+        abi: nonFungiblePositionManagerAbi,
+        eventName: 'IncreaseLiquidity',
+    });
+
+    const increaseLiquidityEvent = increaseLiquidityEvents.find((log) => log.args.tokenId == positionId);
+    if (!increaseLiquidityEvent) {
+        return toResult(`Increased liquidity on Camelot V3, but couldn't verify amounts. ${JSON.stringify(increaseLiquidity)}`);
+    }
+
+    const [symbol0, symbol1, amount0, amount1] = await Promise.all([getSymbol(provider, token0), getSymbol(provider, token1), weiToAmount(provider, token0, increaseLiquidityEvent.args.amount0), weiToAmount(provider, token1, increaseLiquidityEvent.args.amount1)]);
+
+    return toResult(`Successfully increased liquidity [${amount0} ${symbol0}, ${amount1} ${symbol1}] on Camelot V3. ${increaseLiquidity.message}`);
 }
 
 async function getPositionData(chainId: number, provider: PublicClient, positionId: bigint) {

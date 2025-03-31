@@ -54,6 +54,15 @@ const createMockGetProvider = (overrides: any = {}) =>
                         default:
                             throw new Error(`Invalid token ${readContractProps.address}`);
                     }
+                case 'symbol':
+                    switch (readContractProps.address) {
+                        case tokenA:
+                            return Promise.resolve('USD.e');
+                        case tokenB:
+                            return Promise.resolve('USDC');
+                        default:
+                            throw new Error(`Invalid token ${readContractProps.address}`);
+                    }
                 case 'poolByPair':
                     return Promise.resolve(pool);
                 case 'tickSpacing':
@@ -64,6 +73,23 @@ const createMockGetProvider = (overrides: any = {}) =>
         }),
         multicall: jest.fn((multicallProps: any) => {
             return Promise.resolve([{ result: tokenA }, { result: tokenB }, { result: 1 }, { result: [79224581245752470721102n, -276320] }]);
+        }),
+        getTransactionReceipt: jest.fn(() => {
+            return Promise.resolve({
+                logs: [
+                    {
+                        address: '0xc23f308CF1bFA7efFFB592920a619F00990F8D74',
+                        topics: ['0x7a53080ba414158be7ec69b987b5fb7d07dee101fe85488f0853ae16239d0bde', '0x00000000000000000000000000c7f3082833e796a5b3e4bd59f6642ff44dcd15', '0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffbc89b', '0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffbc8a3'],
+                        data: '0x00000000000000000000000000c7f3082833e796a5b3e4bd59f6642ff44dcd1500000000000000000000000000000000000000000000000022b0bca0fe6e9d4f000000000000000000000000000000000000000000000035b8e3007ad02cf2e70000000000000000000000000000000000000000000000000000000000847288',
+                        blockNumber: 0,
+                        transactionHash: '0x',
+                        transactionIndex: 0,
+                        blockHash: '0x',
+                        logIndex: 0,
+                        removed: false,
+                    },
+                ],
+            });
         }),
         ...overrides,
     });

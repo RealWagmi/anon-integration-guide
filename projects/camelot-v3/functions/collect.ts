@@ -1,7 +1,7 @@
 import { FunctionOptions, FunctionReturn, getChainFromName, toResult, TransactionParams } from '@heyanon/sdk';
-import { Address, encodeFunctionData, PublicClient } from 'viem';
+import { Address, encodeFunctionData, parseEventLogs, PublicClient } from 'viem';
 import { ADDRESSES, MAX_UINT128, PERCENTAGE_BASE, SUPPORTED_CHAINS, ZERO_ADDRESS } from '../constants';
-import { amountToWei } from '../utils';
+import { amountToWei, getSymbol, weiToAmount } from '../utils';
 import { nonFungiblePositionManagerAbi } from '../abis';
 import { queryLPPositions } from './getLPPositions';
 
@@ -31,12 +31,12 @@ export async function collect(
         if (!SUPPORTED_CHAINS.includes(chainId)) return toResult(`Camelot V3 is not supported on ${chainName}`, true);
 
         // Validate tokenId
-        if(tokenId && (!Number.isInteger(tokenId) || tokenId < 0)) {
+        if (tokenId && (!Number.isInteger(tokenId) || tokenId < 0)) {
             return toResult(`Invalid token ID: ${tokenId}, please provide a whole non-negative number`, true);
         }
 
         // Validate collectPercentage
-        if(collectPercentage && (!Number.isInteger(collectPercentage) || collectPercentage < 0)) {
+        if (collectPercentage && (!Number.isInteger(collectPercentage) || collectPercentage < 0)) {
             return toResult(`Invalid collect percentage: ${collectPercentage}, please provide a whole non-negative number`, true);
         }
 
@@ -82,7 +82,32 @@ export async function collect(
         const result = await sendTransactions({ chainId, account, transactions });
         const collectFees = result.data[result.data.length - 1];
 
-        return toResult(result.isMultisig ? collectFees.message : `Successfully collected fees on Camelot V3. ${collectFees.message}`);
+        if (result.isMultisig) {
+            return toResult(collectFees.message);
+        }
+
+        if (!collectFees.hash) {
+            return toResult(`Tried to collect fees on Camelot V3, but failed to receive tx hash. ${collectFees.message}`);
+        }
+
+        const receipt = await provider.getTransactionReceipt({ hash: collectFees.hash });
+
+        const collectEvents = parseEventLogs({
+            logs: receipt.logs,
+            abi: nonFungiblePositionManagerAbi,
+            eventName: 'Collect',
+        });
+
+        const collectEvent = collectEvents.find((log) => log.args.tokenId == positionId);
+        if (!collectEvent) {
+            return toResult(`Collected fees on Camelot V3, but couldn't verify collected amounts. ${JSON.stringify(collectFees)}`);
+        }
+
+        const token0 = positionData[2];
+        const token1 = positionData[3];
+        const [symbol0, symbol1, amount0, amount1] = await Promise.all([getSymbol(provider, token0), getSymbol(provider, token1), weiToAmount(provider, token0, collectEvent.args.amount0), weiToAmount(provider, token1, collectEvent.args.amount1)]);
+
+        return toResult(`Successfully collected fees [${amount0} ${symbol0}, ${amount1} ${symbol1}] on Camelot V3. ${collectFees.message}`);
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         return toResult(errorMessage, true);

@@ -8,6 +8,7 @@ import { ADDRESSES } from '../constants';
 // Test data taken from: https://arbiscan.io/tx/0x481eb8d96c5c33cbc5ebf3224cff93008518cdbb88d2de2d5804e31d7de3730f
 const chainId = ChainId.ARBITRUM;
 const spender = '0x29BBc2B5afF41A2143f7d28fe6944453178f1473' as Address;
+const pool = '0x1818FF61ba19C06A554C803eD98B603D5b7D1B43' as Address;
 const tokenIn = '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1' as Address; // WETH
 const tokenOut = '0xD56734d7f9979dD94FAE3d67C7e928234e71cD4C' as Address; // TIA.n
 const amountIn = 107031653463694801n;
@@ -52,9 +53,44 @@ const mockGetProvider = jest.fn().mockReturnValue({
                     return Promise.resolve(tokenOutDecimals);
                 }
                 throw new Error(`Invalid token ${readContractProps.address}`);
+            case 'symbol':
+                switch (readContractProps.address) {
+                    case tokenIn:
+                        return Promise.resolve('WETH');
+                    case tokenOut:
+                        return Promise.resolve('TIA.n');
+                    default:
+                        throw new Error(`Invalid token ${readContractProps.address}`);
+                }
+            case 'poolByPair': {
+                return Promise.resolve(pool);
+            }
+            case 'token0': {
+                return Promise.resolve(tokenIn);
+            }
+            case 'token1': {
+                return Promise.resolve(tokenOut);
+            }
             default:
                 throw new Error(`Invalid function ${readContractProps.functionName}`);
         }
+    }),
+    getTransactionReceipt: jest.fn(() => {
+        return Promise.resolve({
+            logs: [
+                {
+                    address: '0x1818FF61ba19C06A554C803eD98B603D5b7D1B43',
+                    topics: ['0xc42079f94a6350d7e6235f29174924f928cc2ac818eb64fed8004e115fbcca67', '0x0000000000000000000000001f721e2e82f6676fce4ea07a5958cf098d339e18', '0x00000000000000000000000029bbc2b5aff41a2143f7d28fe6944453178f1473'],
+                    data: '0x000000000000000000000000000000000000000000000000017c40b8c46d1dd1fffffffffffffffffffffffffffffffffffffffffffffffffffffffffbfe9c0000000000000000000000000000000000000000000001a4e7620580d1ae306fb20000000000000000000000000000000000000000000000000012b9bac2f41b16fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffcc45e',
+                    blockNumber: 0,
+                    transactionHash: '0x',
+                    transactionIndex: 0,
+                    blockHash: '0x',
+                    logIndex: 0,
+                    removed: false,
+                },
+            ],
+        });
     }),
 });
 
@@ -137,7 +173,10 @@ describe('exactOutputSingle', () => {
             }),
         });
 
-        const result = await exactOutputSingle({ ...props, amountOut: '0' }, { ...functionOptions, getProvider: mockGetProvider });
+        const result = await exactOutputSingle({ ...props, amountOut: '0' }, {
+            ...functionOptions,
+            getProvider: mockGetProvider,
+        });
         expect(result).toEqual(toResult(`Invalid ERC20 token contract at address ${props.tokenOut}. Failed to fetch token details`, true));
     });
 
@@ -148,16 +187,51 @@ describe('exactOutputSingle', () => {
             readContract: jest.fn((readContractProps: any) => {
                 switch (readContractProps.functionName) {
                     case 'decimals':
-                        if (readContractProps.address == props.tokenIn) {
+                        if (readContractProps.address == tokenIn) {
                             return Promise.resolve(tokenInDecimals);
                         }
-                        if (readContractProps.address == props.tokenOut) {
+                        if (readContractProps.address == tokenOut) {
                             return Promise.resolve(tokenOutDecimals);
                         }
                         throw new Error(`Invalid token ${readContractProps.address}`);
+                    case 'symbol':
+                        switch (readContractProps.address) {
+                            case tokenIn:
+                                return Promise.resolve('WETH');
+                            case tokenOut:
+                                return Promise.resolve('TIA.n');
+                            default:
+                                throw new Error(`Invalid token ${readContractProps.address}`);
+                        }
+                    case 'poolByPair': {
+                        return Promise.resolve(pool);
+                    }
+                    case 'token0': {
+                        return Promise.resolve(tokenIn);
+                    }
+                    case 'token1': {
+                        return Promise.resolve(tokenOut);
+                    }
                     default:
                         throw new Error(`Invalid function ${readContractProps.functionName}`);
                 }
+            }),
+            getTransactionReceipt: jest.fn(() => {
+                return Promise.resolve({
+                    logs: [
+                        {
+                            address: '0x1818FF61ba19C06A554C803eD98B603D5b7D1B43',
+                            topics: ['0xc42079f94a6350d7e6235f29174924f928cc2ac818eb64fed8004e115fbcca67', '0x0000000000000000000000001f721e2e82f6676fce4ea07a5958cf098d339e18', '0x00000000000000000000000029bbc2b5aff41a2143f7d28fe6944453178f1473'],
+                            data: '0x000000000000000000000000000000000000000000000000017c40b8c46d1dd1fffffffffffffffffffffffffffffffffffffffffffffffffffffffffbfe9c0000000000000000000000000000000000000000000001a4e7620580d1ae306fb20000000000000000000000000000000000000000000000000012b9bac2f41b16fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffcc45e',
+                            blockNumber: 0,
+                            transactionHash: '0x',
+                            transactionIndex: 0,
+                            blockHash: '0x',
+                            logIndex: 0,
+                            removed: false,
+                        },
+                    ],
+                });
             }),
             simulateContract: jest.fn((simulateContractProps: any) => {
                 switch (simulateContractProps.functionName) {

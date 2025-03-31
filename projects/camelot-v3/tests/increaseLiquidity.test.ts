@@ -1,4 +1,4 @@
-import { exactInputSingle, increaseLiquidity } from '../functions';
+import { collect, exactInputSingle, increaseLiquidity } from '../functions';
 import { Address } from 'viem';
 import { ChainId, SendTransactionProps, toResult, TransactionReturn } from '@heyanon/sdk';
 import { TransactionParams } from '@heyanon/sdk/dist/blockchain/types';
@@ -35,7 +35,15 @@ const mockProvider = jest.fn().mockReturnValue({
                     default:
                         throw new Error(`Invalid token ${readContractProps.address}`);
                 }
-                break;
+            case 'symbol':
+                switch (readContractProps.address) {
+                    case tokenA:
+                        return Promise.resolve('USDC');
+                    case tokenB:
+                        return Promise.resolve('USDT');
+                    default:
+                        throw new Error(`Invalid token ${readContractProps.address}`);
+                }
             case 'positions':
                 if (readContractProps.args[0] < 100000n) {
                     throw new Error('Invalid tokenId');
@@ -101,6 +109,23 @@ const mockProvider = jest.fn().mockReturnValue({
             default:
                 throw new Error(`Invalid function ${simulateContractProps.functionName}`);
         }
+    }),
+    getTransactionReceipt: jest.fn(() => {
+        return Promise.resolve({
+            logs: [
+                {
+                    address: '0x00c7f3082833e796A5b3e4Bd59f6642FF44DCD15',
+                    topics: ['0x8a82de7fe9b33e0e6bca0e26f5bd14a74f1164ffe236d50e0a36c3ea70f2b814', '0x0000000000000000000000000000000000000000000000000000000000036b0d'],
+                    data: '0x000000000000000000000000000000000000000000000000000003ed3303760d000000000000000000000000000000000000000000000000000003ed3303760d00000000000000000000000000000000000000000000000000000000178167ad000000000000000000000000000000000000000000000000000000000f16c627000000000000000000000000a17afcab059f3c6751f5b64347b5a503c3291868',
+                    blockNumber: 0,
+                    transactionHash: '0x',
+                    transactionIndex: 0,
+                    blockHash: '0x',
+                    logIndex: 0,
+                    removed: false,
+                },
+            ],
+        });
     }),
 });
 
@@ -342,5 +367,22 @@ describe('increaseLiquidity', () => {
             getProvider: mockProvider,
         },);
         expect(result).toEqual(toResult('Invalid slippage tolerance: 500, please provide a whole non-negative number, max 3% got 5 %', true));
+    });
+
+    it('should return failed to receive tx message if transaction hash is not received', async () => {
+        const mockSendTransactions = jest.fn((props: SendTransactionProps): Promise<TransactionReturn> => {
+            return Promise.resolve({
+                isMultisig: false,
+                data: [{ message: 'Transaction successful' }],
+            }) as Promise<any>;
+        });
+
+        const result = await increaseLiquidity(props, {
+            notify: mockNotify,
+            sendTransactions: mockSendTransactions,
+            getProvider: mockProvider,
+        });
+
+        expect(result).toEqual(toResult(`Tried to increase liquidity on Camelot V3, but failed to receive tx hash. Transaction successful`, false));
     });
 });
