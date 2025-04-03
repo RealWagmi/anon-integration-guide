@@ -1,0 +1,49 @@
+{
+    "name": "@projects/beets-dex",
+    "version": "1.0.0",
+    "license": "MIT",
+    "main": "dist/index.js",
+    "typings": "dist/index.d.ts",
+    "module": "dist/index.mjs",
+    "files": [
+        "dist"
+    ],
+    "engines": {
+        "node": ">=18.x"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "start": "tsup --watch",
+        "build": "tsup",
+        "test": "vitest --run",
+        "lint": "tsdx lint",
+        "prepare": "pnpm run build",
+        "size": "size-limit",
+        "analyze": "size-limit --why",
+        "format": "prettier --write \"*/**/*.ts\"",
+        "ask": "tsup src/ask_beets/run.ts > /dev/null && node dist/run.js"
+    },
+    "dependencies": {
+        "@balancer/sdk": "^2.5.0",
+        "@heyanon/sdk": "^2.0.2",
+        "axios": "^1.7.9",
+        "chalk": "4",
+        "viem": "2.22.9",
+        "vitest": "^2.1.8"
+    },
+    "devDependencies": {
+        "@size-limit/preset-small-lib": "^9.0.0",
+        "@types/big.js": "^6.2.0",
+        "@types/jest": "^29.5.12",
+        "@types/node": "^22.13.4",
+        "dotenv": "^16.4.7",
+        "openai": "^4.80.0",
+        "prettier": "^3.4.2",
+        "tsdx": "^0.14.1",
+        "tslib": "^2.6.2",
+        "tsup": "^7.2.0",
+        "typescript": "^5.7.3"
+    }
+}

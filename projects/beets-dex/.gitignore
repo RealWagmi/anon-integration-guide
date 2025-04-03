@@ -1,0 +1,7 @@
+node_modules
+.vscode
+.env
+src/contracts
+src/requests
+src/balancer
+dist
