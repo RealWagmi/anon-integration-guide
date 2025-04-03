@@ -45,7 +45,16 @@ Options:
 - `--debug-llm`: Show the actual LLM responses
 - `--debug-tools`: Show the output of every tool call
 
+## To do
+
+- [ ] Implement `getMyPositionsPortfolio`
+
 ## Future improvements
 
-- Implement Zap into position (requires performing the swap before depositing)
+- Implement Zap into position; requires performing the swap before depositing. [Not sure it is even recommended to do so](https://discord.com/channels/755231190134554696/758368074968858645/1304065221916098610).
 - Warn user if there are risks in the position (e.g. low liquidity, low TVL, etc.)
+
+## KB
+
+- [How to get current mooTokens balance](https://discord.com/channels/755231190134554696/758368074968858645/1304062150913949747)
+- [Deposit flow](https://discord.com/channels/755231190134554696/758368074968858645/1305213585286500352)

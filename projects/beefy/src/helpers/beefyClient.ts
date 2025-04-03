@@ -248,6 +248,7 @@ export class BeefyClient {
      * Get all vaults
      * Provides live information about each Beefy vault, including retired (eol) vaults.
      */
+    @staticMemoize()
     async getVaults(): Promise<VaultInfo[]> {
         try {
             const response = await this.apiClient.get('/vaults');
@@ -261,6 +262,7 @@ export class BeefyClient {
      * Get APY breakdown for all vaults
      * Provides more detailed information relating to the yield of each Beefy vault
      */
+    @staticMemoize()
     async getApyBreakdown(): Promise<ApyBreakdown> {
         try {
             const response = await this.apiClient.get('/apy/breakdown');
@@ -274,6 +276,7 @@ export class BeefyClient {
      * Get Total Value Locked for all vaults
      * Provides the current and live total value locked of each Beefy vault
      */
+    @staticMemoize()
     async getTvl(): Promise<Record<string, number>> {
         try {
             const response = await this.apiClient.get('/tvl');
@@ -313,6 +316,7 @@ export class BeefyClient {
      * Get liquidity pool breakdown
      * Provides more detailed information relating to the liquidity pool used by each Beefy vault
      */
+    @staticMemoize()
     async getLpsBreakdown(): Promise<LpBreakdown> {
         try {
             const response = await this.apiClient.get('/lps/breakdown');
@@ -326,6 +330,7 @@ export class BeefyClient {
      * Get tokens
      * Provides information on all of the tokens utilised by Beefy
      */
+    @staticMemoize()
     async getTokens(): Promise<TokenInfo> {
         try {
             const response = await this.apiClient.get('/tokens');
@@ -352,6 +357,7 @@ export class BeefyClient {
      * Get Boosts
      * Provides information on all Launchpool Boosts hosted by Beefy
      */
+    @staticMemoize()
     async getBoosts(): Promise<BoostInfo[]> {
         try {
             const response = await this.apiClient.get('/boosts');
@@ -392,6 +398,43 @@ export class BeefyClient {
             this.handleError(error);
         }
     }
+}
+
+/**
+ * A decorator for memoizing asynchronous methods.
+ *
+ * Potential pitfalls, not relevant for our use case:
+ * 1. Pending Promise Race Condition: If the decorated method is called concurrently with the same arguments,
+ *    the original function is not cached until it finishes executing, potentially triggering duplicate API calls.
+ * 2. Shared Cache Across Instances: The cache is defined in the decorator closure and is shared across all instances,
+ *    which can lead to unintended behavior if different instances (e.g. differing by baseUrl) should have separate
+ *    cache entries.
+ */
+function staticMemoize(cacheKeyFn?: (...args: any[]) => string) {
+    const cache = new Map<string, any>();
+
+    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+        const originalMethod = descriptor.value;
+
+        descriptor.value = async function (...args: any[]) {
+            const key = cacheKeyFn ? cacheKeyFn(...args) : JSON.stringify(args);
+
+            if (cache.has(key)) {
+                return cache.get(key);
+            }
+
+            const result = await originalMethod.apply(this, args);
+            cache.set(key, result);
+            return result;
+        };
+
+        // Add static method to clear cache
+        target.constructor[`clear${propertyKey}Cache`] = () => {
+            cache.clear();
+        };
+
+        return descriptor;
+    };
 }
 
 export default BeefyClient;
