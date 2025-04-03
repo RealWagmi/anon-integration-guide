@@ -1,6 +1,18 @@
-# beefy
+# Beefy Multichain Yield Optimizer
 
-Beefy Multichain Yield Optimizer allows you to earn the highest APYs across 20+ chains with safety and efficiency in mind
+Beefy allows you to earn the highest APYs across 20+ chains with safety and efficiency in mind.
+
+## Common Tasks
+
+1. **Portfolio**
+    - My TVL on @beefy
+    - Show all my positions on @beefy
+    - Value of my "Seamless USDC" position on @beefy on Base chain
+    - Show APR of all my positions on @beefy
+
+## Available Functions
+
+- `getMyPositionsPortfolio`: Show the vault positions in the user portfolio. For each position, show the tokens in the pool, the type of pool, the amounts of tokens, the APR yield, and the dollar value of the position.
 
 ## Installation
 
@@ -8,31 +20,31 @@ Beefy Multichain Yield Optimizer allows you to earn the highest APYs across 20+ 
 pnpm add @heyanon/beefy
 ```
 
-## Supported Functions
+## Test with the askBeefy agent
 
-List of available functions will be added here.
+I've built a simple agent called `askBeefy` to test the integration. To run it, you need to configure .env:
 
-## Usage
-
-Example usage will be added here.
-
-## Development
-
-1. Install dependencies:
 ```bash
+cd projects/beefy
 pnpm install
+cp .env.example .env
+# insert test wallet private key into .env
+# insert OpenAI or DeepSeek key into .env
 ```
 
-2. Build the project:
+and then you can ask questions directly:
+
 ```bash
-pnpm run build
+pnpm ask "What can I do on Beefy?"
+pnpm ask "Deposit 100 USDC on vault Seamless USDC on Base chain"
+pnpm ask "Remove half of my liquidity from vault Seamless USDC on Base chain"
 ```
 
-3. Run tests:
-```bash
-pnpm test
-```
+Options:
 
-## Documentation
+- `--debug-llm`: Show the actual LLM responses
+- `--debug-tools`: Show the output of every tool call
 
-Detailed documentation will be added here.
+## Future improvements
+
+- Implement Zap into position (requires performing the swap before depositing)
