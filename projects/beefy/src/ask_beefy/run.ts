@@ -1,4 +1,4 @@
-import { askBeets } from './askBeets';
+import { askBeefy } from './askBeefy';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -13,7 +13,7 @@ const debugLlm = process.argv.includes('--debug-llm');
 const debugTools = process.argv.includes('--debug-tools');
 
 async function main() {
-    const result = await askBeets(question, { debugLlm, debugTools });
+    const result = await askBeefy(question, { debugLlm, debugTools });
     if (!result.success) {
         console.error(`${result.data}`);
         process.exit(0);

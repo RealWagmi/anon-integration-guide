@@ -4,11 +4,11 @@ import { createPublicClient, http, createWalletClient } from 'viem';
 import { sonic } from 'viem/chains';
 import { EVM, FunctionOptions, FunctionReturn, SolanaFunctionOptions, TonFunctionOptions, toResult } from '@heyanon/sdk';
 import { tools } from '../tools';
-import { tools as askBeetsTools } from './tools';
+import { tools as askBeefyTools } from './tools';
 import * as functions from '../functions';
 import util from 'util';
 import chalk from 'chalk';
-import { fromHeyAnonToolsToOpenAiTools } from '../helpers/openai';
+import { fromHeyAnonToolsToOpenAiTools } from './openai';
 
 // AI configuration
 const OPENAI_MODEL = 'gpt-4o';
@@ -17,10 +17,10 @@ const DEEPSEEK_MODEL = 'deepseek-reasoner';
 // Protocol & chain configuration
 const CHAIN_NAME = 'sonic';
 const CHAIN_VIEM = sonic;
-const PROTOCOL_NAME = 'Beets';
+const PROTOCOL_NAME = 'Beefy';
 const GAS_LIMIT = 2_000_000n; // hardcoded for simplicity
 
-interface AskBeetsOptions {
+interface AskBeefyOptions {
     debugLlm?: boolean;
     debugTools?: boolean;
     notify?: (message: string) => Promise<void>;
@@ -34,12 +34,12 @@ interface ConversationMessage {
     name?: string;
 }
 
-function getSystemPrompt(_options: AskBeetsOptions | undefined, chainName: string, account: string) {
+function getSystemPrompt(_options: AskBeefyOptions | undefined, _chainName: string, account: string) {
     return `You will interact with the ${PROTOCOL_NAME} protocol via your tools.
  You MUST ALWAYS call a tool to get information. 
- NEVER try to guess pool addresses or token addresses without calling the appropriate tool.
+ NEVER try to guess vault addresses or token addresses without calling the appropriate tool.
  You WILL NOT modify token addresses, names or symbols, not even to make them plural.
- All tools that require the 'chainName' and 'account' arguments will need the following default values: chainName: "${chainName}", account: "${account}".`;
+ All tools that require the 'account' arguments will use the following default value: ${account}".`;
 }
 
 function getLlmClient() {
@@ -65,7 +65,7 @@ function getLlmModel() {
 }
 
 /**
- * The askBeets agent.
+ * The askBeefy agent.
  *
  * Ask the agent a question or give it an order.  The agent will use the tools
  * defined in the tools.ts file to perform the necessary operations.
@@ -73,7 +73,7 @@ function getLlmModel() {
  * The agent has an additional step to analyze the data provided by the tools
  * and provide a final answer.
  */
-export async function askBeets(question: string, options?: AskBeetsOptions): Promise<FunctionReturn> {
+export async function askBeefy(question: string, options?: AskBeefyOptions): Promise<FunctionReturn> {
     const llmClient = getLlmClient();
 
     const privateKey = process.env.PRIVATE_KEY;
@@ -162,7 +162,7 @@ export async function askBeets(question: string, options?: AskBeetsOptions): Pro
         const completion = await llmClient.chat.completions.create({
             model: getLlmModel(),
             messages: messages as OpenAI.Chat.Completions.ChatCompletionMessageParam[],
-            tools: [...tools, ...askBeetsTools].map((tool) => fromHeyAnonToolsToOpenAiTools(tool)),
+            tools: [...tools, ...askBeefyTools].map((tool) => fromHeyAnonToolsToOpenAiTools(tool)),
             tool_choice: 'auto',
         });
 
