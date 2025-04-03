@@ -48,3 +48,4 @@ Options:
 ## Future improvements
 
 - Implement Zap into position (requires performing the swap before depositing)
+- Warn user if there are risks in the position (e.g. low liquidity, low TVL, etc.)
