@@ -4,6 +4,8 @@ import { defineConfig } from 'tsup';
 export default defineConfig((options) => ({
     entry: {
         index: './src/index.ts',
+        'beefy-cli/index': './src/beefy-cli/index.ts',
+        run: './src/ask_beefy/run.ts',
     },
     format: ['esm', 'cjs'],
     dts: false,
