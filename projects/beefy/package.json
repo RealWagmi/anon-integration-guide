@@ -24,7 +24,7 @@
         "analyze": "size-limit --why",
         "format": "prettier --write \"*/**/*.ts\"",
         "ask-beefy": "tsup src/ask_beefy/run.ts > /dev/null && node dist/run.js",
-        "beefy-cli": "pnpm build > /dev/null && node dist/beefy-cli/index.js"
+        "beefy-cli": "pnpm build > /dev/null && node dist/beefy_cli/index.js"
     },
     "devDependencies": {
         "@size-limit/preset-small-lib": "^9.0.0",
