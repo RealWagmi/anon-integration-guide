@@ -5,6 +5,36 @@ const { ChainIds } = EVM.constants;
 export const supportedChains = [ChainIds.sonic, ChainIds.base, ChainIds.arbitrum, ChainIds.ethereum];
 
 /**
+ * Mapping from HeyAnon chain names to Beefy chain names
+ * Make sure to have an entry for each chain in supportedChains
+ */
+export const ANON_TO_BEEFY_CHAIN_NAMES = {
+    ethereum: 'ethereum',
+    optimism: 'optimism',
+    bsc: 'bsc',
+    gnosis: 'gnosis',
+    polygon: 'polygon',
+    sonic: 'sonic',
+    zksync: 'zksync',
+    metis: 'metis',
+    kava_evm: 'kava',
+    base: 'base',
+    avalanche: 'avax',
+    arbitrum: 'arbitrum',
+    scroll: 'scroll',
+};
+
+/**
+ * Mapping from Beefy chain names to HeyAnon chain names
+ */
+export const BEEFY_TO_ANON_CHAIN_NAMES = Object.fromEntries(Object.entries(ANON_TO_BEEFY_CHAIN_NAMES).map(([key, value]) => [value, key]));
+
+/**
+ * Decimals of mooTokens.
+ */
+export const MOO_TOKEN_DECIMALS = 18;
+
+/**
  * How much to approve for spending a token, as a multiple of the
  * amount needed to add liquidity.  Choose a value larger
  * than 1 to account for the fact that sometimes, by the time the

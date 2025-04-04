@@ -11,48 +11,57 @@ const DEFAULT_TIMEOUT = 15000;
 export interface VaultInfo {
     id: string;
     name: string;
-    chain: string;
-    status: string;
-    platform: string;
-    assets: string[];
-    risks?: string[];
-    strategyTypeId?: string;
+    type: string;
     token: string;
     tokenAddress: string;
     tokenDecimals: number;
+    tokenProviderId: string;
     earnedToken: string;
     earnedTokenAddress: string;
     earnContractAddress: string;
     oracle: string;
     oracleId: string;
-    depositFee: number;
-    withdrawalFee: number;
-    paused: boolean;
-    retireReason?: string;
-    emergencyShutdown: boolean;
+    status: string;
+    createdAt: number;
+    retireReason: string;
+    retiredAt: number;
+    platformId: string;
+    assets: string[];
+    risks?: string[];
+    strategyTypeId?: string;
+    buyTokenUrl?: string;
     addLiquidityUrl?: string;
     removeLiquidityUrl?: string;
     network: string;
-    excluded?: string[];
-    category?: string;
-    createdAt: number;
+    zaps?: {
+        strategyId: string;
+        ammId: string;
+    }[];
+    isGovVault: boolean;
+    chain: string;
+    strategy: string;
     lastHarvest: number;
-    pricePerFullShare: number;
-    tvl?: number;
-    userTvl?: number;
-    apyId?: string;
+    pricePerFullShare: string;
 }
 
 export interface ApyBreakdown {
-    [vaultId: string]: {
-        totalApy: number;
-        vaultApr: number;
-        compoundingsPerYear: number;
-        beefyPerformanceFee: number;
-        vaultApy: number;
-        tradingApr?: number;
-        composablePoolApr?: number;
-        liquidStakingApr?: number;
+    [vaultId: string]: ApyBreakdownItem;
+}
+
+export interface ApyBreakdownItem {
+    totalApy: number;
+    vaultApr: number;
+    compoundingsPerYear: number;
+    beefyPerformanceFee: number;
+    vaultApy: number;
+    tradingApr?: number;
+    composablePoolApr?: number;
+    liquidStakingApr?: number;
+}
+
+export interface TvlInDollarsData {
+    [chain: string]: {
+        [vaultId: string]: number;
     };
 }
 
@@ -86,7 +95,7 @@ export interface TokenInfo {
     };
 }
 
-export interface ConfigAddress {
+export interface ConfigAddresses {
     [chain: string]: {
         devMultisig?: string;
         treasuryMultisig?: string;
@@ -95,13 +104,26 @@ export interface ConfigAddress {
         keeper?: string;
         treasurer?: string;
         launchpoolOwner?: string;
-        rewardPool?: string;
-        treasury?: string;
         beefyFeeRecipient?: string;
         multicall?: string;
-        bifiMaxiStrategy?: string;
         voter?: string;
         beefyFeeConfig?: string;
+        vaultFactory?: string;
+        strategyFactory?: string;
+        zap?: string;
+        zapTokenManager?: string;
+        clmFactory?: string;
+        clmStrategyFactory?: string;
+        clmRewardPoolFactory?: string;
+        positionMulticall?: string;
+        beefySwapper?: string;
+        beefyOracle?: string;
+        beefyOracleChainlink?: string;
+        beefyOracleUniswapV2?: string;
+        beefyOracleUniswapV3?: string;
+        rewardPool?: string;
+        treasury?: string;
+        bifiMaxiStrategy?: string;
         [key: string]: string | undefined;
     };
 }
@@ -277,7 +299,7 @@ export class BeefyClient {
      * Provides the current and live total value locked of each Beefy vault
      */
     @staticMemoize()
-    async getTvl(): Promise<Record<string, number>> {
+    async getTvl(): Promise<TvlInDollarsData> {
         try {
             const response = await this.apiClient.get('/tvl');
             return response.data;
@@ -344,7 +366,8 @@ export class BeefyClient {
      * Get Beefy configuration
      * Provides information on the addresses of the current configuration of wallets
      */
-    async getConfig(): Promise<ConfigAddress> {
+    @staticMemoize()
+    async getConfig(): Promise<ConfigAddresses> {
         try {
             const response = await this.apiClient.get('/config');
             return response.data;
