@@ -109,3 +109,9 @@ export const EQUIVALENT_TOKENS = {
  * their synonyms, e.g. "ETH" -> "WETH" or "USDC" -> "USDC.e".
  */
 export const ALLOW_TOKEN_SYNONYMS = true;
+
+/**
+ * The default precision used to show token amounts,
+ * expressed as a number of significant digits.
+ */
+export const DEFAULT_PRECISION = 6;

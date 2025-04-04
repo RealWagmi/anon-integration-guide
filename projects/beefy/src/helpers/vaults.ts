@@ -2,7 +2,7 @@ import { erc20Abi, PublicClient } from 'viem';
 import { MOO_TOKEN_DECIMALS } from '../constants';
 import BeefyClient, { ApyBreakdown, TvlInDollarsData, VaultInfo } from './beefyClient';
 import { getChainIdFromBeefyChainName, getChainIdFromProvider, isBeefyChainSupported } from './chains';
-import { to$$$ } from './format';
+import { to$$$, toHumanReadableAmount } from './format';
 
 /**
  * Vault with all relevant information, obtained by joining
@@ -74,11 +74,12 @@ export function buildSimplifiedVaults(vaults: VaultInfo[], apyBreakdown: ApyBrea
  */
 export function formatVault(vault: SimplifiedVault, titlePrefix: string = ''): string {
     let parts = [];
-    parts.push(`${titlePrefix}${vault.name} [${vault.assets.join('-')}]:`);
+    parts.push(`${titlePrefix}Vault ${vault.name}:`);
     const offset = '   ';
     if (vault.mooTokenUserBalance !== undefined) {
-        parts.push(`${offset}- Your balance: ${vault.mooTokenUserBalance}`);
+        parts.push(`${offset}- Your balance: ${toHumanReadableAmount(vault.mooTokenUserBalance, vault.mooTokenDecimals)} mooTokens`);
     }
+    parts.push(`${offset}- Underlying asset${vault.assets.length > 1 ? 's' : ''}: ${vault.assets.join(', ')}`);
     if (vault.totalApy !== null) {
         parts.push(`${offset}- APY: ${(vault.totalApy * 100).toFixed(2)}%`);
     } else {
