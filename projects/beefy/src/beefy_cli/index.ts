@@ -12,6 +12,8 @@ import { getConfig } from './getConfig';
 import { getBoosts } from './getBoosts';
 import { getAddressTimeline } from './getAddressTimeline';
 import { getProductsByChain } from './getProductsByChain';
+import { getChains } from './getChains';
+import { getSimplifiedVaults } from './getSimplifiedVaults';
 
 const program = new Command();
 
@@ -19,6 +21,8 @@ program.name('beefy-cli').description('CLI for interacting with the Beefy Financ
 
 // Register all commands
 program.command('vaults').description('Get all vaults').action(getVaults);
+
+program.command('simplified-vaults').description('Get all simplified vaults').action(getSimplifiedVaults);
 
 program.command('apy').description('Get APY breakdown for all vaults').action(getApyBreakdown);
 
@@ -33,6 +37,8 @@ program.command('lps-breakdown').description('Get liquidity pool breakdown').act
 program.command('tokens').description('Get tokens').action(getTokens);
 
 program.command('config').description('Get Beefy configuration').action(getConfig);
+
+program.command('chains').description('Get chains supported by Beefy').action(getChains);
 
 program.command('boosts').description('Get Boosts').action(getBoosts);
 

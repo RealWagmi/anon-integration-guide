@@ -18,6 +18,7 @@ npm run beefy-cli -- <command> [options]
 ## Available Commands
 
 - `vaults` - Get all vaults
+- `simplified-vaults` - Get all simplified vaults (which include APY and TVL)
 - `apy` - Get APY breakdown for all vaults
 - `tvl` - Get Total Value Locked for all vaults
 - `prices` - Get token prices
@@ -25,6 +26,7 @@ npm run beefy-cli -- <command> [options]
 - `lps-breakdown` - Get liquidity pool breakdown
 - `tokens` - Get tokens
 - `config` - Get Beefy configuration
+- `chains` - Get chains supported by Beefy
 - `boosts` - Get Boosts
 - `timeline` - Get address timeline from Databarn
 - `products` - Get products by chain from Databarn
