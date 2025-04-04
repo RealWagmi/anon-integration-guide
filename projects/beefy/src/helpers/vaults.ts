@@ -1,6 +1,7 @@
+import { erc20Abi, PublicClient } from 'viem';
 import { MOO_TOKEN_DECIMALS } from '../constants';
 import BeefyClient, { ApyBreakdown, TvlInDollarsData, VaultInfo } from './beefyClient';
-import { getBeefyChainFromBeefyChainName, isBeefyChainSupported } from './chains';
+import { getChainIdFromBeefyChainName, getChainIdFromProvider, isBeefyChainSupported } from './chains';
 import { to$$$ } from './format';
 
 /**
@@ -20,6 +21,7 @@ export interface SimplifiedVault {
     mooTokenName: string;
     mooTokenAddress: string;
     mooTokenDecimals: number;
+    mooTokenUserBalance?: bigint;
 }
 
 /**
@@ -47,7 +49,7 @@ export function buildSimplifiedVaults(vaults: VaultInfo[], apyBreakdown: ApyBrea
             return isBeefyChainSupported(vault.chain);
         })
         .map((vault) => {
-            const chainId = getBeefyChainFromBeefyChainName(vault.chain);
+            const chainId = getChainIdFromBeefyChainName(vault.chain);
             return {
                 id: vault.id,
                 name: vault.name,
@@ -74,6 +76,9 @@ export function formatVault(vault: SimplifiedVault, titlePrefix: string = ''): s
     let parts = [];
     parts.push(`${titlePrefix}${vault.name} [${vault.assets.join('-')}]:`);
     const offset = '   ';
+    if (vault.mooTokenUserBalance !== undefined) {
+        parts.push(`${offset}- Your balance: ${vault.mooTokenUserBalance}`);
+    }
     if (vault.totalApy !== null) {
         parts.push(`${offset}- APY: ${(vault.totalApy * 100).toFixed(2)}%`);
     } else {
@@ -88,4 +93,100 @@ export function formatVault(vault: SimplifiedVault, titlePrefix: string = ''): s
     parts.push(`${offset}- ID: ${vault.id}`);
 
     return parts.join('\n');
+}
+
+/**
+ * Return the list of vaults that the user has ever deposited into.
+ * Optionally, specify a chain ID to restrict the results to a
+ * single chain.
+ */
+export async function getUserHistoricalVaults(address: string, chainId?: number): Promise<SimplifiedVault[]> {
+    const beefyClient = new BeefyClient();
+    const timeline = await beefyClient.getAddressTimeline(address);
+    // Fetch all the vaults in the timeline
+    let idChainPairs: { id: string; chain: string }[] = [];
+    for (const entry of timeline) {
+        if (chainId && getChainIdFromBeefyChainName(entry.chain) !== chainId) {
+            continue;
+        }
+        idChainPairs.push({ id: entry.display_name, chain: entry.chain });
+    }
+    // Make sure there are no duplicates
+    idChainPairs = idChainPairs.filter((value, index, self) => self.findIndex((t) => t.id === value.id && t.chain === value.chain) === index);
+    // Fetch the vaults
+    let vaults: SimplifiedVault[] = [];
+    for (const pair of idChainPairs) {
+        const vault = await getSimplifiedVaultByIdAndChain(pair.id, pair.chain);
+        if (vault) {
+            vaults.push(vault);
+        }
+    }
+    return vaults;
+}
+
+/**
+ * Return the list of vaults where the user currently has a position.
+ *
+ * The user's current vaults are determined by checking the user's
+ * balance of the mooToken in each vault in its timeline.
+ *
+ * The balance check is made with a Viem multicall as described in
+ * https://viem.sh/docs/contract/multicall.html
+ *
+ * Please note that the chain here is defined by whatever the RPC
+ * endpoint the PublicClient is connected to.
+ */
+export async function getUserCurrentVaults(address: string, publicClient: PublicClient): Promise<SimplifiedVault[]> {
+    const chainId = getChainIdFromProvider(publicClient);
+    const historicalVaults = await getUserHistoricalVaults(address, chainId);
+
+    if (historicalVaults.length === 0) {
+        return [];
+    }
+
+    // Set up multicall contracts with balanceOf for each mooToken
+    const contractCalls = historicalVaults.map((vault) => ({
+        address: vault.mooTokenAddress as `0x${string}`,
+        abi: erc20Abi,
+        functionName: 'balanceOf',
+        args: [address as `0x${string}`],
+    }));
+
+    // Execute the multicall to get all balances at once
+    const balanceResults = await publicClient.multicall({
+        contracts: contractCalls,
+        allowFailure: true,
+    });
+
+    // Transform vaults with balance > 0
+    const currentVaults = historicalVaults.filter((vault, index) => {
+        if (balanceResults[index].status !== 'success') {
+            throw new Error(`Could not fetch balance of vault ${vault.id}, please retry`);
+        }
+        const balance = BigInt(balanceResults[index].result);
+        vault.mooTokenUserBalance = balance;
+        return balance > 0n;
+    });
+
+    return currentVaults;
+}
+
+/**
+ * Return a simplified vault given a vault name and chain name,
+ * or null if no vault is found.
+ *
+ * The chain name must be given as a valid Beefy chain name.
+ *
+ * If multiple vaults are found, throw an error.
+ */
+export async function getSimplifiedVaultByIdAndChain(id: string, chain: string): Promise<SimplifiedVault | null> {
+    const simplifiedVaults = await getAllSimplifiedVaults();
+    const matches = simplifiedVaults.filter((vault) => vault.id === id && vault.chain === chain);
+    if (matches.length === 0) {
+        return null;
+    }
+    if (matches.length > 1) {
+        throw new Error(`Multiple vaults found for name ${name} and chain ${chain}.  Ids: ${matches.map((vault) => vault.id).join(', ')}`);
+    }
+    return matches[0];
 }

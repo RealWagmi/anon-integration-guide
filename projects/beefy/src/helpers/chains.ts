@@ -12,6 +12,15 @@ export function getDefaultRpcUrl(provider: PublicClient): string | null {
 }
 
 /**
+ * Helper function that returns the chain ID from a viem provider.
+ * Throws an error if the chain ID is not found.
+ */
+export function getChainIdFromProvider(provider: PublicClient): number {
+    if (!provider.chain) throw new Error('Could not find chain ID from provider');
+    return provider.chain.id;
+}
+
+/**
  * Return true if the given Beefy chain name is supported by
  * this Anon integration.
  */
@@ -24,7 +33,7 @@ export function isBeefyChainSupported(chain: string): boolean {
  * Given a Beefy chain name, return the chain ID, or
  * undefined if not supported
  */
-export function getBeefyChainFromBeefyChainName(chain: string): number {
+export function getChainIdFromBeefyChainName(chain: string): number {
     if (!isBeefyChainSupported(chain)) {
         throw new Error(`Unsupported Beefy chain name: ${chain}`);
     }

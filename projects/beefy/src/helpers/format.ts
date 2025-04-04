@@ -10,3 +10,10 @@ export function to$$$(num: number, minFractionDigits: number | undefined = 2, ma
         maximumFractionDigits: maxFractionDigits,
     });
 }
+
+/**
+ * Stringify an object, converting bigint values to strings.
+ */
+export function jsonStringify(obj: any, space: number | string | undefined = 2): string {
+    return JSON.stringify(obj, (_key, value) => (typeof value === 'bigint' ? value.toString() : value), space);
+}
