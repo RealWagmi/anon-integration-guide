@@ -47,7 +47,7 @@ Options:
 
 ## To do
 
-- [ ] Implement `getMyPositionsPortfolio`
+- Handle timeline endpoint delay
 
 ## Future improvements
 

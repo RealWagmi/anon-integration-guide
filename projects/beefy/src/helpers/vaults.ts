@@ -3,6 +3,7 @@ import { MOO_TOKEN_DECIMALS } from '../constants';
 import BeefyClient, { ApyBreakdown, TvlInDollarsData, VaultInfo } from './beefyClient';
 import { getChainIdFromBeefyChainName, getChainIdFromProvider, isBeefyChainSupported } from './chains';
 import { to$$$, toHumanReadableAmount } from './format';
+import { getTokenFraction } from './tokens';
 
 /**
  * Vault with all relevant information, obtained by joining
@@ -22,6 +23,7 @@ export interface SimplifiedVault {
     mooTokenAddress: string;
     mooTokenDecimals: number;
     mooTokenUserBalance?: bigint;
+    mooTokenUserUsdBalance?: number;
 }
 
 /**
@@ -76,8 +78,11 @@ export function formatVault(vault: SimplifiedVault, titlePrefix: string = ''): s
     let parts = [];
     parts.push(`${titlePrefix}Vault ${vault.name}:`);
     const offset = '   ';
+    if (vault.mooTokenUserUsdBalance !== undefined) {
+        parts.push(`${offset}- Your balance: ${to$$$(vault.mooTokenUserUsdBalance)}`);
+    }
     if (vault.mooTokenUserBalance !== undefined) {
-        parts.push(`${offset}- Your balance: ${toHumanReadableAmount(vault.mooTokenUserBalance, vault.mooTokenDecimals)} mooTokens`);
+        parts.push(`${offset}- Your balance in the vault token: ${toHumanReadableAmount(vault.mooTokenUserBalance, vault.mooTokenDecimals)} mooTokens`);
     }
     parts.push(`${offset}- Underlying asset${vault.assets.length > 1 ? 's' : ''}: ${vault.assets.join(', ')}`);
     if (vault.totalApy !== null) {
@@ -97,7 +102,13 @@ export function formatVault(vault: SimplifiedVault, titlePrefix: string = ''): s
 }
 
 /**
- * Return the list of vaults that the user has ever deposited into.
+ * Return the list of vaults that the user has ever deposited into,
+ * according to the timeline endpoint of the Beefy API.
+ *
+ * Please note that there is a 10 minute delay for the timeline
+ * endpoint to update, therefore newly deposited vaults will not
+ * be immediately reflected in the results.
+ *
  * Optionally, specify a chain ID to restrict the results to a
  * single chain.
  */
@@ -126,7 +137,9 @@ export async function getUserHistoricalVaults(address: string, chainId?: number)
 }
 
 /**
- * Return the list of vaults where the user currently has a position.
+ * Return the list of vaults where the user currently has a position,
+ * and compute the user's USD balance in each vault as the product of
+ * the vault's TVL and the user's percent share in the mooToken.
  *
  * The user's current vaults are determined by checking the user's
  * balance of the mooToken in each vault in its timeline.
@@ -159,15 +172,30 @@ export async function getUserCurrentVaults(address: string, publicClient: Public
         allowFailure: true,
     });
 
-    // Transform vaults with balance > 0
-    const currentVaults = historicalVaults.filter((vault, index) => {
-        if (balanceResults[index].status !== 'success') {
-            throw new Error(`Could not fetch balance of vault ${vault.id}, please retry`);
+    let currentVaults: SimplifiedVault[] = [];
+
+    // Select only vaults with user balance > 0, and compute the user's USD balance
+    for (let i = 0; i < historicalVaults.length; i++) {
+        const vault = historicalVaults[i];
+        if (balanceResults[i].status !== 'success') {
+            throw new Error(`Could not fetch balance of vault ${historicalVaults[i].id}, please retry`);
         }
-        const balance = BigInt(balanceResults[index].result);
-        vault.mooTokenUserBalance = balance;
-        return balance > 0n;
-    });
+        const balance = balanceResults[i].result;
+        if (balance === 0n) {
+            continue;
+        }
+        // Compute the user's USD balance
+        if (vault.tvl !== null) {
+            const mooTokenTotalSupply = await publicClient.readContract({
+                address: vault.mooTokenAddress as `0x${string}`,
+                abi: erc20Abi,
+                functionName: 'totalSupply',
+            });
+            const userFraction = getTokenFraction(balance as bigint, mooTokenTotalSupply);
+            vault.mooTokenUserUsdBalance = userFraction * vault.tvl;
+        }
+        currentVaults.push(vault);
+    }
 
     return currentVaults;
 }
