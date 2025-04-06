@@ -1,7 +1,7 @@
 import { erc20Abi, PublicClient } from 'viem';
 import { MOO_TOKEN_DECIMALS } from '../constants';
 import BeefyClient, { ApyBreakdown, TvlInDollarsData, VaultInfo } from './beefyClient';
-import { getChainIdFromBeefyChainName, getChainIdFromProvider, isBeefyChainSupported } from './chains';
+import { getBeefyChainNameFromAnonChainName, getChainIdFromBeefyChainName, getChainIdFromProvider, isBeefyChainSupported } from './chains';
 import { to$$$, toHumanReadableAmount } from './format';
 import { getTokenFraction } from './tokens';
 
@@ -27,7 +27,7 @@ export interface SimplifiedVault {
 }
 
 /**
- * Fetch info from the Beefy API and build a list of SimplifiedVault objects.
+ * Return all vaults from the Beefy API, in the SimplifiedVault format.
  *
  * Only vaults from chains in supportedChains are included.
  */
@@ -37,6 +37,19 @@ export async function getAllSimplifiedVaults(): Promise<SimplifiedVault[]> {
     const apyBreakdown = await beefyClient.getApyBreakdown();
     const tvl = await beefyClient.getTvl();
     return buildSimplifiedVaults(vaults, apyBreakdown, tvl);
+}
+
+/**
+ * Return vaults from the given chain, in the SimplifiedVault format.
+ * The chain must be a valid HeyAnon chain name.
+ *
+ * Please note that this function will still fetch all vaults from
+ * they Beefy APY.
+ */
+export async function getSimplifiedVaultsForChain(chain: string): Promise<SimplifiedVault[]> {
+    const allVaults = await getAllSimplifiedVaults();
+    const beefyChainName = getBeefyChainNameFromAnonChainName(chain);
+    return allVaults.filter((vault) => vault.chain === beefyChainName);
 }
 
 /**
@@ -218,4 +231,12 @@ export async function getSimplifiedVaultByIdAndChain(id: string, chain: string):
         throw new Error(`Multiple vaults found for name ${name} and chain ${chain}.  Ids: ${matches.map((vault) => vault.id).join(', ')}`);
     }
     return matches[0];
+}
+
+/**
+ * Check if a vault contains a specific token, either directly or
+ * as part of a liquidity pool.
+ */
+export function vaultContainsToken(vault: SimplifiedVault, symbol: string): boolean {
+    return vault.assets.some((asset) => asset.toLowerCase() === symbol.toLowerCase());
 }
