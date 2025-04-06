@@ -5,10 +5,11 @@ import { sonic } from 'viem/chains';
 import { EVM, FunctionOptions, FunctionReturn, SolanaFunctionOptions, TonFunctionOptions, toResult } from '@heyanon/sdk';
 import { tools } from '../tools';
 import { tools as askBeefyTools } from './tools';
-import * as functions from '../functions';
+import * as heyAnonFunctions from '../functions';
+import * as askBeefyFunctions from './functions';
 import util from 'util';
 import chalk from 'chalk';
-import { fromHeyAnonToolsToOpenAiTools } from './openai';
+import { fromHeyAnonToolsToOpenAiTools } from './helpers/openai';
 
 // AI configuration
 const OPENAI_MODEL = 'gpt-4o';
@@ -19,6 +20,9 @@ const CHAIN_NAME = 'sonic';
 const CHAIN_VIEM = sonic;
 const PROTOCOL_NAME = 'Beefy';
 const GAS_LIMIT = 2_000_000n; // hardcoded for simplicity
+
+// Merge HeyAnon & AskBeefy functions
+const functions = { ...heyAnonFunctions, ...askBeefyFunctions };
 
 interface AskBeefyOptions {
     debugLlm?: boolean;

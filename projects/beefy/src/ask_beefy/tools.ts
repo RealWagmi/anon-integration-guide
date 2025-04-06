@@ -48,10 +48,4 @@ export const tools: AiTool[] = [
             },
         ],
     },
-    {
-        name: 'getBeetsCapabilities',
-        description: 'Get information about what Beets DEX can do and example prompts.',
-        required: [],
-        props: [],
-    },
 ];
