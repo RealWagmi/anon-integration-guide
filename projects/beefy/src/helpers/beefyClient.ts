@@ -83,15 +83,20 @@ export interface LpBreakdown {
 }
 
 export interface TokenInfo {
+    type: 'erc20' | 'native';
+    id: string;
+    symbol: string;
+    name: string;
+    chainId: number;
+    oracle: 'tokens' | 'lps';
+    oracleId: string;
+    address: string;
+    decimals: number;
+}
+
+export interface TokensResponse {
     [chain: string]: {
-        [tokenId: string]: {
-            name: string;
-            symbol: string;
-            address: string;
-            decimals: number;
-            chainId: number;
-            logoURI?: string;
-        };
+        [tokenId: string]: TokenInfo;
     };
 }
 
@@ -353,7 +358,7 @@ export class BeefyClient {
      * Provides information on all of the tokens utilised by Beefy
      */
     @staticMemoize()
-    async getTokens(): Promise<TokenInfo> {
+    async getTokens(): Promise<TokensResponse> {
         try {
             const response = await this.apiClient.get('/tokens');
             return response.data;

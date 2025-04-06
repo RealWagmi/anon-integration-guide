@@ -1,6 +1,6 @@
 import { EVM, FunctionReturn, toResult, EvmChain } from '@heyanon/sdk';
 import { supportedChains } from '../../constants';
-import { TOKENS } from '../constants';
+import { getTokenInfoFromSymbol } from '../../helpers/tokens';
 interface Props {
     chainName: string;
     symbol: string;
@@ -20,7 +20,7 @@ export async function getTokenAddressFromSymbol({ chainName, symbol }: Props): P
     if (!supportedChains.includes(chainId)) return toResult(`Chain ${chainName} is not supported`, true);
 
     // Look for the token with the exact symbol, or a synonym
-    const token = TOKENS[chainId].find((token) => token.symbol === symbol);
+    const token = await getTokenInfoFromSymbol(chainName, symbol);
     if (!token) return toResult(`Token ${symbol} not found on ${chainName}`, true);
     return toResult(token.address);
 }

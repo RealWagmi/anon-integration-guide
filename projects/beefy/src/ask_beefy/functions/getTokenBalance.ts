@@ -1,7 +1,7 @@
 import { Address, erc20Abi, formatUnits } from 'viem';
 import { EVM, EvmChain, FunctionReturn, toResult, FunctionOptions } from '@heyanon/sdk';
 import { supportedChains } from '../../constants';
-import { TOKENS } from '../constants';
+import { getTokenInfoFromAddress } from '../../helpers/tokens';
 
 interface Props {
     chainName: string;
@@ -25,7 +25,7 @@ export async function getTokenBalance({ chainName, account, tokenAddress }: Prop
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
 
-    const token = TOKENS[chainId].find((token) => token.address === tokenAddress);
+    const token = await getTokenInfoFromAddress(chainName, tokenAddress);
     if (!token) return toResult(`Token not found: ${tokenAddress}`, true);
 
     const publicClient = getProvider(chainId);

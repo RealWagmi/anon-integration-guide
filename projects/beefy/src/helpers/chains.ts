@@ -1,6 +1,6 @@
 import { EVM, EvmChain } from '@heyanon/sdk';
 import { PublicClient } from 'viem';
-import { BEEFY_TO_ANON_CHAIN_NAMES, supportedChains } from '../constants';
+import { ANON_TO_BEEFY_CHAIN_NAMES, BEEFY_TO_ANON_CHAIN_NAMES, supportedChains } from '../constants';
 
 /**
  * Helper function that returns the default RPC URL for a chain
@@ -22,7 +22,7 @@ export function getChainIdFromProvider(provider: PublicClient): number {
 
 /**
  * Return true if the given Beefy chain name is supported by
- * this Anon integration.
+ * this HeyAnon integration.
  */
 export function isBeefyChainSupported(chain: string): boolean {
     const anonChainName = BEEFY_TO_ANON_CHAIN_NAMES[chain];
@@ -39,4 +39,27 @@ export function getChainIdFromBeefyChainName(chain: string): number {
     }
     const anonChainName = BEEFY_TO_ANON_CHAIN_NAMES[chain];
     return EVM.utils.getChainFromName(anonChainName as EvmChain);
+}
+
+/**
+ * Given a Beefy chain name, return the corresponding HeyAnon SDK
+ * chain name.
+ */
+export function getAnonChainNameFromBeefyChainName(chain: string): string {
+    if (!isBeefyChainSupported(chain)) {
+        throw new Error(`Unsupported Beefy chain name: ${chain}`);
+    }
+    return BEEFY_TO_ANON_CHAIN_NAMES[chain.toLowerCase()];
+}
+
+/**
+ * Given a HeyAnon SDK chain name, return the corresponding Beefy
+ * chain name.
+ *
+ * No checks are performed on whether the HeyAnon chain name is
+ * supported as it is assumed each function will have already
+ * checked.
+ */
+export function getBeefyChainNameFromAnonChainName(chain: string): string {
+    return ANON_TO_BEEFY_CHAIN_NAMES[chain.toLowerCase()];
 }
