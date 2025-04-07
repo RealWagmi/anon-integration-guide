@@ -151,17 +151,10 @@ export async function getUserHistoricalVaults(address: string, chainId?: number)
 
 /**
  * Return the list of vaults where the user currently has a position,
- * and compute the user's USD balance in each vault as the product of
- * the vault's TVL and the user's percent share in the mooToken.
+ * and compute the user's USD balance in each vault.
  *
- * The user's current vaults are determined by checking the user's
- * balance of the mooToken in each vault in its timeline.
- *
- * The balance check is made with a Viem multicall as described in
- * https://viem.sh/docs/contract/multicall.html
- *
- * Please note that the chain here is defined by whatever the RPC
- * endpoint the PublicClient is connected to.
+ * The chain here is defined by whatever the RPC endpoint the PublicClient
+ * is connected to.
  */
 export async function getUserCurrentVaults(address: string, publicClient: PublicClient): Promise<SimplifiedVault[]> {
     const chainId = getChainIdFromProvider(publicClient);
@@ -171,8 +164,25 @@ export async function getUserCurrentVaults(address: string, publicClient: Public
         return [];
     }
 
+    return getUpdatedVaultsWithUserBalance(historicalVaults, address, publicClient);
+}
+
+/**
+ * Given a list of vaults, return a new list of vaults with the user's
+ * balance in each vault, including USD value, fetched from the RPC.
+ *
+ * The USD value is computed as the product of the vault's TVL and the
+ * user's percent share in the mooToken.
+ *
+ * The balance check is made with a Viem multicall as described in
+ * https://viem.sh/docs/contract/multicall.html
+ *
+ * Please note that the chain here is defined by whatever the RPC
+ * endpoint the PublicClient is connected to.
+ */
+export async function getUpdatedVaultsWithUserBalance(vaults: SimplifiedVault[], address: string, publicClient: PublicClient): Promise<SimplifiedVault[]> {
     // Multicall to get all mooToken balances at once
-    const balanceContractCalls = historicalVaults.map((vault) => ({
+    const balanceContractCalls = vaults.map((vault) => ({
         address: vault.mooTokenAddress as `0x${string}`,
         abi: erc20Abi,
         functionName: 'balanceOf',
@@ -185,7 +195,7 @@ export async function getUserCurrentVaults(address: string, publicClient: Public
     });
 
     // Multicall to get all mooToken total supplies at once
-    const totalSupplyContractCalls = historicalVaults.map((vault) => ({
+    const totalSupplyContractCalls = vaults.map((vault) => ({
         address: vault.mooTokenAddress as `0x${string}`,
         abi: erc20Abi,
         functionName: 'totalSupply',
@@ -196,16 +206,17 @@ export async function getUserCurrentVaults(address: string, publicClient: Public
         allowFailure: true,
     });
 
-    let currentVaults: SimplifiedVault[] = [];
+    let updatedVaults: SimplifiedVault[] = [];
 
     // Select only vaults with user balance > 0, and compute the user's USD balance
-    for (let i = 0; i < historicalVaults.length; i++) {
-        const vault = historicalVaults[i];
+    for (let i = 0; i < vaults.length; i++) {
+        const vault = { ...vaults[i] }; // clone the vault to avoid mutating the original
+
         if (balanceResults[i].status !== 'success') {
-            throw new Error(`Could not fetch balance of vault ${historicalVaults[i].id}, please retry`);
+            throw new Error(`Could not fetch balance of vault ${vaults[i].id}, please retry`);
         }
         if (totalSupplyResults[i].status !== 'success') {
-            throw new Error(`Could not fetch total supply of vault ${historicalVaults[i].id}, please retry`);
+            throw new Error(`Could not fetch total supply of vault ${vaults[i].id}, please retry`);
         }
         const balance = balanceResults[i].result;
         const totalSupply = totalSupplyResults[i].result;
@@ -217,10 +228,10 @@ export async function getUserCurrentVaults(address: string, publicClient: Public
             const userFraction = getTokenFraction(balance as bigint, totalSupply as bigint);
             vault.mooTokenUserUsdBalance = userFraction * vault.tvl;
         }
-        currentVaults.push(vault);
+        updatedVaults.push(vault);
     }
 
-    return currentVaults;
+    return updatedVaults;
 }
 
 /**
