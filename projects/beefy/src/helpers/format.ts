@@ -58,3 +58,10 @@ export function to$$$(num: number, minFractionDigits: number | undefined = 2, ma
 export function jsonStringify(obj: any, space: number | string | undefined = 2): string {
     return JSON.stringify(obj, (_key, value) => (typeof value === 'bigint' ? value.toString() : value), space);
 }
+
+/**
+ * Make a string title case
+ */
+export function titleCase(str: string): string {
+    return str.replace(/\b\w/g, (char) => char.toUpperCase());
+}

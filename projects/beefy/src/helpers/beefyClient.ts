@@ -15,7 +15,7 @@ export interface VaultInfo {
     token: string;
     tokenAddress?: `0x${string}`; // not set for chain tokens e.g. ETH on Ethereum
     tokenDecimals: number;
-    tokenProviderId: string;
+    tokenProviderId?: string;
     earnedToken: string;
     earnedTokenAddress: `0x${string}`;
     earnContractAddress: `0x${string}`;

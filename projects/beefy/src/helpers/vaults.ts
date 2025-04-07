@@ -2,7 +2,7 @@ import { erc20Abi, PublicClient } from 'viem';
 import { MOO_TOKEN_DECIMALS } from '../constants';
 import BeefyClient, { ApyBreakdown, TvlInDollarsData, VaultInfo } from './beefyClient';
 import { getBeefyChainNameFromAnonChainName, getChainIdFromBeefyChainName, getChainIdFromProvider, isBeefyChainSupported } from './chains';
-import { to$$$, toHumanReadableAmount } from './format';
+import { titleCase, to$$$, toHumanReadableAmount } from './format';
 import { getTokenFraction } from './tokens';
 
 /**
@@ -20,6 +20,8 @@ export interface SimplifiedVault {
     depositedTokenSymbol: string;
     depositedTokenAddress?: `0x${string}`; // not set for chain tokens e.g. ETH on Ethereum
     depositedTokenDecimals: number;
+    depositedTokenPlatform: string;
+    depositedTokenProvider?: string;
     mooTokenSymbol: string;
     mooTokenAddress: `0x${string}`;
     mooTokenDecimals: number;
@@ -83,6 +85,8 @@ export function buildSimplifiedVaults(vaults: VaultInfo[], apyBreakdown: ApyBrea
                 depositedTokenSymbol: vault.token,
                 depositedTokenAddress: vault.tokenAddress,
                 depositedTokenDecimals: vault.tokenDecimals,
+                depositedTokenPlatform: vault.platformId,
+                depositedTokenProvider: vault.tokenProviderId,
                 mooTokenSymbol: vault.earnedToken,
                 mooTokenAddress: vault.earnedTokenAddress,
                 mooTokenDecimals: MOO_TOKEN_DECIMALS,
@@ -105,7 +109,14 @@ export function formatVault(vault: SimplifiedVault, titlePrefix: string = ''): s
     if (vault.mooTokenUserBalance !== undefined) {
         parts.push(`${offset}- Your balance in the vault token: ${toHumanReadableAmount(vault.mooTokenUserBalance, vault.mooTokenDecimals)} mooTokens`);
     }
-    parts.push(`${offset}- Underlying asset${vault.assets.length > 1 ? 's' : ''}: ${vault.assets.join(', ')}`);
+    let by = titleCase(vault.depositedTokenPlatform);
+    if (vault.depositedTokenProvider && vault.depositedTokenProvider !== vault.depositedTokenPlatform) {
+        by += `/${titleCase(vault.depositedTokenProvider)}`;
+    }
+    parts.push(`${offset}- Vault token: ${vault.depositedTokenSymbol} by ${by}`);
+    if (vault.assets.length > 1 || vault.assets[0] !== vault.depositedTokenSymbol) {
+        parts.push(`${offset}- Underlying asset${vault.assets.length > 1 ? 's' : ''}: ${vault.assets.join(', ')}`);
+    }
     if (vault.totalApy !== null) {
         parts.push(`${offset}- APY: ${(vault.totalApy * 100).toFixed(2)}%`);
     } else {
