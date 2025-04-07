@@ -23,7 +23,7 @@ interface Props {
 export async function getTokenBalance({ chainName, account, tokenAddress }: Props, { notify, evm: { getProvider } }: FunctionOptions): Promise<FunctionReturn> {
     const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
-    if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
+    if (!supportedChains.includes(chainId)) return toResult(`Beefy protocol is not supported on ${chainName}`, true);
 
     const token = await getTokenInfoFromAddress(chainName, tokenAddress);
     if (!token) return toResult(`Token not found: ${tokenAddress}`, true);

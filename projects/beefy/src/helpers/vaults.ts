@@ -31,9 +31,12 @@ export interface SimplifiedVault {
  *
  * Only vaults from chains in supportedChains are included.
  */
-export async function getAllSimplifiedVaults(): Promise<SimplifiedVault[]> {
+export async function getAllSimplifiedVaults(includeRetired: boolean = false): Promise<SimplifiedVault[]> {
     const beefyClient = new BeefyClient();
-    const vaults = await beefyClient.getVaults();
+    let vaults = await beefyClient.getVaults();
+    if (!includeRetired) {
+        vaults = vaults.filter((vault) => !vault.retiredAt);
+    }
     const apyBreakdown = await beefyClient.getApyBreakdown();
     const tvl = await beefyClient.getTvl();
     return buildSimplifiedVaults(vaults, apyBreakdown, tvl);
@@ -245,10 +248,8 @@ export async function getUpdatedVaultsWithUserBalance(
 // export async function getUserPositionsInVault(address: string, vaultId: string, chainName: string): Promise<SimplifiedVault[]> {
 
 /**
- * Return a simplified vault given a vault name and chain name,
- * or null if no vault is found.
- *
- * The chain name must be given as a valid Beefy chain name.
+ * Return a simplified vault given a vault id and Beefy chain
+ * name, or null if no vault is found.
  *
  * If multiple vaults are found, throw an error.
  */
@@ -262,6 +263,17 @@ export async function getSimplifiedVaultByIdAndChain(id: string, chain: string):
         throw new Error(`Multiple vaults found for id ${id} and chain ${chain}.  Ids: ${matches.map((vault) => vault.id).join(', ')}`);
     }
     return matches[0];
+}
+
+/**
+ * Return a list of simplified vaults that match a given vault name
+ * and Beefy chain name.
+ *
+ * The vault name is a partial match, and the search is case-insensitive.
+ */
+export async function getSimplifiedVaultsByNameAndChain(name: string, chain: string): Promise<SimplifiedVault[]> {
+    const simplifiedVaults = await getAllSimplifiedVaults();
+    return simplifiedVaults.filter((vault) => vault.name.toLowerCase().includes(name.toLowerCase()) && vault.chain === chain);
 }
 
 /**

@@ -66,4 +66,28 @@ export const tools: AiTool[] = [
             },
         ],
     },
+    {
+        name: 'getVaultInfoFromVaultName',
+        description:
+            'Get information about a specific vault by its name, including the APY yield, the TVL and any positions in the vault belonging to the user.  In case of multiple matches, an error is returned contaninig the TVL-ordered list of vaults.',
+        required: ['chainName', 'account', 'vaultName'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(EVM.utils.getChainName),
+                description: 'Chain name',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Address of the user.  The vault info will include info on any user positions in the vault.',
+            },
+            {
+                name: 'vaultName',
+                type: 'string',
+                description: 'Name of the vault to search for, for example "Boosted Stable Rings".  The search is case-insensitive, with partial matches allowed.',
+            },
+        ],
+    },
 ];

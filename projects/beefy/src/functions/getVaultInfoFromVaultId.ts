@@ -6,7 +6,7 @@ import { getBeefyChainNameFromAnonChainName } from '../helpers/chains';
 
 interface Props {
     chainName: string;
-    account: Address | null;
+    account: Address;
     vaultId: string;
 }
 
@@ -16,14 +16,14 @@ interface Props {
  *
  * @param {Object} props - The input parameters
  * @param {string} props.chainName - Name of the blockchain network
- * @param {Address|null} props.account - Optional address to check position for
+ * @param {Address} props.account - Address to check position for
  * @param {string} props.vaultId - ID of the vault to query
  * @returns {Promise<FunctionReturn>} Detailed vault information
  */
 export async function getVaultInfoFromVaultId({ chainName, account, vaultId }: Props, options: FunctionOptions): Promise<FunctionReturn> {
     const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
-    if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
+    if (!supportedChains.includes(chainId)) return toResult(`Beefy protocol is not supported on ${chainName}`, true);
 
     // Get the vault info
     const beefyChainName = getBeefyChainNameFromAnonChainName(chainName);

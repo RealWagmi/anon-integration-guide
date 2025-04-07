@@ -2,7 +2,7 @@ import { AiTool, EVM } from '@heyanon/sdk';
 import { supportedChains } from '../constants';
 
 /**
- * Tools specific for the askBeets agent, and that are not
+ * Tools specific for the askBeefy agent, and that are not
  * included in the HeyAnon integration because they could
  * interfer with HeyAnon's functionality.
  */

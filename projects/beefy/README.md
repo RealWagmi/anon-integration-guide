@@ -12,7 +12,8 @@ Beefy allows you to earn the highest APYs across 20+ chains with safety and effi
 2. **Yields & Vaults**
     - Best yield for USDC.e on @beefy on Sonic?
     - Best yield for USDC.e on @beefy on Sonic, without the need to LP?
-    - Give me info on @beefy vault beetsv3-sonic-beefyusdce-scusd on Sonic
+    - Show pools with wETH on @beefy on Sonic
+    - Give me info on @beefy vault Boosted Stable Rings on Sonic
 
 ## Available Functions
 
@@ -52,11 +53,13 @@ Options:
 ## To do
 
 - Handle timeline endpoint delay
+- Filter out retired vaults
 
 ## Future improvements
 
 - Implement Zap into position; requires performing the swap before depositing. [Not sure it is even recommended to do so](https://discord.com/channels/755231190134554696/758368074968858645/1304065221916098610).
 - Warn user if there are risks in the position (e.g. low liquidity, low TVL, etc.)
+- Include Beefy Boost into APY computation ([link](https://app.beefy.com/vault/beetsv3-sonic-beefyusdce-scusd) | [screen](https://d.pr/i/5NPz9B))
 
 ## KB
 
