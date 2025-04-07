@@ -1,7 +1,5 @@
 import OpenAI from 'openai';
 import { privateKeyToAccount } from 'viem/accounts';
-import { createPublicClient, http, createWalletClient } from 'viem';
-import { sonic } from 'viem/chains';
 import { EVM, FunctionOptions, FunctionReturn, SolanaFunctionOptions, TonFunctionOptions, toResult } from '@heyanon/sdk';
 import { tools } from '../tools';
 import { tools as askBeefyTools } from './tools';
@@ -10,25 +8,18 @@ import * as askBeefyFunctions from './functions';
 import util from 'util';
 import chalk from 'chalk';
 import { fromHeyAnonToolsToOpenAiTools } from './helpers/openai';
+import { createWalletClient, http, PublicClient } from 'viem';
 
 // AI configuration
 const OPENAI_MODEL = 'gpt-4o';
 const DEEPSEEK_MODEL = 'deepseek-reasoner';
 
 // Protocol & chain configuration
-const CHAIN_NAME = 'sonic';
-const CHAIN_VIEM = sonic;
 const PROTOCOL_NAME = 'Beefy';
 const GAS_LIMIT = 2_000_000n; // hardcoded for simplicity
 
 // Merge HeyAnon & AskBeefy functions
 const functions = { ...heyAnonFunctions, ...askBeefyFunctions };
-
-interface AskBeefyOptions {
-    debugLlm?: boolean;
-    debugTools?: boolean;
-    notify?: (message: string) => Promise<void>;
-}
 
 interface ConversationMessage {
     role: 'system' | 'user' | 'assistant' | 'tool';
@@ -38,12 +29,14 @@ interface ConversationMessage {
     name?: string;
 }
 
-function getSystemPrompt(_options: AskBeefyOptions | undefined, _chainName: string, account: string) {
+function getSystemPrompt(chainName: string, account: string) {
     return `You will interact with the ${PROTOCOL_NAME} protocol via your tools.
  You MUST ALWAYS call a tool to get information. 
  NEVER try to guess vault addresses or token addresses without calling the appropriate tool.
  You WILL NOT modify token addresses, names or symbols, not even to make them plural.
- All tools that require the 'account' arguments will use the following default value: ${account}".`;
+ All tools that require the 'chainName' and 'account' arguments will use the following default values:
+ chainName = ${chainName}
+ account = ${account}".`;
 }
 
 function getLlmClient() {
@@ -68,6 +61,14 @@ function getLlmModel() {
     }
 }
 
+interface AskBeefyOptions {
+    question: string;
+    provider: PublicClient;
+    debugLlm?: boolean;
+    debugTools?: boolean;
+    notify?: (message: string) => Promise<void>;
+}
+
 /**
  * The askBeefy agent.
  *
@@ -77,7 +78,12 @@ function getLlmModel() {
  * The agent has an additional step to analyze the data provided by the tools
  * and provide a final answer.
  */
-export async function askBeefy(question: string, options?: AskBeefyOptions): Promise<FunctionReturn> {
+export async function askBeefy({ question, provider, debugLlm, debugTools, notify }: AskBeefyOptions): Promise<FunctionReturn> {
+    const chainName = provider.chain?.name;
+    if (!chainName) {
+        throw new Error('Could not determine chain name from provider');
+    }
+
     const llmClient = getLlmClient();
 
     const privateKey = process.env.PRIVATE_KEY;
@@ -85,13 +91,9 @@ export async function askBeefy(question: string, options?: AskBeefyOptions): Pro
         throw new Error('PRIVATE_KEY environment variable is required');
     }
 
-    const notify = options?.notify || (async (message: string) => console.log(`[Notification] ${message}`));
+    notify = notify || (async (message: string) => console.log(`[Notification] ${message}`));
 
     const signer = privateKeyToAccount(`0x${privateKey}`);
-    const provider = createPublicClient({
-        chain: CHAIN_VIEM,
-        transport: http(),
-    });
 
     // Create minimal FunctionOptions object
     const functionOptions: FunctionOptions = {
@@ -114,6 +116,7 @@ export async function askBeefy(question: string, options?: AskBeefyOptions): Pro
                         data: tx.data,
                         value: tx.value || 0n,
                         gas: GAS_LIMIT,
+                        chain: provider.chain,
                     });
 
                     const receipt = await provider.waitForTransactionReceipt({ hash });
@@ -149,7 +152,7 @@ export async function askBeefy(question: string, options?: AskBeefyOptions): Pro
     const messages: ConversationMessage[] = [
         {
             role: 'system',
-            content: getSystemPrompt(options, CHAIN_NAME, signer.address),
+            content: getSystemPrompt(chainName, signer.address),
         },
         { role: 'user', content: question },
     ];
@@ -157,7 +160,7 @@ export async function askBeefy(question: string, options?: AskBeefyOptions): Pro
     const funcReturns: FunctionReturn[] = [];
     let isComplete = false;
 
-    if (options?.debugLlm) {
+    if (debugLlm) {
         console.log('System prompt:', util.inspect(messages[0], { depth: null, colors: true }));
     }
 
@@ -178,7 +181,7 @@ export async function askBeefy(question: string, options?: AskBeefyOptions): Pro
             tool_calls: assistantMessage.tool_calls,
         });
 
-        if (options?.debugLlm) {
+        if (debugLlm) {
             console.log('LLM says:', util.inspect(messages[messages.length - 1], { depth: null, colors: true }));
         }
 
@@ -201,10 +204,6 @@ export async function askBeefy(question: string, options?: AskBeefyOptions): Pro
                 throw new Error(`Function ${functionName} not found.`);
             }
 
-            // Replace chain & address for good measure
-            functionArgs.chainName = CHAIN_NAME;
-            functionArgs.account = signer.address;
-
             // Call the tool and add the result to the conversation
             try {
                 const funcReturn = await func(functionArgs, functionOptions);
@@ -215,7 +214,7 @@ export async function askBeefy(question: string, options?: AskBeefyOptions): Pro
 
                 if (!funcReturn.success) {
                     return funcReturn;
-                } else if (options?.debugTools) {
+                } else if (debugTools) {
                     console.log(chalk.gray(`[Debug] Function output: ${funcReturn.data}`));
                 }
 
@@ -227,7 +226,7 @@ export async function askBeefy(question: string, options?: AskBeefyOptions): Pro
                     content: funcReturn.data,
                 });
 
-                if (options?.debugLlm) {
+                if (debugLlm) {
                     console.log(`Tool '${functionName}' message:`, util.inspect(messages[messages.length - 1], { depth: null, colors: true }));
                 }
             } catch (error) {
@@ -251,12 +250,12 @@ export async function askBeefy(question: string, options?: AskBeefyOptions): Pro
     // If the user asked to show the tool calls, add them to the message;
     // otherwise, show only the result of the final tool call
     let combinedMessage = '';
-    if (options?.debugTools) {
+    if (debugTools) {
         combinedMessage += funcReturns
             .map((r, i) => {
                 const toolName = messages.find((m) => m.role === 'tool' && m.content === r.data)?.name || 'Unknown Tool';
                 let msg = chalk.underline.bold(`TOOL CALL ${i + 1}`) + `: ${toolName}`;
-                if (options?.debugTools) msg += `\n${r.data}`;
+                if (debugTools) msg += `\n${r.data}`;
                 return msg;
             })
             .join('\n');
@@ -265,7 +264,7 @@ export async function askBeefy(question: string, options?: AskBeefyOptions): Pro
     }
 
     // Optionally add the final comment of the assistant
-    if (assistantFinalComment && options?.debugLlm) {
+    if (assistantFinalComment && debugLlm) {
         combinedMessage += `\n${chalk.underline.bold('ASSISTANT FINAL COMMENT')}\n${assistantFinalComment}`;
     }
 

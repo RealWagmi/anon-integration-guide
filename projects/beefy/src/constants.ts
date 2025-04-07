@@ -2,27 +2,49 @@ import { EVM } from '@heyanon/sdk';
 
 const { ChainIds } = EVM.constants;
 
-export const supportedChains = [ChainIds.sonic, ChainIds.base, ChainIds.arbitrum, ChainIds.ethereum];
+/**
+ * Chains supported by the Beefy integration with HeyAnon.
+ *
+ * This is a cross-section of the chains supported by Beefy Finance
+ * and HeyAnon.
+ *
+ * Make sure to also have an entry in ANON_TO_BEEFY_CHAIN_NAMES for
+ * each chain in this list.
+ */
+export const supportedChains = [
+    ChainIds.arbitrum,
+    ChainIds.avalanche,
+    ChainIds.base,
+    ChainIds.bsc,
+    ChainIds.ethereum,
+    ChainIds.gnosis,
+    ChainIds.kava_evm,
+    ChainIds.metis,
+    ChainIds.optimism,
+    ChainIds.polygon,
+    ChainIds.scroll,
+    ChainIds.sonic,
+    ChainIds.zksync,
+];
 
 /**
  * Mapping from HeyAnon chain names to Beefy chain names;
  * all keys and values must be lowercase.
- * Make sure to have an entry for each chain in supportedChains
  */
 export const ANON_TO_BEEFY_CHAIN_NAMES: Record<string, string> = {
-    ethereum: 'ethereum',
-    optimism: 'optimism',
+    arbitrum: 'arbitrum',
+    avalanche: 'avax',
+    base: 'base',
     bsc: 'bsc',
+    ethereum: 'ethereum',
     gnosis: 'gnosis',
+    kava_evm: 'kava',
+    metis: 'metis',
+    optimism: 'optimism',
     polygon: 'polygon',
+    scroll: 'scroll',
     sonic: 'sonic',
     zksync: 'zksync',
-    metis: 'metis',
-    kava_evm: 'kava',
-    base: 'base',
-    avalanche: 'avax',
-    arbitrum: 'arbitrum',
-    scroll: 'scroll',
 };
 
 /**

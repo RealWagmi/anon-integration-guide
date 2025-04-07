@@ -24,7 +24,13 @@ export async function getTokenInfoFromSymbol(heyAnonChainName: string, symbol: s
     const beefyClient = new BeefyClient();
     const tokenInfo = await beefyClient.getTokens();
     const beefyChainName = getBeefyChainNameFromAnonChainName(heyAnonChainName);
-    const token = Object.values(tokenInfo[beefyChainName]).find((token) => token.symbol.toLowerCase() === symbol.toLowerCase());
+    let token = Object.values(tokenInfo[beefyChainName]).find((token) => token.symbol.toLowerCase() === symbol.toLowerCase());
+    if (!token) {
+        // Try again with the id... for some reason, it seems that Beefy
+        // does not always store the token symbol in the token.symbol
+        // property
+        token = Object.values(tokenInfo[beefyChainName]).find((token) => token.id.toLowerCase() === symbol.toLowerCase());
+    }
     if (!token) {
         throw new Error(`Could not find info on token ${symbol} on chain ${beefyChainName}`);
     }
