@@ -16,11 +16,12 @@ export interface SimplifiedVault {
     assets: string[];
     totalApy: number | null;
     tvl: number | null;
+    vaultContractAddress: `0x${string}`;
     depositedTokenSymbol: string;
-    depositedTokenAddress: string;
+    depositedTokenAddress?: `0x${string}`; // not set for chain tokens e.g. ETH on Ethereum
     depositedTokenDecimals: number;
     mooTokenSymbol: string;
-    mooTokenAddress: string;
+    mooTokenAddress: `0x${string}`;
     mooTokenDecimals: number;
     mooTokenUserBalance?: bigint;
     mooTokenUserUsdBalance?: number;
@@ -31,11 +32,14 @@ export interface SimplifiedVault {
  *
  * Only vaults from chains in supportedChains are included.
  */
-export async function getAllSimplifiedVaults(includeRetired: boolean = false): Promise<SimplifiedVault[]> {
+export async function getAllSimplifiedVaults(includeRetired: boolean = false, includePaused: boolean = false): Promise<SimplifiedVault[]> {
     const beefyClient = new BeefyClient();
     let vaults = await beefyClient.getVaults();
     if (!includeRetired) {
         vaults = vaults.filter((vault) => !vault.retiredAt);
+    }
+    if (!includePaused) {
+        vaults = vaults.filter((vault) => !vault.pausedAt);
     }
     const apyBreakdown = await beefyClient.getApyBreakdown();
     const tvl = await beefyClient.getTvl();
@@ -75,6 +79,7 @@ export function buildSimplifiedVaults(vaults: VaultInfo[], apyBreakdown: ApyBrea
                 assets: vault.assets,
                 totalApy: apyBreakdown?.[vault.id]?.totalApy ?? null,
                 tvl: tvl?.[chainId]?.[vault.id] ?? null,
+                vaultContractAddress: vault.earnContractAddress,
                 depositedTokenSymbol: vault.token,
                 depositedTokenAddress: vault.tokenAddress,
                 depositedTokenDecimals: vault.tokenDecimals,
@@ -273,7 +278,8 @@ export async function getSimplifiedVaultByIdAndChain(id: string, chain: string):
  */
 export async function getSimplifiedVaultsByNameAndChain(name: string, chain: string): Promise<SimplifiedVault[]> {
     const simplifiedVaults = await getAllSimplifiedVaults();
-    return simplifiedVaults.filter((vault) => vault.name.toLowerCase().includes(name.toLowerCase()) && vault.chain === chain);
+    const filteredVaults = simplifiedVaults.filter((vault) => vault.name.toLowerCase().includes(name.toLowerCase()) && vault.chain === chain);
+    return filteredVaults;
 }
 
 /**

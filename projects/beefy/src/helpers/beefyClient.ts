@@ -13,20 +13,21 @@ export interface VaultInfo {
     name: string;
     type: string;
     token: string;
-    tokenAddress: string;
+    tokenAddress?: `0x${string}`; // not set for chain tokens e.g. ETH on Ethereum
     tokenDecimals: number;
     tokenProviderId: string;
     earnedToken: string;
-    earnedTokenAddress: string;
-    earnContractAddress: string;
+    earnedTokenAddress: `0x${string}`;
+    earnContractAddress: `0x${string}`;
     oracle: string;
     oracleId: string;
     status: string;
     createdAt: number;
-    retireReason: string;
-    retiredAt: number;
     platformId: string;
     assets: string[];
+    retireReason?: string;
+    retiredAt?: number;
+    pausedAt?: number;
     risks?: string[];
     strategyTypeId?: string;
     buyTokenUrl?: string;
@@ -90,7 +91,7 @@ export interface TokenInfo {
     chainId: number;
     oracle: 'tokens' | 'lps';
     oracleId: string;
-    address: string;
+    address: `0x${string}`;
     decimals: number;
 }
 
@@ -135,19 +136,24 @@ export interface ConfigAddresses {
 
 export interface BoostInfo {
     id: string;
-    poolId: string;
     name: string;
+    assets: string[];
     chain: string;
+    poolId: string;
+    version: number;
     status: string;
+    earnContractAddress: `0x${string}`;
+    tokenAddress: `0x${string}`;
+    earnedToken: string;
+    earnedTokenDecimals: number;
+    earnedTokenAddress: `0x${string}`;
+    earnedOracle: string;
+    earnedOracleId: string;
+    partners: string[];
+    partnership: boolean;
+    isMooStaked: boolean;
     periodFinish: number;
-    rewardRate: string;
-    rewardToken: string;
-    rewardTokenAddress: string;
-    rewardTokenDecimals: number;
-    rewardTokenOracle: string;
-    rewardTokenOracleId: string;
-    earnContractAddress: string;
-    totalSupply?: number;
+    periodFinishes: number[];
 }
 
 export interface TimelineEntry {
@@ -179,8 +185,8 @@ export interface ProductData {
             chain: string;
             token_name: string;
             token_decimals: number;
-            contract_address: string;
-            want_address: string;
+            contract_address: `0x${string}`;
+            want_address: `0x${string}`;
             want_decimals: number;
             eol: boolean;
             eol_date: string | null;
@@ -194,16 +200,16 @@ export interface ProductData {
             chain: string;
             vault_id: string;
             name: string;
-            contract_address: string;
+            contract_address: `0x${string}`;
             eol: boolean;
             eol_date: string | null;
-            staked_token_address: string;
+            staked_token_address: `0x${string}`;
             staked_token_decimals: number;
-            vault_want_address: string;
+            vault_want_address: `0x${string}`;
             vault_want_decimals: number;
             reward_token_decimals: number;
             reward_token_symbol: string;
-            reward_token_address: string;
+            reward_token_address: `0x${string}`;
             reward_token_price_feed_key: string;
         };
     };

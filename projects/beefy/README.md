@@ -5,15 +5,15 @@ Beefy allows you to earn the highest APYs across 20+ chains with safety and effi
 ## Common Tasks
 
 1. **Portfolio**
-    - Show all my positions on @beefy on Sonic
-    - My TVL on @beefy on Sonic
-    - Value of my "Seamless USDC" position on @beefy on Sonic
-    - Show APY of all my positions on @beefy on Sonic
+    - Show all my positions on @beefy
+    - My TVL on @beefy
+    - Value of my "Seamless USDC" position on @beefy
+    - Show APY of all my positions on @beefy
 2. **Yields & Vaults**
-    - Best yield for USDC.e on @beefy on Sonic?
-    - Best yield for USDC.e on @beefy on Sonic, without the need to LP?
-    - Show pools with wETH on @beefy on Sonic
-    - Give me info on @beefy vault Boosted Stable Rings on Sonic
+    - Best yield for USDC.e on @beefy?
+    - Best yield for USDC.e on @beefy, without the need to LP?
+    - Show pools with wETH on @beefy
+    - Give me info on @beefy vault 'Boosted Stable Rings'
 
 ## Available Functions
 
@@ -52,8 +52,11 @@ Options:
 
 ## To do
 
+- Prevent conflict between `getVaultInfoFromVaultName` and `getVaultInfoFromVaultId` (e.g. "Deposit 0.01 USDC.e in vault 'aavev3-sonic-usdc.e'" search for name instead than id)
+- Find best ux to allow user to deposit and withdraw LPs... names are hard, maybe with a resolver?
+- Make sure that deposit and withdrawals tools use `getVaultInfoFromVaultName` to get the vault info
+- If the user does not have LP tokens, show them the `addLiquidityUrl` link
 - Handle timeline endpoint delay
-- Filter out retired vaults
 
 ## Future improvements
 

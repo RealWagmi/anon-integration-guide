@@ -3,6 +3,39 @@ import { MAX_VAULTS_IN_RESULTS, supportedChains } from './constants';
 
 export const tools: AiTool[] = [
     {
+        name: 'deposit',
+        description: 'Deposit tokens into a vault',
+        required: ['chainName', 'account', 'vaultId', 'amount', 'tokenAddress'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(EVM.utils.getChainName),
+                description: 'Chain name',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Address of the user',
+            },
+            {
+                name: 'vaultId',
+                type: 'string',
+                description: 'ID of the vault to deposit into, for example "beetsv3-sonic-beefyusdce-scusd"',
+            },
+            {
+                name: 'amount',
+                type: 'string',
+                description: 'Amount of tokens to deposit, in decimal form (e.g. "1.5 ETH" instead of 1.5e18)',
+            },
+            {
+                name: 'tokenAddress',
+                type: 'string',
+                description: 'Address of the token to deposit, starting with "0x".  Must correspond to the token in the vault.',
+            },
+        ],
+    },
+    {
         name: 'getMyPositionsPortfolio',
         description: `Show the top ${MAX_VAULTS_IN_RESULTS} vaults in the user portfolio.  For each vault, show the tokens in the vault, the type of vault, the APY yield, and the dollar value of the user position in the vault.`,
         required: ['chainName', 'account'],
@@ -69,7 +102,7 @@ export const tools: AiTool[] = [
     {
         name: 'getVaultInfoFromVaultName',
         description:
-            'Get information about a specific vault by its name, including the APY yield, the TVL and any positions in the vault belonging to the user.  In case of multiple matches, an error is returned contaninig the TVL-ordered list of vaults.',
+            'Find a vault by its name and return detailed information about it, including the APY yield, the TVL and any positions in the vault belonging to the user.  In case of multiple matches, an error is returned contaninig the TVL-ordered list of vaults.',
         required: ['chainName', 'account', 'vaultName'],
         props: [
             {

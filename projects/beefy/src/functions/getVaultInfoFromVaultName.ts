@@ -27,6 +27,11 @@ export async function getVaultInfoFromVaultName({ chainName, account, vaultName 
     // Get vaults matching the name
     const beefyChainName = getBeefyChainNameFromAnonChainName(chainName);
     let vaults = await getSimplifiedVaultsByNameAndChain(vaultName, beefyChainName);
+    // If one of the vaults is an exact match, return that one
+    const exactMatch = vaults.find((vault) => vault.name.toLowerCase() === vaultName.toLowerCase());
+    if (exactMatch) {
+        vaults = [exactMatch];
+    }
     let numVaults = vaults.length;
 
     // Reduce number of vaults to MAX_VAULTS_IN_RESULTS and compute balances
