@@ -171,17 +171,28 @@ export async function getUserCurrentVaults(address: string, publicClient: Public
         return [];
     }
 
-    // Set up multicall contracts with balanceOf for each mooToken
-    const contractCalls = historicalVaults.map((vault) => ({
+    // Multicall to get all mooToken balances at once
+    const balanceContractCalls = historicalVaults.map((vault) => ({
         address: vault.mooTokenAddress as `0x${string}`,
         abi: erc20Abi,
         functionName: 'balanceOf',
         args: [address as `0x${string}`],
     }));
 
-    // Execute the multicall to get all balances at once
     const balanceResults = await publicClient.multicall({
-        contracts: contractCalls,
+        contracts: balanceContractCalls,
+        allowFailure: true,
+    });
+
+    // Multicall to get all mooToken total supplies at once
+    const totalSupplyContractCalls = historicalVaults.map((vault) => ({
+        address: vault.mooTokenAddress as `0x${string}`,
+        abi: erc20Abi,
+        functionName: 'totalSupply',
+    }));
+
+    const totalSupplyResults = await publicClient.multicall({
+        contracts: totalSupplyContractCalls,
         allowFailure: true,
     });
 
@@ -193,18 +204,17 @@ export async function getUserCurrentVaults(address: string, publicClient: Public
         if (balanceResults[i].status !== 'success') {
             throw new Error(`Could not fetch balance of vault ${historicalVaults[i].id}, please retry`);
         }
+        if (totalSupplyResults[i].status !== 'success') {
+            throw new Error(`Could not fetch total supply of vault ${historicalVaults[i].id}, please retry`);
+        }
         const balance = balanceResults[i].result;
+        const totalSupply = totalSupplyResults[i].result;
         if (balance === 0n) {
             continue;
         }
         // Compute the user's USD balance
         if (vault.tvl !== null) {
-            const mooTokenTotalSupply = await publicClient.readContract({
-                address: vault.mooTokenAddress as `0x${string}`,
-                abi: erc20Abi,
-                functionName: 'totalSupply',
-            });
-            const userFraction = getTokenFraction(balance as bigint, mooTokenTotalSupply);
+            const userFraction = getTokenFraction(balance as bigint, totalSupply as bigint);
             vault.mooTokenUserUsdBalance = userFraction * vault.tvl;
         }
         currentVaults.push(vault);
