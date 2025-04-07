@@ -33,7 +33,7 @@ function getSystemPrompt(chainName: string, account: string) {
     return `You will interact with the ${PROTOCOL_NAME} protocol via your tools.
  You MUST ALWAYS call a tool to get information. 
  NEVER try to guess vault addresses or token addresses without calling the appropriate tool.
- You WILL NOT modify token addresses, names or symbols, not even to make them plural.
+ You WILL NOT modify vault ids, token addresses, names or symbols, not even to make them plural.
  All tools that require the 'chainName' and 'account' arguments will use the following default values:
  chainName = ${chainName}
  account = ${account}".`;

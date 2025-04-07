@@ -164,7 +164,7 @@ export async function getUserCurrentVaults(address: string, publicClient: Public
         return [];
     }
 
-    return getUpdatedVaultsWithUserBalance(historicalVaults, address, publicClient);
+    return getUpdatedVaultsWithUserBalance(historicalVaults, address, publicClient, false);
 }
 
 /**
@@ -180,7 +180,12 @@ export async function getUserCurrentVaults(address: string, publicClient: Public
  * Please note that the chain here is defined by whatever the RPC
  * endpoint the PublicClient is connected to.
  */
-export async function getUpdatedVaultsWithUserBalance(vaults: SimplifiedVault[], address: string, publicClient: PublicClient): Promise<SimplifiedVault[]> {
+export async function getUpdatedVaultsWithUserBalance(
+    vaults: SimplifiedVault[],
+    address: string,
+    publicClient: PublicClient,
+    includeVaultsWithNoBalance: boolean = true,
+): Promise<SimplifiedVault[]> {
     // Multicall to get all mooToken balances at once
     const balanceContractCalls = vaults.map((vault) => ({
         address: vault.mooTokenAddress as `0x${string}`,
@@ -221,6 +226,9 @@ export async function getUpdatedVaultsWithUserBalance(vaults: SimplifiedVault[],
         const balance = balanceResults[i].result;
         const totalSupply = totalSupplyResults[i].result;
         if (balance === 0n) {
+            if (includeVaultsWithNoBalance) {
+                updatedVaults.push(vault);
+            }
             continue;
         }
         // Compute the user's USD balance
@@ -233,6 +241,8 @@ export async function getUpdatedVaultsWithUserBalance(vaults: SimplifiedVault[],
 
     return updatedVaults;
 }
+
+// export async function getUserPositionsInVault(address: string, vaultId: string, chainName: string): Promise<SimplifiedVault[]> {
 
 /**
  * Return a simplified vault given a vault name and chain name,
@@ -249,7 +259,7 @@ export async function getSimplifiedVaultByIdAndChain(id: string, chain: string):
         return null;
     }
     if (matches.length > 1) {
-        throw new Error(`Multiple vaults found for name ${name} and chain ${chain}.  Ids: ${matches.map((vault) => vault.id).join(', ')}`);
+        throw new Error(`Multiple vaults found for id ${id} and chain ${chain}.  Ids: ${matches.map((vault) => vault.id).join(', ')}`);
     }
     return matches[0];
 }

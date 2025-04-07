@@ -5,10 +5,14 @@ Beefy allows you to earn the highest APYs across 20+ chains with safety and effi
 ## Common Tasks
 
 1. **Portfolio**
-    - My TVL on @beefy
-    - Show all my positions on @beefy
-    - Value of my "Seamless USDC" position on @beefy on Base chain
-    - Show APR of all my positions on @beefy
+    - Show all my positions on @beefy on Sonic
+    - My TVL on @beefy on Sonic
+    - Value of my "Seamless USDC" position on @beefy on Sonic
+    - Show APY of all my positions on @beefy on Sonic
+2. **Yields & Vaults**
+    - Best yield for USDC.e on @beefy on Sonic?
+    - Best yield for USDC.e on @beefy on Sonic, without the need to LP?
+    - Give me info on @beefy vault beetsv3-sonic-beefyusdce-scusd on Sonic
 
 ## Available Functions
 
