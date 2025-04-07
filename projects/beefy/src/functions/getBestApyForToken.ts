@@ -7,6 +7,7 @@ import { getTokenInfoFromAddress } from '../helpers/tokens';
 interface Props {
     chainName: string;
     tokenAddress: Address;
+    noLp: boolean;
 }
 
 /**
@@ -16,10 +17,11 @@ interface Props {
  * @param {Object} props - The input parameters
  * @param {string} props.chainName - Name of the blockchain network
  * @param {Address} props.tokenAddress - Address of token to search for
- * @param {FunctionOptions} options - HeyAnon SDK options, including provider and notification handlers
+ * @param {boolean} props.noLp - If true, only include vaults that contain the token directly, thus excluding vaults that only have the token as part of a liquidity pool
+ * @param {FunctionOptions} _options - HeyAnon SDK options, including provider and notification handlers
  * @returns {Promise<FunctionReturn>} List of vaults sorted by APY with vault details
  */
-export async function getBestApyForUnderlyingToken({ chainName, tokenAddress }: Props, _options: FunctionOptions): Promise<FunctionReturn> {
+export async function getBestApyForToken({ chainName, tokenAddress, noLp }: Props, _options: FunctionOptions): Promise<FunctionReturn> {
     const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Beefy protocol is not supported on ${chainName}`, true);
@@ -31,7 +33,7 @@ export async function getBestApyForUnderlyingToken({ chainName, tokenAddress }: 
     // Get all vaults on chain
     const vaults = await getSimplifiedVaultsForChain(chainName);
     // Filter vaults with the given token, and with apy information
-    const matchingVaults = vaults.filter((vault) => vault.totalApy !== null && vaultContainsToken(vault, token.symbol));
+    const matchingVaults = vaults.filter((vault) => vault.totalApy !== null && vaultContainsToken(vault, token.symbol, noLp ?? false));
     if (!matchingVaults || matchingVaults.length === 0) {
         return toResult(`No vaults found containing token ${token.symbol} on chain ${chainName}`);
     }

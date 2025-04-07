@@ -16,10 +16,10 @@ export interface SimplifiedVault {
     assets: string[];
     totalApy: number | null;
     tvl: number | null;
-    depositedTokenName: string;
+    depositedTokenSymbol: string;
     depositedTokenAddress: string;
     depositedTokenDecimals: number;
-    mooTokenName: string;
+    mooTokenSymbol: string;
     mooTokenAddress: string;
     mooTokenDecimals: number;
     mooTokenUserBalance?: bigint;
@@ -72,10 +72,10 @@ export function buildSimplifiedVaults(vaults: VaultInfo[], apyBreakdown: ApyBrea
                 assets: vault.assets,
                 totalApy: apyBreakdown?.[vault.id]?.totalApy ?? null,
                 tvl: tvl?.[chainId]?.[vault.id] ?? null,
-                depositedTokenName: vault.token,
+                depositedTokenSymbol: vault.token,
                 depositedTokenAddress: vault.tokenAddress,
                 depositedTokenDecimals: vault.tokenDecimals,
-                mooTokenName: vault.earnedToken,
+                mooTokenSymbol: vault.earnedToken,
                 mooTokenAddress: vault.earnedTokenAddress,
                 mooTokenDecimals: MOO_TOKEN_DECIMALS,
             };
@@ -236,7 +236,12 @@ export async function getSimplifiedVaultByIdAndChain(id: string, chain: string):
 /**
  * Check if a vault contains a specific token, either directly or
  * as part of a liquidity pool.
+ *
+ * If noLp is true, exclude vaults that only have the token as part of a liquidity pool.
  */
-export function vaultContainsToken(vault: SimplifiedVault, symbol: string): boolean {
+export function vaultContainsToken(vault: SimplifiedVault, symbol: string, noLp: boolean = false): boolean {
+    if (noLp) {
+        return vault.depositedTokenSymbol.toLowerCase() === symbol.toLowerCase();
+    }
     return vault.assets.some((asset) => asset.toLowerCase() === symbol.toLowerCase());
 }

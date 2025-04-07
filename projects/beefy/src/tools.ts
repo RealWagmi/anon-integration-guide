@@ -21,9 +21,9 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'getBestApyForUnderlyingToken',
-        description: `Show the top ${MAX_VAULTS_IN_RESULTS} vaults with the best APY yield for the given token, sorted by APY.  The returned vaults can contain the token either directly or as part of a liquidity pool.`,
-        required: ['chainName', 'tokenAddress'],
+        name: 'getBestApyForToken',
+        description: `Show the top ${MAX_VAULTS_IN_RESULTS} vaults with the best APY yield for the given token, sorted by APY.  By default, vaults where the token is part of a liquidity pool will be included, too.`,
+        required: ['chainName', 'tokenAddress', 'noLp'],
         props: [
             {
                 name: 'chainName',
@@ -35,6 +35,11 @@ export const tools: AiTool[] = [
                 name: 'tokenAddress',
                 type: 'string',
                 description: 'Address of the token to search for, starting with "0x"',
+            },
+            {
+                name: 'noLp',
+                type: ['boolean', 'null'],
+                description: 'If true, only include vaults that contain the token directly, thus excluding vaults that only have the token as part of a liquidity pool',
             },
         ],
     },

@@ -1,2 +1,2 @@
 export { getMyPositionsPortfolio } from './getMyPositionsPortfolio';
-export { getBestApyForUnderlyingToken } from './getBestApyForUnderlyingToken';
+export { getBestApyForToken } from './getBestApyForToken';
