@@ -1,0 +1,19 @@
+{
+    "name": "@projects/enso",
+    "version": "1.0.0",
+    "scripts": {
+        "yarn": "yarn install"
+    },
+    "dependencies": {
+        "@ensofinance/sdk": "^1.0.16",
+        "@heyanon/sdk": "^1.0.4",
+        "axios": "^1.7.9",
+        "viem": "^2.22.10"
+    },
+    "license": "MIT",
+    "engines": {
+        "npm": "please-use-yarn",
+        "node": ">=18.x",
+        "yarn": ">=1.22"
+    }
+}
