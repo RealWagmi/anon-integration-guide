@@ -65,6 +65,64 @@ export const tools: AiTool[] = [
         ],
     },
     {
+        name: 'getTokenOut',
+        description: 'Determines the token received (e.g., LP token, deposit receipt token) from a project for utilizing a specific underlying token.',
+        required: ['chainName', 'project', 'underlyingToken'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name',
+            },
+            {
+                name: 'project',
+                type: 'string',
+                description: `Name of the target DeFi project or protocol whose token interaction is being examined (e.g., 'lido', 'aave')`,
+            },
+            {
+                name: 'underlyingToken',
+                type: 'string',
+                description: 'Address of the underlying asset involved in the interaction with the project',
+            },
+        ],
+    },
+
+    {
+        name: 'quote',
+        description: 'Calculates the estimated output amount for a token route, finding the most optimal route across all available paths.',
+        required: ['chainName', 'account', 'tokenIn', 'tokenOut', 'amountIn'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(getChainName),
+                description: 'Chain name',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'The wallet address of the user requesting the quote.',
+            },
+            {
+                name: 'tokenIn',
+                type: 'string',
+                description: 'The contract address of the token user wants to route away from.',
+            },
+            {
+                name: 'tokenOut',
+                type: 'string',
+                description: 'The contract address of the token user wants to route to.',
+            },
+            {
+                name: 'amountIn',
+                type: 'string',
+                description: 'The raw amount of tokenIn to route away from in wei',
+            },
+        ],
+    },
+
+    {
         name: 'route',
         description: 'Execute best route from a token to a token',
         required: ['chainName', 'account', 'tokenIn', 'tokenOut', 'amountIn'],

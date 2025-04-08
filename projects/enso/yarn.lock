@@ -7,12 +7,13 @@
   resolved "https://registry.yarnpkg.com/@adraffy/ens-normalize/-/ens-normalize-1.11.0.tgz#42cc67c5baa407ac25059fcd7d405cc5ecdb0c33"
   integrity sha512-/3DDPKHqqIqxUULp8yP4zODUY1i+2xvVWsv8A79xGWdCAG+8sb0hRh0Rk2QyOJUnnbyPUAZYcpBuRe3nS2OIUg==
 
-"@ensofinance/sdk@^1.0.7":
-  version "1.0.7"
-  resolved "https://registry.yarnpkg.com/@ensofinance/sdk/-/sdk-1.0.7.tgz#6384d915b767ed150ac395ca3191932249de736c"
-  integrity sha512-BNphPW8Ur710KmXSzyqq5JRpy3BPJAjQxsS9PkUAxx0/700hgCV81ImkZ7J5119bXKsi1qah6N/Os4h33FBXYg==
+"@ensofinance/sdk@^1.0.16":
+  version "1.0.16"
+  resolved "https://registry.yarnpkg.com/@ensofinance/sdk/-/sdk-1.0.16.tgz#02131af0a531e0f5a4adb3666cd7abae392c7101"
+  integrity sha512-7EguiXbybaEi2c3QrCHOAF5/7HU6imGZZYt7GxvOOUy1NyYFIdKhAVXppnQMq8BVg6hadnHQWBkb8JfCM9pg3A==
   dependencies:
     axios "^1.7.9"
+    prettier "^3.4.2"
 
 "@esbuild/aix-ppc64@0.21.5":
   version "0.21.5"
@@ -871,6 +872,11 @@ postcss@^8.4.43:
     nanoid "^3.3.8"
     picocolors "^1.1.1"
     source-map-js "^1.2.1"
+
+prettier@^3.4.2:
+  version "3.5.3"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-3.5.3.tgz#4fc2ce0d657e7a02e602549f053b239cb7dfe1b5"
+  integrity sha512-QQtaxnoDJeAkDvDKWCLiwIXkTgRhwYDEQCghU9Z6q03iyek/rxRh/2lC3HB7P8sWT2xC/y5JDctPLBIGzHKbhw==
 
 pretty-format@^29.7.0:
   version "29.7.0"
