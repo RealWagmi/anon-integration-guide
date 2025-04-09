@@ -8,8 +8,14 @@ import { getTokenInfoFromAddress } from '../helpers/tokens';
 import { TokenInfo } from '../helpers/beefyClient';
 
 /**
- * Deposit the specified amount of tokens into a vault.  Both the token to
- * deposit and the vault contract address are determined by the vaultId.
+ * Build the transactions to Deposit the specified amount of tokens into a
+ * vault.  Both the token to deposit and the vault contract address are
+ * determined by the vaultId.
+ *
+ * A check is done to ensure that the token address corresponds to the
+ * vault's deposited token.
+ *
+ * If no token address is provided, the vault's deposited token will be used.
  *
  * Docs: https://docs.beefy.finance/developer-documentation/vault-contract
  */
@@ -18,7 +24,7 @@ export async function buildtExactTokensTransactions(
     chainName: string,
     vaultId: string,
     amount: string,
-    tokenAddress: `0x${string}`,
+    tokenAddress: `0x${string}` | null,
     { evm: { getProvider }, notify }: FunctionOptions,
 ): Promise<[EVM.types.TransactionParams[], TokenInfo]> {
     // Get provider
@@ -44,20 +50,29 @@ export async function buildtExactTokensTransactions(
     })) as `0x${string}`;
     if (!depositedTokenAddress) throw new Error('Could not get token address from vault contract');
 
-    // Get info on the token the user wants to deposit (tokenInfo) and on
-    // the token the vault wants (depositedTokenInfo)
-    let tokenInfo: TokenInfo;
+    // Get info on the token the vault wants (depositedTokenInfo)
     let depositedTokenInfo: TokenInfo;
     try {
-        tokenInfo = await getTokenInfoFromAddress(chainName, tokenAddress);
         depositedTokenInfo = await getTokenInfoFromAddress(chainName, depositedTokenAddress);
     } catch (error) {
-        throw new Error('Could not get info on token to deposit');
+        throw new Error("Could not get info on vault's deposit token");
     }
 
-    // Check that the user is trying to deposit the right token
-    if (tokenAddress.toLowerCase() !== depositedTokenAddress.toLowerCase()) {
-        throw new Error('You are trying to deposit the wrong token.  The vault wants ' + depositedTokenInfo.id + ' but you are trying to deposit ' + tokenInfo.symbol);
+    // If the user provided a token address, verify that it matches the
+    // vault's deposited token
+    if (tokenAddress) {
+        let userProvidedTokenInfo: TokenInfo;
+        try {
+            userProvidedTokenInfo = await getTokenInfoFromAddress(chainName, tokenAddress);
+        } catch (error) {
+            throw new Error('Could not get info on user provided deposit token');
+        }
+        // Check that the user is trying to deposit the right token
+        if (tokenAddress.toLowerCase() !== depositedTokenAddress.toLowerCase()) {
+            throw new Error(
+                'You are trying to deposit the wrong token.  The vault wants ' + depositedTokenInfo.id + ' but you are trying to deposit ' + userProvidedTokenInfo.symbol,
+            );
+        }
     }
 
     await notify(`Checking your balance of ${depositedTokenInfo.id}...`);

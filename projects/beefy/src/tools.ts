@@ -4,7 +4,7 @@ import { MAX_VAULTS_IN_RESULTS, supportedChains } from './constants';
 export const tools: AiTool[] = [
     {
         name: 'depositExactTokens',
-        description: 'Deposit an exact amount of tokens into a vault',
+        description: 'Deposit an exact amount of tokens into a vault.',
         required: ['chainName', 'account', 'vaultId', 'amount', 'tokenAddress'],
         props: [
             {
@@ -37,7 +37,7 @@ export const tools: AiTool[] = [
     },
     {
         name: 'depositDollarAmount',
-        description: 'Deposit into the given vault the amount of tokens that is equivalent to the dollar amount specified.  The token to deposit is determined by the vault.',
+        description: 'Deposit the given amount of US dollars ($) in the given vault.',
         required: ['chainName', 'account', 'vaultId', 'dollarAmount'],
         props: [
             {
@@ -58,8 +58,8 @@ export const tools: AiTool[] = [
             },
             {
                 name: 'dollarAmount',
-                type: 'string',
-                description: 'Amount to deposit expressed in dollars, e.g. "1.5" for 1.5 $',
+                type: 'number',
+                description: 'Amount to deposit expressed in dollars, e.g. 100.5 for $100.50 or 1000 for $1000',
             },
         ],
     },

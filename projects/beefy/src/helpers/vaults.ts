@@ -16,7 +16,7 @@ export interface SimplifiedVault {
     assets: string[];
     totalApy: number | null;
     tvl: number | null;
-    oracle: "lps" | "tokens";
+    oracle: 'lps' | 'tokens';
     oracleId: string;
     vaultContractAddress: `0x${string}`;
     depositedTokenSymbol: string;
@@ -110,7 +110,7 @@ export function formatVault(vault: SimplifiedVault, titlePrefix: string = ''): s
     parts.push(`${titlePrefix}Vault ${vault.name}:`);
     const offset = '   ';
     if (vault.mooTokenUserUsdBalance !== undefined) {
-        parts.push(`${offset}- Your balance: ${to$$$(vault.mooTokenUserUsdBalance)}`);
+        parts.push(`${offset}- Your balance: ${to$$$(vault.mooTokenUserUsdBalance, 2, 6)}`);
     }
     if (vault.mooTokenUserBalance !== undefined) {
         parts.push(`${offset}- Your balance in the vault token: ${toHumanReadableAmount(vault.mooTokenUserBalance, vault.mooTokenDecimals)} mooTokens`);
@@ -129,7 +129,7 @@ export function formatVault(vault: SimplifiedVault, titlePrefix: string = ''): s
         parts.push(`${offset}- APY: N/A`);
     }
     if (vault.tvl !== null) {
-        parts.push(`${offset}- TVL: ${to$$$(vault.tvl)}`);
+        parts.push(`${offset}- TVL: ${to$$$(vault.tvl, 0, 0)}`);
     } else {
         parts.push(`${offset}- TVL: N/A`);
     }
@@ -320,11 +320,26 @@ export function vaultContainsToken(vault: SimplifiedVault, symbol: string, noLp:
 export function getDepositedTokenUrl(vault: VaultInfo): string | null {
     if (vault.oracle === 'tokens') {
         return vault.buyTokenUrl ?? null;
-    }
-    else if (vault.oracle === 'lps') {
+    } else if (vault.oracle === 'lps') {
         return vault.addLiquidityUrl ?? null;
+    } else {
+        throw new Error(`Unknown oracle type ${vault.oracle} for vault ${vault.id}`);
     }
-    else {
+}
+
+/**
+ * Given a simplified vault, return the price of the vault deposited token
+ * in USD, using the Beefy API.
+ */
+export async function getVaultDepositedTokenPrice(vault: SimplifiedVault): Promise<number> {
+    const beefyClient = new BeefyClient();
+    if (vault.oracle === 'tokens') {
+        const prices = await beefyClient.getPrices();
+        return prices[vault.oracleId];
+    } else if (vault.oracle === 'lps') {
+        const lps = await beefyClient.getLps();
+        return lps[vault.oracleId];
+    } else {
         throw new Error(`Unknown oracle type ${vault.oracle} for vault ${vault.id}`);
     }
 }

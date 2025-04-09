@@ -323,6 +323,7 @@ export class BeefyClient {
      * Get token prices
      * All token prices under the same endpoint
      */
+    @staticMemoize()
     async getPrices(): Promise<PriceData> {
         try {
             const response = await this.apiClient.get('/prices');
@@ -336,6 +337,7 @@ export class BeefyClient {
      * Get liquidity pool prices
      * Provides the current live prices of underlying liquidity pools used by each Beefy vaults
      */
+    @staticMemoize()
     async getLps(): Promise<LpData> {
         try {
             const response = await this.apiClient.get('/lps');
