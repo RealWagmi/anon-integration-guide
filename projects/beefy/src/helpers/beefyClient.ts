@@ -19,7 +19,7 @@ export interface VaultInfo {
     earnedToken: string;
     earnedTokenAddress: `0x${string}`;
     earnContractAddress: `0x${string}`;
-    oracle: string;
+    oracle: 'tokens' | 'lps';
     oracleId: string;
     status: string;
     createdAt: number;

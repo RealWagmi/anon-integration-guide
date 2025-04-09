@@ -16,12 +16,15 @@ export interface SimplifiedVault {
     assets: string[];
     totalApy: number | null;
     tvl: number | null;
+    oracle: "lps" | "tokens";
+    oracleId: string;
     vaultContractAddress: `0x${string}`;
     depositedTokenSymbol: string;
     depositedTokenAddress?: `0x${string}`; // not set for chain tokens e.g. ETH on Ethereum
     depositedTokenDecimals: number;
     depositedTokenPlatform: string;
     depositedTokenProvider?: string;
+    depositedTokenUrl: string | null;
     mooTokenSymbol: string;
     mooTokenAddress: `0x${string}`;
     mooTokenDecimals: number;
@@ -81,12 +84,15 @@ export function buildSimplifiedVaults(vaults: VaultInfo[], apyBreakdown: ApyBrea
                 assets: vault.assets,
                 totalApy: apyBreakdown?.[vault.id]?.totalApy ?? null,
                 tvl: tvl?.[chainId]?.[vault.id] ?? null,
+                oracle: vault.oracle,
+                oracleId: vault.oracleId,
                 vaultContractAddress: vault.earnContractAddress,
                 depositedTokenSymbol: vault.token,
                 depositedTokenAddress: vault.tokenAddress,
                 depositedTokenDecimals: vault.tokenDecimals,
                 depositedTokenPlatform: vault.platformId,
                 depositedTokenProvider: vault.tokenProviderId,
+                depositedTokenUrl: getDepositedTokenUrl(vault),
                 mooTokenSymbol: vault.earnedToken,
                 mooTokenAddress: vault.earnedTokenAddress,
                 mooTokenDecimals: MOO_TOKEN_DECIMALS,
@@ -304,4 +310,21 @@ export function vaultContainsToken(vault: SimplifiedVault, symbol: string, noLp:
         return vault.depositedTokenSymbol.toLowerCase() === symbol.toLowerCase();
     }
     return vault.assets.some((asset) => asset.toLowerCase() === symbol.toLowerCase());
+}
+
+/**
+ * Return the URL the user has to visit to acquire the deposited token
+ * for a given vault.  This is either an liquidiry add page or a swap
+ * token page.
+ */
+export function getDepositedTokenUrl(vault: VaultInfo): string | null {
+    if (vault.oracle === 'tokens') {
+        return vault.buyTokenUrl ?? null;
+    }
+    else if (vault.oracle === 'lps') {
+        return vault.addLiquidityUrl ?? null;
+    }
+    else {
+        throw new Error(`Unknown oracle type ${vault.oracle} for vault ${vault.id}`);
+    }
 }
