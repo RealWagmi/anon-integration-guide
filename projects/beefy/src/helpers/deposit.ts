@@ -8,9 +8,15 @@ import { getTokenInfoFromAddress } from '../helpers/tokens';
 import { TokenInfo } from '../helpers/beefyClient';
 
 /**
- * Build the transactions to Deposit the specified amount of tokens into a
- * vault.  Both the token to deposit and the vault contract address are
- * determined by the vaultId.
+ * Build the transactions to deposit the specified amount of tokens into a
+ * vault.
+ *
+ * Both the token to deposit and the vault contract address are determined by
+ * the vaultId.
+ *
+ * If the token allowance is enough, only the deposit transaction is returned.
+ * Otherwise, two transactions are returned: one to approve the vault and one
+ * to deposit the tokens.
  *
  * A check is done to ensure that the token address corresponds to the
  * vault's deposited token.
@@ -19,7 +25,7 @@ import { TokenInfo } from '../helpers/beefyClient';
  *
  * Docs: https://docs.beefy.finance/developer-documentation/vault-contract
  */
-export async function buildtExactTokensTransactions(
+export async function buildDepositExactTokensTransactions(
     account: Address,
     chainName: string,
     vaultId: string,
@@ -105,7 +111,7 @@ export async function buildtExactTokensTransactions(
 
     // Prepare deposit transaction
     const tx: EVM.types.TransactionParams = {
-        target: vault.vaultContractAddress as `0x${string}`,
+        target: vault.vaultContractAddress,
         data: encodeFunctionData({
             abi: beefyVaultAbi,
             functionName: 'deposit',

@@ -1,7 +1,7 @@
 import { Address } from 'viem';
 import { FunctionReturn, FunctionOptions, toResult, EVM, EvmChain } from '@heyanon/sdk';
 import { supportedChains } from '../constants';
-import { buildtExactTokensTransactions } from '../helpers/deposit';
+import { buildDepositExactTokensTransactions } from '../helpers/deposit';
 import { TokenInfo } from '../helpers/beefyClient';
 
 interface Props {
@@ -36,7 +36,7 @@ export async function depositExactTokens({ chainName, account, vaultId, amount, 
     let transactions: EVM.types.TransactionParams[] = [];
     let depositedTokenInfo: TokenInfo;
     try {
-        [transactions, depositedTokenInfo] = await buildtExactTokensTransactions(account, chainName, vaultId, amount, tokenAddress, options);
+        [transactions, depositedTokenInfo] = await buildDepositExactTokensTransactions(account, chainName, vaultId, amount, tokenAddress, options);
     } catch (error) {
         return toResult(error instanceof Error ? error.message : 'An unknown error occurred', true);
     }

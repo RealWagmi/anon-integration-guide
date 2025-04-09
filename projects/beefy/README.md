@@ -7,17 +7,19 @@ Beefy allows you to earn the highest APYs across 20+ chains with safety and effi
 1. **Portfolio**
     - Show all my positions on @beefy
     - My TVL on @beefy
-    - Value of my Seamless USDC position on Base chain on @beefy
+    - Value of my "Seamless USDC" position on Base chain on @beefy
     - Show APY of all my positions on @beefy
 2. **Yields & Vaults**
     - Best yield for USDC on @beefy?
     - Best yield for USDC on @beefy, without the need to LP?
     - Show pools with wETH on @beefy
-    - Give me info on @beefy vault 'Boosted Stable Rings'
+    - Give me info on @beefy vault "Boosted Stable Rings"
 3. **Deposits & Withdrawals**
     - Deposit $500 in @beefy vault Silo Super Sonic on Sonic chain
-    - Deposit 100 USDC on @beefy vault Seamless USDC on Base chain
-    - Deposit half of my USDC in @beefy vault Seamless USDC on Base chain
+    - Deposit all of my USDC in @beefy vault "Seamless USDC" on Base chain
+    - Deposit half of my USDC in @beefy vault "Seamless USDC" on Base chain
+    - Withdraw 50% of my tokens from @beefy vault "Seamless USDC" on Base chain
+    - Withdraw all of my tokens from @beefy vault "Seamless USDC" on Base chain
 
 ## Available Functions
 
@@ -61,6 +63,7 @@ Options:
 ## To do
 
 - Handle timeline endpoint delay
+- Allow "Deposit all my tokens in vault Sonic Quartet Audition - Act II"
 
 ## Future improvements
 

@@ -65,6 +65,34 @@ export const tools: AiTool[] = [
         ],
     },
     {
+        name: 'withdraw',
+        description: "Withdraw a percentage of the user's deposited tokens from a vault.  Omit the removal percentage to withdraw all of the user's tokens.",
+        required: ['chainName', 'account', 'vaultId', 'removalPercentage'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(EVM.utils.getChainName),
+                description: 'Chain name',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Address of the user',
+            },
+            {
+                name: 'vaultId',
+                type: 'string',
+                description: 'ID of the vault to withdraw from, for example "beetsv3-sonic-beefyusdce-scusd"',
+            },
+            {
+                name: 'removalPercentage',
+                type: ['string', 'null'],
+                description: 'Percent of liquidity to remove, expressed as a string (e.g. "50" for 50%). If null, all of the user liquidity will be removed.',
+            },
+        ],
+    },
+    {
         name: 'getMyPositionsPortfolio',
         description: `Show the top ${MAX_VAULTS_IN_RESULTS} vaults in the user portfolio.  For each vault, show the tokens in the vault, the type of vault, the APY yield, and the dollar value of the user position in the vault.`,
         required: ['chainName', 'account'],
