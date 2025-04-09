@@ -1,4 +1,4 @@
-export { deposit } from './deposit';
+export { depositExactTokens } from './depositExactTokens';
 export { getMyPositionsPortfolio } from './getMyPositionsPortfolio';
 export { getBestApyForToken } from './getBestApyForToken';
 export { getVaultInfoFromVaultId } from './getVaultInfoFromVaultId';

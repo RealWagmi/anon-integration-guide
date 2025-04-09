@@ -23,7 +23,7 @@ interface Props {
  * Docs: https://docs.beefy.finance/developer-documentation/vault-contract
  *
  * @param {Object} props - The function input parameters
- * @param {string} props.chainName - Name of the blockchain network
+ * @param {string} props.chainName - Name of the blockchain netìwork
  * @param {Address} props.account - The user's address that will deposit tokens
  * @param {string} props.vaultId - The ID of the vault to deposit into, for example "beetsv3-sonic-beefyusdce-scusd"
  * @param {string} props.amount - The amount of tokens to deposit, in decimal format
@@ -31,7 +31,7 @@ interface Props {
  * @param {FunctionOptions} context - Holds EVM utilities and a notifier
  * @returns {Promise<FunctionReturn>} A message confirming the deposit or an error description
  */
-export async function deposit(
+export async function depositExactTokens(
     { chainName, account, vaultId, amount, tokenAddress }: Props,
     { evm: { sendTransactions, getProvider }, notify }: FunctionOptions,
 ): Promise<FunctionReturn> {
@@ -85,9 +85,11 @@ export async function deposit(
         args: [account],
     });
     if (balance < amountInWei) {
-        return toResult(
-            `Not enough tokens: you have ${toHumanReadableAmount(balance, vault.depositedTokenDecimals)} ${vault.depositedTokenSymbol}, you need ${amount} ${vault.depositedTokenSymbol}`,
-        );
+        let msg = `Not enough tokens: you need ${amount} ${vault.depositedTokenSymbol} but you have ${toHumanReadableAmount(balance, vault.depositedTokenDecimals)}`;
+        if (vault.depositedTokenUrl) {
+            msg += `\nVisit this URL to acquire the tokens: ${vault.depositedTokenUrl}`;
+        }
+        return toResult(msg);
     }
 
     // Maybe approve token to vault

@@ -7,13 +7,15 @@ Beefy allows you to earn the highest APYs across 20+ chains with safety and effi
 1. **Portfolio**
     - Show all my positions on @beefy
     - My TVL on @beefy
-    - Value of my "Seamless USDC" position on @beefy
+    - Value of my Seamless USDC position on Base chain on @beefy
     - Show APY of all my positions on @beefy
 2. **Yields & Vaults**
     - Best yield for USDC on @beefy?
     - Best yield for USDC on @beefy, without the need to LP?
     - Show pools with wETH on @beefy
     - Give me info on @beefy vault 'Boosted Stable Rings'
+3. **Deposits & Withdrawals**
+    - Deposit 100 USDC on vault Seamless USDC on Base chain
 
 ## Available Functions
 

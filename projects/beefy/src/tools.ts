@@ -3,8 +3,8 @@ import { MAX_VAULTS_IN_RESULTS, supportedChains } from './constants';
 
 export const tools: AiTool[] = [
     {
-        name: 'deposit',
-        description: 'Deposit tokens into a vault',
+        name: 'depositExactTokens',
+        description: 'Deposit an exact amount of tokens into a vault',
         required: ['chainName', 'account', 'vaultId', 'amount', 'tokenAddress'],
         props: [
             {
@@ -32,6 +32,34 @@ export const tools: AiTool[] = [
                 name: 'tokenAddress',
                 type: 'string',
                 description: 'Address of the token to deposit, starting with "0x".  Must correspond to the token in the vault.',
+            },
+        ],
+    },
+    {
+        name: 'depositDollarAmount',
+        description: 'Deposit into the given vault the amount of tokens that is equivalent to the dollar amount specified.  The token to deposit is determined by the vault.',
+        required: ['chainName', 'account', 'vaultId', 'dollarAmount'],
+        props: [
+            {
+                name: 'chainName',
+                type: 'string',
+                enum: supportedChains.map(EVM.utils.getChainName),
+                description: 'Chain name',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Address of the user',
+            },
+            {
+                name: 'vaultId',
+                type: 'string',
+                description: 'ID of the vault to deposit into, for example "beetsv3-sonic-beefyusdce-scusd"',
+            },
+            {
+                name: 'dollarAmount',
+                type: 'string',
+                description: 'Amount to deposit expressed in dollars, e.g. "1.5" for 1.5 $',
             },
         ],
     },
