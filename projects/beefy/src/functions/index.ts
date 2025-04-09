@@ -1,6 +1,5 @@
 export { depositExactTokens } from './depositExactTokens';
+export { depositDollarAmount } from './depositDollarAmount';
 export { getMyPositionsPortfolio } from './getMyPositionsPortfolio';
 export { getBestApyForToken } from './getBestApyForToken';
-export { getVaultInfoFromVaultId } from './getVaultInfoFromVaultId';
-export { getVaultInfoFromVaultName } from './getVaultInfoFromVaultName';
-export { depositDollarAmount } from './depositDollarAmount';
+export { findVault } from './findVault';

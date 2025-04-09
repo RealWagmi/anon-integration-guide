@@ -277,7 +277,7 @@ export async function getUpdatedVaultsWithUserBalance(
  */
 export async function getSimplifiedVaultByIdAndChain(id: string, chain: string): Promise<SimplifiedVault | null> {
     const simplifiedVaults = await getAllSimplifiedVaults();
-    const matches = simplifiedVaults.filter((vault) => vault.id === id && vault.chain === chain);
+    const matches = simplifiedVaults.filter((vault) => vault.id.toLowerCase() === id.toLowerCase() && vault.chain === chain);
     if (matches.length === 0) {
         return null;
     }
@@ -293,12 +293,28 @@ export async function getSimplifiedVaultByIdAndChain(id: string, chain: string):
  *
  * The vault name is a partial match, and the search is case-insensitive.
  */
-export async function getSimplifiedVaultsByNameAndChain(name: string, chain: string): Promise<SimplifiedVault[]> {
+export async function getSimplifiedVaultsByNameAndChainPartialMatch(name: string, chain: string): Promise<SimplifiedVault[]> {
     const simplifiedVaults = await getAllSimplifiedVaults();
     const filteredVaults = simplifiedVaults.filter((vault) => vault.name.toLowerCase().includes(name.toLowerCase()) && vault.chain === chain);
     return filteredVaults;
 }
 
+/**
+ * Return the simplified vault that matches the given vault name.
+ *
+ * The vault name is an exact match, and the search is case-insensitive.
+ */
+export async function getSimplifiedVaultByNameAndChain(name: string, chain: string): Promise<SimplifiedVault | null> {
+    const simplifiedVaults = await getAllSimplifiedVaults();
+    const matches = simplifiedVaults.filter((vault) => vault.name.toLowerCase() === name.toLowerCase() && vault.chain === chain);
+    if (matches.length === 0) {
+        return null;
+    }
+    if (matches.length > 1) {
+        throw new Error(`Multiple vaults found for name ${name} and chain ${chain}.  Names: ${matches.map((vault) => vault.name).join(', ')}`);
+    }
+    return matches[0];
+}
 /**
  * Check if a vault contains a specific token, either directly or
  * as part of a liquidity pool.

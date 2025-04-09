@@ -15,11 +15,17 @@ Beefy allows you to earn the highest APYs across 20+ chains with safety and effi
     - Show pools with wETH on @beefy
     - Give me info on @beefy vault 'Boosted Stable Rings'
 3. **Deposits & Withdrawals**
-    - Deposit 100 USDC on vault Seamless USDC on Base chain
+    - Deposit $500 in @beefy vault Silo Super Sonic on Sonic chain
+    - Deposit 100 USDC on @beefy vault Seamless USDC on Base chain
+    - Deposit half of my USDC in @beefy vault Seamless USDC on Base chain
 
 ## Available Functions
 
-- `getMyPositionsPortfolio`: Show the vault positions in the user portfolio. For each position, show the tokens in the pool, the type of pool, the amounts of tokens, the APR yield, and the dollar value of the position.
+- `depositExactTokens`: Deposit an exact amount of tokens into a vault.
+- `depositDollarAmount`: Deposit the given amount of US dollars ($) in the given vault. The dollar value is converted to an amount of tokens to deposit, based on the current price of the vault token.
+- `getMyPositionsPortfolio`: Show the top 10 vaults in the user portfolio. For each vault, show the tokens in the vault, the type of vault, the APY yield, and the dollar value of the user position in the vault.
+- `getBestApyForToken`: Show the top 10 vaults with the best APY yield for the given token, sorted by APY. By default, vaults where the token is part of a liquidity pool will be included, too.
+- `findVault`: Get information about a specific vault by either its ID or its name. The result will include info on any user positions in the vault.
 
 ## Installation
 
@@ -43,8 +49,8 @@ and then you can ask questions directly:
 
 ```bash
 pnpm ask "What can I do on Beefy?"
-pnpm ask "Deposit 100 USDC on vault Seamless USDC on Base chain"
-pnpm ask "Remove half of my liquidity from vault Seamless USDC on Base chain"
+pnpm ask "Deposit 100 USDC on vault Seamless USDC" --chain base
+pnpm ask "Remove half of my liquidity from vault Seamless USDC" --chain base
 ```
 
 Options:
@@ -54,10 +60,6 @@ Options:
 
 ## To do
 
-- Prevent conflict between `getVaultInfoFromVaultName` and `getVaultInfoFromVaultId` (e.g. "Deposit 0.01 USDC.e in vault 'aavev3-sonic-usdc.e'" search for name instead than id)
-- Find best ux to allow user to deposit and withdraw LPs... names are hard, maybe with a resolver?
-- Make sure that deposit and withdrawals tools use `getVaultInfoFromVaultName` to get the vault info
-- If the user does not have LP tokens, show them the `addLiquidityUrl` link
 - Handle timeline endpoint delay
 
 ## Future improvements

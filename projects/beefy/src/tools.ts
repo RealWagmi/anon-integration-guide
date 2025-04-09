@@ -37,7 +37,8 @@ export const tools: AiTool[] = [
     },
     {
         name: 'depositDollarAmount',
-        description: 'Deposit the given amount of US dollars ($) in the given vault.',
+        description:
+            'Deposit the given amount of US dollars ($) in the given vault.  The dollar value is converted to an amount of tokens to deposit, based on the current price of the vault token.  IMPORTANT: Stablecoins often have "USD" or "US" in their name, but should be treated as tokens, not dollars.  For example, 100 USDC is not 100 dollars, it is 100 USDC, a stablecoin.',
         required: ['chainName', 'account', 'vaultId', 'dollarAmount'],
         props: [
             {
@@ -105,9 +106,9 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'getVaultInfoFromVaultId',
-        description: 'Get information about a specific vault, including the AP yield, the TVL, and any positions in the vault belonging to the user.',
-        required: ['chainName', 'account', 'vaultId'],
+        name: 'findVault',
+        description: 'Get information about a specific vault by either its ID or its name.  The result will include info on any user positions in the vault.',
+        required: ['chainName', 'account', 'vaultIdOrName'],
         props: [
             {
                 name: 'chainName',
@@ -121,33 +122,10 @@ export const tools: AiTool[] = [
                 description: 'Address of the user.  The vault info will include info on any user positions in the vault.',
             },
             {
-                name: 'vaultId',
+                name: 'vaultIdOrName',
                 type: 'string',
-                description: 'ID of the vault to get information about, for example "beetsv3-sonic-beefyusdce-scusd"',
-            },
-        ],
-    },
-    {
-        name: 'getVaultInfoFromVaultName',
-        description:
-            'Find a vault by its name and return detailed information about it, including the APY yield, the TVL and any positions in the vault belonging to the user.  In case of multiple matches, an error is returned contaninig the TVL-ordered list of vaults.',
-        required: ['chainName', 'account', 'vaultName'],
-        props: [
-            {
-                name: 'chainName',
-                type: 'string',
-                enum: supportedChains.map(EVM.utils.getChainName),
-                description: 'Chain name',
-            },
-            {
-                name: 'account',
-                type: 'string',
-                description: 'Address of the user.  The vault info will include info on any user positions in the vault.',
-            },
-            {
-                name: 'vaultName',
-                type: 'string',
-                description: 'Name of the vault to search for, for example "Boosted Stable Rings".  The search is case-insensitive, with partial matches allowed.',
+                description:
+                    'ID or name of the vault to get information about, for example "beetsv3-sonic-beefyusdce-scusd" or "Boosted Stable Rings".  The match is case-insensitive.  The ID match is done first, then if no match is found, the name match is done.',
             },
         ],
     },
