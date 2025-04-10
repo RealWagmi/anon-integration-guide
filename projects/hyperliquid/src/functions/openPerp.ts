@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Address, isAddress, parseSignature, zeroAddress } from 'viem';
 import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
-import { ARBITRUM_CHAIN_ID, ARBITRUM_CHAIN_ID_HEX, hyperliquidPerps, MIN_HYPERLIQUID_TRADE_SIZE } from '../constants';
+import { ARBITRUM_CHAIN_ID, ARBITRUM_CHAIN_ID_HEX, DEFAULT_HYPERLIQUID_SLIPPAGE, hyperliquidPerps, MIN_HYPERLIQUID_TRADE_SIZE } from '../constants';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import { _formatPrice } from './utils/_formatPrice';
 import { _formatSize } from './utils/_formatSize';
@@ -181,23 +181,74 @@ export async function openPerp(
             .replace(/\.0+$/g, '');
         const formattedSize = _formatSize(Math.abs(sizeAsset), perpInfo.szDecimals);
 
-        const action = {
-            type: 'order',
-            orders: [
-                {
-                    a: perpInfo.assetIndex,
-                    b: Number(sizeAsset) < 0 ? short : !short,
-                    p: formattedExecutionPrice,
-                    s: formattedSize,
-                    r: false,
-                    t: {
-                        limit: {
-                            tif: 'Ioc',
-                        },
+        const orders: any = [
+            {
+                a: perpInfo.assetIndex,
+                b: Number(sizeAsset) < 0 ? short : !short,
+                p: formattedExecutionPrice,
+                s: formattedSize,
+                r: closing || (updating && Number(size) < 0) ? true : false,
+                t: {
+                    limit: {
+                        tif: limitPrice ? 'Gtc' : 'Ioc',
                     },
                 },
-            ],
-            grouping: 'na',
+            },
+        ];
+
+        if (stopLossPrice) {
+            const formattedStopLossPrice = _formatPrice(Number(stopLossPrice), perpInfo.szDecimals)
+                .replace(/(\.\d*?[1-9])0+$/g, '$1')
+                .replace(/\.0+$/g, '');
+
+            const stopLossExecutionPrice = Number(stopLossPrice) * (1 + DEFAULT_HYPERLIQUID_SLIPPAGE * (short ? 1 : -1));
+            const formattedStopLossExecutionPrice = _formatPrice(stopLossExecutionPrice, perpInfo.szDecimals)
+                .replace(/(\.\d*?[1-9])0+$/g, '$1')
+                .replace(/\.0+$/g, '');
+            orders.push({
+                a: perpInfo.assetIndex,
+                b: Number(sizeAsset) < 0 ? !short : short,
+                p: formattedStopLossExecutionPrice,
+                s: formattedSize,
+                r: true,
+                t: {
+                    trigger: {
+                        isMarket: false,
+                        triggerPx: formattedStopLossPrice,
+                        tpsl: 'sl',
+                    },
+                },
+            });
+        }
+        if (takeProfitPrice) {
+            const formattedTakeProfitPrice = _formatPrice(Number(takeProfitPrice), perpInfo.szDecimals)
+                .replace(/(\.\d*?[1-9])0+$/g, '$1')
+                .replace(/\.0+$/g, '');
+
+            const takeProfitExecutionPrice = Number(takeProfitPrice) * (1 + DEFAULT_HYPERLIQUID_SLIPPAGE * (short ? 1 : -1));
+            const formattedTakeProfitExecutionPrice = _formatPrice(takeProfitExecutionPrice, perpInfo.szDecimals)
+                .replace(/(\.\d*?[1-9])0+$/g, '$1')
+                .replace(/\.0+$/g, '');
+            orders.push({
+                a: perpInfo.assetIndex,
+                b: Number(sizeAsset) < 0 ? !short : short,
+                p: formattedTakeProfitExecutionPrice,
+                s: formattedSize,
+                r: true,
+                t: {
+                    trigger: {
+                        isMarket: false,
+                        triggerPx: formattedTakeProfitPrice,
+                        tpsl: 'tp',
+                    },
+                },
+            });
+        }
+
+        const action = {
+            type: 'order',
+            orders,
+            grouping: takeProfitPrice || stopLossPrice ? 'normalTpsl' : 'na',
         };
         const nonce = Date.now();
         const signature = await _signL1Action(action, nonce, true, agentWallet, (vault || undefined) as Address | undefined);
