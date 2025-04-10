@@ -58,9 +58,9 @@ cp .env.example .env
 and then you can ask questions directly:
 
 ```bash
-pnpm ask "What can I do on Beefy?"
-pnpm ask "Deposit 100 USDC on vault Seamless USDC" --chain base
-pnpm ask "Remove half of my liquidity from vault Seamless USDC" --chain base
+pnpm ask-beefy "Deposit \$100 into vault USDC.e (wS Market)" --chain sonic
+pnpm ask-beefy "Remove half of my liquidity from vault USDC.e (wS Market)" --chain sonic
+pnpm ask-beefy "What can I do on Beefy?"  # TODO
 ```
 
 Options:
