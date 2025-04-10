@@ -4,6 +4,8 @@ Beefy allows you to earn the highest APYs across 20+ chains with safety and effi
 
 ## Common Tasks
 
+For best results, use Vault IDs rather than vault names.
+
 1. **Portfolio**
     - Show all my positions on @beefy
     - My TVL on @beefy
@@ -17,14 +19,16 @@ Beefy allows you to earn the highest APYs across 20+ chains with safety and effi
 3. **Deposits & Withdrawals**
     - Deposit $500 in @beefy vault Silo Super Sonic on Sonic chain
     - Deposit all in @beefy vault "Boosted Stable Rings" on Sonic chain
-    - Deposit 50% of my USDC in @beefy vault "Seamless USDC" on Base chain
+    - Deposit 50% in @beefy vault "Seamless USDC" on Base chain
     - Withdraw 50% from @beefy vault "Seamless USDC" on Base chain
     - Withdraw all from @beefy vault "Seamless USDC" on Base chain
 
 ## Available Functions
 
 - `depositExactTokens`: Deposit an exact amount of tokens into a vault.
+- `depositFractionOfTokens`: Deposit a percentage of the user's tokens into a vault.
 - `depositDollarAmount`: Deposit the given amount of US dollars ($) in the given vault. The dollar value is converted to an amount of tokens to deposit, based on the current price of the vault token.
+- `withdraw`: Withdraw a percentage of the user's deposited tokens from a vault. Omit the removal percentage to withdraw all of the user's tokens.
 - `getMyPositionsPortfolio`: Show the top 10 vaults in the user portfolio. For each vault, show the tokens in the vault, the type of vault, the APY yield, and the dollar value of the user position in the vault.
 - `getBestApyForToken`: Show the top 10 vaults with the best APY yield for the given token, sorted by APY. By default, vaults where the token is part of a liquidity pool will be included, too.
 - `findVault`: Get information about a specific vault by either its ID or its name. The result will include info on any user positions in the vault.
@@ -63,8 +67,6 @@ Options:
 ## To do
 
 - Handle timeline endpoint delay
-- Allow depositing by percentage, without specifying the token, e.g. "Deposit half of my tokens in vault Sonic Quartet Audition - Act II"
-- Fix "Withdraw all from vault xxx"
 
 ## Future improvements
 

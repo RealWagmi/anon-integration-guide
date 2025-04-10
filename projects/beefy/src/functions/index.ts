@@ -1,4 +1,5 @@
 export { depositExactTokens } from './depositExactTokens';
+export { depositFractionOfTokens } from './depositFractionOfTokens';
 export { depositDollarAmount } from './depositDollarAmount';
 export { withdraw } from './withdraw';
 export { getMyPositionsPortfolio } from './getMyPositionsPortfolio';

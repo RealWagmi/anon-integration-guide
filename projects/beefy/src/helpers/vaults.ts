@@ -4,6 +4,7 @@ import BeefyClient, { ApyBreakdown, TvlInDollarsData, VaultInfo } from './beefyC
 import { getBeefyChainNameFromAnonChainName, getChainIdFromBeefyChainName, getChainIdFromProvider, isBeefyChainSupported } from './chains';
 import { titleCase, to$$$, toHumanReadableAmount } from './format';
 import { getTokenFraction } from './tokens';
+import { beefyVaultAbi } from '../abis';
 
 /**
  * Vault with all relevant information, obtained by joining
@@ -186,15 +187,15 @@ export async function getUserHistoricalVaults(address: string, chainId?: number)
  * The chain here is defined by whatever the RPC endpoint the PublicClient
  * is connected to.
  */
-export async function getUserCurrentVaults(address: string, publicClient: PublicClient): Promise<SimplifiedVault[]> {
-    const chainId = getChainIdFromProvider(publicClient);
+export async function getUserCurrentVaults(address: string, provider: PublicClient): Promise<SimplifiedVault[]> {
+    const chainId = getChainIdFromProvider(provider);
     const historicalVaults = await getUserHistoricalVaults(address, chainId);
 
     if (historicalVaults.length === 0) {
         return [];
     }
 
-    return getUpdatedVaultsWithUserBalance(historicalVaults, address, publicClient, false);
+    return getVaultsWithUserBalances(historicalVaults, address, provider, false);
 }
 
 /**
@@ -210,10 +211,10 @@ export async function getUserCurrentVaults(address: string, publicClient: Public
  * Please note that the chain here is defined by whatever the RPC
  * endpoint the PublicClient is connected to.
  */
-export async function getUpdatedVaultsWithUserBalance(
+export async function getVaultsWithUserBalances(
     vaults: SimplifiedVault[],
     address: string,
-    publicClient: PublicClient,
+    provider: PublicClient,
     includeVaultsWithNoBalance: boolean = true,
 ): Promise<SimplifiedVault[]> {
     // Multicall to get all mooToken balances at once
@@ -224,7 +225,7 @@ export async function getUpdatedVaultsWithUserBalance(
         args: [address as `0x${string}`],
     }));
 
-    const balanceResults = await publicClient.multicall({
+    const balanceResults = await provider.multicall({
         contracts: balanceContractCalls,
         allowFailure: true,
     });
@@ -236,7 +237,7 @@ export async function getUpdatedVaultsWithUserBalance(
         functionName: 'totalSupply',
     }));
 
-    const totalSupplyResults = await publicClient.multicall({
+    const totalSupplyResults = await provider.multicall({
         contracts: totalSupplyContractCalls,
         allowFailure: true,
     });
@@ -277,6 +278,14 @@ export async function getUpdatedVaultsWithUserBalance(
     }
 
     return updatedVaults;
+}
+
+/**
+ * Same as getVaultsWithUserBalances, but with a single vault
+ */
+export async function getVaultWithUserBalance(vault: SimplifiedVault, address: string, provider: PublicClient): Promise<SimplifiedVault> {
+    const updatedVaults = await getVaultsWithUserBalances([vault], address, provider, false);
+    return updatedVaults[0];
 }
 
 /**
@@ -351,6 +360,25 @@ export function getDepositedTokenUrl(vault: VaultInfo): string | null {
     } else {
         throw new Error(`Unknown oracle type ${vault.oracle} for vault ${vault.id}`);
     }
+}
+
+/**
+ * Given a vault, return the address of the deposited token ('want') by
+ * fetching it on-chain on the vault contract.
+ *
+ * This is safer than using the address returned by the Beefy API,
+ * which sometimes is null (e.g. for wrapped native tokens)
+ *
+ * @throws {Error} If the address cannot be fetched
+ */
+export async function getDepositedTokenAddress(vault: SimplifiedVault, provider: PublicClient): Promise<`0x${string}`> {
+    const depositedTokenAddress = (await provider.readContract({
+        address: vault.vaultContractAddress as `0x${string}`,
+        abi: beefyVaultAbi,
+        functionName: 'want',
+    })) as `0x${string}`;
+    if (!depositedTokenAddress) throw new Error('Could not get depositedtoken address from vault contract');
+    return depositedTokenAddress;
 }
 
 /**

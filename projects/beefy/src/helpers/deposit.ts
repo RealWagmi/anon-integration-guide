@@ -1,7 +1,7 @@
 import { encodeFunctionData, parseUnits, erc20Abi, Address } from 'viem';
 import { FunctionOptions, EVM, EvmChain } from '@heyanon/sdk';
 import { getBeefyChainNameFromAnonChainName } from '../helpers/chains';
-import { getSimplifiedVaultByIdAndChain } from '../helpers/vaults';
+import { getDepositedTokenAddress, getSimplifiedVaultByIdAndChain } from '../helpers/vaults';
 import { beefyVaultAbi } from '../abis';
 import { toHumanReadableAmount } from '../helpers/format';
 import { getTokenInfoFromAddress } from '../helpers/tokens';
@@ -10,6 +10,8 @@ import { TokenInfo } from '../helpers/beefyClient';
 /**
  * Build the transactions to deposit the specified amount of tokens into a
  * vault.
+ *
+ * The amount is specified in decimals, e.g. 1 ETH rather than 10^18 wei.
  *
  * Both the token to deposit and the vault contract address are determined by
  * the vaultId.
@@ -47,14 +49,7 @@ export async function buildDepositExactTokensTransactions(
     if (amountInWei === 0n) throw new Error('Amount must be greater than 0');
 
     // Get token address from vault contract
-    // We could get it from the API (as vault.depositedTokenAddress), but
-    // sometimes (e.g. native chain tokens) the API omits it
-    const depositedTokenAddress = (await provider.readContract({
-        address: vault.vaultContractAddress as `0x${string}`,
-        abi: beefyVaultAbi,
-        functionName: 'want',
-    })) as `0x${string}`;
-    if (!depositedTokenAddress) throw new Error('Could not get token address from vault contract');
+    const depositedTokenAddress = await getDepositedTokenAddress(vault, provider);
 
     // Get info on the token the vault wants (depositedTokenInfo)
     let depositedTokenInfo: TokenInfo;

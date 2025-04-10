@@ -4,7 +4,7 @@ import { MAX_VAULTS_IN_RESULTS, supportedChains } from './constants';
 export const tools: AiTool[] = [
     {
         name: 'depositExactTokens',
-        description: 'Deposit an exact amount of tokens into a vault.',
+        description: 'Deposit an exact amount of tokens into a vault',
         required: ['chainName', 'account', 'vaultId', 'amount', 'tokenAddress'],
         props: [
             {
@@ -30,8 +30,36 @@ export const tools: AiTool[] = [
             },
             {
                 name: 'tokenAddress',
+                type: ['string', 'null'],
+                description: 'Address of the token to deposit, starting with "0x".  Must correspond to the token in the vault.  If null, the vault token will be used.',
+            },
+        ],
+    },
+    {
+        name: 'depositFractionOfTokens',
+        description: "Deposit a percentage of the user's tokens into a vault",
+        required: ['chainName', 'account', 'vaultId', 'percentage'],
+        props: [
+            {
+                name: 'chainName',
                 type: 'string',
-                description: 'Address of the token to deposit, starting with "0x".  Must correspond to the token in the vault.',
+                enum: supportedChains.map(EVM.utils.getChainName),
+                description: 'Chain name',
+            },
+            {
+                name: 'account',
+                type: 'string',
+                description: 'Address of the user',
+            },
+            {
+                name: 'vaultId',
+                type: 'string',
+                description: 'ID of the vault to deposit into, for example "beetsv3-sonic-beefyusdce-scusd"',
+            },
+            {
+                name: 'percentage',
+                type: 'number',
+                description: 'Percentage of the user\'s tokens to deposit, expressed as a string (e.g. "50" for 50%)',
             },
         ],
     },
@@ -112,7 +140,7 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getBestApyForToken',
-        description: `Show the top ${MAX_VAULTS_IN_RESULTS} vaults with the best APY yield for the given token, sorted by APY.  By default, vaults where the token is part of a liquidity pool will be included, too.`,
+        description: `Show the top ${MAX_VAULTS_IN_RESULTS} yield opportunities for the given token, sorted by APY.  NEVER use this function to find the ID of a vault, use findVault instead.`,
         required: ['chainName', 'tokenAddress', 'noLp'],
         props: [
             {
@@ -135,7 +163,8 @@ export const tools: AiTool[] = [
     },
     {
         name: 'findVault',
-        description: 'Get information about a specific vault by either its ID or its name.  The result will include info on any user positions in the vault.',
+        description:
+            'Get information about a specific vault by either its ID or its name.  ALWAYS use this function to find the ID of a vault.  The result will include info on any user positions in the vault.',
         required: ['chainName', 'account', 'vaultIdOrName'],
         props: [
             {

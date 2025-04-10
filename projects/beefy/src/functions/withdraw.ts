@@ -40,5 +40,5 @@ export async function withdraw({ chainName, account, vaultId, removalPercentage 
 
     const result = await options.evm.sendTransactions({ chainId, account, transactions: [transaction] });
     const message = result.data[result.data.length - 1].message;
-    return toResult(result.isMultisig ? message : `Successfully withdrew ${removalPercentage}% of your liquidity from the vault. ${message}`);
+    return toResult(result.isMultisig ? message : `Successfully withdrew ${removalPercentage ?? '100'}% of your liquidity from the vault. ${message}`);
 }

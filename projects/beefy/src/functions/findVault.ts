@@ -1,6 +1,6 @@
 import { EVM, FunctionOptions, FunctionReturn, toResult, EvmChain } from '@heyanon/sdk';
 import { supportedChains } from '../constants';
-import { formatVault, getSimplifiedVaultByIdAndChain, getSimplifiedVaultByNameAndChain, getUpdatedVaultsWithUserBalance } from '../helpers/vaults';
+import { formatVault, getSimplifiedVaultByIdAndChain, getSimplifiedVaultByNameAndChain, getVaultsWithUserBalances } from '../helpers/vaults';
 import { getBeefyChainNameFromAnonChainName } from '../helpers/chains';
 
 interface Props {
@@ -35,7 +35,7 @@ export async function findVault({ chainName, account, vaultIdOrName }: Props, op
     // If an account is provided, update the vault with the user's balance
     if (account) {
         const publicClient = options.evm.getProvider(chainId);
-        const [vaultWithUserBalance] = await getUpdatedVaultsWithUserBalance([vault], account, publicClient, true);
+        const [vaultWithUserBalance] = await getVaultsWithUserBalances([vault], account, publicClient, true);
         vault = vaultWithUserBalance;
     }
 

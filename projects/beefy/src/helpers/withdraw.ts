@@ -1,7 +1,7 @@
 import { encodeFunctionData, Address } from 'viem';
 import { FunctionOptions, EVM, EvmChain } from '@heyanon/sdk';
 import { getBeefyChainNameFromAnonChainName } from '../helpers/chains';
-import { getSimplifiedVaultByIdAndChain } from '../helpers/vaults';
+import { getSimplifiedVaultByIdAndChain, getVaultWithUserBalance } from '../helpers/vaults';
 import { beefyVaultAbi } from '../abis';
 import { toHumanReadableAmount } from '../helpers/format';
 import { validatePercentage } from './validation';
@@ -34,17 +34,16 @@ export async function buildWithdrawTransaction(
     const beefyChainName = getBeefyChainNameFromAnonChainName(chainName);
     const vault = await getSimplifiedVaultByIdAndChain(vaultId, beefyChainName);
     if (!vault) throw new Error(`Could not find vault with ID ${vaultId}`);
-    const decimals = vault.mooTokenDecimals;
+    const mDecimals = vault.mooTokenDecimals;
+    const dDecimals = vault.depositedTokenDecimals;
 
     // Get user liquidity in the vault
-    const userLiquidityInWei = (await provider.readContract({
-        address: vault.vaultContractAddress,
-        abi: beefyVaultAbi,
-        functionName: 'balanceOf',
-        args: [account],
-    })) as bigint;
+    const vaultWithUserBalance = await getVaultWithUserBalance(vault, account, provider);
+    const userLiquidityInWei = vaultWithUserBalance.mooTokenUserBalance as bigint;
     if (userLiquidityInWei === 0n) throw new Error(`You have no liquidity in vault ${vault.name}`);
-    notify(`You have ${toHumanReadableAmount(userLiquidityInWei, decimals, decimals, decimals)} mooTokens in vault ${vault.name}`);
+    notify(
+        `You have ${toHumanReadableAmount(vaultWithUserBalance.depositedTokenUserBalance as bigint, dDecimals, dDecimals, dDecimals)} ${vault.depositedTokenSymbol} in vault ${vault.name}, corresponding to ${toHumanReadableAmount(userLiquidityInWei, mDecimals, mDecimals, mDecimals)} mooTokens`,
+    );
 
     // Calculate the amount of liquidity to remove
     let liquidityToRemoveInWei;
@@ -53,7 +52,7 @@ export async function buildWithdrawTransaction(
         notify(`Will remove all liquidity from the vault`);
     } else {
         liquidityToRemoveInWei = (userLiquidityInWei * BigInt(removalPercentage)) / 100n;
-        notify(`Will withdraw ${removalPercentage}% of your mooTokens from the vault, for a total of ${toHumanReadableAmount(liquidityToRemoveInWei, decimals)} mooTokens`);
+        notify(`Will withdraw ${removalPercentage}% of your mooTokens from the vault, for a total of ${toHumanReadableAmount(liquidityToRemoveInWei, mDecimals)} mooTokens`);
     }
 
     // Return the withdraw transaction
