@@ -231,7 +231,11 @@ export async function openPerp(
                 avgPx: '0',
             };
 
-        if (totalSz == '0') throw new Error('Could not open order');
+        if (totalSz == '0' && !limitPrice) throw new Error('Could not open order');
+
+        if (limitPrice) {
+            return toResult(`Successfully created order!`);
+        }
 
         return toResult(
             `Successfully ${short ? 'sold' : 'bought'} ${sizeUnit == 'ASSET' ? formattedSize : sizeUsd} ${
