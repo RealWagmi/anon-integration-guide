@@ -204,12 +204,66 @@ export const tools: AiTool[] = [
         ],
     },
     {
+        name: 'cancelOrder',
+        description: 'Cancels the existing open order on Hyperliquid based on its ID (oid).',
+        required: ['account', 'id'],
+        props: [
+            { name: 'account', type: 'string', description: 'User wallet address that will cancel the order.' },
+            {
+                name: 'id',
+                type: 'number',
+                description: 'Order ID (oid) of the order to be closed.',
+            },
+            { name: 'vault', type: 'string', description: 'Optional. Vault name or address.' },
+        ],
+    },
+    {
+        name: 'addStopLoss',
+        description: 'Adds stop loss trigger at the given price to the existing Hyperliquid position in the given asset.',
+        required: ['account', 'asset', 'price'],
+        props: [
+            { name: 'account', type: 'string', description: 'User wallet address that will cancel the order.' },
+            { name: 'asset', type: 'string', enum: Object.keys(hyperliquidPerps), description: 'Name of the underlying asset of the perp position.' },
+            {
+                name: 'price',
+                type: 'string',
+                description: 'Trigger price for the stop loss action.',
+            },
+            { name: 'vault', type: 'string', description: 'Optional. Vault name or address.' },
+        ],
+    },
+    {
+        name: 'addTakeProfit',
+        description: 'Adds take profit trigger at the given price to the existing Hyperliquid position in the given asset.',
+        required: ['account', 'asset', 'price'],
+        props: [
+            { name: 'account', type: 'string', description: 'User wallet address that will cancel the order.' },
+            { name: 'asset', type: 'string', enum: Object.keys(hyperliquidPerps), description: 'Name of the underlying asset of the perp position.' },
+            {
+                name: 'price',
+                type: 'string',
+                description: 'Trigger price for the take profit action.',
+            },
+            { name: 'vault', type: 'string', description: 'Optional. Vault name or address.' },
+        ],
+    },
+    {
         name: 'getPerpPositions',
         description:
             "Retrieves user's perpetual positions on Hyperliquid. This function is ONLY used for retreiving data, and it does not modify any of the positions. This function should be called ONLY if it has been explicitly stated that list of user's perp positions is needed. DON'T call this function if some change is explicitly asked for. If vault is provided, retrieves positions for that vault.  NEVER CALL THIS FUNCTION IF SOMETHING ELSE IS NEEDED! ",
         required: ['account'],
         props: [
             { name: 'account', type: 'string', description: 'User wallet address to check for perpetual positions.' },
+            { name: 'vault', type: 'string', description: 'Optional. Vault name or address.' },
+        ],
+    },
+    {
+        name: 'getOpenOrders',
+        description:
+            "Retrieves the list of user's currently open orders on Hyperliquid. This function is ONLY used for retreiving data, and it does not modify any of the positions. This function should be called ONLY if it has been explicitly stated that list of user's list of pending orders is needed. DON'T call this function if some change is explicitly asked for. If vault is provided, retrieves positions for that vault.  NEVER CALL THIS FUNCTION IF SOMETHING ELSE IS NEEDED! ",
+        required: ['account'],
+        props: [
+            { name: 'account', type: 'string', description: 'User wallet address to check for open orders' },
             { name: 'vault', type: 'string', description: 'Optional. Vault name or address.' },
         ],
     },
