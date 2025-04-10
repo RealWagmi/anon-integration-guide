@@ -19,7 +19,7 @@ The Hyperliquid L1 uses a custom consensus algorithm called HyperBFT which is he
 -   "Move 10.5 USDC from Hyperliquid back to Arbitrum"
 -   "Move 100 USDC from my spot to my perp balance on Hyperliquid"
 -   "I need you to transfer 55.5 USD from perps to spot on Hyperliquid"
--   "Open a long on 12$ of BTC with no leverage on Hyperliquid"
+-   "Open a long on 12\$ of BTC with no leverage on Hyperliquid"
 -   "Short me 1 BTC with 50x leverage on Hyperliquid"
 -   "Close my ARB position on Hyperliquid"
 -   "Close my Bitcoin position on Hyperliquid"
@@ -48,6 +48,9 @@ The Hyperliquid L1 uses a custom consensus algorithm called HyperBFT which is he
 -   "Has BTC funding been positive or negative over the last 24 hours?"
 -   "Add 10 USDC to margin of my ETH position on Hyperliquid?"
 -   "Remove 100 USDC from margin of the hyperliquid BTC position of my vault 'MyVault'?"
+-   "Get list of my open orders?"
+-   "Cancel order with ID 1234"
+-   "If ETH price gets to 3.5k, I want to take profit on my ETH position"
 
 ## Available Functions
 
@@ -65,6 +68,7 @@ The Hyperliquid L1 uses a custom consensus algorithm called HyperBFT which is he
 -   Getting current and historical funding rates
 -   Comparing funding rates across assets
 -   Managing the margin of your positions
+-   Creating and managing limit and TP/SL orders
 
 ## Tests
 
@@ -123,6 +127,13 @@ await transferToSpot({
 ```
 
 ### Opening a perp position
+
+This is a basic use case, but you can also configure the following parameters:
+
+-   `vault`
+-   `limitPrice`
+-   `takeProfitPrice`
+-   `stopLossPrice`
 
 ```typescript
 // Shorts 1000$ of BTC at 50x leverage on Hyperliquid
@@ -262,10 +273,33 @@ await getHistoricalFundingRates({ asset: 'LINK', timeRange: '8h' });
 ### Margin management
 
 ```typescript
-
 // Adds 10 USD margin to 0xYourAddress's LINK position
 await addMargin({ account: '0xYourAddress', asset: 'LINK', amount: '10' });
 
 // Removes 41 USD margin from BTC position of MyVault (managed by 0xYourAddress)
 await removeMargin({ account: '0xYourAddress', asset: 'BTC', amount: '41', vault: 'MyVault' });
+```
+
+### Get the list of open orders
+
+```typescript
+// Get the list of your open orders on Hyperliquid (Limit orders, take profit and stop loss)
+await addMargin({ account: '0xYourAddress', asset: 'LINK', amount: '10' });
+```
+
+### Cancel an order
+
+```typescript
+// Cancel the order by its id
+await cancelOrder({ account: '0xYourAddress', id: '1234' });
+```
+
+### Take profit / Stop loss
+
+```typescript
+// Take profit on your BTC position when BTC reaches $94K
+await addTakeProfit({ account: '0xYourAddress', asset: 'BTC', price: '94000' });
+
+// Stop loss on your ETH position when BTC reaches $3.5K (for vault 'MyVault')
+await addTakeProfit({ account: '0xYourAddress', asset: 'ETH', price: '3500', vault: 'MyVault' });
 ```
