@@ -32,7 +32,7 @@ interface Props {
 export async function depositFractionOfTokens({ chainName, account, vaultId, percentage }: Props, options: FunctionOptions): Promise<FunctionReturn> {
     const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
-    if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
+    if (!supportedChains.includes(chainId)) return toResult(`Beefy protocol is not supported on ${chainName}`, true);
 
     // Parse and validate removal percentage
     if (!validatePercentage(percentage)) throw new Error(`Invalid percentage: ${percentage}`);

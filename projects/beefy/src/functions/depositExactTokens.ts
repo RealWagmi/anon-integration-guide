@@ -30,7 +30,7 @@ interface Props {
 export async function depositExactTokens({ chainName, account, vaultId, amount, tokenAddress }: Props, options: FunctionOptions): Promise<FunctionReturn> {
     const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
-    if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
+    if (!supportedChains.includes(chainId)) return toResult(`Beefy protocol is not supported on ${chainName}`, true);
 
     // Build the transactions that need to be sent
     let transactions: EVM.types.TransactionParams[] = [];

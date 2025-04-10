@@ -186,4 +186,10 @@ export const tools: AiTool[] = [
             },
         ],
     },
+    {
+        name: 'getBeefyCapabilities',
+        description: 'Get information about what Beefy can do and example prompts.',
+        required: [],
+        props: [],
+    },
 ];

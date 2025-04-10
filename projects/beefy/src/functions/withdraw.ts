@@ -29,7 +29,7 @@ interface Props {
 export async function withdraw({ chainName, account, vaultId, removalPercentage }: Props, options: FunctionOptions): Promise<FunctionReturn> {
     const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
-    if (!supportedChains.includes(chainId)) return toResult(`Beets protocol is not supported on ${chainName}`, true);
+    if (!supportedChains.includes(chainId)) return toResult(`Beefy protocol is not supported on ${chainName}`, true);
 
     // Build the transaction that needs to be sent
     let transaction: EVM.types.TransactionParams;

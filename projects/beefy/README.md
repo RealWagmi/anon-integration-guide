@@ -20,6 +20,8 @@ Beefy allows you to earn the highest APYs across 20+ chains with safety and effi
     - Deposit 50% in @beefy vault "Seamless USDC" on Base chain
     - Withdraw 50% from @beefy vault "Seamless USDC" on Base chain
     - Withdraw all from @beefy vault "Seamless USDC" on Base chain
+4. **Help**
+    - What can I do on @beefy?
 
 ## Best Practices
 
@@ -58,9 +60,9 @@ cp .env.example .env
 and then you can ask questions directly:
 
 ```bash
+pnpm ask-beefy "What can I do on Beefy?" --chain sonic
 pnpm ask-beefy "Deposit \$100 into vault USDC.e (wS Market)" --chain sonic
 pnpm ask-beefy "Remove half of my liquidity from vault USDC.e (wS Market)" --chain sonic
-pnpm ask-beefy "What can I do on Beefy?"  # TODO
 ```
 
 Options:
