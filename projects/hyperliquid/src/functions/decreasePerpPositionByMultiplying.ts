@@ -9,6 +9,7 @@ interface Props {
     account: Address;
     asset: keyof typeof hyperliquidPerps;
     sizeMultiplier: string;
+    limitPrice?: string;
     vault?: string;
 }
 
@@ -17,11 +18,12 @@ interface Props {
  * @param account - User's wallet address
  * @param asset - The asset to trade on Hyperliquid.
  * @param size - Percentage as decimal number <1
+ * @param limitPrice - Price if the user wants to execute a limit order instead of a market order.
  * @param vault - Add this if you want to do this action as the vault. Can be vault name or address.
  * @param options - SDK function options
  * @returns Promise resolving to function execution result
  */
-export async function decreasePerpPositionByMultiplying({ account, asset, sizeMultiplier, vault }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+export async function decreasePerpPositionByMultiplying({ account, asset, sizeMultiplier, vault, limitPrice }: Props, options: FunctionOptions): Promise<FunctionReturn> {
     const { notify } = options;
     try {
         await notify('Preparing to decrease position by specified percentage...');
@@ -67,6 +69,7 @@ export async function decreasePerpPositionByMultiplying({ account, asset, sizeMu
                         short: sz < 0,
                         updating: true,
                         vault,
+                        limitPrice,
                     },
                     options,
                 );
@@ -74,7 +77,7 @@ export async function decreasePerpPositionByMultiplying({ account, asset, sizeMu
                     notify(result.data);
                     return toResult('Failed to modify position on Hyperliquid. ', true);
                 }
-                return toResult('Successfully modified position.');
+                return toResult(limitPrice ? 'Successfully created order' : 'Successfully modified position.');
             }
         }
         return toResult("You don't have a perp in that asset.", true);

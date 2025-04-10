@@ -19,6 +19,9 @@ interface Props {
     short: boolean;
     closing?: boolean;
     updating?: boolean;
+    limitPrice?: string;
+    takeProfitPrice?: string;
+    stopLossPrice?: string;
     vault?: string;
 }
 
@@ -30,12 +33,13 @@ interface Props {
  * @param sizeUnit - Whether `size` is specified in asset units or in USD.
  * @param leverage - The leverage (multiplier) for the position.
  * @param short - Set to `true` for a short position, `false` for a long position.
+ * @param limitPrice - Price if the user wants to execute a limit order instead of a market order.
  * @param vault - Add this if you want to do this action as the vault. Can be vault name or address.
  * @param options - SDK function options
  * @returns Promise resolving to function execution result
  */
 export async function openPerp(
-    { account, asset, size, sizeUnit, leverage, short, closing, updating, vault }: Props,
+    { account, asset, size, sizeUnit, leverage, short, closing, updating, vault, limitPrice, takeProfitPrice, stopLossPrice }: Props,
     { evm: { signTypedDatas } }: FunctionOptions,
 ): Promise<FunctionReturn> {
     try {
