@@ -4,8 +4,6 @@ Beefy allows you to earn the highest APYs across 20+ chains with safety and effi
 
 ## Common Tasks
 
-For best results, use Vault IDs rather than vault names.
-
 1. **Portfolio**
     - Show all my positions on @beefy
     - My TVL on @beefy
@@ -22,6 +20,12 @@ For best results, use Vault IDs rather than vault names.
     - Deposit 50% in @beefy vault "Seamless USDC" on Base chain
     - Withdraw 50% from @beefy vault "Seamless USDC" on Base chain
     - Withdraw all from @beefy vault "Seamless USDC" on Base chain
+
+## Best Practices
+
+For best results, use Vault IDs (beets-sonic-silo-super-sonic) instead of vault names (Silo Super Sonic). Vault IDs are returned by all vault-related queries, e.g. `Show me all my positions on @beefy` or `Show me best yield opportunities for USDC on @beefy`.
+
+Vault IDs can also be found by clicking on a vault in the Beefy website, and looking at the URL: `https://app.beefy.com/vault/<VAULT ID>`.
 
 ## Available Functions
 

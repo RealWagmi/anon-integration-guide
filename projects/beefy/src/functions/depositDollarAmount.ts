@@ -3,7 +3,7 @@ import { FunctionReturn, FunctionOptions, toResult, EVM, EvmChain } from '@heyan
 import { supportedChains } from '../constants';
 import { buildDepositExactTokensTransactions } from '../helpers/deposit';
 import { TokenInfo } from '../helpers/beefyClient';
-import { getSimplifiedVaultByIdAndChain, getVaultDepositedTokenPrice } from '../helpers/vaults';
+import { getSimplifiedVaultByIdAndChain, getDepositedTokenPrice } from '../helpers/vaults';
 import { to$$$ } from '../helpers/format';
 
 interface Props {
@@ -38,7 +38,7 @@ export async function depositDollarAmount({ chainName, account, vaultId, dollarA
     if (!vault) return toResult(`Could not find vault with ID ${vaultId}`, true);
 
     // Get the amount of tokens to deposit
-    const vaultDepositedTokenPrice = await getVaultDepositedTokenPrice(vault);
+    const vaultDepositedTokenPrice = await getDepositedTokenPrice(vault);
     const amount = dollarAmount / vaultDepositedTokenPrice;
     options.notify(`Will attempt to deposit ${to$$$(dollarAmount, 2, 6)} worth of tokens in vault ${vault.name} (${amount} ${vault.depositedTokenSymbol} tokens).`);
 

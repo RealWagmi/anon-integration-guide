@@ -7,11 +7,14 @@ import { toHumanReadableAmount } from '../helpers/format';
 import { validatePercentage } from './validation';
 
 /**
- * Build the transaction to withdraw liquidity from a vault as a percentage
- * of the deposited balance.
+ * Build the transaction to withdraw liquidity from a vault as a
+ * percentage of the deposited balance.
  *
  * Both the token to withdraw and the vault contract address are
  * determined by the vaultId.
+ *
+ * Returns a tuple with the transaction parameters and the amount
+ * of the deposited token that will be withdrawn.
  *
  * Docs: https://docs.beefy.finance/developer-documentation/vault-contract
  */
@@ -21,7 +24,7 @@ export async function buildWithdrawTransaction(
     vaultId: string,
     removalPercentage: `${number}` | null,
     { evm: { getProvider }, notify }: FunctionOptions,
-): Promise<EVM.types.TransactionParams> {
+): Promise<[EVM.types.TransactionParams, bigint]> {
     // Parse and validate removal percentage
     removalPercentage = removalPercentage ?? `${100}`;
     if (!validatePercentage(removalPercentage)) throw new Error(`Invalid removal percentage: ${removalPercentage}`);
@@ -55,8 +58,8 @@ export async function buildWithdrawTransaction(
         notify(`Will withdraw ${removalPercentage}% of your mooTokens from the vault, for a total of ${toHumanReadableAmount(liquidityToRemoveInWei, mDecimals)} mooTokens`);
     }
 
-    // Return the withdraw transaction
-    return {
+    // Build the withdraw transaction
+    const tx = {
         target: vault.vaultContractAddress,
         data: encodeFunctionData({
             abi: beefyVaultAbi,
@@ -64,4 +67,7 @@ export async function buildWithdrawTransaction(
             args: [liquidityToRemoveInWei],
         }),
     };
+
+    // Return the withdraw transaction, the token info, and the amount of the deposited token that will be withdrawn
+    return [tx, vaultWithUserBalance.depositedTokenUserBalance as bigint];
 }

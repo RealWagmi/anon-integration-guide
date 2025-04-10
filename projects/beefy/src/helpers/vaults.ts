@@ -1,9 +1,9 @@
 import { erc20Abi, formatUnits, PublicClient } from 'viem';
 import { E18, MOO_TOKEN_DECIMALS } from '../constants';
-import BeefyClient, { ApyBreakdown, TvlInDollarsData, VaultInfo } from './beefyClient';
+import BeefyClient, { ApyBreakdown, TokenInfo, TvlInDollarsData, VaultInfo } from './beefyClient';
 import { getBeefyChainNameFromAnonChainName, getChainIdFromBeefyChainName, getChainIdFromProvider, isBeefyChainSupported } from './chains';
 import { titleCase, to$$$, toHumanReadableAmount } from './format';
-import { getTokenFraction } from './tokens';
+import { getTokenFraction, getTokenInfoFromAddress } from './tokens';
 import { beefyVaultAbi } from '../abis';
 
 /**
@@ -265,8 +265,8 @@ export async function getVaultsWithUserBalances(
 
         // Compute the user balances in the deposited token (rather
         // than the receipt mooToken)
-        vault.depositedTokenUserBalance = getDepositedTokenBalance(vault, vault.mooTokenUserBalance);
-        vault.userUsdTvl = await getUserTvlInVault(vault, vault.mooTokenUserBalance);
+        vault.depositedTokenUserBalance = getUserDepositedTokenBalance(vault, vault.mooTokenUserBalance);
+        vault.userUsdTvl = await getUserTvl(vault, vault.mooTokenUserBalance);
 
         // Update the vault TVL with the fresh USD balance
         if (vault.tvl !== null) {
@@ -348,6 +348,14 @@ export function vaultContainsToken(vault: SimplifiedVault, symbol: string, noLp:
 }
 
 /**
+ * Given a vault, return the extended info of the deposited token
+ */
+export async function getDepositedTokenInfo(vault: SimplifiedVault, provider: PublicClient): Promise<TokenInfo> {
+    const address = await getDepositedTokenAddress(vault, provider);
+    return getTokenInfoFromAddress(vault.chain, address);
+}
+
+/**
  * Return the URL the user has to visit to acquire the deposited token
  * for a given vault.  This is either an liquidiry add page or a swap
  * token page.
@@ -385,7 +393,7 @@ export async function getDepositedTokenAddress(vault: SimplifiedVault, provider:
  * Given a vault, return the price of the vault deposited token
  * in USD, using the Beefy API.
  */
-export async function getVaultDepositedTokenPrice(vault: SimplifiedVault): Promise<number> {
+export async function getDepositedTokenPrice(vault: SimplifiedVault): Promise<number> {
     const beefyClient = new BeefyClient();
     if (vault.oracle === 'tokens') {
         const prices = await beefyClient.getPrices();
@@ -403,7 +411,7 @@ export async function getVaultDepositedTokenPrice(vault: SimplifiedVault): Promi
  * amount of deposited tokens the user has in the vault.  This is computed as the
  * product of the user's mooToken balance and the price per full share.
  */
-export function getDepositedTokenBalance(vault: SimplifiedVault, mooTokenUserBalance: bigint): bigint {
+export function getUserDepositedTokenBalance(vault: SimplifiedVault, mooTokenUserBalance: bigint): bigint {
     return (BigInt(vault.pricePerFullShare) * mooTokenUserBalance) / E18;
 }
 
@@ -418,8 +426,8 @@ export function getDepositedTokenBalance(vault: SimplifiedVault, mooTokenUserBal
  *
  * Source: https://discord.com/channels/755231190134554696/758368074968858645/1304062150913949747
  */
-export async function getUserTvlInVault(vault: SimplifiedVault, mooTokenUserBalance: bigint): Promise<number> {
-    const depositedTokenBalance = getDepositedTokenBalance(vault, mooTokenUserBalance);
-    const price = await getVaultDepositedTokenPrice(vault);
+export async function getUserTvl(vault: SimplifiedVault, mooTokenUserBalance: bigint): Promise<number> {
+    const depositedTokenBalance = getUserDepositedTokenBalance(vault, mooTokenUserBalance);
+    const price = await getDepositedTokenPrice(vault);
     return Number(formatUnits(depositedTokenBalance, vault.depositedTokenDecimals)) * price;
 }

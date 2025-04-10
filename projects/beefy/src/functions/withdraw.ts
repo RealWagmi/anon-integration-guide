@@ -2,6 +2,9 @@ import { Address } from 'viem';
 import { FunctionReturn, FunctionOptions, toResult, EVM, EvmChain } from '@heyanon/sdk';
 import { supportedChains } from '../constants';
 import { buildWithdrawTransaction } from '../helpers/withdraw';
+import { getDepositedTokenInfo, getSimplifiedVaultByIdAndChain, SimplifiedVault } from '../helpers/vaults';
+import { getBeefyChainNameFromAnonChainName } from '../helpers/chains';
+import { toHumanReadableAmount } from '../helpers/format';
 
 interface Props {
     chainName: string;
@@ -30,8 +33,9 @@ export async function withdraw({ chainName, account, vaultId, removalPercentage 
 
     // Build the transaction that needs to be sent
     let transaction: EVM.types.TransactionParams;
+    let liquidityToRemoveInWei: bigint;
     try {
-        transaction = await buildWithdrawTransaction(account, chainName, vaultId, removalPercentage, options);
+        [transaction, liquidityToRemoveInWei] = await buildWithdrawTransaction(account, chainName, vaultId, removalPercentage, options);
     } catch (error) {
         return toResult(error instanceof Error ? error.message : 'An unknown error occurred', true);
     }
@@ -40,5 +44,16 @@ export async function withdraw({ chainName, account, vaultId, removalPercentage 
 
     const result = await options.evm.sendTransactions({ chainId, account, transactions: [transaction] });
     const message = result.data[result.data.length - 1].message;
-    return toResult(result.isMultisig ? message : `Successfully withdrew ${removalPercentage ?? '100'}% of your liquidity from the vault. ${message}`);
+
+    // Get token info
+    const beefyChainName = getBeefyChainNameFromAnonChainName(chainName);
+    const vault = (await getSimplifiedVaultByIdAndChain(vaultId, beefyChainName)) as SimplifiedVault;
+    const depositedTokenInfo = await getDepositedTokenInfo(vault, options.evm.getProvider(chainId));
+    const dDecimals = depositedTokenInfo.decimals;
+
+    return toResult(
+        result.isMultisig
+            ? message
+            : `Successfully withdrawn ${toHumanReadableAmount(liquidityToRemoveInWei, dDecimals, dDecimals, dDecimals)} ${depositedTokenInfo.symbol} from the vault (${removalPercentage ?? '100'}% of your tokens). ${message}`,
+    );
 }

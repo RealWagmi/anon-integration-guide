@@ -80,12 +80,7 @@ export async function buildDepositExactTokensTransactions(
 
     // Check user balance
     let balance: bigint;
-    balance = await provider.readContract({
-        address: depositedTokenAddress as `0x${string}`,
-        abi: erc20Abi,
-        functionName: 'balanceOf',
-        args: [account],
-    });
+    balance = await provider.readContract({ address: depositedTokenAddress as `0x${string}`, abi: erc20Abi, functionName: 'balanceOf', args: [account] });
     if (balance < amountInWei) {
         let msg = `Not enough tokens: you need ${amount} ${vault.depositedTokenSymbol} but you have ${toHumanReadableAmount(balance, vault.depositedTokenDecimals)}`;
         if (vault.depositedTokenUrl) {
