@@ -213,7 +213,7 @@ export async function openPerp(
                 r: true,
                 t: {
                     trigger: {
-                        isMarket: false,
+                        isMarket: true,
                         triggerPx: formattedStopLossPrice,
                         tpsl: 'sl',
                     },
@@ -237,7 +237,7 @@ export async function openPerp(
                 r: true,
                 t: {
                     trigger: {
-                        isMarket: false,
+                        isMarket: true,
                         triggerPx: formattedTakeProfitPrice,
                         tpsl: 'tp',
                     },
