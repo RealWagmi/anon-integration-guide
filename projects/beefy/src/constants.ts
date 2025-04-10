@@ -82,3 +82,8 @@ export const DEFAULT_PRECISION = 6;
  * Useful for operations between floating point numbers and bigints.
  */
 export const WAD = 1000000000000000000n;
+
+/**
+ * Big number representing 10^18.
+ */
+export const E18 = 1000000000000000000n;

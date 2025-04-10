@@ -11,7 +11,7 @@ export function multiplyTokenAmount(amountInWei: bigint, multiplier: number): bi
 }
 
 /**
- * Get the fraction of a token that the user holds.
+ * Get the fraction of a token that the user holds with respect to the total supply.
  */
 export function getTokenFraction(amountInWei: bigint, totalSupplyInWei: bigint): number {
     return Number((WAD * amountInWei) / totalSupplyInWei) / Number(WAD);

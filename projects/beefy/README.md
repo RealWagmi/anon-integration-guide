@@ -16,10 +16,10 @@ Beefy allows you to earn the highest APYs across 20+ chains with safety and effi
     - Give me info on @beefy vault "Boosted Stable Rings"
 3. **Deposits & Withdrawals**
     - Deposit $500 in @beefy vault Silo Super Sonic on Sonic chain
-    - Deposit all of my USDC in @beefy vault "Seamless USDC" on Base chain
-    - Deposit half of my USDC in @beefy vault "Seamless USDC" on Base chain
-    - Withdraw 50% of my tokens from @beefy vault "Seamless USDC" on Base chain
-    - Withdraw all of my tokens from @beefy vault "Seamless USDC" on Base chain
+    - Deposit all in @beefy vault "Boosted Stable Rings" on Sonic chain
+    - Deposit 50% of my USDC in @beefy vault "Seamless USDC" on Base chain
+    - Withdraw 50% from @beefy vault "Seamless USDC" on Base chain
+    - Withdraw all from @beefy vault "Seamless USDC" on Base chain
 
 ## Available Functions
 
@@ -63,13 +63,15 @@ Options:
 ## To do
 
 - Handle timeline endpoint delay
-- Allow "Deposit all my tokens in vault Sonic Quartet Audition - Act II"
+- Allow depositing by percentage, without specifying the token, e.g. "Deposit half of my tokens in vault Sonic Quartet Audition - Act II"
+- Fix "Withdraw all from vault xxx"
 
 ## Future improvements
 
 - Implement Zap into position; requires performing the swap before depositing. [Not sure it is even recommended to do so](https://discord.com/channels/755231190134554696/758368074968858645/1304065221916098610).
 - Warn user if there are risks in the position (e.g. low liquidity, low TVL, etc.)
 - Include Beefy Boost into APY computation ([link](https://app.beefy.com/vault/beetsv3-sonic-beefyusdce-scusd) | [screen](https://d.pr/i/5NPz9B))
+- Related to the above: Merge related products in timeline: vaults, boosts and reward pools of the same bundle of products ([discord](https://discord.com/channels/755231190134554696/758368074968858645/1357402647430299750))
 
 ## KB
 

@@ -1,5 +1,5 @@
-import { erc20Abi, PublicClient } from 'viem';
-import { MOO_TOKEN_DECIMALS } from '../constants';
+import { erc20Abi, formatUnits, PublicClient } from 'viem';
+import { E18, MOO_TOKEN_DECIMALS } from '../constants';
 import BeefyClient, { ApyBreakdown, TvlInDollarsData, VaultInfo } from './beefyClient';
 import { getBeefyChainNameFromAnonChainName, getChainIdFromBeefyChainName, getChainIdFromProvider, isBeefyChainSupported } from './chains';
 import { titleCase, to$$$, toHumanReadableAmount } from './format';
@@ -19,17 +19,19 @@ export interface SimplifiedVault {
     oracle: 'lps' | 'tokens';
     oracleId: string;
     vaultContractAddress: `0x${string}`;
+    pricePerFullShare: string;
+    userUsdTvl?: number;
     depositedTokenSymbol: string;
     depositedTokenAddress?: `0x${string}`; // not set for chain tokens e.g. ETH on Ethereum
     depositedTokenDecimals: number;
     depositedTokenPlatform: string;
     depositedTokenProvider?: string;
     depositedTokenUrl: string | null;
+    depositedTokenUserBalance?: bigint;
     mooTokenSymbol: string;
     mooTokenAddress: `0x${string}`;
     mooTokenDecimals: number;
     mooTokenUserBalance?: bigint;
-    mooTokenUserUsdBalance?: number;
 }
 
 /**
@@ -87,6 +89,7 @@ export function buildSimplifiedVaults(vaults: VaultInfo[], apyBreakdown: ApyBrea
                 oracle: vault.oracle,
                 oracleId: vault.oracleId,
                 vaultContractAddress: vault.earnContractAddress,
+                pricePerFullShare: vault.pricePerFullShare,
                 depositedTokenSymbol: vault.token,
                 depositedTokenAddress: vault.tokenAddress,
                 depositedTokenDecimals: vault.tokenDecimals,
@@ -109,11 +112,13 @@ export function formatVault(vault: SimplifiedVault, titlePrefix: string = ''): s
     let parts = [];
     parts.push(`${titlePrefix}Vault ${vault.name}:`);
     const offset = '   ';
-    if (vault.mooTokenUserUsdBalance !== undefined) {
-        parts.push(`${offset}- Your balance: ${to$$$(vault.mooTokenUserUsdBalance, 2, 6)}`);
+    if (vault.userUsdTvl !== undefined) {
+        parts.push(`${offset}- Your balance: ${to$$$(vault.userUsdTvl, 2, 6)}`);
     }
-    if (vault.mooTokenUserBalance !== undefined) {
-        parts.push(`${offset}- Your balance in the vault token: ${toHumanReadableAmount(vault.mooTokenUserBalance, vault.mooTokenDecimals)} mooTokens`);
+    if (vault.depositedTokenUserBalance !== undefined) {
+        parts.push(
+            `${offset}- Your balance in the vault token: ${toHumanReadableAmount(vault.depositedTokenUserBalance, vault.depositedTokenDecimals)} ${vault.depositedTokenSymbol}`,
+        );
     }
     let by = titleCase(vault.depositedTokenPlatform);
     if (vault.depositedTokenProvider && vault.depositedTokenProvider !== vault.depositedTokenPlatform) {
@@ -240,7 +245,7 @@ export async function getUpdatedVaultsWithUserBalance(
 
     // Select only vaults with user balance > 0, and compute the user's USD balance
     for (let i = 0; i < vaults.length; i++) {
-        const vault = { ...vaults[i] }; // clone the vault to avoid mutating the original
+        const vault = { ...vaults[i] } as SimplifiedVault; // clone the vault to avoid mutating the original
 
         if (balanceResults[i].status !== 'success') {
             throw new Error(`Could not fetch balance of vault ${vaults[i].id}, please retry`);
@@ -248,26 +253,31 @@ export async function getUpdatedVaultsWithUserBalance(
         if (totalSupplyResults[i].status !== 'success') {
             throw new Error(`Could not fetch total supply of vault ${vaults[i].id}, please retry`);
         }
-        const balance = balanceResults[i].result;
-        const totalSupply = totalSupplyResults[i].result;
-        if (balance === 0n) {
+        vault.mooTokenUserBalance = balanceResults[i].result as bigint;
+        const totalSupply = totalSupplyResults[i].result as bigint;
+        if (vault.mooTokenUserBalance === 0n) {
             if (includeVaultsWithNoBalance) {
                 updatedVaults.push(vault);
             }
             continue;
         }
-        // Compute the user's USD balance
+
+        // Compute the user balances in the deposited token (rather
+        // than the receipt mooToken)
+        vault.depositedTokenUserBalance = getDepositedTokenBalance(vault, vault.mooTokenUserBalance);
+        vault.userUsdTvl = await getUserTvlInVault(vault, vault.mooTokenUserBalance);
+
+        // Update the vault TVL with the fresh USD balance
         if (vault.tvl !== null) {
-            const userFraction = getTokenFraction(balance as bigint, totalSupply as bigint);
-            vault.mooTokenUserUsdBalance = userFraction * vault.tvl;
+            const userFraction = getTokenFraction(vault.mooTokenUserBalance, totalSupply);
+            const staleUsdBalance = userFraction * vault.tvl;
+            vault.tvl += vault.userUsdTvl - staleUsdBalance;
         }
         updatedVaults.push(vault);
     }
 
     return updatedVaults;
 }
-
-// export async function getUserPositionsInVault(address: string, vaultId: string, chainName: string): Promise<SimplifiedVault[]> {
 
 /**
  * Return a simplified vault given a vault id and Beefy chain
@@ -344,7 +354,7 @@ export function getDepositedTokenUrl(vault: VaultInfo): string | null {
 }
 
 /**
- * Given a simplified vault, return the price of the vault deposited token
+ * Given a vault, return the price of the vault deposited token
  * in USD, using the Beefy API.
  */
 export async function getVaultDepositedTokenPrice(vault: SimplifiedVault): Promise<number> {
@@ -358,4 +368,30 @@ export async function getVaultDepositedTokenPrice(vault: SimplifiedVault): Promi
     } else {
         throw new Error(`Unknown oracle type ${vault.oracle} for vault ${vault.id}`);
     }
+}
+
+/**
+ * Given a vault and the user's mooToken balance in the vault, return the
+ * amount of deposited tokens the user has in the vault.  This is computed as the
+ * product of the user's mooToken balance and the price per full share.
+ */
+export function getDepositedTokenBalance(vault: SimplifiedVault, mooTokenUserBalance: bigint): bigint {
+    return (BigInt(vault.pricePerFullShare) * mooTokenUserBalance) / E18;
+}
+
+/**
+ * Given a vault and the user's mooToken balance in the vault, return the
+ * USD value of the user's TVL in the vault
+ *
+ * The formula is:
+ * - shares = mooToken user balance
+ * - deposited token amount = shares * price per full share
+ * - USD value = deposited token amount * price of deposited token
+ *
+ * Source: https://discord.com/channels/755231190134554696/758368074968858645/1304062150913949747
+ */
+export async function getUserTvlInVault(vault: SimplifiedVault, mooTokenUserBalance: bigint): Promise<number> {
+    const depositedTokenBalance = getDepositedTokenBalance(vault, mooTokenUserBalance);
+    const price = await getVaultDepositedTokenPrice(vault);
+    return Number(formatUnits(depositedTokenBalance, vault.depositedTokenDecimals)) * price;
 }
