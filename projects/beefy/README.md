@@ -38,6 +38,7 @@ Vault IDs can also be found by clicking on a vault in the Beefy website, and loo
 - `getMyPositionsPortfolio`: Show the top 10 vaults in the user portfolio. For each vault, show the tokens in the vault, the type of vault, the APY yield, and the dollar value of the user position in the vault.
 - `getBestApyForToken`: Show the top 10 vaults with the best APY yield for the given token, sorted by APY. By default, vaults where the token is part of a liquidity pool will be included, too.
 - `findVault`: Get information about a specific vault by either its ID or its name. The result will include info on any user positions in the vault.
+- `getBeefyCapabilities`: Get information about what Beefy can do and example prompts.
 
 ## Installation
 
@@ -70,16 +71,31 @@ Options:
 - `--debug-llm`: Show the actual LLM responses
 - `--debug-tools`: Show the output of every tool call
 
-## To do
+## Beefy CLI
 
-- Handle timeline endpoint delay
+This is a simple CLI to interact with Beefy, to test the various helpers, without having to go through the LLM.
+
+To use the CLI just run commands like:
+
+```bash
+pnpm run beefy-cli timeline --address <address>
+pnpm run beefy-cli user-vaults --chain sonic --address <address>
+pnpm run beefy-cli vault --chain base --id morpho-seamless-usdc
+```
+
+and so on. For a complete list of commands, see the [./src/beefy_cli folder](src/beefy_cli).
+
+## Beefy API client
+
+[Beefy API endpoints](https://docs.beefy.finance/developer-documentation/beefy-api) are used extensively by this integration. The Beefy API client can be found in the [./src/helpers/beefyClient.ts](src/helpers/beefyClient.ts) file. I wrote Typescript interfaces for the output of all endpoints... but I might have missed some details, like optional fields vs required ones.
 
 ## Future improvements
 
-- Implement Zap into position; requires performing the swap before depositing. [Not sure it is even recommended to do so](https://discord.com/channels/755231190134554696/758368074968858645/1304065221916098610).
 - Warn user if there are risks in the position (e.g. low liquidity, low TVL, etc.)
+- Handle timeline endpoint delay by fetching all of the mooTokens balances from the API
 - Include Beefy Boost into APY computation ([link](https://app.beefy.com/vault/beetsv3-sonic-beefyusdce-scusd) | [screen](https://d.pr/i/5NPz9B))
-- Related to the above: Merge related products in timeline: vaults, boosts and reward pools of the same bundle of products ([discord](https://discord.com/channels/755231190134554696/758368074968858645/1357402647430299750))
+- Merge related products in timeline: vaults, boosts and reward pools of the same bundle of products ([discord](https://discord.com/channels/755231190134554696/758368074968858645/1357402647430299750))
+- Implement Zap into position; requires performing the swap before depositing. [Not easy](https://discord.com/channels/755231190134554696/758368074968858645/1304065221916098610) or even [almost impossible](https://discord.com/channels/755231190134554696/758368074968858645/1359081924039151616).
 
 ## KB
 
