@@ -85,6 +85,24 @@ export const tools: AiTool[] = [
             { name: 'sizeUnit', type: 'string', enum: ['ASSET', 'USD'], description: 'Specifies whether the size is denominated in asset units or in USD.' },
             { name: 'leverage', type: 'number', description: 'Leverage multiplier for the position.' },
             { name: 'short', type: 'boolean', description: 'If true, opens a short position; if false, opens a long position.' },
+            {
+                name: 'limitPrice',
+                type: 'string',
+                description:
+                    "Optional. Only used in the case when it was explicitly specified that limit order needs to be opened at a specific price, or a specific price is specified, which represents the worst price the order should be accepted for. When limit order for a price / worst price is specified for, it is then provided as this field's value. ",
+            },
+            {
+                name: 'takeProfitPrice',
+                type: 'string',
+                description:
+                    'Optional. Only used in the case when it was explicitly specified that user wants to have "Take profit" enabled for the position, and what price does the asset need to reach in order for position to be closed. (In case user specifies something other than the asset price at which to do the take profit (e.g. the profit amount when to take it), it is invalid input and this function should not be called). ',
+            },
+            {
+                name: 'stopLossPrice',
+                type: 'string',
+                description:
+                    'Optional. Only used in the case when it was explicitly specified that user wants to have "Stop loss" enabled for the position, and what price does the asset need to reach in order for position to be closed. (In case user specifies something other than the asset price at which to do the stop loss (e.g. the loss amount it needs to reach for stopping it), it is invalid input and this function should not be called). ',
+            },
             { name: 'vault', type: 'string', description: 'Optional. Vault name or address.' },
         ],
     },
@@ -97,6 +115,12 @@ export const tools: AiTool[] = [
             { name: 'account', type: 'string', description: 'User wallet address that will have its perp position modified.' },
             { name: 'asset', type: 'string', enum: Object.keys(hyperliquidPerps), description: 'Name of the underlying asset of the perp position.' },
             { name: 'size', type: 'string', description: 'How many USD the position needs to be increased for. Positive for size increase and negative for size decrease.' },
+            {
+                name: 'limitPrice',
+                type: 'string',
+                description:
+                    "Optional. Only used in the case when it was explicitly specified that limit order needs to be opened at a specific price, or a specific price is specified, which represents the worst price the order should be accepted for. When limit order for a price / worst price is specified for, it is then provided as this field's value. ",
+            },
             { name: 'vault', type: 'string', description: 'Optional. Vault name or address.' },
         ],
     },
@@ -113,6 +137,12 @@ export const tools: AiTool[] = [
                 type: 'string',
                 description: 'Amount of underlying token that the position needs to be increased for. Positive for size increase and negative for size decrease.',
             },
+            {
+                name: 'limitPrice',
+                type: 'string',
+                description:
+                    "Optional. Only used in the case when it was explicitly specified that limit order needs to be opened at a specific price, or a specific price is specified, which represents the worst price the order should be accepted for. When limit order for a price / worst price is specified for, it is then provided as this field's value. ",
+            },
             { name: 'vault', type: 'string', description: 'Optional. Vault name or address.' },
         ],
     },
@@ -125,6 +155,12 @@ export const tools: AiTool[] = [
             { name: 'account', type: 'string', description: 'User wallet address that will have its perp position increased.' },
             { name: 'asset', type: 'string', enum: Object.keys(hyperliquidPerps), description: 'Name of the underlying asset of the perp position.' },
             { name: 'sizeMultiplier', type: 'string', description: 'Multiplier to increase the position (e.g., 1.5 to increase by 50%).' },
+            {
+                name: 'limitPrice',
+                type: 'string',
+                description:
+                    "Optional. Only used in the case when it was explicitly specified that limit order needs to be opened at a specific price, or a specific price is specified, which represents the worst price the order should be accepted for. When limit order for a price / worst price is specified for, it is then provided as this field's value. ",
+            },
             { name: 'vault', type: 'string', description: 'Optional. Vault name or address.' },
         ],
     },
@@ -137,6 +173,12 @@ export const tools: AiTool[] = [
             { name: 'account', type: 'string', description: 'User wallet address whose perp position will be decreased.' },
             { name: 'asset', type: 'string', enum: Object.keys(hyperliquidPerps), description: 'Name of the underlying asset of the perp position.' },
             { name: 'sizeMultiplier', type: 'string', description: 'Multiplier to decrease the position (e.g., 0.5 to reduce by 50%).' },
+            {
+                name: 'limitPrice',
+                type: 'string',
+                description:
+                    "Optional. Only used in the case when it was explicitly specified that limit order needs to be opened at a specific price, or a specific price is specified, which represents the worst price the order should be accepted for. When limit order for a price / worst price is specified for, it is then provided as this field's value. ",
+            },
             { name: 'vault', type: 'string', description: 'Optional. Vault name or address.' },
         ],
     },
@@ -151,6 +193,12 @@ export const tools: AiTool[] = [
                 type: 'string',
                 enum: Object.keys(hyperliquidPerps),
                 description: 'Name of the underlying asset whose perp position should be closed.',
+            },
+            {
+                name: 'limitPrice',
+                type: 'string',
+                description:
+                    "Optional. Only used in the case when it was explicitly specified that limit order needs to be opened at a specific price, or a specific price is specified, which represents the worst price the order should be accepted for. When limit order for a price / worst price is specified for, it is then provided as this field's value. ",
             },
             { name: 'vault', type: 'string', description: 'Optional. Vault name or address.' },
         ],
