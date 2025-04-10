@@ -49,11 +49,13 @@ export async function depositFractionOfTokens({ chainName, account, vaultId, per
     let amountToDepositInWei;
     if (percentage === '100') {
         amountToDepositInWei = userBalance;
-        options.notify(`Will deposit all of your ${vault.depositedTokenSymbol} into the vault (${toHumanReadableAmount(amountToDepositInWei, vault.depositedTokenDecimals)})`);
+        options.notify(
+            `Will deposit all of your ${vault.depositedTokenSymbol} tokens into the vault (${toHumanReadableAmount(amountToDepositInWei, vault.depositedTokenDecimals)})`,
+        );
     } else {
         amountToDepositInWei = (userBalance * BigInt(percentage)) / 100n;
         options.notify(
-            `Will deposit ${percentage}% of your ${vault.depositedTokenSymbol} into the vault, for a total of ${toHumanReadableAmount(amountToDepositInWei, vault.depositedTokenDecimals)} ${vault.depositedTokenSymbol}`,
+            `Will deposit ${percentage}% of your ${vault.depositedTokenSymbol} tokens into the vault, for a total of ${toHumanReadableAmount(amountToDepositInWei, vault.depositedTokenDecimals)} ${vault.depositedTokenSymbol}`,
         );
     }
 
@@ -81,5 +83,9 @@ export async function depositFractionOfTokens({ chainName, account, vaultId, per
 
     const result = await options.evm.sendTransactions({ chainId, account, transactions });
     const message = result.data[result.data.length - 1].message;
-    return toResult(result.isMultisig ? message : `Successfully deposited ${formatUnits(amountToDepositInWei, vault.depositedTokenDecimals)} ${depositedTokenInfo.id}. ${message}`);
+    return toResult(
+        result.isMultisig
+            ? message
+            : `Successfully deposited ${formatUnits(amountToDepositInWei, vault.depositedTokenDecimals)} ${depositedTokenInfo.id} tokens in the vault. ${message}`,
+    );
 }

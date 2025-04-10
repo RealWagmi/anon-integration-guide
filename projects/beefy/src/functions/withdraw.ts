@@ -54,6 +54,6 @@ export async function withdraw({ chainName, account, vaultId, removalPercentage 
     return toResult(
         result.isMultisig
             ? message
-            : `Successfully withdrawn ${toHumanReadableAmount(liquidityToRemoveInWei, dDecimals, dDecimals, dDecimals)} ${depositedTokenInfo.symbol} from the vault (${removalPercentage ?? '100'}% of your tokens). ${message}`,
+            : `Successfully withdrawn ${toHumanReadableAmount(liquidityToRemoveInWei, dDecimals, dDecimals, dDecimals)} ${depositedTokenInfo.symbol} tokens from the vault (${removalPercentage ?? '100'}% of your tokens). ${message}`,
     );
 }

@@ -97,7 +97,7 @@ export async function buildDepositExactTokensTransactions(
         transactions,
     });
 
-    await notify(`Preparing to deposit ${amount} ${depositedTokenInfo.id} into vault ${vault.name}...`);
+    await notify(`Preparing to deposit ${amount} ${depositedTokenInfo.id} tokens into vault ${vault.name}...`);
 
     // Prepare deposit transaction
     const tx: EVM.types.TransactionParams = {

@@ -49,13 +49,21 @@ export async function buildWithdrawTransaction(
     );
 
     // Calculate the amount of liquidity to remove
-    let liquidityToRemoveInWei;
+    let liquidityToRemoveInWei: bigint;
+    let depositedTokensToWithdrawInWei: bigint;
+    const depositedTokenUserBalance = vaultWithUserBalance.depositedTokenUserBalance as bigint;
     if (removalPercentage === '100') {
         liquidityToRemoveInWei = userLiquidityInWei;
-        notify(`Will remove all liquidity from the vault`);
+        depositedTokensToWithdrawInWei = depositedTokenUserBalance;
+        notify(
+            `Will withdraw all of your tokens from the vault, for a total of ${toHumanReadableAmount(depositedTokensToWithdrawInWei, dDecimals)} ${vault.depositedTokenSymbol} tokens`,
+        );
     } else {
         liquidityToRemoveInWei = (userLiquidityInWei * BigInt(removalPercentage)) / 100n;
-        notify(`Will withdraw ${removalPercentage}% of your mooTokens from the vault, for a total of ${toHumanReadableAmount(liquidityToRemoveInWei, mDecimals)} mooTokens`);
+        depositedTokensToWithdrawInWei = (depositedTokenUserBalance * BigInt(removalPercentage)) / 100n;
+        notify(
+            `Will withdraw ${removalPercentage}% of your tokens from the vault, for a total of ${toHumanReadableAmount(depositedTokensToWithdrawInWei, dDecimals)} ${vault.depositedTokenSymbol} tokens`,
+        );
     }
 
     // Build the withdraw transaction
@@ -69,5 +77,5 @@ export async function buildWithdrawTransaction(
     };
 
     // Return the withdraw transaction, the token info, and the amount of the deposited token that will be withdrawn
-    return [tx, vaultWithUserBalance.depositedTokenUserBalance as bigint];
+    return [tx, depositedTokensToWithdrawInWei];
 }

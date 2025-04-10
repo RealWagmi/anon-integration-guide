@@ -49,5 +49,5 @@ export async function depositExactTokens({ chainName, account, vaultId, amount, 
 
     const result = await options.evm.sendTransactions({ chainId, account, transactions });
     const message = result.data[result.data.length - 1].message;
-    return toResult(result.isMultisig ? message : `Successfully deposited ${amount} ${depositedTokenInfo.id}. ${message}`);
+    return toResult(result.isMultisig ? message : `Successfully deposited ${amount} ${depositedTokenInfo.id} tokens in the vault. ${message}`);
 }
