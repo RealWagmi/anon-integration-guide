@@ -174,8 +174,10 @@ export async function openPerp(
         // Preparing, signing and sending the action to Hyperliquid
         //
         const slippageAmount = 0.03 * midPrice;
-        const executionPrice = (Number(sizeAsset) < 0 ? !short : short) ? midPrice - slippageAmount : midPrice + slippageAmount;
-        const formattedExecutionPrice = _formatPrice(executionPrice, perpInfo.szDecimals).replace(/\.?0+$/, '');
+        const executionPriceMarketOrder = (Number(sizeAsset) < 0 ? !short : short) ? midPrice - slippageAmount : midPrice + slippageAmount;
+        const formattedExecutionPrice = _formatPrice(Number(limitPrice || '0') || executionPriceMarketOrder, perpInfo.szDecimals)
+            .replace(/(\.\d*?[1-9])0+$/g, '$1')
+            .replace(/\.0+$/g, '');
         const formattedSize = _formatSize(Math.abs(sizeAsset), perpInfo.szDecimals);
 
         const action = {
