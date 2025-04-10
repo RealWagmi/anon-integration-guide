@@ -216,7 +216,7 @@ export const tools: AiTool[] = [
     {
         name: 'getSpotBalances',
         description:
-            "Retrieves user's spot balances on Hyperliquid. This function is ONLY used for retreiving data, and it does not modify any of the spot balances. This function should be called ONLY if it has been explicitly stated that list of user's spot assets is needed. DON'T call this function if some change is explicitly asked for. NEVER CALL THIS FUNCTION IF SOMETHING ELSE IS NEEDED! ",
+            "Retrieves user's spot balances on Hyperliquid. This function is ONLY used for retreiving data, and it does not modify any of the spot balances. This function should be called ONLY if it has been explicitly stated that list of user's spot assets is needed. DON'T call this function if some change is explicitly asked for. NEVER CALL THIS FUNCTION IF SOMETHING ELSE IS NEEDED! Vaults do not have spot balances and this function should not be called for them.",
         required: ['account'],
         props: [
             {
@@ -229,7 +229,7 @@ export const tools: AiTool[] = [
     {
         name: 'getPerpBalances',
         description:
-            "Retrieves user's available balance in their Hyperliquid perpetual account. This function is ONLY used for retreiving data, and it does not modify the perpetual account balance. This function should be called ONLY if it has been explicitly stated that his balance of hyperliquid perp account is needed. DON'T call this function if some change is explicitly asked for. If vault is provided, retrieves the balance for that vault. NEVER CALL THIS FUNCTION IF SOMETHING ELSE IS NEEDED! ",
+            "Retrieves user's available balance (USDC/USD) in their Hyperliquid perpetual account. This function is ONLY used for retreiving data, and it does not modify the perpetual account balance. This function should be called ONLY if it has been explicitly stated that his balance of hyperliquid perp account is needed. DON'T call this function if some change is explicitly asked for. If vault is provided, retrieves the balance for that vault. NEVER CALL THIS FUNCTION IF SOMETHING ELSE IS NEEDED! ",
         required: ['account'],
         props: [
             { name: 'account', type: 'string', description: 'User wallet address to check for perpetual balance.' },
@@ -250,7 +250,8 @@ export const tools: AiTool[] = [
             {
                 name: 'asset',
                 type: 'string',
-                description: 'If word "margin" has not been mentioned in the prompt text, this function should not be called. Asset identifier of the position that user wants to add margin to.',
+                description:
+                    'If word "margin" has not been mentioned in the prompt text, this function should not be called. Asset identifier of the position that user wants to add margin to.',
             },
             {
                 name: 'amount',
@@ -286,7 +287,8 @@ export const tools: AiTool[] = [
                 name: 'asset',
                 type: 'string',
                 enum: Object.keys(hyperliquidPerps),
-                description: 'If word "margin" has not been mentioned in the prompt text, this function should not be called. Asset identifier of the position that user wants to remove margin from.',
+                description:
+                    'If word "margin" has not been mentioned in the prompt text, this function should not be called. Asset identifier of the position that user wants to remove margin from.',
             },
             {
                 name: 'amount',
