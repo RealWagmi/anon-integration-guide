@@ -22,6 +22,9 @@ export const ONE_WEEK_MS = 7 * ONE_DAY_MS; // 1 week
 export const ONE_MONTH_MS = 30 * ONE_DAY_MS; // 1 month (approximated as 30 days)
 export const DEFAULT_FUNDING_RATE_RANGE_MS = ONE_DAY_MS; // Default 24h
 
+// Default slippage for immediate orders on Hyperliquid frontend
+export const DEFAULT_HYPERLIQUID_SLIPPAGE = 0.08;
+
 interface TokenInfo {
     tokenAddress: string;
     decimals: number;
