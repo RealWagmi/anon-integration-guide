@@ -65,7 +65,8 @@ export async function openPerp(
         for (const { position } of assetPositions) {
             const { coin } = position;
             if (coin == asset && !closing && !updating) {
-                return toResult('You already have a perp in that asset, close it in order to open a new one.', true);
+                // Disabled this one, it can be re-enabled or only triggered on non-limit orders
+                // return toResult('You already have a perp in that asset, close it in order to open a new one.', true);
             }
             if (coin == asset) {
                 openPosition = position;
