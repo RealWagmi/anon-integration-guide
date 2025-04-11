@@ -1,0 +1,46 @@
+{
+  "name": "@heyanon/project-hyperliquid",
+  "version": "1.0.0",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "module": "dist/index.mjs",
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "start": "tsup --watch",
+    "build": "tsup",
+    "test": "vitest --run",
+    "lint": "tsdx lint",
+    "prepare": "pnpm run build",
+    "size": "size-limit",
+    "analyze": "size-limit --why",
+    "format": "prettier --write \"*/**/*.ts\""
+  },
+  "devDependencies": {
+    "@size-limit/preset-small-lib": "^9.0.0",
+    "@types/big.js": "^6.2.0",
+    "@types/jest": "^29.5.12",
+    "@types/ws": "^8.18.0",
+    "tsdx": "^0.14.1",
+    "tslib": "^2.6.2",
+    "tsup": "^7.2.0",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "@heyanon/sdk": "^2.0.2",
+    "@msgpack/msgpack": "2.8.0",
+    "axios": "^1.8.1",
+    "viem": "2.22.9",
+    "vitest": "^2.1.8",
+    "ws": "^8.18.1"
+  },
+  "description": "Hyperliquid is Layer 1 blockchain providing CEX-like trading experience through on-chain order books. Enables USDC bridging and supports both spot/perpetual trading with full position management."
+}
