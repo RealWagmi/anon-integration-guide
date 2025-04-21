@@ -1,52 +1,50 @@
 {
-  "name": "@heyanon/project-binance",
-  "version": "1.0.0",
-  "license": "MIT",
-  "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
-  "module": "dist/index.mjs",
-  "files": [
-      "dist"
-  ],
-  "engines": {
-      "node": ">=18"
-  },
-  "publishConfig": {
-      "access": "public"
-  },
-  "scripts": {
-      "start": "tsup --watch",
-      "build": "tsup",
-      "test": "vitest --run",
-      "lint": "tsdx lint",
-      "prepare": "pnpm run build",
-      "size": "size-limit",
-      "analyze": "size-limit --why",
-      "format": "prettier --write \"*/**/*.ts\"",
-      "ask-binance": "tsup src/ask_binance/run.ts > /dev/null && node dist/run.js",
-      "binance-cli": "pnpm build > /dev/null && node dist/binance_cli/index.js"
-  },
-  "devDependencies": {
-      "@size-limit/preset-small-lib": "^9.0.0",
-      "@types/big.js": "^6.2.0",
-      "@types/jest": "^29.5.12",
-      "@types/node": "^22.13.4",
-      "chalk": "4",
-      "dotenv": "^16.4.7",
-      "openai": "^4.80.0",
-      "prettier": "^3.4.2",
-      "tsdx": "^0.14.1",
-      "tslib": "^2.6.2",
-      "tsup": "^7.2.0",
-      "typescript": "^5.7.3"
-  },
-  "dependencies": {
-      "@heyanon/sdk": "^2.0.2",
-      "axios": "^1.7.9",
-      "commander": "^12.1.0",
-      "dotenv": "^16.4.7",
-      "viem": "2.22.9",
-      "vitest": "^2.1.8"
-  },
-  "description": "Binance Spot and Futures"
+    "name": "@heyanon/project-binance",
+    "version": "1.0.0",
+    "license": "MIT",
+    "main": "dist/index.js",
+    "typings": "dist/index.d.ts",
+    "module": "dist/index.mjs",
+    "files": [
+        "dist"
+    ],
+    "engines": {
+        "node": ">=18"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "start": "tsup --watch",
+        "build": "tsup",
+        "test": "vitest --run",
+        "lint": "tsdx lint",
+        "prepare": "pnpm run build",
+        "size": "size-limit",
+        "analyze": "size-limit --why",
+        "format": "prettier --write \"*/**/*.ts\"",
+        "ask-binance": "tsup src/ask_binance/run.ts > /dev/null && node dist/run.js",
+        "binance-cli": "pnpm build > /dev/null && node dist/binance_cli/index.js"
+    },
+    "devDependencies": {
+        "@size-limit/preset-small-lib": "^9.0.0",
+        "@types/big.js": "^6.2.0",
+        "@types/jest": "^29.5.12",
+        "@types/node": "^22.13.4",
+        "chalk": "4",
+        "commander": "^12.1.0",
+        "dotenv": "^16.4.7",
+        "openai": "^4.80.0",
+        "prettier": "^3.4.2",
+        "tsdx": "^0.14.1",
+        "tslib": "^2.6.2",
+        "tsup": "^7.2.0",
+        "typescript": "^5.7.3"
+    },
+    "dependencies": {
+        "@heyanon/sdk": "^2.1.13",
+        "ccxt": "^4.4.77",
+        "vitest": "^2.1.8"
+    },
+    "description": "Binance Spot and Futures"
 }

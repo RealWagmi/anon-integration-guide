@@ -9,20 +9,11 @@ importers:
   .:
     dependencies:
       '@heyanon/sdk':
-        specifier: ^2.0.2
-        version: 2.1.8(@ton/crypto@3.3.0)(@types/node@22.13.17)(bufferutil@4.0.9)(jsdom@15.2.1(bufferutil@4.0.9)(utf-8-validate@5.0.10))(typescript@5.8.2)(utf-8-validate@5.0.10)(zod@3.24.2)
-      axios:
-        specifier: ^1.7.9
-        version: 1.8.4
-      commander:
-        specifier: ^12.1.0
-        version: 12.1.0
-      dotenv:
-        specifier: ^16.4.7
-        version: 16.4.7
-      viem:
-        specifier: 2.22.9
-        version: 2.22.9(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)(zod@3.24.2)
+        specifier: ^2.1.13
+        version: 2.1.13(@ton/crypto@3.3.0)(@types/node@22.13.17)(bufferutil@4.0.9)(jsdom@15.2.1(bufferutil@4.0.9)(utf-8-validate@5.0.10))(typescript@5.8.2)(utf-8-validate@5.0.10)(zod@3.24.2)
+      ccxt:
+        specifier: ^4.4.77
+        version: 4.4.77(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       vitest:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@22.13.17)(jsdom@15.2.1(bufferutil@4.0.9)(utf-8-validate@5.0.10))
@@ -42,6 +33,12 @@ importers:
       chalk:
         specifier: '4'
         version: 4.1.2
+      commander:
+        specifier: ^12.1.0
+        version: 12.1.0
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.4.7
       openai:
         specifier: ^4.80.0
         version: 4.91.1(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(zod@3.24.2)
@@ -906,8 +903,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@heyanon/sdk@2.1.8':
-    resolution: {integrity: sha512-O1ptK0OUXT5A5vJfsS/iTBz0ZyI4jBDQ6GpdhMADAwY2FzxmP/TaG+t0SLQGKR2l2v0uN1H0EKyoEVuHHD5TQw==}
+  '@heyanon/sdk@2.1.13':
+    resolution: {integrity: sha512-nLOkEYH78OH5hGLgNZhtAs3O30IgRp93ZrkqZpvfoj7/zx3eSUpYBff0zhR8WhxYzrmdWsPOidqtJQfCBnsvEQ==}
     engines: {node: '>=18'}
 
   '@isaacs/cliui@8.0.2':
@@ -1880,6 +1877,11 @@ packages:
 
   caseless@0.12.0:
     resolution: {integrity: sha512-4tYFyifaFfGacoiObjJegolkwSU4xQNGbVgUiNYVUxbQ2x2lUsFvY4hVgVzGiIe6WLOPqycWXA40l+PWsxthUw==}
+
+  ccxt@4.4.77:
+    resolution: {integrity: sha512-BKRJRJ1PZQ2jn5i6wM0bUEE04Vkmy9pky9wJLaGZsbp39ZjCRPhHhFbr00GFfUI/msWZaaiZkH0ubCSjkaOBPw==}
+    engines: {node: '>=15.0.0'}
+    hasBin: true
 
   chai@4.5.0:
     resolution: {integrity: sha512-RITGBfijLkBddZvnn8jdqoTypxvqbOLYQkGGxXzeFjVHvudaPw0HNFD9x928/eUwYWd2dPCugVqspGALTZZQKw==}
@@ -5994,7 +5996,7 @@ snapshots:
   '@esbuild/win32-x64@0.21.5':
     optional: true
 
-  '@heyanon/sdk@2.1.8(@ton/crypto@3.3.0)(@types/node@22.13.17)(bufferutil@4.0.9)(jsdom@15.2.1(bufferutil@4.0.9)(utf-8-validate@5.0.10))(typescript@5.8.2)(utf-8-validate@5.0.10)(zod@3.24.2)':
+  '@heyanon/sdk@2.1.13(@ton/crypto@3.3.0)(@types/node@22.13.17)(bufferutil@4.0.9)(jsdom@15.2.1(bufferutil@4.0.9)(utf-8-validate@5.0.10))(typescript@5.8.2)(utf-8-validate@5.0.10)(zod@3.24.2)':
     dependencies:
       '@real-wagmi/sdk': 1.4.5(@types/node@22.13.17)(bufferutil@4.0.9)(jsdom@15.2.1(bufferutil@4.0.9)(utf-8-validate@5.0.10))(typescript@5.8.2)(utf-8-validate@5.0.10)(zod@3.24.2)
       '@solana/web3.js': 1.98.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
@@ -7228,6 +7230,13 @@ snapshots:
       rsvp: 4.8.5
 
   caseless@0.12.0: {}
+
+  ccxt@4.4.77(bufferutil@4.0.9)(utf-8-validate@5.0.10):
+    dependencies:
+      ws: 8.18.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   chai@4.5.0:
     dependencies:

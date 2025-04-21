@@ -1,4 +1,5 @@
-import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
+import { FunctionReturn, toResult } from '@heyanon/sdk';
+import { FunctionOptionsWithExchange } from '../overrides';
 
 interface Props {
     symbol: string;
@@ -22,13 +23,13 @@ interface Props {
  * @param {FunctionOptions} options
  * @returns {Promise<FunctionReturn>} A message confirming the order or an error description
  */
-export async function createSimpleSpotOrder({ symbol, type, side, amount, price }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+export async function createSimpleSpotOrder({ symbol, type, side, amount, price }: Props, { exchange }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
     // Print arguments
     console.log('symbol', symbol);
     console.log('type', type);
     console.log('side', side);
     console.log('amount', amount);
     console.log('price', price);
-    console.log('options', options);
+    console.log('exchange', exchange);
     return toResult('Not implemented', true);
 }

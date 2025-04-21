@@ -1,3 +1,4 @@
+import * as ccxt from 'ccxt';
 import OpenAI from 'openai';
 import { tools } from '../tools';
 import { tools as askBinanceTools } from './tools';
@@ -5,14 +6,15 @@ import * as heyAnonFunctions from '../functions';
 import util from 'util';
 import chalk from 'chalk';
 import { fromHeyAnonToolsToOpenAiTools } from './helpers/openai';
-import { FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
+import { FunctionReturn, toResult } from '@heyanon/sdk';
+import { FunctionOptionsWithExchange } from '../overrides';
 
 // AI configuration
 const OPENAI_MODEL = 'gpt-4o';
 const DEEPSEEK_MODEL = 'deepseek-reasoner';
 
 // Protocol & chain configuration
-const PROTOCOL_NAME = 'Binance';
+const EXCHANGE_NAME = 'Binance';
 
 // Merge HeyAnon & AskBinance functions (no AskBinance functions yet)
 const functions = { ...heyAnonFunctions };
@@ -26,12 +28,45 @@ interface ConversationMessage {
 }
 
 function getSystemPrompt() {
-    return `You will interact with ${PROTOCOL_NAME} via your tools.
+    return `You will interact with ${EXCHANGE_NAME} exchange via your tools.
  You MUST ALWAYS call a tool to get information. 
  NEVER try to guess pair symbols or currency names without calling the appropriate tool.
  You WILL NOT modify pair symbols or currency names, not even to make them plural.`;
 }
 
+/**
+ * Get authenticated exchange object from the CCXT library.
+ * 
+ * If the EXCHANGE_API_KEY and EXCHANGE_SECRET_KEY environment variables are set, use them to create the exchange.
+ * Otherwise, throw an error.
+ */
+function getExchange() {
+    // Is exchange supported?
+    if (!Object.keys(ccxt).includes(EXCHANGE_NAME.toLowerCase())) {
+        throw new Error(`Exchange named '${EXCHANGE_NAME}' is not supported by CCXT.`);
+    }
+
+    // Get API keys from environment
+    const exchangeApiKey = process.env[`${EXCHANGE_NAME.toUpperCase()}_API_KEY`];
+    const exchangeSecret = process.env[`${EXCHANGE_NAME.toUpperCase()}_SECRET_KEY`];
+    if (!exchangeApiKey || !exchangeSecret) {
+        throw new Error(`${EXCHANGE_NAME.toUpperCase()}_API_KEY and ${EXCHANGE_NAME.toUpperCase()}_SECRET environment variables are required`);
+    }
+
+    // Return exchange object
+    try {
+        return new (ccxt as any)[EXCHANGE_NAME.toLowerCase()]({ apiKey: exchangeApiKey, secret: exchangeSecret });
+    } catch (error) {
+        throw new Error(`Failed to create ${EXCHANGE_NAME} exchange: ${error instanceof Error ? `${error.message}` : 'Unknown error'}`);
+    }
+}
+
+/**
+ * Get the LLM client.
+ * 
+ * If the DEEPSEEK_API_KEY environment variable is set, use the DeepSeek API.
+ * Otherwise, use the OpenAI API.
+ */
 function getLlmClient() {
     const openaiApiKey = process.env.OPENAI_API_KEY;
     const deepseekApiKey = process.env.DEEPSEEK_API_KEY;
@@ -78,7 +113,8 @@ export async function askBinance({ action, debugLlm, debugTools, notify }: AskBi
     // Create minimal FunctionOptions object
     const functionOptions = {
         notify,
-    } as FunctionOptions;
+        exchange: getExchange(),
+    } as FunctionOptionsWithExchange;
 
     const messages: ConversationMessage[] = [
         {
