@@ -31,7 +31,7 @@ export const tools: AiTool[] = [
             },
             {
                 name: 'side',
-                type: 'string',
+                type: ['string', 'null'],
                 enum: ['buy', 'sell'],
                 description: 'Side of the order; either "buy" or "sell"',
             },
@@ -42,7 +42,7 @@ export const tools: AiTool[] = [
             },
             {
                 name: 'price',
-                type: 'number',
+                type: ['number', 'null'],
                 description: 'Buy or sell at this price.  Only for limit orders.',
             },
         ],
