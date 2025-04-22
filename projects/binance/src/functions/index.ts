@@ -1,2 +1,2 @@
-export { getPairsWithCurrency } from './getPairsWithCurrency';
+export { getCurrencyMarkets } from './getCurrencyMarkets';
 export { createSimpleSpotOrder } from './createSimpleSpotOrder';

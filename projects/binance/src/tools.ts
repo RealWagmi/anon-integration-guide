@@ -2,26 +2,26 @@ import { AiTool } from '@heyanon/sdk';
 
 export const tools: AiTool[] = [
     {
-        name: 'getPairsWithCurrency',
-        description: 'Get a list of all pair symbols that include a given currency.',
+        name: 'getCurrencyMarkets',
+        description: 'Get a list of all active markets that include a given currency.  Returns a list of market symbols.',
         required: ['currency'],
         props: [
             {
                 name: 'currency',
                 type: 'string',
-                description: 'Currency to get pairs for, e.g. "BTC"',
+                description: 'Currency to get markets for, e.g. "BTC"',
             },
         ],
     },
     {
         name: 'createSimpleSpotOrder',
-        description: 'Create a simple spot order, with no conditionals attached.  For example, to buy 1 BTC for 100,000 USDT, you would set the symbol to "BTC/USDT", the type to "limit", the side to "buy", the amount to 1, the price to 100000.',
-        required: ['symbol', 'type', 'side', 'amount', 'price'],
+        description: 'Create a simple spot order, with no conditionals attached.  For example, to buy 1 BTC for 100,000 USDT, you would set the market to "BTC/USDT", the type to "limit", the side to "buy", the amount to 1, the price to 100000.',
+        required: ['market', 'type', 'side', 'amount', 'price'],
         props: [
             {
-                name: 'symbol',
+                name: 'market',
                 type: 'string',
-                description: 'Symbol of the pair to trade, for example "BTC/USDT" or "AAVE/ETH"',
+                description: 'Symbol of the market to trade, for example "BTC/USDT" or "AAVE/ETH"',
             },
             {
                 name: 'type',

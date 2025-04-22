@@ -30,8 +30,8 @@ interface ConversationMessage {
 function getSystemPrompt() {
     return `You will interact with ${EXCHANGE_NAME} exchange via your tools.
  You MUST ALWAYS call a tool to get information. 
- NEVER try to guess pair symbols or currency names without calling the appropriate tool.
- You WILL NOT modify pair symbols or currency names, not even to make them plural.`;
+ NEVER try to guess market symbols or currency names without calling the appropriate tool.
+ You WILL NOT modify market symbols or currency names, not even to make them plural.`;
 }
 
 /**

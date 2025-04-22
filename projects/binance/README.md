@@ -1,6 +1,6 @@
 # binance
 
-Binance Spot and Futures
+Binance Spot and Futures Trading
 
 ## Installation
 
