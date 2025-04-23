@@ -1,38 +1,14 @@
-# binance
+# Binance Spot and Futures Trading
 
-Binance Spot and Futures Trading
+Integration between HeyAnon.ai and Binance Spot and Futures trading.
 
-## Installation
+## Common Tasks
 
-```bash
-pnpm add @heyanon/binance
-```
+1. **Markets**
+    - Show all markets with AAVE @binance
+    - Price of AAVE/USDT @binance
+    - Market buy 1 AAVE on AAVE/USDT @binance
 
-## Supported Functions
-
-List of available functions will be added here.
-
-## Usage
-
-Example usage will be added here.
-
-## Development
-
-1. Install dependencies:
-```bash
-pnpm install
-```
-
-2. Build the project:
-```bash
-pnpm run build
-```
-
-3. Run tests:
-```bash
-pnpm test
-```
-
-## Documentation
-
-Detailed documentation will be added here.
+2. **Orders**
+    - Show all my open orders on @binance
+    - Cancel all orders on @binance

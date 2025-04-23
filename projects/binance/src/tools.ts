@@ -14,6 +14,18 @@ export const tools: AiTool[] = [
         ],
     },
     {
+        name: 'getMarketInfo',
+        description: 'Get information about a specific market, most importantly: last price, bid price, ask price, 24h volume, and more.  Prices are in quote currency.',
+        required: ['market'],
+        props: [
+            {
+                name: 'market',
+                type: 'string',
+                description: 'Symbol of the market to get information for, for example "BTC/USDT" or "AAVE/ETH"',
+            },
+        ],
+    },
+    {
         name: 'createSimpleSpotOrder',
         description: 'Create a simple spot order, with no conditionals attached.  For example, to buy 1 BTC for 100,000 USDT, you would set the market to "BTC/USDT", the type to "limit", the side to "buy", the amount to 1, the price to 100000.',
         required: ['market', 'type', 'side', 'amount', 'price'],
