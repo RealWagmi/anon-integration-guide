@@ -48,6 +48,22 @@ export async function getMarketsWithCurrency(currency: string, exchange: Exchang
  * @link https://docs.ccxt.com/#/?id=ticker-structure
  */
 export async function getMarketTickerBySymbol(symbol: string, exchange: Exchange): Promise<Ticker> {
+    if (!exchange.has['fetchTicker']) {
+        throw new Error(`Exchange ${exchange.name} does not support fetching price information`);
+    }
     const ticker = await exchange.fetchTicker(symbol);
     return ticker;
+}
+
+/**
+ * Given a market object, return the type of market, preferring the term
+ * "perpetual" for swap markets.
+ *
+ * @link https://docs.ccxt.com/#/?id=contract-naming-conventions
+ */
+export function getMarketType(market: MarketInterface) {
+    if (market.type === 'swap') {
+        return 'perpetual';
+    }
+    return market.type;
 }

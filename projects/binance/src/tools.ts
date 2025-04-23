@@ -3,7 +3,7 @@ import { AiTool } from '@heyanon/sdk';
 export const tools: AiTool[] = [
     {
         name: 'getCurrencyMarkets',
-        description: 'Get a list of all active markets that include a given currency.  Returns a list of market symbols.',
+        description: 'Get a list of all active markets (also called pairs) that include the given currency or token.  Returns a list of market symbols.',
         required: ['currency'],
         props: [
             {
@@ -15,7 +15,7 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getMarketInfo',
-        description: 'Get information about a specific market, most importantly: last price, bid price, ask price, 24h volume, and more.  Prices are in quote currency.',
+        description: 'Get information about a specific market (also called a pair), most importantly: last price, bid price, ask price, 24h volume, and more.  Prices are in quote currency.',
         required: ['market'],
         props: [
             {

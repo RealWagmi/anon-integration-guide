@@ -1,6 +1,6 @@
 import { FunctionReturn, toResult } from '@heyanon/sdk';
 import { FunctionOptionsWithExchange } from '../overrides';
-import { getMarketsWithCurrency } from '../helpers/markets';
+import { getMarketsWithCurrency, getMarketType } from '../helpers/markets';
 interface Props {
     currency: string;
 }
@@ -18,5 +18,5 @@ export async function getCurrencyMarkets({ currency }: Props, { exchange }: Func
     if (markets.length === 0) {
         return toResult('No markets found for currency ' + currency, true);
     }
-    return toResult(`Found ${markets.length} markets for currency ${currency}:\n\n${markets.map((market) => market.symbol).join('\n')}`);
+    return toResult(`Found ${markets.length} markets for currency ${currency}:\n\n${markets.map((market) => `${market.symbol} (${getMarketType(market)})`).join('\n')}`);
 }
