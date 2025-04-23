@@ -1,3 +1,4 @@
+- Sort out open orders pagination
 - Make use of the ["has"](https://docs.ccxt.com/#/?id=exchange-metadata) or  ["features"](https://docs.ccxt.com/#/?id=features) properties to determine whether the exchange supports the given method
 - Specify in README that integration is for abouve 1hour timeframes only (see https://docs.ccxt.com/#/?id=notes-on-latency)
 - Should we handle API key errors such as [this one](https://d.pr/i/bKUK9j)?

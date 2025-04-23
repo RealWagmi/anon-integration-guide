@@ -1,6 +1,13 @@
 import { AiTool } from '@heyanon/sdk';
+import { MAX_ORDERS_IN_RESULTS } from './constants';
 
 export const tools: AiTool[] = [
+    {
+        name: 'getOpenOrders',
+        description: `Show the most recent ${MAX_ORDERS_IN_RESULTS} open orders.  For each order, show: order ID, timestamp, market symbol, type, side, price, amount, amount filled, and status.`,
+        required: [],
+        props: [],
+    },
     {
         name: 'getCurrencyMarkets',
         description: 'Get a list of all active markets (also called pairs) that include the given currency or token.  Returns a list of market symbols.',
