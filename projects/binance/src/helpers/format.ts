@@ -1,4 +1,20 @@
-import { MarketInterface, Order, Ticker } from "ccxt";
+import { MarketInterface, Order, Ticker } from 'ccxt';
+
+/**
+ * A stringified order object
+ */
+interface StringOrder {
+    id: string;
+    timestamp: string;
+    symbol: string;
+    type: string;
+    side: string;
+    price: string;
+    triggerPrice: string;
+    amount: string;
+    filled: string;
+    status: string;
+}
 
 /**
  * Format a ticker object into a string.
@@ -11,7 +27,7 @@ export function formatMarketInfo(market: MarketInterface, ticker: Ticker) {
         `24h high: ${ticker.high} ${market.quote}`,
         `24h low: ${ticker.low} ${market.quote}`,
         `24h volume in ${market.quote}: ${ticker.quoteVolume}`,
-        `24h volume in ${market.base}: ${ticker.baseVolume}`
+        `24h volume in ${market.base}: ${ticker.baseVolume}`,
     ];
     return rows.join('\n');
 }
@@ -19,18 +35,8 @@ export function formatMarketInfo(market: MarketInterface, ticker: Ticker) {
 /**
  * Format an order object into a multi-line string.
  */
-export function formatOrderMultiLine(order: Order, prefix: string = '', delimiter: string = '\n') {
-
-    const id = order.id || 'N/A';
-    const timestamp = order.timestamp ? formatDate(order.timestamp) : 'N/A';
-    const symbol = order.symbol || 'N/A';
-    const type = order.type || 'N/A';
-    const side = order.side || 'N/A';
-    const price = order.price !== undefined ? order.price.toString() : 'N/A';
-    const triggerPrice = order.triggerPrice !== undefined ? order.triggerPrice.toString() : 'N/A';
-    const amount = order.amount !== undefined ? order.amount.toString() : 'N/A';
-    const filled = order.filled !== undefined ? order.filled.toString() : 'N/A';
-    const status = order.status || 'N/A'; // Should typically be 'open'
+export function formatOrderMultiLine(order: Order, market: MarketInterface, prefix: string = '', delimiter: string = '\n') {
+    const { id, timestamp, symbol, type, side, price, triggerPrice, amount, filled, status } = stringifyOrder(order);
 
     const rows = [
         `${prefix}Order ID: ${id}`,
@@ -38,10 +44,10 @@ export function formatOrderMultiLine(order: Order, prefix: string = '', delimite
         `${prefix}Market: ${symbol}`,
         `${prefix}Type: ${type}`,
         `${prefix}Side: ${side}`,
-        `${prefix}Price: ${price}`,
-        `${prefix}Trigger: ${triggerPrice}`,
-        `${prefix}Amount: ${amount}`,
-        `${prefix}Filled: ${filled}`,
+        `${prefix}Price: ${price} ${market.quote}`,
+        `${prefix}Trigger: ${triggerPrice} ${market.quote}`,
+        `${prefix}Amount: ${amount} ${market.base}`,
+        `${prefix}Filled: ${filled} ${market.base}`,
         `${prefix}Status: ${status}`,
     ];
     return rows.join(delimiter);
@@ -51,25 +57,35 @@ export function formatOrderMultiLine(order: Order, prefix: string = '', delimite
  * Format an order object into a single-line string.
  */
 export function formatOrderSingleLine(order: Order, market: MarketInterface, showStatus: boolean = true, prefix: string = '') {
-    const id = order.id || 'N/A';
-    const timestamp = order.timestamp ? formatDate(order.timestamp) : 'N/A';
-    const symbol = order.symbol || 'N/A';
-    const type = order.type || 'N/A';
-    const side = order.side || 'N/A';
-    const price = order.price !== undefined ? order.price.toString() : 'N/A';
-    const triggerPrice = order.triggerPrice !== undefined ? order.triggerPrice.toString() : 'N/A';
-    const amount = order.amount !== undefined ? order.amount.toString() : 'N/A';
-    const filled = order.filled !== undefined ? order.filled.toString() : 'N/A';
-    const status = order.status || 'N/A'; // Should typically be 'open'
+    const { id, timestamp, symbol, type, side, price, triggerPrice, amount, filled, status } = stringifyOrder(order);
 
     let parts = [
         `${titleCase(type)} order with ID ${id}`,
         `${triggerPrice !== 'N/A' ? ` that triggers at ${triggerPrice} ${market.quote},` : ''}`,
-        ` to ${side} ${amount} ${market.base} @ ${price} ${market.quote}`,
-        ` (${filled === '0' ? '' : `filled: ${filled}, `}${showStatus ? `status: ${status}, ` : ''}date: ${timestamp}, market: ${symbol})`,
+        ` to ${side} ${amount} ${market.base}`,
+        `${price !== 'N/A' ? ` @ ${price} ${market.quote}` : ''}`,
+        ` (${filled === '0' ? '' : `filled: ${filled} ${market.base}, `}${showStatus ? `status: ${status}, ` : ''}date: ${timestamp}, market: ${symbol})`,
     ];
 
     return prefix + parts.join('');
+}
+
+/**
+ * Prepare an order for display in console
+ */
+function stringifyOrder(order: Order): StringOrder {
+    return {
+        id: order.id || 'N/A',
+        timestamp: order.timestamp ? formatDate(order.timestamp) : 'N/A',
+        symbol: order.symbol || 'N/A',
+        type: order.type || 'N/A',
+        side: order.side || 'N/A',
+        price: order.price !== undefined ? order.price.toString() : 'N/A',
+        triggerPrice: order.triggerPrice !== undefined ? order.triggerPrice.toString() : 'N/A',
+        amount: order.amount !== undefined ? order.amount.toString() : 'N/A',
+        filled: order.filled !== undefined ? order.filled.toString() : 'N/A',
+        status: order.status || 'N/A',
+    };
 }
 
 /**
