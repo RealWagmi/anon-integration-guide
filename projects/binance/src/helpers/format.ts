@@ -64,7 +64,7 @@ export function formatOrderSingleLine(order: Order, market: MarketInterface, sho
         `${triggerPrice !== 'N/A' ? ` that triggers at ${triggerPrice} ${market.quote},` : ''}`,
         ` to ${side} ${amount} ${market.base}`,
         `${price !== 'N/A' ? ` @ ${price} ${market.quote}` : ''}`,
-        ` (${filled === '0' ? '' : `filled: ${filled} ${market.base}, `}${showStatus ? `status: ${status}, ` : ''}date: ${timestamp}, market: ${symbol})`,
+        ` (${filled === '0' ? '' : `filled: ${filled} ${market.base}, `}${showStatus ? `status: ${status}, ` : ''}created: ${timestamp}, market: ${symbol})`,
     ];
 
     return prefix + parts.join('');

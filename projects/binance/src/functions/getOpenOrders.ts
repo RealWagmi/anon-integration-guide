@@ -5,8 +5,6 @@ import { MAX_ORDERS_IN_RESULTS } from '../constants';
 import { formatOrderSingleLine } from '../helpers/format';
 import { MarketInterface } from 'ccxt';
 
-
-
 /**
  * Get a list of the user's open orders, sorted in descending order of timestamp.
  *
@@ -27,7 +25,6 @@ export async function getOpenOrders({}: {}, { exchange }: FunctionOptionsWithExc
             .sort((a, b) => b.timestamp - a.timestamp)
             .slice(0, MAX_ORDERS_IN_RESULTS)
             .map((order, index) => formatOrderSingleLine(order, markets[order.symbol] as MarketInterface, false, `${index + 1}. `))
-            .join('\n')
+            .join('\n'),
     );
 }
-

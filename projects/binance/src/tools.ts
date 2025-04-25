@@ -9,8 +9,25 @@ export const tools: AiTool[] = [
         props: [],
     },
     {
+        name: 'getOrderByIdAndSymbol',
+        description: 'Get information about a specific order by ID and trading pair symbol.  The symbol is required because Binance does not have univocal order IDs.',
+        required: ['id', 'symbol'],
+        props: [
+            {
+                name: 'id',
+                type: 'string',
+                description: 'Order ID to get information for',
+            },
+            {
+                name: 'symbol',
+                type: 'string',
+                description: 'Symbol of the order trading pair, e.g. "BTC/USDT"',
+            },
+        ],
+    },
+    {
         name: 'getCurrencyMarkets',
-        description: 'Get a list of all active markets (also called pairs) that include the given currency or token.  Returns a list of market symbols.',
+        description: 'Get a list of all active markets (also called trading pairs) that include the given currency or token.  Returns a list of market symbols.',
         required: ['currency'],
         props: [
             {
@@ -22,7 +39,8 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getMarketInfo',
-        description: 'Get information about a specific market (also called a pair), most importantly: last price, bid price, ask price, 24h volume, and more.  Prices are in quote currency.',
+        description:
+            'Get information about a specific market (also called a trading pair), most importantly: last price, bid price, ask price, 24h volume, and more.  Prices are in quote currency.',
         required: ['market'],
         props: [
             {
@@ -34,7 +52,8 @@ export const tools: AiTool[] = [
     },
     {
         name: 'createSimpleSpotOrder',
-        description: 'Create a simple spot order, with no conditionals attached.  For example, to buy 1 BTC for 100,000 USDT, you would set the market to "BTC/USDT", the type to "limit", the side to "buy", the amount to 1, the price to 100000.',
+        description:
+            'Create a simple spot order, with no conditionals attached.  For example, to buy 1 BTC for 100,000 USDT, you would set the market to "BTC/USDT", the type to "limit", the side to "buy", the amount to 1, the price to 100000.',
         required: ['market', 'type', 'side', 'amount', 'price'],
         props: [
             {

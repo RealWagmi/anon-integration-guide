@@ -1,4 +1,5 @@
+export { getOpenOrders } from './getOpenOrders';
+export { getOrderByIdAndSymbol } from './getOrderByIdAndSymbol';
 export { getCurrencyMarkets } from './getCurrencyMarkets';
 export { getMarketInfo } from './getMarketInfo';
-export { getOpenOrders } from './getOpenOrders';
 export { createSimpleSpotOrder } from './createSimpleSpotOrder';
