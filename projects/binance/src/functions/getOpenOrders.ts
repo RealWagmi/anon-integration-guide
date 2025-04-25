@@ -21,13 +21,12 @@ export async function getOpenOrders({}: {}, { exchange }: FunctionOptionsWithExc
     }
 
     const markets = await exchange.loadMarkets();
-    const market = markets[orders[0].symbol] as MarketInterface;
 
     return toResult(
         orders
             .sort((a, b) => b.timestamp - a.timestamp)
             .slice(0, MAX_ORDERS_IN_RESULTS)
-            .map((order, index) => formatOrderSingleLine(order, market, false, `${index + 1}. `))
+            .map((order, index) => formatOrderSingleLine(order, markets[order.symbol] as MarketInterface, false, `${index + 1}. `))
             .join('\n')
     );
 }

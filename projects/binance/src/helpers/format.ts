@@ -27,6 +27,7 @@ export function formatOrderMultiLine(order: Order, prefix: string = '', delimite
     const type = order.type || 'N/A';
     const side = order.side || 'N/A';
     const price = order.price !== undefined ? order.price.toString() : 'N/A';
+    const triggerPrice = order.triggerPrice !== undefined ? order.triggerPrice.toString() : 'N/A';
     const amount = order.amount !== undefined ? order.amount.toString() : 'N/A';
     const filled = order.filled !== undefined ? order.filled.toString() : 'N/A';
     const status = order.status || 'N/A'; // Should typically be 'open'
@@ -38,6 +39,7 @@ export function formatOrderMultiLine(order: Order, prefix: string = '', delimite
         `${prefix}Type: ${type}`,
         `${prefix}Side: ${side}`,
         `${prefix}Price: ${price}`,
+        `${prefix}Trigger: ${triggerPrice}`,
         `${prefix}Amount: ${amount}`,
         `${prefix}Filled: ${filled}`,
         `${prefix}Status: ${status}`,
@@ -55,12 +57,14 @@ export function formatOrderSingleLine(order: Order, market: MarketInterface, sho
     const type = order.type || 'N/A';
     const side = order.side || 'N/A';
     const price = order.price !== undefined ? order.price.toString() : 'N/A';
+    const triggerPrice = order.triggerPrice !== undefined ? order.triggerPrice.toString() : 'N/A';
     const amount = order.amount !== undefined ? order.amount.toString() : 'N/A';
     const filled = order.filled !== undefined ? order.filled.toString() : 'N/A';
     const status = order.status || 'N/A'; // Should typically be 'open'
 
     let parts = [
         `${titleCase(type)} order with ID ${id}`,
+        `${triggerPrice !== 'N/A' ? ` that triggers at ${triggerPrice} ${market.quote},` : ''}`,
         ` to ${side} ${amount} ${market.base} @ ${price} ${market.quote}`,
         ` (${filled === '0' ? '' : `filled: ${filled}, `}${showStatus ? `status: ${status}, ` : ''}date: ${timestamp}, market: ${symbol})`,
     ];
@@ -80,5 +84,7 @@ export function formatDate(timestamp: number) {
  * Return the Title Case version of the given string.
  */
 export function titleCase(str: string) {
+    // Remove underscores and replace with spaces
+    str = str.replace(/_/g, ' ');
     return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase());
 }
