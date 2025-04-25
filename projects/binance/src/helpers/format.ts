@@ -1,4 +1,4 @@
-import { MarketInterface, Order, Ticker } from 'ccxt';
+import { Balances, MarketInterface, Order, Ticker } from 'ccxt';
 
 /**
  * A stringified order object
@@ -17,9 +17,31 @@ interface StringOrder {
 }
 
 /**
+ * Format the full balance of an account into a multi-line string.
+ */
+export function formatBalances(balances: Balances, prefix: string = ''): string {
+    const nonZeroBalances = Object.entries(balances.total || {})
+        .filter(([, amount]) => parseFloat(amount as any) > 0)
+        .sort(([currA], [currB]) => currA.localeCompare(currB));
+
+    const rows: string[] = [];
+    nonZeroBalances.forEach(([currency, amount]) => {
+        const free = parseFloat((balances.free as any)[currency] || 0);
+        const used = parseFloat((balances.used as any)[currency] || 0);
+        if (used > 0) {
+            rows.push(`${prefix}${currency}: ${amount} of which ${free} can be used to trade`);
+        } else {
+            rows.push(`${prefix}${currency}: ${amount}`);
+        }
+    });
+
+    return rows.join('\n');
+}
+
+/**
  * Format a ticker object into a string.
  */
-export function formatMarketInfo(market: MarketInterface, ticker: Ticker) {
+export function formatMarketInfo(market: MarketInterface, ticker: Ticker): string {
     const rows = [
         `Last price: ${ticker.last} ${market.quote}`,
         `Bid price: ${ticker.bid} ${market.quote}`,
@@ -38,7 +60,7 @@ export function formatMarketInfo(market: MarketInterface, ticker: Ticker) {
  * Optional market parameter is used to show ticker
  * symbols.
  */
-export function formatOrderMultiLine(order: Order, market?: MarketInterface, prefix: string = '', delimiter: string = '\n') {
+export function formatOrderMultiLine(order: Order, market?: MarketInterface, prefix: string = '', delimiter: string = '\n'): string {
     const { id, timestamp, symbol, type, side, price, triggerPrice, amount, filled, status } = stringifyOrder(order);
 
     const quoteSymbol = market ? ` ${market.quote}` : '';
@@ -65,7 +87,7 @@ export function formatOrderMultiLine(order: Order, market?: MarketInterface, pre
  * Optional market parameter is used to show ticker
  * symbols.
  */
-export function formatOrderSingleLine(order: Order, market?: MarketInterface, showStatus: boolean = true, prefix: string = '') {
+export function formatOrderSingleLine(order: Order, market?: MarketInterface, showStatus: boolean = true, prefix: string = ''): string {
     const { id, timestamp, symbol, type, side, price, triggerPrice, amount, filled, status } = stringifyOrder(order);
 
     const quoteSymbol = market ? ` ${market.quote}` : '';
@@ -104,14 +126,14 @@ function stringifyOrder(order: Order): StringOrder {
  * Format a timestamp in YYYY-MM-DD HH:MM:SS format,
  * in UTC timezone.
  */
-export function formatDate(timestamp: number) {
+export function formatDate(timestamp: number): string {
     return new Date(timestamp).toISOString().replace('T', ' ').substring(0, 19);
 }
 
 /**
  * Return the Title Case version of the given string.
  */
-export function titleCase(str: string) {
+export function titleCase(str: string): string {
     // Remove underscores and replace with spaces
     str = str.replace(/_/g, ' ');
     return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase());

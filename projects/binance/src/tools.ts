@@ -84,6 +84,12 @@ export const tools: AiTool[] = [
         ],
     },
     {
+        name: 'getBalance',
+        description: 'Get balance for all currencies/tokens that the user owns on the exchange.  For each currency, also show how much is available to trade (free).',
+        required: ['currency'],
+        props: [{ name: 'currency', type: ['string', 'null'], description: 'Optionally, specify a currency to show balance just for that currency, e.g. "BTC"' }],
+    },
+    {
         name: 'getCurrencyMarkets',
         description: 'Get a list of all active markets (also called trading pairs) that include the given currency or token.  Returns a list of market symbols.',
         required: ['currency'],

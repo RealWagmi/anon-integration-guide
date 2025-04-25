@@ -1,6 +1,7 @@
 import { FunctionReturn, toResult } from '@heyanon/sdk';
 import { FunctionOptionsWithExchange } from '../overrides';
 import { getMarketsWithCurrency, getMarketType } from '../helpers/markets';
+
 interface Props {
     currency: string;
 }
