@@ -38,9 +38,9 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'cancelOrderByIdAndSymbol',
-        description: 'Cancel a specific order by ID and trading pair symbol.  The symbol is required because Binance does not have univocal order IDs.',
-        required: ['id', 'symbol'],
+        name: 'cancelOrderByIdAndMarket',
+        description: 'Cancel a specific order by ID and market symbol.  If you only have the order ID, use getOpenOrders to get the market symbol.',
+        required: ['id', 'market'],
         props: [
             {
                 name: 'id',
@@ -48,11 +48,17 @@ export const tools: AiTool[] = [
                 description: 'Order ID to cancel',
             },
             {
-                name: 'symbol',
+                name: 'market',
                 type: 'string',
-                description: 'Symbol of the order trading pair, e.g. "BTC/USDT"',
+                description: 'Symbol of the market the order belongs to, e.g. "BTC/USDT"',
             },
         ],
+    },
+    {
+        name: 'cancelAllOrdersOnMarket',
+        description: 'Cancel all open orders on a given market',
+        required: ['market'],
+        props: [{ name: 'market', type: 'string', description: 'Symbol of the market to cancel orders on, e.g. "BTC/USDT"' }],
     },
     {
         name: 'getOpenOrders',
@@ -61,9 +67,9 @@ export const tools: AiTool[] = [
         props: [],
     },
     {
-        name: 'getOrderByIdAndSymbol',
-        description: 'Get information about a specific order by ID and trading pair symbol.  The symbol is required because Binance does not have univocal order IDs.',
-        required: ['id', 'symbol'],
+        name: 'getOrderByIdAndMarket',
+        description: 'Get information about a specific order by ID and market symbol',
+        required: ['id', 'market'],
         props: [
             {
                 name: 'id',
@@ -71,9 +77,9 @@ export const tools: AiTool[] = [
                 description: 'Order ID to get information for',
             },
             {
-                name: 'symbol',
+                name: 'market',
                 type: 'string',
-                description: 'Symbol of the order trading pair, e.g. "BTC/USDT"',
+                description: 'Symbol of the market the order belongs to, e.g. "BTC/USDT"',
             },
         ],
     },

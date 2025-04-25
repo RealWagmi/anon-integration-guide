@@ -1,11 +1,11 @@
-import { Exchange } from 'ccxt';
+import { Exchange, Order } from 'ccxt';
 
 /**
  * Get all open orders of the user on the given exchange
  *
  * @link https://docs.ccxt.com/#/README?id=understanding-the-orders-api-design
  */
-export async function getUserOpenOrders(exchange: Exchange) {
+export async function getUserOpenOrders(exchange: Exchange): Promise<Order[]> {
     if (!exchange.has['fetchOpenOrders']) {
         throw new Error(`Exchange ${exchange.name} does not support fetching open orders.`);
     }
@@ -17,13 +17,12 @@ export async function getUserOpenOrders(exchange: Exchange) {
 /**
  * Get a specific order by ID on the given exchange.
  *
- * A trading pair symbol argument is included because some exchanges
- * (including Binance) do not have univocal order IDs, so the symbol
- * is required to identify the order.
+ * The trading pair symbol argument is required for some exchanges
+ * (including Binance) that do not have univocal order IDs.
  *
  * @link https://docs.ccxt.com/#/README?id=understanding-the-orders-api-design
  */
-export async function getOrderById(exchange: Exchange, id: string, symbol?: string) {
+export async function getOrderById(exchange: Exchange, id: string, symbol?: string): Promise<Order> {
     if (!exchange.has['fetchOrder']) {
         throw new Error(`Exchange ${exchange.name} does not support fetching a single order.`);
     }
@@ -34,16 +33,31 @@ export async function getOrderById(exchange: Exchange, id: string, symbol?: stri
 /**
  * Cancel a specific order by ID on the given exchange.
  *
- * A trading pair symbol argument is included because some exchanges
- * (including Binance) do not have univocal order IDs, so the symbol
- * is required to identify the order.
+ * The trading pair symbol argument is required for some exchanges
+ * (including Binance) that do not have univocal order IDs.
  *
  * @link https://docs.ccxt.com/#/README?id=canceling-orders
  */
-export async function cancelOrderById(exchange: Exchange, id: string, symbol?: string) {
+export async function cancelOrderById(exchange: Exchange, id: string, symbol?: string): Promise<Order> {
     if (!exchange.has['cancelOrder']) {
         throw new Error(`Exchange ${exchange.name} does not support cancelling a single order.`);
     }
     const cancelledOrder = await exchange.cancelOrder(id, symbol);
-    return cancelledOrder;
+    return cancelledOrder as Order;
+}
+
+/**
+ * Cancel all open orders on the given exchange.
+ *
+ * The trading pair symbol argument is required for some exchanges
+ * (including Binance) that do not have univocal order IDs.
+ *
+ * @link https://docs.ccxt.com/#/README?id=canceling-orders
+ */
+export async function cancelAllOrders(exchange: Exchange, symbol?: string): Promise<Order[]> {
+    if (!exchange.has['cancelAllOrders']) {
+        throw new Error(`Exchange ${exchange.name} does not support cancelling all orders.`);
+    }
+    const cancelledOrders = await exchange.cancelAllOrders(symbol);
+    return cancelledOrders as Order[];
 }

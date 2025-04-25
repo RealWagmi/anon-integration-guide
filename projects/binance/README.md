@@ -16,9 +16,11 @@ Integration between HeyAnon.ai and Binance Spot and Futures trading.
     - Show all my open orders on BTC/USDT on @binance
     - Show details on order 232168017 on @binance
 
-3. **Orders management**
+3. **Cancel orders**
+
     - Cancel all my orders on @binance
     - Cancel all my orders on BTC/USDT on @binance
+    - Cancel my BTC orders on @binance
     - Cancel order 232168017 on @binance
 
 ## Reference
@@ -32,3 +34,4 @@ Integration between HeyAnon.ai and Binance Spot and Futures trading.
 ## Binance specific behaviors
 
 - `fetchOrder` and `cancelOrder` require both `id` and `symbol`
+- `cancelAllOrders` requires a `symbol`

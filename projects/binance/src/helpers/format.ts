@@ -34,9 +34,15 @@ export function formatMarketInfo(market: MarketInterface, ticker: Ticker) {
 
 /**
  * Format an order object into a multi-line string.
+ *
+ * Optional market parameter is used to show ticker
+ * symbols.
  */
-export function formatOrderMultiLine(order: Order, market: MarketInterface, prefix: string = '', delimiter: string = '\n') {
+export function formatOrderMultiLine(order: Order, market?: MarketInterface, prefix: string = '', delimiter: string = '\n') {
     const { id, timestamp, symbol, type, side, price, triggerPrice, amount, filled, status } = stringifyOrder(order);
+
+    const quoteSymbol = market ? ` ${market.quote}` : '';
+    const baseSymbol = market ? ` ${market.base}` : '';
 
     const rows = [
         `${prefix}Order ID: ${id}`,
@@ -44,10 +50,10 @@ export function formatOrderMultiLine(order: Order, market: MarketInterface, pref
         `${prefix}Market: ${symbol}`,
         `${prefix}Type: ${type}`,
         `${prefix}Side: ${side}`,
-        `${prefix}Price: ${price} ${market.quote}`,
-        `${prefix}Trigger: ${triggerPrice} ${market.quote}`,
-        `${prefix}Amount: ${amount} ${market.base}`,
-        `${prefix}Filled: ${filled} ${market.base}`,
+        `${prefix}Price: ${price}${quoteSymbol}`,
+        `${prefix}Trigger: ${triggerPrice}${quoteSymbol}`,
+        `${prefix}Amount: ${amount}${baseSymbol}`,
+        `${prefix}Filled: ${filled}${baseSymbol}`,
         `${prefix}Status: ${status}`,
     ];
     return rows.join(delimiter);
@@ -55,16 +61,22 @@ export function formatOrderMultiLine(order: Order, market: MarketInterface, pref
 
 /**
  * Format an order object into a single-line string.
+ *
+ * Optional market parameter is used to show ticker
+ * symbols.
  */
-export function formatOrderSingleLine(order: Order, market: MarketInterface, showStatus: boolean = true, prefix: string = '') {
+export function formatOrderSingleLine(order: Order, market?: MarketInterface, showStatus: boolean = true, prefix: string = '') {
     const { id, timestamp, symbol, type, side, price, triggerPrice, amount, filled, status } = stringifyOrder(order);
+
+    const quoteSymbol = market ? ` ${market.quote}` : '';
+    const baseSymbol = market ? ` ${market.base}` : '';
 
     let parts = [
         `${titleCase(type)} order with ID ${id}`,
-        `${triggerPrice !== 'N/A' ? ` that triggers at ${triggerPrice} ${market.quote},` : ''}`,
-        ` to ${side} ${amount} ${market.base}`,
-        `${price !== 'N/A' ? ` @ ${price} ${market.quote}` : ''}`,
-        ` (${filled === '0' ? '' : `filled: ${filled} ${market.base}, `}${showStatus ? `status: ${status}, ` : ''}created: ${timestamp}, market: ${symbol})`,
+        `${triggerPrice !== 'N/A' ? ` that triggers at ${triggerPrice}${quoteSymbol},` : ''}`,
+        ` to ${side} ${amount}${baseSymbol}`,
+        `${price !== 'N/A' ? ` @ ${price}${quoteSymbol}` : ''}`,
+        ` (${filled === '0' ? '' : `filled: ${filled}${baseSymbol}, `}${showStatus ? `status: ${status}, ` : ''}created: ${timestamp}, market: ${symbol})`,
     ];
 
     return prefix + parts.join('');
