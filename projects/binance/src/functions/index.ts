@@ -1,4 +1,4 @@
-export { createSimpleSpotOrder } from './createSimpleSpotOrder';
+export { createOrder } from './createOrder';
 export { cancelOrderByIdAndMarket } from './cancelOrderByIdAndMarket';
 export { cancelAllOrdersOnMarket } from './cancelAllOrdersOnMarket';
 export { getBalance } from './getBalance';

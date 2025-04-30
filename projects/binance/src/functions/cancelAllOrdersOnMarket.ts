@@ -34,10 +34,10 @@ export async function cancelAllOrdersOnMarket({ market }: Props, { exchange, not
         const markets = await exchange.loadMarkets();
         marketObject = markets[market] as MarketInterface;
     }
-    notify(`Orders to be cancelled:\n${ordersOnMarket.map((order) => formatOrderSingleLine(order, marketObject, false)).join('\n')}`);
+    notify(`Orders to be cancelled:\n${ordersOnMarket.map((order) => formatOrderSingleLine(order, marketObject, false)).join('\n- ')}`);
 
     // Cancel the orders
     const cancelledOrders = await cancelAllOrders(exchange, market);
 
-    return toResult(`Cancelled ${cancelledOrders.length} orders (${cancelledOrders.map((order) => order.id).join(', ')})`);
+    return toResult(`Cancelled ${cancelledOrders.length} order${cancelledOrders.length === 1 ? '' : 's'} (${cancelledOrders.map((order) => order.id).join(', ')})`);
 }

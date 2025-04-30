@@ -1,12 +1,12 @@
 import { AiTool } from '@heyanon/sdk';
-import { MAX_ORDERS_IN_RESULTS } from './constants';
+import { MAX_ORDERS_IN_RESULTS, ORDER_TYPES } from './constants';
 
 export const tools: AiTool[] = [
     {
-        name: 'createSimpleSpotOrder',
+        name: 'createOrder',
         description:
-            'Create a simple spot order, with no conditionals attached.  For example, to buy 1 BTC for 100,000 USDT, you would set the market to "BTC/USDT", the type to "limit", the side to "buy", the amount to 1, the price to 100000.',
-        required: ['market', 'type', 'side', 'amount', 'price'],
+            'Create various types of orders including market, limit, trigger, stop loss, take profit, OCO, and trailing orders. The order type determines which parameters are required.',
+        required: ['market', 'type', 'side', 'amount', 'price', 'triggerPrice', 'stopLoss', 'takeProfit', 'trailingPercent', 'trailingAmount', 'reduceOnly'],
         props: [
             {
                 name: 'market',
@@ -16,24 +16,74 @@ export const tools: AiTool[] = [
             {
                 name: 'type',
                 type: 'string',
-                enum: ['limit', 'market'],
-                description: 'Type of the order; either "limit" or "market"',
+                enum: ORDER_TYPES,
+                description: 'Type of order to create',
             },
             {
                 name: 'side',
-                type: ['string', 'null'],
+                type: 'string',
                 enum: ['buy', 'sell'],
                 description: 'Side of the order; either "buy" or "sell"',
             },
             {
                 name: 'amount',
                 type: 'number',
-                description: 'Amount of currency to buy or sell, e.g. 1 for 1 BTC',
+                description: 'Amount of base currency to buy or sell',
             },
             {
                 name: 'price',
                 type: ['number', 'null'],
-                description: 'Buy or sell at this price.  Only for limit orders.',
+                description: 'Price for limit orders (required for limit orders, optional for other types)',
+            },
+            {
+                name: 'triggerPrice',
+                type: ['number', 'null'],
+                description: 'Trigger price for trigger, stop loss, and take profit orders',
+            },
+            {
+                name: 'stopLoss',
+                type: ['object', 'null'],
+                description: 'Stop loss configuration for OCO orders (object with triggerPrice and optional price)',
+                required: ['triggerPrice', 'price'],
+                properties: {
+                    triggerPrice: {
+                        type: 'number',
+                    },
+                    price: {
+                        type: ['number', 'null'],
+                    },
+                },
+                additionalProperties: false,
+            },
+            {
+                name: 'takeProfit',
+                type: ['object', 'null'],
+                description: 'Take profit configuration for OCO orders (object with triggerPrice and optional price)',
+                required: ['triggerPrice', 'price'],
+                properties: {
+                    triggerPrice: {
+                        type: 'number',
+                    },
+                    price: {
+                        type: ['number', 'null'],
+                    },
+                },
+                additionalProperties: false,
+            },
+            {
+                name: 'trailingPercent',
+                type: ['number', 'null'],
+                description: 'Percentage away from market price for trailing orders',
+            },
+            {
+                name: 'trailingAmount',
+                type: ['number', 'null'],
+                description: 'Fixed amount away from market price for trailing orders',
+            },
+            {
+                name: 'reduceOnly',
+                type: ['boolean', 'null'],
+                description: 'Whether the order should only reduce position size (not open new position)',
             },
         ],
     },

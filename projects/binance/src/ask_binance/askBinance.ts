@@ -36,7 +36,7 @@ function getSystemPrompt() {
 
 /**
  * Get authenticated exchange object from the CCXT library.
- * 
+ *
  * If the EXCHANGE_API_KEY and EXCHANGE_SECRET_KEY environment variables are set, use them to create the exchange.
  * Otherwise, throw an error.
  */
@@ -63,7 +63,7 @@ function getExchange() {
 
 /**
  * Get the LLM client.
- * 
+ *
  * If the DEEPSEEK_API_KEY environment variable is set, use the DeepSeek API.
  * Otherwise, use the OpenAI API.
  */

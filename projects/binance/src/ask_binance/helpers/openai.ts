@@ -46,14 +46,32 @@ export function fromHeyAnonToolsToOpenAiTools(tool: AiTool): OpenAI.Chat.Complet
             parameters: {
                 type: 'object',
                 properties: Object.fromEntries(
-                    tool.props.map((prop) => [
-                        prop.name,
-                        {
-                            type: prop.type,
-                            enum: prop.enum,
-                            description: prop.description,
-                        },
-                    ]),
+                    tool.props.map((prop) => {
+                        // Case of a nested property, e.g. the search knowledge example from
+                        // https://platform.openai.com/docs/guides/function-calling
+                        if (prop.type === 'object' || (Array.isArray(prop.type) && prop.type.includes('object'))) {
+                            return [
+                                prop.name,
+                                {
+                                    type: prop.type,
+                                    enum: prop.enum,
+                                    description: prop.description,
+                                    properties: prop.properties, // nested properties
+                                    required: prop.required, // all properties are required
+                                    additionalProperties: false, // required by API
+                                },
+                            ];
+                        } else {
+                            return [
+                                prop.name,
+                                {
+                                    type: prop.type,
+                                    enum: prop.enum,
+                                    description: prop.description,
+                                },
+                            ];
+                        }
+                    }),
                 ),
                 required: tool.required,
                 additionalProperties: false,

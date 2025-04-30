@@ -46,3 +46,5 @@ Integration between HeyAnon.ai and Binance Spot and Futures trading.
 
 - `fetchOrder` and `cancelOrder` require both `id` and `symbol`
 - `cancelAllOrders` requires a `symbol`
+- Binance APIs [lack a trigger price parameter](https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-trade), so specifying `triggerPrice` automatically creates a `STOP_LOSS` order ([see Discord](https://discord.com/channels/690203284119617602/690203284727660739/1367189081418633389))
+- CCXT does not seem to support OCO oders for spot ([Discord](https://discord.com/channels/690203284119617602/690203284727660739/1237329333824000030))
