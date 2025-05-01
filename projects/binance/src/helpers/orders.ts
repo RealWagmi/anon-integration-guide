@@ -132,6 +132,8 @@ export async function createOrder(
     const filteredParams = Object.fromEntries(Object.entries(params).filter(([_, value]) => value !== null && value !== undefined));
 
     // Create the order with CCXT
+    console.log('filteredParams', filteredParams);
+
     const order = await exchange.createOrder(symbol, ccxtType, side, amount, price === null ? undefined : price, filteredParams);
     return order;
 }

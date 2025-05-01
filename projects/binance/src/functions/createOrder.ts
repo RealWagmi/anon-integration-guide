@@ -10,11 +10,11 @@ interface Props {
     amount: number;
     price?: number | null;
     triggerPrice?: number | null;
-    stopLoss?: {
+    ocoStopLoss?: {
         triggerPrice: number;
         price?: number;
     } | null;
-    takeProfit?: {
+    ocoTakeProfit?: {
         triggerPrice: number;
         price?: number;
     } | null;
@@ -33,8 +33,8 @@ interface Props {
  * @param {number} props.amount - Amount of base currency to buy or sell
  * @param {number|null} [props.price] - Price for limit orders (required for limit orders, optional for others)
  * @param {number|null} [props.triggerPrice] - Trigger price for trigger, stop loss, and take profit orders
- * @param {Object|null} [props.stopLoss] - Stop loss configuration for OCO orders
- * @param {Object|null} [props.takeProfit] - Take profit configuration for OCO orders
+ * @param {Object|null} [props.ocoStopLoss] - Stop loss configuration for OCO orders
+ * @param {Object|null} [props.ocoTakeProfit] - Take profit configuration for OCO orders
  * @param {number|null} [props.trailingPercent] - Percentage away from market price for trailing orders
  * @param {number|null} [props.trailingAmount] - Fixed amount away from market price for trailing orders
  * @param {boolean|null} [props.reduceOnly] - Whether the order should only reduce position size
@@ -42,7 +42,19 @@ interface Props {
  * @returns {Promise<FunctionReturn>} A message confirming the order or an error description
  */
 export async function createOrder(
-    { market, type, side, amount, price = null, triggerPrice = null, stopLoss = null, takeProfit = null, trailingPercent = null, trailingAmount = null, reduceOnly = null }: Props,
+    {
+        market,
+        type,
+        side,
+        amount,
+        price = null,
+        triggerPrice = null,
+        ocoStopLoss = null,
+        ocoTakeProfit = null,
+        trailingPercent = null,
+        trailingAmount = null,
+        reduceOnly = null,
+    }: Props,
     { exchange }: FunctionOptionsWithExchange,
 ): Promise<FunctionReturn> {
     try {
@@ -55,8 +67,8 @@ export async function createOrder(
             return toResult(`${type} orders require a triggerPrice`, true);
         }
 
-        if (type === 'oco' && (!stopLoss || !takeProfit)) {
-            return toResult('OCO orders require both stopLoss and takeProfit configurations', true);
+        if (type === 'oco' && (!ocoStopLoss || !ocoTakeProfit)) {
+            return toResult('OCO orders require both ocoStopLoss and ocoTakeProfit configurations', true);
         }
 
         if (type === 'trailing' && trailingPercent === null && trailingAmount === null) {
@@ -66,8 +78,8 @@ export async function createOrder(
         // Create the order using the helper function
         const order = await createOrderHelper(exchange, market, type, side, amount, price, {
             triggerPrice,
-            stopLoss,
-            takeProfit,
+            ocoStopLoss,
+            ocoTakeProfit,
             trailingPercent,
             trailingAmount,
             reduceOnly,

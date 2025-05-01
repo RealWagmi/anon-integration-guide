@@ -6,7 +6,7 @@ export const tools: AiTool[] = [
         name: 'createOrder',
         description:
             'Create various types of orders including market, limit, trigger, stop loss, take profit, OCO, and trailing orders. The order type determines which parameters are required.',
-        required: ['market', 'type', 'side', 'amount', 'price', 'triggerPrice', 'stopLoss', 'takeProfit', 'trailingPercent', 'trailingAmount', 'reduceOnly'],
+        required: ['market', 'type', 'side', 'amount', 'price', 'triggerPrice', 'ocoStopLoss', 'ocoTakeProfit', 'trailingPercent', 'trailingAmount', 'reduceOnly'],
         props: [
             {
                 name: 'market',
@@ -41,7 +41,7 @@ export const tools: AiTool[] = [
                 description: 'Trigger price for trigger, stop loss, and take profit orders',
             },
             {
-                name: 'stopLoss',
+                name: 'ocoStopLoss',
                 type: ['object', 'null'],
                 description: 'Stop loss configuration for OCO orders (object with triggerPrice and optional price)',
                 required: ['triggerPrice', 'price'],
@@ -56,7 +56,7 @@ export const tools: AiTool[] = [
                 additionalProperties: false,
             },
             {
-                name: 'takeProfit',
+                name: 'ocoTakeProfit',
                 type: ['object', 'null'],
                 description: 'Take profit configuration for OCO orders (object with triggerPrice and optional price)',
                 required: ['triggerPrice', 'price'],
