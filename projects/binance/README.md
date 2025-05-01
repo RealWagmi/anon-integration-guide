@@ -18,12 +18,16 @@ Integration between HeyAnon.ai and Binance Spot and Futures trading.
     - Show my balance on @binance
     - Show my ETH balance on @binance
 
-1. **Place orders**
+1. **Market & limit orders**
 
-    - Market buy 1 BTC on BTC/USDT on @binance
+    - Market buy 1 BTC with USDT on @binance
     - Buy 1 BTC at 40000 USDT on @binance
     - Buy 1 BTC at 40000 USDT with a 5% stop loss on @binance
-    - Sell 1 BTC at 40000 USDT with a 10% take profit on @binance
+    - Sell 1 BTC at 50000 USDT with a 10% take profit on @binance
+
+1. **Conditional orders**
+
+    - Send a buy order for 0.05 AAVE at a price of 250 USDC when AAVE price goes above 190 USDC
     - When the price goes below 50000 USDT, trigger a market buy order for 1 BTC on @binance
     - When the prices goes below 50000 USDT, trigger a limit buy order for 1 BTC at 40000 USDT on @binance
 

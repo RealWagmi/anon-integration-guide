@@ -23,3 +23,4 @@
 - Options trading
 - Spot with margin
 - Implement open orders pagination
+- Should we stop the user from creating limit orders that will execute immediately (e.g. limit buy at price higher than market price)?

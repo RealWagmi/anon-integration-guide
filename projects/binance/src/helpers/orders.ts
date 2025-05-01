@@ -25,9 +25,7 @@ export async function createOrder(
     options: any = {},
 ): Promise<Order> {
     // Default params for all order types
-    const params: any = {
-        ...options,
-    };
+    const params: any = {};
 
     let ccxtType = type; // Default, will be overridden for special order types
 
@@ -128,13 +126,15 @@ export async function createOrder(
         throw new Error('Limit orders require a price');
     }
 
-    // Only send parameters that have a non-null or non-undefined value
-    const filteredParams = Object.fromEntries(Object.entries(params).filter(([_, value]) => value !== null && value !== undefined));
+    // Throw if any of the parameters is null or undefined
+    for (const key in params) {
+        if (params[key] === null || params[key] === undefined) {
+            throw new Error(`Parameter ${key} is null or undefined`);
+        }
+    }
 
     // Create the order with CCXT
-    console.log('filteredParams', filteredParams);
-
-    const order = await exchange.createOrder(symbol, ccxtType, side, amount, price === null ? undefined : price, filteredParams);
+    const order = await exchange.createOrder(symbol, ccxtType, side, amount, price === null ? undefined : price, params);
     return order;
 }
 
