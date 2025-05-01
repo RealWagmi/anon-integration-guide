@@ -37,8 +37,16 @@ function getSystemPrompt() {
 /**
  * Get authenticated exchange object from the CCXT library.
  *
- * If the EXCHANGE_API_KEY and EXCHANGE_SECRET_KEY environment variables are set, use them to create the exchange.
+ * If the ${EXCHANGE_NAME}_API_KEY and ${EXCHANGE_NAME}_SECRET_KEY
+ * environment variables are set, use them to create the exchange.
  * Otherwise, throw an error.
+ *
+ * If the ${EXCHANGE_NAME}_USE_TESTNET environment variable is set
+ * to true, use the sandbox/testnet mode, which requires different
+ * API keys.
+ *
+ * Sandbox docs:
+ * - https://docs.ccxt.com/#/README?id=testnets-and-sandbox-environments
  */
 function getExchange() {
     // Is exchange supported?
@@ -46,19 +54,46 @@ function getExchange() {
         throw new Error(`Exchange named '${EXCHANGE_NAME}' is not supported by CCXT.`);
     }
 
-    // Get API keys from environment
-    const exchangeApiKey = process.env[`${EXCHANGE_NAME.toUpperCase()}_API_KEY`];
-    const exchangeSecret = process.env[`${EXCHANGE_NAME.toUpperCase()}_SECRET_KEY`];
-    if (!exchangeApiKey || !exchangeSecret) {
-        throw new Error(`${EXCHANGE_NAME.toUpperCase()}_API_KEY and ${EXCHANGE_NAME.toUpperCase()}_SECRET environment variables are required`);
+    // Should we use testnet?
+    const envVarPrefix = `${EXCHANGE_NAME.toUpperCase()}_`;
+    const useTestnet = process.env[`${envVarPrefix}USE_TESTNET`] === 'true';
+    let apiKeyEnvVar: string | undefined;
+    let secretKeyEnvVar: string | undefined;
+    if (useTestnet) {
+        console.log(chalk.bgGreenBright(`[Debug] Using testnet`));
+        apiKeyEnvVar = `${envVarPrefix}TESTNET_API_KEY`;
+        secretKeyEnvVar = `${envVarPrefix}TESTNET_SECRET_KEY`;
+    } else {
+        console.log(chalk.bgYellowBright(`[Warning] Using mainnet`));
+        apiKeyEnvVar = `${envVarPrefix}API_KEY`;
+        secretKeyEnvVar = `${envVarPrefix}SECRET_KEY`;
     }
 
-    // Return exchange object
+    // Get API keys from environment
+    const exchangeApiKey = process.env[apiKeyEnvVar];
+    const exchangeSecret = process.env[secretKeyEnvVar];
+    if (!exchangeApiKey || !exchangeSecret) {
+        throw new Error(`${apiKeyEnvVar} and ${secretKeyEnvVar} environment variables are required`);
+    }
+
+    // Get exchange object
+    let exchange: ccxt.Exchange;
     try {
-        return new (ccxt as any)[EXCHANGE_NAME.toLowerCase()]({ apiKey: exchangeApiKey, secret: exchangeSecret });
+        exchange = new (ccxt as any)[EXCHANGE_NAME.toLowerCase()]({ apiKey: exchangeApiKey, secret: exchangeSecret });
     } catch (error) {
         throw new Error(`Failed to create ${EXCHANGE_NAME} exchange: ${error instanceof Error ? `${error.message}` : 'Unknown error'}`);
     }
+
+    // Set testnet if requested
+    if (useTestnet) {
+        if (!exchange.has['sandbox']) {
+            throw new Error(`${EXCHANGE_NAME} does not support sandbox mode`);
+        }
+        exchange.setSandboxMode(true);
+    }
+
+    // Return exchange object
+    return exchange;
 }
 
 /**

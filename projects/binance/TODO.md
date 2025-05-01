@@ -8,7 +8,6 @@
 - Test stop loss orders
 - Test take profit orders
 - Edit order & understand how to implement reduce only
-- Sort out open orders pagination
 - Check against exchange.features whether the submitted order is supported
 - Make sure HeyAnon supports nested properties in OpenAI tool definition (e.g. for trailing stop orders creation)
 
@@ -23,3 +22,4 @@
 - OCO and TWAP orders
 - Options trading
 - Spot with margin
+- Implement open orders pagination
