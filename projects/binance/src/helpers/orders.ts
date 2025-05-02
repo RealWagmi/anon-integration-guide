@@ -1,10 +1,10 @@
 import { Exchange, Order } from 'ccxt';
 import { getMarketLastPriceBySymbol } from './markets';
-
+import util from 'util';
 /**
  * Create a simple order, that is, an order that has no triggers attached to it.
  */
-export async function createSimpleOrder(exchange: Exchange, symbol: string, side: string, amount: number, limitPrice?: number): Promise<Order> {
+export async function createSimpleOrder(exchange: Exchange, symbol: string, side: 'buy' | 'sell', amount: number, limitPrice?: number): Promise<Order> {
     // Warn the user if their limit price is useless
     if (limitPrice) {
         const lastPrice = await getMarketLastPriceBySymbol(symbol, exchange);
@@ -24,7 +24,7 @@ export async function createSimpleOrder(exchange: Exchange, symbol: string, side
 /**
  * Create a trigger order, that is, an order that has a trigger price attached to it.
  */
-export async function createTriggerOrder(exchange: Exchange, symbol: string, side: string, amount: number, triggerPrice: number, limitPrice?: number): Promise<Order> {
+export async function createTriggerOrder(exchange: Exchange, symbol: string, side: 'buy' | 'sell', amount: number, triggerPrice: number, limitPrice?: number): Promise<Order> {
     const ccxtParams: any = {};
     const lastPrice = await getMarketLastPriceBySymbol(symbol, exchange);
     // Determine whether the order is take profit or stop loss
@@ -38,6 +38,70 @@ export async function createTriggerOrder(exchange: Exchange, symbol: string, sid
     const ccxtType = limitPrice ? 'limit' : 'market';
     const order = await exchange.createOrder(symbol, ccxtType, side, amount, limitPrice, ccxtParams);
     return order;
+}
+
+/**
+ * Create an OCO (one-cancels-the-other) order using CCXT implicit API for Binance
+ */
+export async function createBinanceOcoOrder(
+    exchange: Exchange,
+    symbol: string,
+    side: 'buy' | 'sell',
+    amount: number,
+    takeProfitTriggerPrice: number,
+    stopLossTriggerPrice: number,
+    takeProfitLimitPrice?: number,
+    stopLossLimitPrice?: number,
+): Promise<any> {
+    // Fetch market object
+    const markets = await exchange.loadMarkets();
+    const market = markets[symbol];
+    if (!market) {
+        throw new Error(`Market ${symbol} not found`);
+    }
+
+    // Determine parameters to send Binance
+    const args: any = {
+        symbol: market.id,
+        side: side.toUpperCase(),
+        quantity: exchange.amountToPrecision(symbol, amount),
+    };
+
+    if (side === 'sell') {
+        // Above order is a take profit order
+        args.aboveType = takeProfitLimitPrice ? 'TAKE_PROFIT_LIMIT' : 'TAKE_PROFIT';
+        args.aboveStopPrice = exchange.priceToPrecision(symbol, takeProfitTriggerPrice);
+        if (takeProfitLimitPrice) {
+            args.abovePrice = exchange.priceToPrecision(symbol, takeProfitLimitPrice);
+            args.aboveTimeInForce = 'GTC';
+        }
+        // Below order is a stop loss order
+        args.belowType = stopLossLimitPrice ? 'STOP_LOSS_LIMIT' : 'STOP_LOSS';
+        args.belowStopPrice = exchange.priceToPrecision(symbol, stopLossTriggerPrice);
+        if (stopLossLimitPrice) {
+            args.belowPrice = exchange.priceToPrecision(symbol, stopLossLimitPrice);
+            args.belowTimeInForce = 'GTC';
+        }
+    } else {
+        // Above order is a stop loss order
+        args.aboveType = stopLossLimitPrice ? 'STOP_LOSS_LIMIT' : 'STOP_LOSS';
+        args.aboveStopPrice = exchange.priceToPrecision(symbol, stopLossTriggerPrice);
+        if (stopLossLimitPrice) {
+            args.abovePrice = exchange.priceToPrecision(symbol, stopLossLimitPrice);
+            args.aboveTimeInForce = 'GTC';
+        }
+        // Below order is a take profit order
+        args.belowType = takeProfitLimitPrice ? 'TAKE_PROFIT_LIMIT' : 'TAKE_PROFIT';
+        args.belowStopPrice = exchange.priceToPrecision(symbol, takeProfitTriggerPrice);
+        if (takeProfitLimitPrice) {
+            args.belowPrice = exchange.priceToPrecision(symbol, takeProfitLimitPrice);
+            args.belowTimeInForce = 'GTC';
+        }
+    }
+
+    const response = await (exchange as any).privatePostOrderListOco(args);
+    console.log(util.inspect(response, { depth: null, colors: true }));
+    return response;
 }
 
 // /**
