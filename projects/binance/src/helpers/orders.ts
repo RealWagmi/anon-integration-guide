@@ -1,5 +1,6 @@
 import { Exchange, Order } from 'ccxt';
 import { ORDER_TYPES } from '../constants';
+import { getMarketLastPriceBySymbol } from './markets';
 
 /**
  * Create an advanced order with support for various order types.
@@ -43,9 +44,32 @@ export async function createOrder(
                 throw new Error('Trigger orders require a triggerPrice');
             }
 
-            // Usually exchanges implement trigger orders as limit or market orders with additional params
             ccxtType = price ? 'limit' : 'market';
             params.triggerPrice = options.triggerPrice;
+
+            if (exchange.id === 'binance') {
+                // Trigger orders are not supported by Binance
+                // @link https://developers.binance.com/docs/binance-spot-api-docs/enums#order-types-ordertypes-type
+                // CCXT automatically converts them to STOP_LOSS orders
+                // @link https://discord.com/channels/690203284119617602/690203284727660739/1367185601572376636
+                // So, we need to manually check if the user wants a take profit order,
+                // lest Binance return with error "Stop price would trigger immediately".
+                // In other words, we are simulating what the UI does when you select
+                // a "Stop limit" or a "Stop market" order from the dropdown menu.
+                const lastPrice = await getMarketLastPriceBySymbol(symbol, exchange);
+                if ((options.triggerPrice > lastPrice && side === 'sell') || (options.triggerPrice < lastPrice && side === 'buy')) {
+                    // a take profit order is a trigger order with direction from below (sell) or above (buy)
+                    console.log('Trigger price is in the direction of the take profit order');
+                    ccxtType = 'take_profit';
+                } else if ((options.triggerPrice > lastPrice && side === 'buy') || (options.triggerPrice < lastPrice && side === 'sell')) {
+                    // a stop loss order is a trigger order with direction from above (sell) or below (buy)
+                    console.log('Trigger price is in the direction of the stop loss order');
+                    ccxtType = 'stop_loss';
+                }
+                // Do not break here, we need to continue the switch so that
+                // the take profit or stop loss order is processed correctly
+            }
+
             break;
 
         case 'stop_loss':
@@ -129,7 +153,7 @@ export async function createOrder(
     // Throw if any of the parameters is null or undefined
     for (const key in params) {
         if (params[key] === null || params[key] === undefined) {
-            throw new Error(`Parameter ${key} is null or undefined`);
+            throw new Error(`createOrder: Parameter ${key} is null or undefined`);
         }
     }
 

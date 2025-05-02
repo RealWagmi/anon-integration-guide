@@ -56,6 +56,19 @@ export async function getMarketTickerBySymbol(symbol: string, exchange: Exchange
 }
 
 /**
+ * Given a market symbol and an exchange, return the last price for that market.
+ *
+ * The last price is the price of the last trade for the market.
+ */
+export async function getMarketLastPriceBySymbol(symbol: string, exchange: Exchange): Promise<number> {
+    const ticker = await getMarketTickerBySymbol(symbol, exchange);
+    if (!ticker.last) {
+        throw new Error(`No last price found for symbol ${symbol}`);
+    }
+    return ticker.last;
+}
+
+/**
  * Given a market object, return the type of market, preferring the term
  * "perpetual" for swap markets.
  *
