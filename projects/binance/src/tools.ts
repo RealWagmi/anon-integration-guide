@@ -4,9 +4,8 @@ import { MAX_ORDERS_IN_RESULTS, ORDER_TYPES } from './constants';
 export const tools: AiTool[] = [
     {
         name: 'createOrder',
-        description:
-            'Create various types of orders including market, limit, trigger, stop loss, take profit, OCO, and trailing orders. The order type determines which parameters are required.',
-        required: ['market', 'type', 'side', 'amount', 'price', 'triggerPrice', 'ocoStopLoss', 'ocoTakeProfit', 'trailingPercent', 'trailingAmount', 'reduceOnly'],
+        description: 'Create various types of orders. The order type determines which parameters are required.',
+        required: ['market', 'type', 'side', 'amount', 'price', 'triggerPrice', 'ocoConfiguration', 'trailingPercent', 'trailingAmount', 'reduceOnly'],
         props: [
             {
                 name: 'market',
@@ -17,7 +16,7 @@ export const tools: AiTool[] = [
                 name: 'type',
                 type: 'string',
                 enum: ORDER_TYPES,
-                description: 'Type of order to create',
+                description: 'Type of order to create.  An OCO order requires both ocoStopLoss and ocoTakeProfit parameters.',
             },
             {
                 name: 'side',
@@ -41,34 +40,38 @@ export const tools: AiTool[] = [
                 description: 'Trigger price for trigger, stop loss, and take profit orders',
             },
             {
-                name: 'ocoStopLoss',
+                name: 'ocoConfiguration',
                 type: ['object', 'null'],
-                description: 'Stop loss configuration for OCO orders (object with triggerPrice and optional price)',
-                required: ['triggerPrice', 'price'],
+                description: 'Configuration for OCO orders.  Only use this when the user asks for both stop loss and take profit.',
+                required: ['ocoStopLoss', 'ocoTakeProfit'],
                 properties: {
-                    triggerPrice: {
-                        type: 'number',
+                    ocoStopLoss: {
+                        type: 'object',
+                        description: 'Stop loss configuration for OCO orders (required: triggerPrice, optional: price)',
+                        required: ['triggerPrice', 'price'],
+                        properties: {
+                            triggerPrice: {
+                                type: 'number',
+                            },
+                            price: {
+                                type: ['number', 'null'],
+                            },
+                        },
                     },
-                    price: {
-                        type: ['number', 'null'],
+                    ocoTakeProfit: {
+                        type: 'object',
+                        description: 'Take profit configuration for OCO orders (required: triggerPrice, optional: price)',
+                        required: ['triggerPrice', 'price'],
+                        properties: {
+                            triggerPrice: {
+                                type: 'number',
+                            },
+                            price: {
+                                type: ['number', 'null'],
+                            },
+                        },
                     },
                 },
-                additionalProperties: false,
-            },
-            {
-                name: 'ocoTakeProfit',
-                type: ['object', 'null'],
-                description: 'Take profit configuration for OCO orders (object with triggerPrice and optional price)',
-                required: ['triggerPrice', 'price'],
-                properties: {
-                    triggerPrice: {
-                        type: 'number',
-                    },
-                    price: {
-                        type: ['number', 'null'],
-                    },
-                },
-                additionalProperties: false,
             },
             {
                 name: 'trailingPercent',

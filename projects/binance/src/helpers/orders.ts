@@ -59,11 +59,9 @@ export async function createOrder(
                 const lastPrice = await getMarketLastPriceBySymbol(symbol, exchange);
                 if ((options.triggerPrice > lastPrice && side === 'sell') || (options.triggerPrice < lastPrice && side === 'buy')) {
                     // a take profit order is a trigger order with direction from below (sell) or above (buy)
-                    console.log('Trigger price is in the direction of the take profit order');
                     ccxtType = 'take_profit';
                 } else if ((options.triggerPrice > lastPrice && side === 'buy') || (options.triggerPrice < lastPrice && side === 'sell')) {
                     // a stop loss order is a trigger order with direction from above (sell) or below (buy)
-                    console.log('Trigger price is in the direction of the stop loss order');
                     ccxtType = 'stop_loss';
                 }
                 // Do not break here, we need to continue the switch so that
