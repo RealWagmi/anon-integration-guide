@@ -1,0 +1,43 @@
+{
+  "name": "@heyanon/project-dark-forest-ai",
+  "version": "1.0.0",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "module": "dist/index.mjs",
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "start": "tsup --watch",
+    "build": "tsup",
+    "test": "vitest --run",
+    "lint": "tsdx lint",
+    "prepare": "pnpm run build",
+    "size": "size-limit",
+    "analyze": "size-limit --why",
+    "format": "prettier --write \"*/**/*.ts\""
+  },
+  "devDependencies": {
+    "@size-limit/preset-small-lib": "^9.0.0",
+    "@types/big.js": "^6.2.0",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.10.5",
+    "tsdx": "^0.14.1",
+    "tslib": "^2.8.1",
+    "tsup": "^8.4.0",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@heyanon/sdk": "^2.0.2",
+    "viem": "2.22.9",
+    "vitest": "^2.1.8"
+  },
+  "description": "The OTC market for Autonomous Agents"
+}
