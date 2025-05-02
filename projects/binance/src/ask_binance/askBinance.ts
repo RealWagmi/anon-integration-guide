@@ -167,6 +167,13 @@ export async function askBinance({ action, debugLlm, debugTools, notify }: AskBi
     }
 
     while (!isComplete) {
+        // Uncomment to debug the tool configuration
+        // console.log(
+        //     util.inspect(
+        //         [...tools, ...askBinanceTools].map((tool) => fromHeyAnonToolsToOpenAiTools(tool)),
+        //         { depth: null, colors: true },
+        //     ),
+        // );
         // Call the LLM to determine which tools to call
         const completion = await llmClient.chat.completions.create({
             model: getLlmModel(),

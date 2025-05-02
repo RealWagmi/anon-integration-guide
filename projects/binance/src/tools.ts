@@ -1,11 +1,12 @@
 import { AiTool } from '@heyanon/sdk';
-import { MAX_ORDERS_IN_RESULTS, ORDER_TYPES } from './constants';
+import { MAX_ORDERS_IN_RESULTS } from './constants';
 
 export const tools: AiTool[] = [
     {
-        name: 'createOrder',
-        description: 'Create various types of orders. The order type determines which parameters are required.',
-        required: ['market', 'type', 'side', 'amount', 'price', 'triggerPrice', 'ocoConfiguration', 'trailingPercent', 'trailingAmount', 'reduceOnly'],
+        name: 'createSimpleOrder',
+        description:
+            'Create an order that is activated immediately, without a trigger attached to it.  The order will execute at the current market price or a specified limit price.',
+        required: ['market', 'side', 'amount', 'limitPrice'],
         props: [
             {
                 name: 'market',
@@ -13,10 +14,32 @@ export const tools: AiTool[] = [
                 description: 'Symbol of the market to trade, for example "BTC/USDT" or "AAVE/ETH"',
             },
             {
-                name: 'type',
+                name: 'side',
                 type: 'string',
-                enum: ORDER_TYPES,
-                description: 'Type of order to create.  An OCO order requires both ocoStopLoss and ocoTakeProfit parameters.',
+                description: 'Side of the order, either "buy" or "sell"',
+            },
+            {
+                name: 'amount',
+                type: 'number',
+                description: 'Amount of base currency to buy or sell',
+            },
+            {
+                name: 'limitPrice',
+                type: ['number', 'null'],
+                description: 'Price at which the order will be executed.  If not specified, the order will be a market order.',
+            },
+        ],
+    },
+    {
+        name: 'createTriggerOrder',
+        description:
+            'Create an order that is activated only after the given price condition is met. Once activated, the order will be executed at either the current market price or a specified limit price.',
+        required: ['market', 'side', 'amount', 'triggerPrice', 'limitPrice'],
+        props: [
+            {
+                name: 'market',
+                type: 'string',
+                description: 'Symbol of the market to trade, for example "BTC/USDT" or "AAVE/ETH"',
             },
             {
                 name: 'side',
@@ -30,66 +53,118 @@ export const tools: AiTool[] = [
                 description: 'Amount of base currency to buy or sell',
             },
             {
-                name: 'price',
+                name: 'limitPrice',
                 type: ['number', 'null'],
-                description: 'Price for limit orders (required for limit orders, optional for other types)',
+                description: 'Price at which the order will be executed.  If not specified, the order will be a market order.',
             },
             {
                 name: 'triggerPrice',
-                type: ['number', 'null'],
-                description: 'Trigger price for trigger, stop loss, and take profit orders',
-            },
-            {
-                name: 'ocoConfiguration',
-                type: ['object', 'null'],
-                description: 'Configuration for OCO orders.  Only use this when the user asks for both stop loss and take profit.',
-                required: ['ocoStopLoss', 'ocoTakeProfit'],
-                properties: {
-                    ocoStopLoss: {
-                        type: 'object',
-                        description: 'Stop loss configuration for OCO orders (required: triggerPrice, optional: price)',
-                        required: ['triggerPrice', 'price'],
-                        properties: {
-                            triggerPrice: {
-                                type: 'number',
-                            },
-                            price: {
-                                type: ['number', 'null'],
-                            },
-                        },
-                    },
-                    ocoTakeProfit: {
-                        type: 'object',
-                        description: 'Take profit configuration for OCO orders (required: triggerPrice, optional: price)',
-                        required: ['triggerPrice', 'price'],
-                        properties: {
-                            triggerPrice: {
-                                type: 'number',
-                            },
-                            price: {
-                                type: ['number', 'null'],
-                            },
-                        },
-                    },
-                },
-            },
-            {
-                name: 'trailingPercent',
-                type: ['number', 'null'],
-                description: 'Percentage away from market price for trailing orders',
-            },
-            {
-                name: 'trailingAmount',
-                type: ['number', 'null'],
-                description: 'Fixed amount away from market price for trailing orders',
-            },
-            {
-                name: 'reduceOnly',
-                type: ['boolean', 'null'],
-                description: 'Whether the order should only reduce position size (not open new position)',
+                type: 'number',
+                description: 'Price at which the order will be activated',
             },
         ],
     },
+    // {
+    //     name: 'createOrder',
+    //     description: 'Create various types of orders. The order type determines which parameters are required.',
+    //     required: ['market', 'type', 'side', 'amount', 'price', 'triggerPrice', 'ocoConfiguration', 'trailingPercent', 'trailingAmount', 'reduceOnly'],
+    //     props: [
+    //         {
+    //             name: 'market',
+    //             type: 'string',
+    //             description: 'Symbol of the market to trade, for example "BTC/USDT" or "AAVE/ETH"',
+    //         },
+    //         {
+    //             name: 'type',
+    //             type: 'string',
+    //             enum: ORDER_TYPES,
+    //             description: 'Type of order to create',
+    //         },
+    //         {
+    //             name: 'side',
+    //             type: 'string',
+    //             enum: ['buy', 'sell'],
+    //             description: 'Side of the order; either "buy" or "sell"',
+    //         },
+    //         {
+    //             name: 'amount',
+    //             type: 'number',
+    //             description: 'Amount of base currency to buy or sell',
+    //         },
+    //         {
+    //             name: 'limitPrice',
+    //             type: ['number', 'null'],
+    //             description:
+    //                 'Price for limit orders (required for limit orders, optional for other types).  The order will be executed at this price if the market price crosses the trigger price.',
+    //         },
+    //         {
+    //             name: 'triggerConfiguration',
+    //             type: ['object', 'null'],
+    //             description: 'Configuration for orders of type "trigger", that is, orders that are sent only after the market price crosses the trigger price.',
+    //             required: ['triggerPrice', 'triggerDirection'],
+    //             properties: {
+    //                 triggerPrice: {
+    //                     type: 'number',
+    //                     description: 'Trigger price for the order',
+    //                 },
+    //                 triggerDirection: {
+    //                     type: 'string',
+    //                     description: 'Direction of the trigger price; can be "greater_than", "less_than", or "null" if not specified',
+    //                     enum: ['greater_than', 'less_than', 'null'],
+    //                 },
+    //             },
+    //         },
+    //         {
+    //             name: 'ocoConfiguration',
+    //             type: ['object', 'null'],
+    //             description: 'Configuration for OCO orders',
+    //             required: ['ocoStopLoss', 'ocoTakeProfit'],
+    //             properties: {
+    //                 ocoStopLoss: {
+    //                     type: 'object',
+    //                     description: 'Stop loss configuration for OCO orders (required: triggerPrice, optional: price)',
+    //                     required: ['triggerPrice', 'price'],
+    //                     properties: {
+    //                         triggerPrice: {
+    //                             type: 'number',
+    //                         },
+    //                         limitPrice: {
+    //                             type: ['number', 'null'],
+    //                         },
+    //                     },
+    //                 },
+    //                 ocoTakeProfit: {
+    //                     type: 'object',
+    //                     description: 'Take profit configuration for OCO orders (required: triggerPrice, optional: price)',
+    //                     required: ['triggerPrice', 'price'],
+    //                     properties: {
+    //                         triggerPrice: {
+    //                             type: 'number',
+    //                         },
+    //                         limitPrice: {
+    //                             type: ['number', 'null'],
+    //                         },
+    //                     },
+    //                 },
+    //             },
+    //         },
+    //         {
+    //             name: 'trailingPercent',
+    //             type: ['number', 'null'],
+    //             description: 'Percentage away from market price for trailing orders',
+    //         },
+    //         {
+    //             name: 'trailingAmount',
+    //             type: ['number', 'null'],
+    //             description: 'Fixed amount away from market price for trailing orders',
+    //         },
+    //         {
+    //             name: 'reduceOnly',
+    //             type: ['boolean', 'null'],
+    //             description: 'Whether the order should only reduce position size (not open new position)',
+    //         },
+    //     ],
+    // },
     {
         name: 'cancelOrderByIdAndMarket',
         description: 'Cancel a specific order by ID and market symbol.  If you only have the order ID, use getOpenOrders to get the market symbol.',
