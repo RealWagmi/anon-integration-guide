@@ -1,5 +1,5 @@
 import { AiTool } from '@heyanon/sdk';
-import { MAX_ORDERS_IN_RESULTS, MAX_TRAILING_DELTA, MIN_TRAILING_DELTA } from './constants';
+import { ACCOUNT_TYPES, MAX_ORDERS_IN_RESULTS, MAX_TRAILING_DELTA, MIN_TRAILING_DELTA } from './constants';
 
 const SIDE_DESCRIPTION =
     'Side of the order, either "buy" or "sell".  If the market is BTC/USDT, then the side is "buy" if the user wants to buy BTC and "sell" if the user wants to sell BTC.';
@@ -208,16 +208,20 @@ export const tools: AiTool[] = [
             {
                 name: 'from',
                 type: ['string', 'null'],
+                enum: ACCOUNT_TYPES,
                 description: 'Account to transfer from.  e.g. "spot" or "future".  Defaults to "spot" or "future".',
             },
-            { name: 'to', type: 'string', description: 'Account to transfer to.  e.g. "spot" or "future"' },
+            { name: 'to', type: 'string', enum: ACCOUNT_TYPES, description: 'Account to transfer to.  e.g. "spot" or "future"' },
         ],
     },
     {
         name: 'getBalance',
-        description: 'Get balance for all currencies/tokens that the user owns on the exchange.  For each currency, also show how much is available to trade (free).',
-        required: ['currency'],
-        props: [{ name: 'currency', type: ['string', 'null'], description: 'Optionally, specify a currency to show balance just for that currency, e.g. "BTC"' }],
+        description: 'Get balance for all currencies/tokens on the given account type.  For each currency, also show how much is available to trade (free).',
+        required: ['type', 'currency'],
+        props: [
+            { name: 'type', type: ['string', 'null'], enum: ACCOUNT_TYPES, description: 'Account type to get balance for.  e.g. "spot" or "future".  Defaults to "spot".' },
+            { name: 'currency', type: ['string', 'null'], description: 'Optionally, specify a currency to show balance just for that currency, e.g. "BTC"' },
+        ],
     },
     {
         name: 'getCurrencyMarkets',

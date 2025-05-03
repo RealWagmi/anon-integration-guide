@@ -26,3 +26,8 @@ export const MIN_TRAILING_DELTA = 10;
  * @link https://developers.binance.com/docs/binance-spot-api-docs/filters#trailing_delta
  */
 export const MAX_TRAILING_DELTA = 2000;
+
+/**
+ * Possible account types
+ */
+export const ACCOUNT_TYPES = ['main', 'spot', 'funding', 'margin', 'cross', 'future', 'delivery', 'linear', 'swap', 'inverse', 'option'] as const;
