@@ -32,7 +32,7 @@ export async function createTakeProfitStopLossOrder(
     { market, side, amount, takeProfitTriggerPrice, takeProfitLimitPrice, stopLossTriggerPrice, stopLossLimitPrice }: Props,
     { exchange }: FunctionOptionsWithExchange,
 ): Promise<FunctionReturn> {
-    // We need a trigger price
+    // We need at least one trigger price
     if (!takeProfitTriggerPrice && !stopLossTriggerPrice) {
         return toResult(`Error: Either take profit or stop loss trigger price must be provided`, true);
     }
@@ -63,7 +63,7 @@ export async function createTakeProfitStopLossOrder(
     // Case of a take profit AND stop loss order (OCO)
     else {
         try {
-            await createBinanceOcoOrder(
+            const orders = await createBinanceOcoOrder(
                 exchange,
                 market,
                 side,
@@ -73,8 +73,7 @@ export async function createTakeProfitStopLossOrder(
                 takeProfitLimitPrice ?? undefined,
                 stopLossLimitPrice ?? undefined,
             );
-            return toResult(`Successfully created order`);
-            // return toResult(`Successfully created ${formatOrderSingleLine(order, undefined, false)}`);
+            return toResult(`Successfully created two OCO orders:\n${formatOrderSingleLine(orders[0], undefined, false)}\n${formatOrderSingleLine(orders[1], undefined, false)}`);
         } catch (error) {
             console.error(error);
             return toResult(`Error creating OCO order: ${error}`, true);

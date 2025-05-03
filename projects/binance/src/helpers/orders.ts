@@ -1,7 +1,7 @@
 import { Exchange, Order } from 'ccxt';
 import { getMarketLastPriceBySymbol } from './markets';
-import util from 'util';
 import { LIMIT_PRICE_TOLERANCE } from '../constants';
+
 /**
  * Create a simple order, that is, an order that has no triggers attached to it.
  */
@@ -45,7 +45,23 @@ export async function createTriggerOrder(exchange: Exchange, symbol: string, sid
 }
 
 /**
- * Create an OCO (one-cancels-the-other) order using CCXT implicit API for Binance
+ * Create a spot OCO order using CCXT implicit API for Binance
+ *
+ * An OCO order (one-cancels-the-other) contains a take profit and a stop loss
+ * order for the same amount.
+ *
+ * @link https://gist.github.com/coccoinomane/efeb6e213e5d34ca66ebdc72b478a215
+ * @link https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-list---oco-trade
+ *
+ * @param {Exchange} exchange - The exchange object
+ * @param {string} symbol - The symbol of the market
+ * @param {'buy' | 'sell'} side - The side of the order
+ * @param {number} amount - The amount of the order
+ * @param {number} takeProfitTriggerPrice - The trigger price of the take profit order
+ * @param {number} stopLossTriggerPrice - The trigger price of the stop loss order
+ * @param {number} [takeProfitLimitPrice] - The limit price of the take profit order
+ * @param {number} [stopLossLimitPrice] - The limit price of the stop loss order
+ * @returns {[Order, Order]} - The two orders created
  */
 export async function createBinanceOcoOrder(
     exchange: Exchange,
@@ -56,7 +72,7 @@ export async function createBinanceOcoOrder(
     stopLossTriggerPrice: number,
     takeProfitLimitPrice?: number,
     stopLossLimitPrice?: number,
-): Promise<any> {
+): Promise<[Order, Order]> {
     // Fetch market object
     const markets = await exchange.loadMarkets();
     const market = markets[symbol];
@@ -102,10 +118,20 @@ export async function createBinanceOcoOrder(
             args.belowTimeInForce = 'GTC';
         }
     }
-
+    // Send the request to Binance
     const response = await (exchange as any).privatePostOrderListOco(args);
-    console.log(util.inspect(response, { depth: null, colors: true }));
-    return response;
+
+    // Parse the response into two orders
+    let orders: [Order | null, Order | null] = [null, null];
+    try {
+        const binanceOrders = response.orderReports;
+        orders = binanceOrders.map((o: any) => exchange.parseOrder(o));
+    } catch (error) {
+        console.error(error);
+        throw new Error(`createBinanceOcoOrder: Could not parse orders from Binance response.  Response: ${response}`);
+    }
+
+    return orders as [Order, Order];
 }
 
 /**
