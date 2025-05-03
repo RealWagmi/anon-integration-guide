@@ -78,7 +78,7 @@ export const tools: AiTool[] = [
                 name: 'side',
                 type: 'string',
                 enum: ['buy', 'sell'],
-                description: 'Side of the order; either "buy" or "sell"',
+                description: 'Side of the order; either "buy" or "sell".',
             },
             {
                 name: 'amount',
@@ -88,7 +88,8 @@ export const tools: AiTool[] = [
             {
                 name: 'takeProfitTriggerPrice',
                 type: ['number', 'null'],
-                description: 'Price at which the take profit order will be activated.  If not specified, the take profit order will not be created.',
+                description:
+                    'Price at which the take profit order will be activated.  For sell orders, must be higher than stop loss trigger price.  For buy orders, must be lower than stop loss trigger price.  If not specified, the take profit order will not be created.',
             },
             {
                 name: 'takeProfitLimitPrice',
