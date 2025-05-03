@@ -22,9 +22,13 @@ interface Props {
  * @returns {Promise<FunctionReturn>} A message confirming the order or an error description
  */
 export async function createSimpleOrder({ market, side, amount, limitPrice }: Props, { exchange }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
+    // Fetch market object to provide better feedback to the user
+    const markets = await exchange.loadMarkets();
+    const marketObject = markets[market];
+    // Create the order
     try {
         const order = await createSimpleOrderHelper(exchange, market, side, amount, limitPrice === null ? undefined : limitPrice);
-        return toResult(`Successfully created ${formatOrderSingleLine(order, undefined, false)}`);
+        return toResult(`Successfully created ${formatOrderSingleLine(order, marketObject, false)}`);
     } catch (error) {
         console.error(error);
         return toResult(`Error creating order: ${error}`, true);

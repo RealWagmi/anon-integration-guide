@@ -13,6 +13,7 @@ interface StringOrder {
     triggerPrice: string;
     amount: string;
     filled: string;
+    filledPercent: string;
     status: string;
 }
 
@@ -88,7 +89,7 @@ export function formatOrderMultiLine(order: Order, market?: MarketInterface, pre
  * symbols.
  */
 export function formatOrderSingleLine(order: Order, market?: MarketInterface, showStatus: boolean = true, prefix: string = ''): string {
-    const { id, timestamp, symbol, type, side, price, triggerPrice, amount, filled, status } = stringifyOrder(order);
+    const { id, timestamp, symbol, type, side, price, triggerPrice, amount, filled, filledPercent, status } = stringifyOrder(order);
 
     const quoteSymbol = market ? ` ${market.quote}` : '';
     const baseSymbol = market ? ` ${market.base}` : '';
@@ -96,9 +97,9 @@ export function formatOrderSingleLine(order: Order, market?: MarketInterface, sh
     let parts = [
         `${titleCase(type)} order with ID ${id}`,
         `${triggerPrice !== 'N/A' ? ` that triggers at ${triggerPrice}${quoteSymbol},` : ''}`,
-        ` to ${side} ${amount}${baseSymbol}`,
+        ` to ${side} ${amount}${baseSymbol}${quoteSymbol ? ` for${quoteSymbol}` : ''}`,
         `${price !== 'N/A' ? ` @ ${price}${quoteSymbol}` : ''}`,
-        ` (${filled === '0' ? '' : `filled: ${filled}${baseSymbol}, `}${showStatus ? `status: ${status}, ` : ''}created: ${timestamp}, market: ${symbol})`,
+        ` (${filled === '0' ? '' : `filled: ${filledPercent}%, `}${showStatus ? `status: ${status}, ` : ''}created: ${timestamp}, market: ${symbol})`,
     ];
 
     return prefix + parts.join('');
@@ -108,9 +109,10 @@ export function formatOrderSingleLine(order: Order, market?: MarketInterface, sh
  * Prepare an order for display in console
  */
 function stringifyOrder(order: Order): StringOrder {
+    const timestamp = extractTimestamp(order);
     return {
         id: order.id || 'N/A',
-        timestamp: order.timestamp ? formatDate(order.timestamp) : 'N/A',
+        timestamp: timestamp ? formatDate(timestamp) : 'N/A',
         symbol: order.symbol || 'N/A',
         type: order.type || 'N/A',
         side: order.side || 'N/A',
@@ -118,6 +120,7 @@ function stringifyOrder(order: Order): StringOrder {
         triggerPrice: order.triggerPrice !== undefined ? order.triggerPrice.toString() : 'N/A',
         amount: order.amount !== undefined ? order.amount.toString() : 'N/A',
         filled: order.filled !== undefined ? order.filled.toString() : 'N/A',
+        filledPercent: order.filled !== undefined ? ((order.filled / order.amount) * 100).toFixed(0) : 'N/A',
         status: order.status || 'N/A',
     };
 }
@@ -137,4 +140,18 @@ export function titleCase(str: string): string {
     // Remove underscores and replace with spaces
     str = str.replace(/_/g, ' ');
     return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase());
+}
+
+/**
+ * Given a CCXT order, extract the timestamp.
+ * Returns undefined if the timestamp is not found or is -1.
+ */
+export function extractTimestamp(order: Order): number | undefined {
+    if (order.timestamp && order.timestamp !== -1) {
+        return order.timestamp;
+    }
+    if (order.lastUpdateTimestamp && order.lastUpdateTimestamp !== -1) {
+        return order.lastUpdateTimestamp;
+    }
+    return undefined;
 }

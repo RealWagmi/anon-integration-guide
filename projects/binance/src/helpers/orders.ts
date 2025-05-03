@@ -50,6 +50,7 @@ export async function createTriggerOrder(exchange: Exchange, symbol: string, sid
  * An OCO order (one-cancels-the-other) contains a take profit and a stop loss
  * order for the same amount.
  *
+ * @link https://d.pr/i/G72YL7 UI SCREENSHOT
  * @link https://gist.github.com/coccoinomane/efeb6e213e5d34ca66ebdc72b478a215
  * @link https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-list---oco-trade
  *
@@ -85,6 +86,7 @@ export async function createBinanceOcoOrder(
         symbol: market.id,
         side: side.toUpperCase(),
         quantity: exchange.amountToPrecision(symbol, amount),
+        newOrderRespType: 'FULL',
     };
 
     if (side === 'sell') {

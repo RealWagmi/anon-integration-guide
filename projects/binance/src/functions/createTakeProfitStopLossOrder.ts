@@ -32,6 +32,9 @@ export async function createTakeProfitStopLossOrder(
     { market, side, amount, takeProfitTriggerPrice, takeProfitLimitPrice, stopLossTriggerPrice, stopLossLimitPrice }: Props,
     { exchange }: FunctionOptionsWithExchange,
 ): Promise<FunctionReturn> {
+    // Fetch market object to provide better feedback to the user
+    const markets = await exchange.loadMarkets();
+    const marketObject = markets[market];
     // We need at least one trigger price
     if (!takeProfitTriggerPrice && !stopLossTriggerPrice) {
         return toResult(`Error: Either take profit or stop loss trigger price must be provided`, true);
@@ -44,7 +47,7 @@ export async function createTakeProfitStopLossOrder(
     if (takeProfitTriggerPrice && !stopLossTriggerPrice) {
         try {
             const order = await createTriggerOrder(exchange, market, side, amount, takeProfitTriggerPrice, takeProfitLimitPrice === null ? undefined : takeProfitLimitPrice);
-            return toResult(`Successfully created ${formatOrderSingleLine(order, undefined, false)}`);
+            return toResult(`Successfully created ${formatOrderSingleLine(order, marketObject, false)}`);
         } catch (error) {
             console.error(error);
             return toResult(`Error creating take profit order: ${error}`, true);
@@ -54,7 +57,7 @@ export async function createTakeProfitStopLossOrder(
     if (!takeProfitTriggerPrice && stopLossTriggerPrice) {
         try {
             const order = await createTriggerOrder(exchange, market, side, amount, stopLossTriggerPrice, stopLossLimitPrice === null ? undefined : stopLossLimitPrice);
-            return toResult(`Successfully created ${formatOrderSingleLine(order, undefined, false)}`);
+            return toResult(`Successfully created ${formatOrderSingleLine(order, marketObject, false)}`);
         } catch (error) {
             console.error(error);
             return toResult(`Error creating stop loss order: ${error}`, true);
@@ -73,7 +76,9 @@ export async function createTakeProfitStopLossOrder(
                 takeProfitLimitPrice ?? undefined,
                 stopLossLimitPrice ?? undefined,
             );
-            return toResult(`Successfully created two OCO orders:\n${formatOrderSingleLine(orders[0], undefined, false)}\n${formatOrderSingleLine(orders[1], undefined, false)}`);
+            return toResult(
+                `Successfully created two OCO orders:\n${formatOrderSingleLine(orders[0], marketObject, false)}\n${formatOrderSingleLine(orders[1], undefined, false)}`,
+            );
         } catch (error) {
             console.error(error);
             return toResult(`Error creating OCO order: ${error}`, true);

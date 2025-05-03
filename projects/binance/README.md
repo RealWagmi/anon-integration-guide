@@ -10,7 +10,7 @@ Integration between HeyAnon.ai and Binance Spot and Futures trading.
     - Price of AAVE/USDT on @binance
     - Market buy 1 AAVE on AAVE/USDT on @binance
 
-1. **Order and balance info**
+1. **Info on orders and balances**
 
     - Show my open orders on @binance
     - Show all my open orders on BTC/USDT on @binance
@@ -23,6 +23,7 @@ Integration between HeyAnon.ai and Binance Spot and Futures trading.
     - Market buy 1 BTC with USDT on @binance
     - Buy 1 BTC at 40000 USDT on @binance
     - Sell half of my BTC at 40000 USDT on @binance
+    - Ape all my USDT into BTC on @binance
 
 1. **Conditional orders**
 

@@ -1,6 +1,6 @@
 ## Bug fixes
 
-- Convert OCO orders response to CCXT Order objects
+- Make sure to respect limits & precision rules > https://docs.ccxt.com/#/README?id=notes-on-precision-and-limits . See also https://github.com/webcerebrium/java-binance-api/issues/7#issuecomment-1076805294
 
 ## Features
 
@@ -22,6 +22,6 @@
 - Spot with margin
 - Implement open orders pagination
 - Should we stop the user from creating limit orders that will execute immediately (e.g. limit buy at price higher than market price)?
-- More meaningful error messages, for example:
+- More meaningful error messages, using the [exchange's `exceptions` property](https://github.com/ccxt/ccxt/blob/master/ts/src/binance.ts#L1550), for example:
     - `BadRequest: binance {"code":-1013,"msg":"Filter failure: NOTIONAL"}` should be "Order too small for this market"
     - API key errors such as [this one](https://d.pr/i/bKUK9j)

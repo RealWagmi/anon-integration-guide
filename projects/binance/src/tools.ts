@@ -1,5 +1,8 @@
 import { AiTool } from '@heyanon/sdk';
-import { MAX_ORDERS_IN_RESULTS } from './constants';
+import { MAX_ORDERS_IN_RESULTS, MAX_TRAILING_DELTA, MIN_TRAILING_DELTA } from './constants';
+
+const SIDE_DESCRIPTION =
+    'Side of the order, either "buy" or "sell".  If the market is BTC/USDT, then the side is "buy" if the user wants to buy BTC and "sell" if the user wants to sell BTC.';
 
 export const tools: AiTool[] = [
     {
@@ -11,12 +14,13 @@ export const tools: AiTool[] = [
             {
                 name: 'market',
                 type: 'string',
-                description: 'Symbol of the market to trade, for example "BTC/USDT" or "AAVE/ETH"',
+                description: 'Symbol of the market to trade, for example "BTC/USDT"',
             },
             {
                 name: 'side',
                 type: 'string',
-                description: 'Side of the order, either "buy" or "sell"',
+                enum: ['buy', 'sell'],
+                description: SIDE_DESCRIPTION,
             },
             {
                 name: 'amount',
@@ -26,7 +30,7 @@ export const tools: AiTool[] = [
             {
                 name: 'limitPrice',
                 type: ['number', 'null'],
-                description: 'Price at which the order will be executed.  If not specified, the order will be a market order.',
+                description: 'Price at which the order will be executed.  Include only if explicitly specified by the user.  Leave blank for a market order.',
             },
         ],
     },
@@ -39,13 +43,13 @@ export const tools: AiTool[] = [
             {
                 name: 'market',
                 type: 'string',
-                description: 'Symbol of the market to trade, for example "BTC/USDT" or "AAVE/ETH"',
+                description: 'Symbol of the market to trade, for example "BTC/USDT"',
             },
             {
                 name: 'side',
                 type: 'string',
                 enum: ['buy', 'sell'],
-                description: 'Side of the order; either "buy" or "sell"',
+                description: SIDE_DESCRIPTION,
             },
             {
                 name: 'amount',
@@ -55,7 +59,7 @@ export const tools: AiTool[] = [
             {
                 name: 'limitPrice',
                 type: ['number', 'null'],
-                description: 'Price at which the order will be executed.  If not specified, the order will be a market order.',
+                description: 'Price at which the order will be executed.  Include only if explicitly specified by the user.  If not specified, the order will be a market order.',
             },
             {
                 name: 'triggerPrice',
@@ -72,13 +76,13 @@ export const tools: AiTool[] = [
             {
                 name: 'market',
                 type: 'string',
-                description: 'Symbol of the market to trade, for example "BTC/USDT" or "AAVE/ETH"',
+                description: 'Symbol of the market to trade, for example "BTC/USDT"',
             },
             {
                 name: 'side',
                 type: 'string',
                 enum: ['buy', 'sell'],
-                description: 'Side of the order; either "buy" or "sell".',
+                description: SIDE_DESCRIPTION,
             },
             {
                 name: 'amount',
@@ -181,7 +185,7 @@ export const tools: AiTool[] = [
             {
                 name: 'market',
                 type: 'string',
-                description: 'Symbol of the market to get information for, for example "BTC/USDT" or "AAVE/ETH"',
+                description: 'Symbol of the market to get information for, for example "BTC/USDT"',
             },
         ],
     },
