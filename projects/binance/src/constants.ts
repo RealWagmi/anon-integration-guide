@@ -12,3 +12,17 @@ export const MAX_ORDERS_IN_RESULTS = 25;
  * current price fluctuations while the order is being placed.
  */
 export const LIMIT_PRICE_TOLERANCE = 0.005;
+
+/**
+ * Minimum trailing delta in BIPS (100 BIPS = 1%)
+ *
+ * @link https://developers.binance.com/docs/binance-spot-api-docs/filters#trailing_delta
+ */
+export const MIN_TRAILING_DELTA = 10;
+
+/**
+ * Maximum trailing delta in BIPS (100 BIPS = 1%)
+ *
+ * @link https://developers.binance.com/docs/binance-spot-api-docs/filters#trailing_delta
+ */
+export const MAX_TRAILING_DELTA = 2000;

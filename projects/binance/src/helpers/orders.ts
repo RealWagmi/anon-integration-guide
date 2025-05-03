@@ -1,6 +1,7 @@
 import { Exchange, Order } from 'ccxt';
 import { getMarketLastPriceBySymbol } from './markets';
-import { LIMIT_PRICE_TOLERANCE } from '../constants';
+import { LIMIT_PRICE_TOLERANCE, MAX_TRAILING_DELTA, MIN_TRAILING_DELTA } from '../constants';
+import { BINANCE_ORDER_TYPES } from './binance';
 
 /**
  * Create a simple order, that is, an order that has no triggers attached to it.
@@ -124,16 +125,97 @@ export async function createBinanceOcoOrder(
     const response = await (exchange as any).privatePostOrderListOco(args);
 
     // Parse the response into two orders
-    let orders: [Order | null, Order | null] = [null, null];
     try {
         const binanceOrders = response.orderReports;
-        orders = binanceOrders.map((o: any) => exchange.parseOrder(o));
+        return binanceOrders.map((o: any) => exchange.parseOrder(o, market));
     } catch (error) {
         console.error(error);
         throw new Error(`createBinanceOcoOrder: Could not parse orders from Binance response.  Response: ${response}`);
     }
+}
 
-    return orders as [Order, Order];
+/**
+ * Create a spot trailing stop order using CCXT implicit API for Binance
+ *
+ * A trailing stop order is a stop loss order that moves up or down as
+ * the price moves up or down.
+ *
+ * Intuitively, trailing stop orders allow unlimited price movement in a direction
+ * that is beneficial for the order, and limited movement in a detrimental direction.
+ *
+ * @link https://d.pr/i/uZBFJc UI SCREENSHOT
+ * @link https://github.com/binance/binance-spot-api-docs/blob/master/faqs/trailing-stop-faq.md
+ * @link https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-trade
+ *
+ * @param {Exchange} exchange - The exchange object
+ * @param {string} symbol - The symbol of the market
+ * @param {'buy' | 'sell'} side - The side of the order
+ * @param {number} amount - The amount of the order
+ * @param {'STOP_LOSS' | 'TAKE_PROFIT'} stopLossOrTakeProfit - Whether the order is a stop loss or take profit order.  One could try to infer this from the other parameters, but we confide the user knows what they want.
+ * @param {number} trailingDelta - Percent change in price required to trigger order entry, expressed in BIPS (100 BIPS = 1%)
+ * @param {number} [limitPrice] - The limit price of the order once the trailing stop is triggered ("Limit" in the UI, "price" in the Binance API).  If omitted, the order will be executed as soon as the trailing stop is triggered.
+ * @param {number} [triggerPrice] - The trigger price needed to activate the trailing stop order ("Activation price" in the UI, "stopPrice" in the Binance API).  If omitted, the order will be activated immediately.
+ * @returns {[Order, Order]} - The two orders created
+ */
+export async function createBinanceTrailingStopOrder(
+    exchange: Exchange,
+    symbol: string,
+    side: 'buy' | 'sell',
+    amount: number,
+    stopLossOrTakeProfit: 'STOP_LOSS' | 'TAKE_PROFIT',
+    trailingDelta: number,
+    limitPrice?: number,
+    triggerPrice?: number,
+): Promise<Order> {
+    // Fetch market object
+    const markets = await exchange.loadMarkets();
+    const market = markets[symbol];
+    if (!market) {
+        throw new Error(`Market ${symbol} not found`);
+    }
+
+    // Validate trailing delta
+    if (trailingDelta < MIN_TRAILING_DELTA || trailingDelta > MAX_TRAILING_DELTA) {
+        throw new Error(`trailingDelta must be between ${MIN_TRAILING_DELTA} and ${MAX_TRAILING_DELTA} BIPS (100 BIPS = 1%).  You provided ${trailingDelta}.`);
+    }
+
+    // Determine parameters to send Binance
+    const args: any = {
+        symbol: market.id,
+        side: side.toUpperCase(),
+        quantity: exchange.amountToPrecision(symbol, amount),
+        newOrderRespType: 'FULL',
+        trailingDelta: trailingDelta,
+    };
+
+    // Determine order type
+    if (limitPrice) {
+        args.type = stopLossOrTakeProfit === 'STOP_LOSS' ? 'STOP_LOSS_LIMIT' : 'TAKE_PROFIT_LIMIT';
+        args.price = exchange.priceToPrecision(symbol, limitPrice);
+        args.timeInForce = 'GTC';
+    } else {
+        args.type = stopLossOrTakeProfit;
+    }
+
+    if (!BINANCE_ORDER_TYPES.includes(args.type)) {
+        throw new Error(`Invalid order type: ${args.type}.  Must be one of: ${BINANCE_ORDER_TYPES.join(', ')}.`);
+    }
+
+    // Should the order be activated immediately or upon the price moving by a certain amount?
+    if (triggerPrice) {
+        args.stopPrice = exchange.priceToPrecision(symbol, triggerPrice);
+    }
+
+    // Send the request to Binance
+    const response = await (exchange as any).privatePostOrder(args);
+
+    // Parse the response into an order
+    try {
+        return exchange.parseOrder(response, market);
+    } catch (error) {
+        console.error(error);
+        throw new Error(`createBinanceTrailingStopOrder: Could not parse order from Binance response.  Response: ${response}`);
+    }
 }
 
 /**

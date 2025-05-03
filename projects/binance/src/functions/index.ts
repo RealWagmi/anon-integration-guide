@@ -1,6 +1,7 @@
 export { createSimpleOrder } from './createSimpleOrder';
 export { createTriggerOrder } from './createTriggerOrder';
 export { createTakeProfitStopLossOrder } from './createTakeProfitStopLossOrder';
+export { createTrailingStopOrder } from './createTrailingStopOrder';
 export { cancelOrderByIdAndMarket } from './cancelOrderByIdAndMarket';
 export { cancelAllOrdersOnMarket } from './cancelAllOrdersOnMarket';
 export { getBalance } from './getBalance';

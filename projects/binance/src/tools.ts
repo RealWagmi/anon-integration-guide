@@ -113,6 +113,46 @@ export const tools: AiTool[] = [
         ],
     },
     {
+        name: 'createTrailingStopOrder',
+        description: 'Create a trailing stop order.  The order can be either a stop loss or take profit.',
+        required: ['market', 'side', 'amount', 'stopLossOrTakeProfit', 'trailingDelta', 'limitPrice'],
+        props: [
+            {
+                name: 'market',
+                type: 'string',
+                description: 'Symbol of the market to trade, for example "BTC/USDT"',
+            },
+            {
+                name: 'side',
+                type: 'string',
+                enum: ['buy', 'sell'],
+                description: SIDE_DESCRIPTION,
+            },
+            {
+                name: 'amount',
+                type: 'number',
+                description: 'Amount of base currency to buy or sell',
+            },
+            {
+                name: 'stopLossOrTakeProfit',
+                type: 'string',
+                enum: ['STOP_LOSS', 'TAKE_PROFIT', 'NOT_SPECIFIED'],
+                description: 'Whether to create a STOP LOSS or TAKE PROFIT order.  If it is not 100% clear what the user wants, leave blank.',
+            },
+            {
+                name: 'trailingDelta',
+                type: 'number',
+                description: `Percentage change in price required to trigger order entry, expressed in BIPS (100 BIPS = 1%).  Must be between ${MIN_TRAILING_DELTA} and ${MAX_TRAILING_DELTA}.`,
+            },
+            {
+                name: 'limitPrice',
+                type: ['number', 'null'],
+                description:
+                    'Price at which the order will be executed, after the trailing stop is triggered.  Include only if explicitly specified by the user.  If not specified, the order will be a market order.',
+            },
+        ],
+    },
+    {
         name: 'cancelOrderByIdAndMarket',
         description: 'Cancel a specific order by ID and market symbol.  If you only have the order ID, use getOpenOrders to get the market symbol.',
         required: ['id', 'market'],

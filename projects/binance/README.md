@@ -38,6 +38,15 @@ Integration between HeyAnon.ai and Binance Spot and Futures trading.
     - Sell all of my BTC for USDT with a 10% take profit and a 15% stop loss on @binance
     - Buy BTC with 1000 USDT, then place a 10% take profit and a 15% stop loss on @binance
 
+1. **Trailing stop orders**
+
+    - `Sell 1 BTC for USDT with a trailing take profit of 10%`: You are willing to sell 1 BTC for a minimum profit of 10% with respect to the current price. If the price goes up even more, you will sell when the price retraces by 10%.
+    - `Sell 1 BTC @ 100.000 USDT with a trailing take profit of 10%`: Same as the above, but your order will be executed at a limit price of 100.000 USDT.
+    - `Sell 1 BTC for USDT with a trailing take loss of 10%`: You are willing to sell 1 BTC for a maximum loss of 10% with respect to the current price. If the price goes up instead of down, you will only sell when the price retraces again by 10%.
+    - `Sell 1 BTC @ 50.000 USDT with a trailing take loss of 10%`: Same as the above, but your order will be executed at a limit price of 50.000 USDT.
+    - `Buy 1 BTC with USDT with a trailing take profit of 10%`: You are willing to buy 1 BTC but only if the current price goes down by at least 10%. If the price decreases even more, you will buy on when the price increases again by 10%.
+    - `Buy 1 BTC with USDT with a trailing stop loss of 10%`: You are willing to buy 1 BTC at a maximum price of 10% above the current price. If the price goes lower instead of higher, you will buy when the price increases again by 10%.
+
 1. **Cancel orders**
 
     - Cancel all my orders on @binance
