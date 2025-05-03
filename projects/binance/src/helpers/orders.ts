@@ -26,6 +26,9 @@ export async function createSimpleOrder(exchange: Exchange, symbol: string, side
  * Create a trigger order, that is, an order that has a trigger price attached to it.
  */
 export async function createTriggerOrder(exchange: Exchange, symbol: string, side: 'buy' | 'sell', amount: number, triggerPrice: number, limitPrice?: number): Promise<Order> {
+    if (!exchange.features.spot.createOrder.triggerPrice) {
+        throw new Error(`Exchange ${exchange.name} does not support trigger/conditional orders.`);
+    }
     const ccxtParams: any = {};
     const lastPrice = await getMarketLastPriceBySymbol(symbol, exchange);
     // Determine whether the order is take profit or stop loss

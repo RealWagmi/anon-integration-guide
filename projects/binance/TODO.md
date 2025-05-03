@@ -16,6 +16,8 @@
 
 - Trailing stop support in OCO orders
 - TWAP orders
+- OTOCO orders to do stuff like "Buy 1 BTC/USDT, then place a 10% take profit and a 15% stop loss" in a single go, avoiding potential issues with price changes and fund unavailability
+- OTO orders to do stuff like "Buy 1 BTC/USDT, then place a 15% stop loss" in single go, avoiding potential issues with price changes and fund unavailability
 - Options trading
 - Spot with margin
 - Implement open orders pagination

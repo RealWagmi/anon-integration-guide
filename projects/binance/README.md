@@ -29,13 +29,13 @@ Integration between HeyAnon.ai and Binance Spot and Futures trading.
     - Market buy 1 BTC on @binance when the price goes below 50000 USDT
     - Buy 1 BTC at 45000 USDT on @binance when the price goes below 50000 USDT
     - Sell 100 USDT for BTC for 10% profit on @binance
-    - Buy 1 BTC for USDT with a stop loss of 15% on @binance
+    - Market buy 1 BTC with USDT then place a 15% stop loss on @binance
 
 1. **Take profit & stop loss (OCO)**
 
     - Sell 1 BTC for USDT with a 10% take profit and a 15% stop loss on @binance
     - Sell all of my BTC for USDT with a 10% take profit and a 15% stop loss on @binance
-    - Buy BTC with 1000 USDT a 10% take profit and a 15% stop loss on @binance
+    - Buy BTC with 1000 USDT, then place a 10% take profit and a 15% stop loss on @binance
 
 1. **Cancel orders**
 
