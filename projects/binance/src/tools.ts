@@ -14,7 +14,7 @@ export const tools: AiTool[] = [
             {
                 name: 'market',
                 type: 'string',
-                description: 'Symbol of the market to trade, for example "BTC/USDT"',
+                description: 'Symbol of the market to trade, for example "BTC/USDT".  Buy and sell are relative to the first currency in the market symbol.',
             },
             {
                 name: 'side',
@@ -43,7 +43,7 @@ export const tools: AiTool[] = [
             {
                 name: 'market',
                 type: 'string',
-                description: 'Symbol of the market to trade, for example "BTC/USDT"',
+                description: 'Symbol of the market to trade, for example "BTC/USDT".  Buy and sell are relative to the first currency in the market symbol.',
             },
             {
                 name: 'side',
@@ -76,7 +76,7 @@ export const tools: AiTool[] = [
             {
                 name: 'market',
                 type: 'string',
-                description: 'Symbol of the market to trade, for example "BTC/USDT"',
+                description: 'Symbol of the market to trade, for example "BTC/USDT".  Buy and sell are relative to the first currency in the market symbol.',
             },
             {
                 name: 'side',
@@ -120,7 +120,7 @@ export const tools: AiTool[] = [
             {
                 name: 'market',
                 type: 'string',
-                description: 'Symbol of the market to trade, for example "BTC/USDT"',
+                description: 'Symbol of the market to trade, for example "BTC/USDT".  Buy and sell are relative to the first currency in the market symbol.',
             },
             {
                 name: 'side',
@@ -196,6 +196,21 @@ export const tools: AiTool[] = [
                 type: 'string',
                 description: 'Symbol of the market the order belongs to, e.g. "BTC/USDT"',
             },
+        ],
+    },
+    {
+        name: 'transferFunds',
+        description: 'Transfer funds between accounts of the same user, e.g. from spot to future account',
+        required: ['currency', 'amount', 'from', 'to'],
+        props: [
+            { name: 'currency', type: 'string', description: 'Currency to transfer, e.g. "USDT"' },
+            { name: 'amount', type: 'number', description: 'Amount to transfer' },
+            {
+                name: 'from',
+                type: ['string', 'null'],
+                description: 'Account to transfer from.  e.g. "spot" or "future".  Defaults to "spot" or "future".',
+            },
+            { name: 'to', type: 'string', description: 'Account to transfer to.  e.g. "spot" or "future"' },
         ],
     },
     {

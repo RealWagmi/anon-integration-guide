@@ -61,6 +61,7 @@ Integration between HeyAnon.ai and Binance Spot and Futures trading.
 - [Placing orders](https://docs.ccxt.com/#/README?id=placing-orders)
 - [Conditional/trigger orders](https://docs.ccxt.com/#/README?id=conditional-orders)
 - [Binance createOrder](https://docs.ccxt.com/#/exchanges/binance?id=createorder)
+- [Isolated margin order](https://discord.com/channels/690203284119617602/690203284727660739/1119234330775007262)
 
 ## Binance specific behaviors
 
