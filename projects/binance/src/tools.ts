@@ -66,7 +66,7 @@ export const tools: AiTool[] = [
     },
     {
         name: 'createTakeProfitStopLossOrder',
-        description: 'Create two orders: a take profit order and a stop loss order.',
+        description: 'Create take profit and/or stop loss orders.  If both are provided, they will be created as an OCO (one-cancels-the-other) order.',
         required: ['market', 'side', 'amount', 'takeProfitTriggerPrice', 'takeProfitLimitPrice', 'stopLossTriggerPrice', 'stopLossLimitPrice'],
         props: [
             {
@@ -87,8 +87,8 @@ export const tools: AiTool[] = [
             },
             {
                 name: 'takeProfitTriggerPrice',
-                type: 'number',
-                description: 'Price at which the take profit order will be activated',
+                type: ['number', 'null'],
+                description: 'Price at which the take profit order will be activated.  If not specified, the take profit order will not be created.',
             },
             {
                 name: 'takeProfitLimitPrice',
@@ -97,8 +97,8 @@ export const tools: AiTool[] = [
             },
             {
                 name: 'stopLossTriggerPrice',
-                type: 'number',
-                description: 'Price at which the stop loss order will be activated',
+                type: ['number', 'null'],
+                description: 'Price at which the stop loss order will be activated.  If not specified, the stop loss order will not be created.',
             },
             {
                 name: 'stopLossLimitPrice',
