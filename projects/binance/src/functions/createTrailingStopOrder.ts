@@ -1,7 +1,7 @@
 import { FunctionReturn, toResult } from '@heyanon/sdk';
 import { FunctionOptionsWithExchange } from '../overrides';
 import { formatOrderSingleLine } from '../helpers/format';
-import { createBinanceTrailingStopOrder } from '../helpers/orders';
+import { createBinanceTrailingStopOrder } from '../helpers/binance';
 
 interface Props {
     market: string;

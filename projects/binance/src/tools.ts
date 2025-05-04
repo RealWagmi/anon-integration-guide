@@ -176,6 +176,22 @@ export const tools: AiTool[] = [
         props: [{ name: 'market', type: 'string', description: 'Symbol of the market to cancel orders on, e.g. "BTC/USDT"' }],
     },
     {
+        name: 'transferFunds',
+        description: 'Transfer funds between accounts of the same user, e.g. from spot to future account',
+        required: ['currency', 'amount', 'from', 'to'],
+        props: [
+            { name: 'currency', type: 'string', description: 'Currency to transfer, e.g. "USDT"' },
+            { name: 'amount', type: 'number', description: 'Amount to transfer' },
+            {
+                name: 'from',
+                type: ['string', 'null'],
+                enum: ACCOUNT_TYPES,
+                description: 'Account to transfer from.  e.g. "spot" or "future".  Defaults to "spot" or "future".',
+            },
+            { name: 'to', type: 'string', enum: ACCOUNT_TYPES, description: 'Account to transfer to.  e.g. "spot" or "future"' },
+        ],
+    },
+    {
         name: 'getOpenOrders',
         description: `Show the most recent ${MAX_ORDERS_IN_RESULTS} open orders.  For each order, show: order ID, timestamp, market symbol, type, side, price, amount, amount filled, and status.`,
         required: [],
@@ -196,22 +212,6 @@ export const tools: AiTool[] = [
                 type: 'string',
                 description: 'Symbol of the market the order belongs to, e.g. "BTC/USDT"',
             },
-        ],
-    },
-    {
-        name: 'transferFunds',
-        description: 'Transfer funds between accounts of the same user, e.g. from spot to future account',
-        required: ['currency', 'amount', 'from', 'to'],
-        props: [
-            { name: 'currency', type: 'string', description: 'Currency to transfer, e.g. "USDT"' },
-            { name: 'amount', type: 'number', description: 'Amount to transfer' },
-            {
-                name: 'from',
-                type: ['string', 'null'],
-                enum: ACCOUNT_TYPES,
-                description: 'Account to transfer from.  e.g. "spot" or "future".  Defaults to "spot" or "future".',
-            },
-            { name: 'to', type: 'string', enum: ACCOUNT_TYPES, description: 'Account to transfer to.  e.g. "spot" or "future"' },
         ],
     },
     {
@@ -238,7 +238,7 @@ export const tools: AiTool[] = [
     {
         name: 'getMarketInfo',
         description:
-            'Get information about a specific market (also called a trading pair), most importantly: last price, bid price, ask price, 24h volume, and more.  Prices are in quote currency.',
+            'Get price and volume information about a specific market (also called a trading pair).  Prices are in quote currency.  Always use this function to get up-to-date prices.',
         required: ['market'],
         props: [
             {

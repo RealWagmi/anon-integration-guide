@@ -1,7 +1,8 @@
 import { FunctionReturn, toResult } from '@heyanon/sdk';
 import { FunctionOptionsWithExchange } from '../overrides';
-import { createBinanceOcoOrder, createTriggerOrder } from '../helpers/orders';
+import { createTriggerOrder } from '../helpers/orders';
 import { formatOrderSingleLine } from '../helpers/format';
+import { createBinanceOcoOrder } from '../helpers/binance';
 
 interface Props {
     market: string;
@@ -77,7 +78,7 @@ export async function createTakeProfitStopLossOrder(
                 stopLossLimitPrice ?? undefined,
             );
             return toResult(
-                `Successfully created two OCO orders:\n${formatOrderSingleLine(orders[0], marketObject, false)}\n${formatOrderSingleLine(orders[1], undefined, false)}`,
+                `Successfully created the following OCO order:\n${formatOrderSingleLine(orders[0], marketObject, false)}\n${formatOrderSingleLine(orders[1], undefined, false)}`,
             );
         } catch (error) {
             console.error(error);
