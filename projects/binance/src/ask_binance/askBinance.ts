@@ -79,7 +79,15 @@ function getExchange() {
     // Get exchange object
     let exchange: ccxt.Exchange;
     try {
-        exchange = new (ccxt as any)[EXCHANGE_NAME.toLowerCase()]({ apiKey: exchangeApiKey, secret: exchangeSecret });
+        exchange = new (ccxt as any)[EXCHANGE_NAME.toLowerCase()]({
+            apiKey: exchangeApiKey,
+            secret: exchangeSecret,
+            enableRateLimit: true,
+            options: {
+                defaultType: 'spot',
+                fetchMarkets: ['spot'],
+            },
+        });
     } catch (error) {
         throw new Error(`Failed to create ${EXCHANGE_NAME} exchange: ${error instanceof Error ? `${error.message}` : 'Unknown error'}`);
     }
