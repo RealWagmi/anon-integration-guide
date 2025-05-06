@@ -80,3 +80,33 @@ export function getMarketType(market: MarketInterface) {
     }
     return market.type;
 }
+
+/**
+ * Complete a partial market symbol with the settle currency.  For example,
+ * "BTC/USDT" becomes "BTC/USDT:USDT", "ETH/BTC" becomes "ETH/BTC:BTC"
+ *
+ * If the market symbol is fully specified, e.g. "BTC/USDT:USDT",
+ * return it unchanged.
+ */
+export function completeMarketSymbol(symbol: string): string {
+    if (symbol.includes(':')) {
+        return symbol;
+    }
+    const quote = symbol.split('/')[1];
+    return `${symbol}:${quote}`;
+}
+
+/**
+ * Given a market object, return the expiry date time object
+ * for the market.
+ *
+ * If the market is not a future market, return null.
+ *
+ * @link https://docs.ccxt.com/#/?id=market-types
+ */
+export function getMarketExpiry(market: MarketInterface): Date | null {
+    if (market.type === 'future') {
+        return market.expiryDatetime ? new Date(market.expiryDatetime) : null;
+    }
+    return null;
+}

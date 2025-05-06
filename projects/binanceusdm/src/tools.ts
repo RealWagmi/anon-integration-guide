@@ -41,7 +41,7 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getCurrencyMarkets',
-        description: 'Get a list of all active markets (also called trading pairs) that include the given currency or token.  Returns a list of market symbols.',
+        description: 'Get a list of all active markets (also called trading pairs) that include the given currency or token.  For each market, show the maximum leverage allowed.',
         required: ['currency'],
         props: [
             {
@@ -54,13 +54,13 @@ export const tools: AiTool[] = [
     {
         name: 'getMarketInfo',
         description:
-            'Get price and volume information about a specific market (also called a trading pair).  Prices are in quote currency.  Always use this function to get up-to-date prices.',
+            'Get price, volume and leverage information about a specific market (also called a trading pair).  Prices are in quote currency.  Always use this function to get up-to-date prices.',
         required: ['market'],
         props: [
             {
                 name: 'market',
                 type: 'string',
-                description: 'Symbol of the market to get information for, for example "BTC/USDT"',
+                description: 'Symbol of the market to get information for, for example "BTC/USDT:USDT"',
             },
         ],
     },

@@ -6,9 +6,9 @@ Integration between HeyAnon.ai and Binance USDM Futures trading.
 
 1. **Markets**
 
- <!-- - Show last price and volume of BTC/USDT on @binanceusdm
- - Show all spot markets for BTC on @binanceusdm
- - Show all perpetual and futures markets for BTC on @binanceusdm -->
+- Show all future markets for BTC on @binanceusdm
+- Show last price and volume of BTC/USDT:USDT on @binanceusdm
+- Show max leverage for BTC/USDT:USDT on @binanceusdm
 
 1. **Info on orders and balances**
 
@@ -90,10 +90,15 @@ To show all the requests and responses to the LLM, run `askBinance` with `--debu
 pnpm ask-binance "Show me the price of BTC/USDT:USDT" --debug-llm
 ```
 
+## Binance specific behaviors
+
+- In Binance it seems the settle currency is always the same as the quote currency. When implementing other exchanges, if this is not the case, we should consider reviewing the `completeMarketSymbol` function.
+
 ## Reference
 
 - [Binance fAPI docs](https://developers.binance.com/docs/derivatives/usds-margined-futures/general-info)
 - [Binance fAPI orders](https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api)
+- [CCXT leverage tiers](https://docs.ccxt.com/#/README?id=leverage-tiers)
 - [CCXT Order structure](https://docs.ccxt.com/#/?id=order-structure)
 - [CCXT Querying orders](https://docs.ccxt.com/#/README?id=querying-orders)
 - [CCXT Placing orders](https://docs.ccxt.com/#/README?id=placing-orders)

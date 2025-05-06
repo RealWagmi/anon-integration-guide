@@ -1,4 +1,5 @@
-import { Balances, MarketInterface, Order, Ticker } from 'ccxt';
+import { Balances, LeverageTiers, MarketInterface, Order, Ticker } from 'ccxt';
+import { getMarketExpiry, getMarketType } from './markets';
 
 /**
  * A stringified order object

@@ -1,6 +1,9 @@
 import { FunctionReturn, toResult } from '@heyanon/sdk';
 import { FunctionOptionsWithExchange } from '../overrides';
-import { getMarketsWithCurrency, getMarketType } from '../helpers/markets';
+import { getMarketExpiry, getMarketsWithCurrency, getMarketType } from '../helpers/markets';
+import { getMarketsLeverageTiers } from '../helpers/leverage';
+import { LeverageTier, MarketInterface } from 'ccxt';
+import { MAX_MARKETS_IN_RESULTS } from '../constants';
 
 interface Props {
     currency: string;
@@ -19,5 +22,22 @@ export async function getCurrencyMarkets({ currency }: Props, { exchange }: Func
     if (markets.length === 0) {
         return toResult('No markets found for currency ' + currency, true);
     }
-    return toResult(`Found ${markets.length} markets for currency ${currency}:\n\n${markets.map((market) => `${market.symbol} (${getMarketType(market)})`).join('\n')}`);
+    const leverageTiers = await getMarketsLeverageTiers(
+        markets.map((market) => market.symbol),
+        exchange,
+    );
+    const rows = [
+        `Found ${markets.length} markets for ${currency}`,
+        markets.length > MAX_MARKETS_IN_RESULTS ? ` (showing first ${MAX_MARKETS_IN_RESULTS})` : '',
+        ':',
+        ...markets.slice(0, MAX_MARKETS_IN_RESULTS).map((market) => formatMarketLine(market, leverageTiers[market.symbol])),
+    ];
+    return toResult(rows.join('\n'));
+}
+
+function formatMarketLine(market: MarketInterface, leverageTiers: LeverageTier[]) {
+    if (market.type === 'future') {
+        return ` - ${market.base}/${market.quote} ${getMarketType(market)} market settled in ${market.settle} with expiry ${getMarketExpiry(market)?.toUTCString()} and max leverage ${leverageTiers[0].maxLeverage}x (symbol: ${market.symbol})`;
+    }
+    return ` - ${market.base}/${market.quote} ${getMarketType(market)} market settled in ${market.settle} with max leverage ${leverageTiers[0].maxLeverage}x (symbol: ${market.symbol})`;
 }
