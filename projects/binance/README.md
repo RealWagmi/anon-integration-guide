@@ -1,6 +1,6 @@
-# Binance Spot and Futures Trading
+# Binance Spot Trading
 
-Integration between HeyAnon.ai and Binance Spot and Futures trading.
+Integration between HeyAnon.ai and Binance Spot trading.
 
 ## Common Tasks
 
