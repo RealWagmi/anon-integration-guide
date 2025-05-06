@@ -23,6 +23,10 @@ export async function getBalance({ currency, type }: Props, { exchange }: Functi
     if (type === null) {
         type = 'future';
     }
+    // This is the futures integration, so we can't get spot balance
+    if (type !== 'future') {
+        return toResult(`This is the futures integration (@binanceusdm).  To get the ${type} balance, please use the Binance Spot integration (@binance)`, true);
+    }
     // Fetch the balance for the given account type
     const balances = await getUserBalance(exchange, type);
     // If a currency is specified, return the balance for that currency
@@ -32,11 +36,11 @@ export async function getBalance({ currency, type }: Props, { exchange }: Functi
             return toResult(`Could not find currency '${currency}', make sure it is supported by the exchange.`, true);
         }
         if (balance.used && balance.used > 0) {
-            return toResult(`Your ${type.toUpperCase()} balance for currency ${currency} is ${balance.total}, of which ${balance.free} can be used to trade`);
+            return toResult(`Your futures balance for currency ${currency} is ${balance.total}, of which ${balance.free} can be used to trade`);
         } else {
-            return toResult(`Your ${type.toUpperCase()} balance for currency ${currency} is ${balance.total}`);
+            return toResult(`Your futures balance for currency ${currency} is ${balance.total}`);
         }
     }
     // Return the balance for all currencies/tokens
-    return toResult(`Here is your ${type.toUpperCase()} balance for all currencies:\n${formatBalances(balances, ' - ')}`);
+    return toResult(`Here is your futures balance for all currencies:\n${formatBalances(balances, ' - ')}`);
 }
