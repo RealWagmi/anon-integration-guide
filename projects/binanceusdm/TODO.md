@@ -14,3 +14,5 @@
 
 - Support for future non-perpetual contracts
 - Implement open positions pagination
+- Open orders pagination
+- Open positions pagination

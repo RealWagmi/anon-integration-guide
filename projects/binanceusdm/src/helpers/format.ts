@@ -69,21 +69,17 @@ export function formatMarketInfo(market: MarketInterface, ticker: Ticker, levera
  * symbols.
  */
 export function formatOrderMultiLine(order: Order, market?: MarketInterface, prefix: string = '', delimiter: string = '\n'): string {
-    const { id, timestamp, symbol, type, side, price, triggerPrice, amount, filled, status } = stringifyOrder(order);
-
-    const quoteSymbol = market ? ` ${market.quote}` : '';
-    const baseSymbol = market ? ` ${market.base}` : '';
-
+    const { id, timestamp, symbol, type, side, price, triggerPrice, amount, filled, status } = stringifyOrder(order, market);
     const rows = [
         `${prefix}Order ID: ${id}`,
         `${prefix}Timestamp: ${timestamp}`,
         `${prefix}Market: ${symbol}`,
         `${prefix}Type: ${type}`,
         `${prefix}Side: ${side}`,
-        `${prefix}Price: ${price}${quoteSymbol}`,
-        `${prefix}Trigger: ${triggerPrice}${quoteSymbol}`,
-        `${prefix}Amount: ${amount}${baseSymbol}`,
-        `${prefix}Filled: ${filled}${baseSymbol}`,
+        `${prefix}Price: ${price}`,
+        `${prefix}Trigger: ${triggerPrice}`,
+        `${prefix}Amount: ${amount}`,
+        `${prefix}Filled: ${filled}`,
         `${prefix}Status: ${status}`,
     ];
     return rows.join(delimiter);
@@ -96,17 +92,16 @@ export function formatOrderMultiLine(order: Order, market?: MarketInterface, pre
  * symbols.
  */
 export function formatOrderSingleLine(order: Order, market?: MarketInterface, showStatus: boolean = true, prefix: string = ''): string {
-    const { id, timestamp, symbol, type, side, price, triggerPrice, amount, filled, filledPercent, status } = stringifyOrder(order);
+    const { id, timestamp, symbol, type, side, price, triggerPrice, amount, filled, filledPercent, status } = stringifyOrder(order, market);
 
     const quoteSymbol = market ? ` ${market.quote}` : '';
-    const baseSymbol = market ? ` ${market.base}` : '';
 
     let parts = [
         `${titleCase(type)} order with ID ${id}`,
-        `${triggerPrice !== 'N/A' ? ` that triggers at ${triggerPrice}${quoteSymbol},` : ''}`,
-        ` to ${side} ${amount}${baseSymbol}${quoteSymbol ? ` for${quoteSymbol}` : ''}`,
-        `${price !== 'N/A' ? ` @ ${price}${quoteSymbol}` : ''}`,
-        ` (${filled === '0' ? '' : `filled: ${filledPercent}%, `}${showStatus ? `status: ${status}, ` : ''}created: ${timestamp}, market: ${symbol})`,
+        `${triggerPrice !== 'N/A' ? ` that triggers at ${triggerPrice},` : ''}`,
+        ` to ${side} ${amount}${quoteSymbol && triggerPrice === 'N/A' && price === 'N/A' ? ` for${quoteSymbol}` : ''}`,
+        `${price !== 'N/A' ? ` @ ${price}` : ''}`,
+        ` (${filled.startsWith('0') ? '' : `filled: ${filledPercent}%, `}${showStatus ? `status: ${status}, ` : ''}created: ${timestamp}, market: ${symbol})`,
     ];
 
     return prefix + parts.join('');
@@ -115,18 +110,20 @@ export function formatOrderSingleLine(order: Order, market?: MarketInterface, sh
 /**
  * Prepare an order for display in console
  */
-function stringifyOrder(order: Order): StringOrder {
+function stringifyOrder(order: Order, market?: MarketInterface): StringOrder {
     const timestamp = extractTimestamp(order);
+    const quoteSymbol = market ? ` ${market.quote}` : '';
+    const baseSymbol = market ? ` ${market.base}` : '';
     return {
         id: order.id || 'N/A',
         timestamp: timestamp ? formatDate(timestamp) : 'N/A',
         symbol: order.symbol || 'N/A',
         type: order.type || 'N/A',
         side: order.side || 'N/A',
-        price: order.price !== undefined ? order.price.toString() : 'N/A',
-        triggerPrice: order.triggerPrice !== undefined ? order.triggerPrice.toString() : 'N/A',
-        amount: order.amount !== undefined ? order.amount.toString() : 'N/A',
-        filled: order.filled !== undefined ? order.filled.toString() : 'N/A',
+        price: order.price !== undefined ? order.price.toString() + quoteSymbol : 'N/A',
+        triggerPrice: order.triggerPrice !== undefined ? order.triggerPrice.toString() + quoteSymbol : 'N/A',
+        amount: order.amount !== undefined ? order.amount.toString() + baseSymbol : 'N/A',
+        filled: order.filled !== undefined ? order.filled.toString() + baseSymbol : 'N/A',
         filledPercent: order.filled !== undefined ? ((order.filled / order.amount) * 100).toFixed(0) : 'N/A',
         status: order.status || 'N/A',
     };
