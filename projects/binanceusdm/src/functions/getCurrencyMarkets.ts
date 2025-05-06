@@ -15,7 +15,7 @@ interface Props {
  * @param {Object} props - The function input parameters
  * @param {string} props.currency - The currency to get markets for
  * @param {FunctionOptions} options
- * @returns {Promise<FunctionReturn>} The list of market symbols or an error description
+ * @returns {Promise<FunctionReturn>} The list of markets with a short description, or an error description
  */
 export async function getCurrencyMarkets({ currency }: Props, { exchange }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
     const markets = await getMarketsWithCurrency(currency, exchange);

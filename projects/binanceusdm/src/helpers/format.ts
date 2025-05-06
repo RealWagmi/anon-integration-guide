@@ -41,19 +41,25 @@ export function formatBalances(balances: Balances, prefix: string = ''): string 
 }
 
 /**
- * Format a ticker object into a string.
+ * Show information about a market, including price, volume data and max leverage.
+ *
+ * @link https://docs.ccxt.com/#/?id=ticker-structure
  */
-export function formatMarketInfo(market: MarketInterface, ticker: Ticker): string {
+export function formatMarketInfo(market: MarketInterface, ticker: Ticker, leverageTiers: LeverageTiers): string {
+    const type = getMarketType(market);
     const rows = [
+        `Type: ${type}`,
+        market.expiryDatetime ? `Expiry: ${getMarketExpiry(market)?.toUTCString()}` : '',
+        `Settled in: ${market.settle}`,
+        `Max leverage: ${leverageTiers[market.symbol][0].maxLeverage}`,
         `Last price: ${ticker.last} ${market.quote}`,
-        `Bid price: ${ticker.bid} ${market.quote}`,
-        `Ask price: ${ticker.ask} ${market.quote}`,
         `24h high: ${ticker.high} ${market.quote}`,
         `24h low: ${ticker.low} ${market.quote}`,
         `24h volume in ${market.quote}: ${ticker.quoteVolume}`,
         `24h volume in ${market.base}: ${ticker.baseVolume}`,
+        `Market symbol: ${market.symbol}`,
     ];
-    return rows.join('\n');
+    return rows.filter(Boolean).join('\n');
 }
 
 /**
