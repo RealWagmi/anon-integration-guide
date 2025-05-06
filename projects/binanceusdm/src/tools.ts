@@ -3,6 +3,22 @@ import { ACCOUNT_TYPES, MAX_ORDERS_IN_RESULTS } from './constants';
 
 export const tools: AiTool[] = [
     {
+        name: 'transferFunds',
+        description: 'Transfer funds between accounts of the same user, e.g. from spot to future account',
+        required: ['currency', 'amount', 'from', 'to'],
+        props: [
+            { name: 'currency', type: 'string', description: 'Currency to transfer, e.g. "USDT"' },
+            { name: 'amount', type: 'number', description: 'Amount to transfer' },
+            {
+                name: 'from',
+                type: ['string', 'null'],
+                enum: ACCOUNT_TYPES,
+                description: 'Account to transfer from.  e.g. "spot" or "future".  Defaults to "spot" or "future".',
+            },
+            { name: 'to', type: 'string', enum: ACCOUNT_TYPES, description: 'Account to transfer to.  e.g. "spot" or "future"' },
+        ],
+    },
+    {
         name: 'getOpenOrders',
         description: `Show the most recent ${MAX_ORDERS_IN_RESULTS} open orders.  For each order, show: order ID, timestamp, market symbol, type, side, price, amount, amount filled, and status.`,
         required: [],

@@ -10,6 +10,8 @@
 
 ## Minor
 
+- Test transferIn and transferOut functions on mainnet (testnet does not have spot account)
+
 ## Future
 
 - Support for future non-perpetual contracts
