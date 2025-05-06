@@ -13,15 +13,15 @@ interface Props {
  * Get the user balance on the exchange.
  *
  * @param {Object} props - The function input parameters
- * @param {string|undefined} props.currency - Optionally, specify a currency to get balance just for that currency, e.g. "BTC"
- * @param {string|null} props.type - Optionally, specify an account type to get balance just for that account type.  Defaults to "spot".
+ * @param {string|null} props.currency - Optionally, specify a currency to get balance just for that currency, e.g. "BTC"
+ * @param {string|null} props.type - Optionally, specify an account type to get balance just for that account type.  Defaults to "future".
  * @param {FunctionOptions} options
  * @returns {Promise<FunctionReturn>} The balance for all currencies/tokens of the user
  */
 export async function getBalance({ currency, type }: Props, { exchange }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
-    // If no type is specified, default to "spot"
+    // If no type is specified, default to "future"
     if (type === null) {
-        type = 'spot';
+        type = 'future';
     }
     // Fetch the balance for the given account type
     const balances = await getUserBalance(exchange, type);

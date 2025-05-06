@@ -30,7 +30,7 @@ export const tools: AiTool[] = [
         description: 'Get balance for all currencies/tokens on the given account type.  For each currency, also show how much is available to trade (free).',
         required: ['type', 'currency'],
         props: [
-            { name: 'type', type: ['string', 'null'], enum: ACCOUNT_TYPES, description: 'Account type to get balance for.  e.g. "spot" or "future".  Defaults to "spot".' },
+            { name: 'type', type: ['string', 'null'], enum: ACCOUNT_TYPES, description: 'Account type to get balance for.  e.g. "future" or "spot".  Defaults to "future".' },
             { name: 'currency', type: ['string', 'null'], description: 'Optionally, specify a currency to show balance just for that currency, e.g. "BTC"' },
         ],
     },

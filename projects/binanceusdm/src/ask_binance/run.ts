@@ -8,7 +8,7 @@ const program = new Command();
 
 program
     .name('ask-binance')
-    .description('Interact with Binance using natural language')
+    .description('Interact with Binance USDM futures using natural language')
     .argument('<action>', 'The action to perform on Binance')
     .option('--debug-llm', 'Enable LLM debugging')
     .option('--debug-tools', 'Enable tools debugging')
