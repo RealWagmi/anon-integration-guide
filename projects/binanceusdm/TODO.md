@@ -19,4 +19,4 @@
 - Open orders pagination
 - Open positions pagination
 - Transfer to/from isolated margin, via 'params' field in `transfer` function
-- Support for hedged positions
+- Support for hedged positions (e.g. 2 positions on the same market, one long, one short)

@@ -1,5 +1,7 @@
 export { transferFunds } from './transferFunds';
 export { getBalance } from './getBalance';
+export { getPositions } from './getPositions';
+export { getPositionOnMarket } from './getPositionOnMarket';
 export { getOpenOrders } from './getOpenOrders';
 export { getOrderByIdAndMarket } from './getOrderByIdAndMarket';
 export { getCurrencyMarkets } from './getCurrencyMarkets';

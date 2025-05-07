@@ -19,14 +19,32 @@ export const tools: AiTool[] = [
         ],
     },
     {
+        name: 'getPositions',
+        description: `Show the user's most recent ${MAX_POSITIONS_IN_RESULTS} open positions`,
+        required: [],
+        props: [],
+    },
+    {
+        name: 'getPositionOnMarket',
+        description: `Show information on the position held by the user on the given market`,
+        required: ['market'],
+        props: [
+            {
+                name: 'market',
+                type: 'string',
+                description: 'Symbol of the market to get position for, e.g. "BTC/USDT:USDT"',
+            },
+        ],
+    },
+    {
         name: 'getOpenOrders',
-        description: `Show the most recent ${MAX_ORDERS_IN_RESULTS} open orders.  For each order, show: order ID, timestamp, market symbol, type, side, price, amount, amount filled, and status.`,
+        description: `Show the user's most recent ${MAX_ORDERS_IN_RESULTS} open orders`,
         required: [],
         props: [],
     },
     {
         name: 'getOrderByIdAndMarket',
-        description: 'Get information about a specific order by ID and market symbol',
+        description: 'Show information about a specific order by ID and market symbol',
         required: ['id', 'market'],
         props: [
             {
@@ -37,7 +55,7 @@ export const tools: AiTool[] = [
             {
                 name: 'market',
                 type: 'string',
-                description: 'Symbol of the market the order belongs to, e.g. "BTC/USDT"',
+                description: 'Symbol of the market the order belongs to, e.g. "BTC/USDT:USDT"',
             },
         ],
     },

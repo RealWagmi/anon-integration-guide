@@ -92,6 +92,7 @@ pnpm ask-binance "Show me the price of BTC/USDT:USDT" --debug-llm
 
 ## Binance specific behaviors
 
+- Binance does not support `fetchPosition` for future and perpetual markets, see workaround in `getUserOpenPositionBySymbol`
 - In Binance it seems the settle currency is always the same as the quote currency. When implementing other exchanges, if this is not the case, we should consider reviewing the `completeMarketSymbol` function.
 
 ## Reference
