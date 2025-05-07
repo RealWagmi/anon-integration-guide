@@ -2,7 +2,7 @@
  * Maximum number of markets to show in results,
  * important to avoid the 500 token limit for getters.
  */
-export const MAX_MARKETS_IN_RESULTS = 25;
+export const MAX_MARKETS_IN_RESULTS = 50;
 
 /**
  * Maximum number of orders to show in results,

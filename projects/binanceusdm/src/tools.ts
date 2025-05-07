@@ -1,5 +1,5 @@
 import { AiTool } from '@heyanon/sdk';
-import { ACCOUNT_TYPES, MAX_ORDERS_IN_RESULTS } from './constants';
+import { ACCOUNT_TYPES, MAX_MARKETS_IN_RESULTS, MAX_ORDERS_IN_RESULTS, MAX_POSITIONS_IN_RESULTS } from './constants';
 
 export const tools: AiTool[] = [
     {
@@ -57,7 +57,7 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getCurrencyMarkets',
-        description: 'Get a list of all active markets (also called trading pairs) that include the given currency or token.  For each market, show the maximum leverage allowed.',
+        description: `Show active markets (also called trading pairs) with the given currency or token.  For each market, show the maximum leverage allowed.  Show only the first ${MAX_MARKETS_IN_RESULTS} markets.`,
         required: ['currency'],
         props: [
             {

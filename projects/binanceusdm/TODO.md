@@ -10,7 +10,7 @@
 
 ## Minor
 
-- Test transferIn and transferOut functions on mainnet (testnet does not have spot account)
+- Test transferFunds function on mainnet (testnet does not have spot account)
 
 ## Future
 
@@ -18,3 +18,5 @@
 - Implement open positions pagination
 - Open orders pagination
 - Open positions pagination
+- Transfer to/from isolated margin, via 'params' field in `transfer` function
+- Support for hedged positions

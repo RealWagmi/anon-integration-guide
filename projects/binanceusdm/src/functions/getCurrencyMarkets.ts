@@ -4,6 +4,7 @@ import { getMarketExpiry, getMarketsWithCurrency, getMarketType } from '../helpe
 import { getMarketsLeverageTiers } from '../helpers/leverage';
 import { LeverageTier, MarketInterface } from 'ccxt';
 import { MAX_MARKETS_IN_RESULTS } from '../constants';
+import { formatDate } from '../helpers/format';
 
 interface Props {
     currency: string;
@@ -22,22 +23,23 @@ export async function getCurrencyMarkets({ currency }: Props, { exchange }: Func
     if (markets.length === 0) {
         return toResult('No markets found for currency ' + currency, true);
     }
+
+    const firstNMarkets = markets.slice(0, MAX_MARKETS_IN_RESULTS);
     const leverageTiers = await getMarketsLeverageTiers(
-        markets.map((market) => market.symbol),
+        firstNMarkets.map((m) => m.symbol),
         exchange,
     );
+
     const rows = [
-        `Found ${markets.length} markets for ${currency}`,
-        markets.length > MAX_MARKETS_IN_RESULTS ? ` (showing first ${MAX_MARKETS_IN_RESULTS})` : '',
-        ':',
-        ...markets.slice(0, MAX_MARKETS_IN_RESULTS).map((market) => formatMarketLine(market, leverageTiers[market.symbol])),
+        `Found ${markets.length} markets for ${currency} ${markets.length > MAX_MARKETS_IN_RESULTS ? `(showing first ${MAX_MARKETS_IN_RESULTS})` : ''}:`,
+        ...firstNMarkets.map((market) => formatMarketLine(market, leverageTiers[market.symbol])),
     ];
     return toResult(rows.join('\n'));
 }
 
 function formatMarketLine(market: MarketInterface, leverageTiers: LeverageTier[]) {
     if (market.type === 'future') {
-        return ` - ${market.base}/${market.quote} ${getMarketType(market)} market settled in ${market.settle} with expiry ${getMarketExpiry(market)?.toUTCString()} and max leverage ${leverageTiers[0].maxLeverage}x (symbol: ${market.symbol})`;
+        return ` - ${market.base}/${market.quote} ${getMarketType(market)} market settled in ${market.settle} with expiry ${formatDate(getMarketExpiry(market))} and max leverage ${leverageTiers[0].maxLeverage}x (symbol: ${market.symbol})`;
     }
     return ` - ${market.base}/${market.quote} ${getMarketType(market)} market settled in ${market.settle} with max leverage ${leverageTiers[0].maxLeverage}x (symbol: ${market.symbol})`;
 }

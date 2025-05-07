@@ -49,7 +49,7 @@ export function formatMarketInfo(market: MarketInterface, ticker: Ticker, levera
     const type = getMarketType(market);
     const rows = [
         `Type: ${type}`,
-        market.expiryDatetime ? `Expiry: ${getMarketExpiry(market)?.toUTCString()}` : '',
+        market.expiryDatetime ? `Expiry: ${formatDate(getMarketExpiry(market))}` : '',
         `Settled in: ${market.settle}`,
         `Max leverage: ${leverageTiers[market.symbol][0].maxLeverage}`,
         `Last price: ${ticker.last} ${market.quote}`,
@@ -133,8 +133,14 @@ function stringifyOrder(order: Order, market?: MarketInterface): StringOrder {
  * Format a timestamp in YYYY-MM-DD HH:MM:SS format,
  * in UTC timezone.
  */
-export function formatDate(timestamp: number): string {
-    return new Date(timestamp).toISOString().replace('T', ' ').substring(0, 19);
+export function formatDate(timestamp: number | Date | null, includeUTC: boolean = true): string {
+    if (timestamp === null) {
+        return 'N/A';
+    }
+    if (timestamp instanceof Date) {
+        return timestamp.toISOString().replace('T', ' ').substring(0, 19) + (includeUTC ? ' UTC' : '');
+    }
+    return new Date(timestamp).toISOString().replace('T', ' ').substring(0, 19) + (includeUTC ? ' UTC' : '');
 }
 
 /**
