@@ -13,18 +13,18 @@ import { MarketInterface } from 'ccxt';
  */
 export async function getOpenOrders({}: {}, { exchange }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
     const orders = await getUserOpenOrders(exchange);
-
     if (orders.length === 0) {
         return toResult('No open orders found', true);
     }
 
     const markets = await exchange.loadMarkets();
 
-    return toResult(
-        orders
-            .sort((a, b) => b.timestamp - a.timestamp)
-            .slice(0, MAX_ORDERS_IN_RESULTS)
-            .map((order, index) => formatOrderSingleLine(order, markets[order.symbol] as MarketInterface, false, `${index + 1}. `))
-            .join('\n'),
-    );
+    const mostRecentNOrders = orders.sort((a, b) => b.timestamp - a.timestamp).slice(0, MAX_ORDERS_IN_RESULTS);
+
+    const rows = [
+        `Found ${orders.length} open orders ${orders.length > MAX_ORDERS_IN_RESULTS ? `, showing first ${MAX_ORDERS_IN_RESULTS}` : ''}:`,
+        ...mostRecentNOrders.map((order, index) => formatOrderSingleLine(order, markets[order.symbol] as MarketInterface, false, `${index + 1}. `)),
+    ];
+
+    return toResult(rows.join('\n'));
 }

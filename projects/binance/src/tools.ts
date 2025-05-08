@@ -193,7 +193,7 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getOpenOrders',
-        description: `Show the most recent ${MAX_ORDERS_IN_RESULTS} open orders.  For each order, show: order ID, timestamp, market symbol, type, side, price, amount, amount filled, and status.`,
+        description: `Show the most recent ${MAX_ORDERS_IN_RESULTS} open orders`,
         required: [],
         props: [],
     },
