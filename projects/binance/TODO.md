@@ -1,14 +1,12 @@
 ## Bug fixes
 
-- Make sure to respect [limits & precision rules](https://docs.ccxt.com/#/README?id=notes-on-precision-and-limits). See also [here](https://github.com/webcerebrium/java-binance-api/issues/7#issuecomment-1076805294)
-- Include trailing percent in the order formatting function
-- Before publishing PR, harmonize JSDocs and Props in tool implementations
-
 ## Features
 
 - Make sure HeyAnon supports nested properties in OpenAI tool definition (e.g. for trailing stop orders creation)
 
 ## Minor
+
+- Include trailing percent in the order formatting function
 
 ## Future
 
@@ -22,3 +20,4 @@
     - `{"code":-1013,"msg":"Filter failure: NOTIONAL"}` should be "Order too small for this market"
     - API key errors such as [this one](https://d.pr/i/bKUK9j)
 - In order output, include amount spent/received in quote currency
+- Check that orders sent by the integration respect [limits & precision rules](https://docs.ccxt.com/#/README?id=notes-on-precision-and-limits). See also [here](https://github.com/webcerebrium/java-binance-api/issues/7#issuecomment-1076805294)

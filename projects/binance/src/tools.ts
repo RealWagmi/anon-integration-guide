@@ -1,8 +1,33 @@
 import { AiTool } from '@heyanon/sdk';
 import { ACCOUNT_TYPES, MAX_ORDERS_IN_RESULTS, MAX_TRAILING_DELTA, MIN_TRAILING_DELTA } from './constants';
 
-const SIDE_DESCRIPTION =
-    'Side of the order, either "buy" or "sell".  If the market is BTC/USDT, then the side is "buy" if the user wants to buy BTC and "sell" if the user wants to sell BTC.';
+const SIDE_DESCRIPTION = [
+    'Side of the order, either "buy" or "sell".  Buy and sell are ALWAYS relative to the FIRST (base) currency in the market symbol.',
+    '',
+    'Examples to avoid confusion (especially when the user speaks in terms of the quote currency):',
+    '• Market "BTC/USDT":',
+    '    – side = "buy" → you are BUYING BTC and paying with USDT.',
+    '    – side = "sell" → you are SELLING BTC and receiving USDT.',
+    '    – Natural-language request: "Sell all my USDT for BTC" → side = "buy" on market "BTC/USDT" (because you are ultimately buying BTC).',
+    '    – Natural-language request: "Buy USDT with BTC" → side = "sell" on market "BTC/USDT" (because you are ultimately selling BTC).',
+    '',
+    'When in doubt, rewrite the user sentence so the first currency is the one being bought (side = "buy") or sold (side = "sell").',
+].join(' ');
+
+const MARKET_DESCRIPTION =
+    'Symbol of the market to trade, e.g. "BTC/USDT".  The FIRST (base) currency is the asset you are actually buying (side = "buy") or selling (side = "sell").  For a request like "sell USDT for BTC" you must use market "BTC/USDT" with side = "buy".';
+
+const AMOUNT_DESCRIPTION = [
+    'Amount of BASE currency (i.e. the FIRST currency in the market symbol) to buy or sell.',
+    '',
+    'If the user gives the amount in the QUOTE currency (second currency) or expresses it as "spend all my Y" where Y is the quote currency, follow this procedure:',
+    '1. Use getBalance to determine the available amount of the quote currency.',
+    '2. Use getMarketInfo to fetch the up-to-date price for the chosen market.',
+    '3. Compute baseAmount = quoteAmount / price.',
+    '4. Provide this baseAmount as the value for the amount field.',
+    '',
+    'Never pass the quote-currency amount directly; the amount must always be in base-currency units.',
+].join(' ');
 
 export const tools: AiTool[] = [
     {
@@ -14,7 +39,7 @@ export const tools: AiTool[] = [
             {
                 name: 'market',
                 type: 'string',
-                description: 'Symbol of the market to trade, for example "BTC/USDT".  Buy and sell are relative to the first currency in the market symbol.',
+                description: MARKET_DESCRIPTION,
             },
             {
                 name: 'side',
@@ -25,7 +50,7 @@ export const tools: AiTool[] = [
             {
                 name: 'amount',
                 type: 'number',
-                description: 'Amount of base currency to buy or sell',
+                description: AMOUNT_DESCRIPTION,
             },
             {
                 name: 'limitPrice',
@@ -43,7 +68,7 @@ export const tools: AiTool[] = [
             {
                 name: 'market',
                 type: 'string',
-                description: 'Symbol of the market to trade, for example "BTC/USDT".  Buy and sell are relative to the first currency in the market symbol.',
+                description: MARKET_DESCRIPTION,
             },
             {
                 name: 'side',
@@ -54,7 +79,7 @@ export const tools: AiTool[] = [
             {
                 name: 'amount',
                 type: 'number',
-                description: 'Amount of base currency to buy or sell',
+                description: AMOUNT_DESCRIPTION,
             },
             {
                 name: 'limitPrice',
@@ -76,7 +101,7 @@ export const tools: AiTool[] = [
             {
                 name: 'market',
                 type: 'string',
-                description: 'Symbol of the market to trade, for example "BTC/USDT".  Buy and sell are relative to the first currency in the market symbol.',
+                description: MARKET_DESCRIPTION,
             },
             {
                 name: 'side',
@@ -87,7 +112,7 @@ export const tools: AiTool[] = [
             {
                 name: 'amount',
                 type: 'number',
-                description: 'Amount of base currency to buy or sell',
+                description: AMOUNT_DESCRIPTION,
             },
             {
                 name: 'takeProfitTriggerPrice',
@@ -120,7 +145,7 @@ export const tools: AiTool[] = [
             {
                 name: 'market',
                 type: 'string',
-                description: 'Symbol of the market to trade, for example "BTC/USDT".  Buy and sell are relative to the first currency in the market symbol.',
+                description: MARKET_DESCRIPTION,
             },
             {
                 name: 'side',
@@ -131,7 +156,7 @@ export const tools: AiTool[] = [
             {
                 name: 'amount',
                 type: 'number',
-                description: 'Amount of base currency to buy or sell',
+                description: AMOUNT_DESCRIPTION,
             },
             {
                 name: 'stopLossOrTakeProfit',

@@ -28,8 +28,8 @@ Integration between HeyAnon.ai and Binance Spot trading.
 
     - Market buy 1 BTC with USDT on @binance
     - Buy 1 BTC at 40,000 USDT on @binance
-    - Sell half of my BTC at 150,000 USDT on @binance (_TODO: Might incur LOT_MARKET_LOT_SIZE error_)
-    - Ape all my USDT into BTC on @binance (_TODO: Might incur LOT_MARKET_LOT_SIZE error_)
+    - Sell half of my BTC at 150,000 USDT on @binance
+    - Buy BTC with all my USDT on @binance
 
 1. **Conditional orders**
 

@@ -44,13 +44,14 @@ export function formatBalances(balances: Balances, prefix: string = ''): string 
  */
 export function formatMarketInfo(market: MarketInterface, ticker: Ticker): string {
     const rows = [
-        `Last price: ${ticker.last} ${market.quote}`,
-        `Bid price: ${ticker.bid} ${market.quote}`,
-        `Ask price: ${ticker.ask} ${market.quote}`,
-        `24h high: ${ticker.high} ${market.quote}`,
-        `24h low: ${ticker.low} ${market.quote}`,
+        `Last price of ${market.base}: ${ticker.last} ${market.quote}`,
+        `Bid price of ${market.base}: ${ticker.bid} ${market.quote}`,
+        `Ask price of ${market.base}: ${ticker.ask} ${market.quote}`,
+        `24h high of ${market.base}: ${ticker.high} ${market.quote}`,
+        `24h low of ${market.base}: ${ticker.low} ${market.quote}`,
         `24h volume in ${market.quote}: ${ticker.quoteVolume}`,
         `24h volume in ${market.base}: ${ticker.baseVolume}`,
+        `Last price of ${market.quote}: ${ticker.last ? 1 / ticker.last : 'N/A'} ${market.base}`,
     ];
     return rows.join('\n');
 }
