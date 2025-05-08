@@ -216,7 +216,7 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getBalance',
-        description: 'Get balance for all currencies/tokens on the given account type.  For each currency, also show how much is available to trade (free).',
+        description: 'Get user balance.  For each currency, also show how much is available to trade (free).',
         required: ['type', 'currency'],
         props: [
             { name: 'type', type: ['string', 'null'], enum: ACCOUNT_TYPES, description: 'Account type to get balance for.  e.g. "spot" or "future".  Defaults to "spot".' },
