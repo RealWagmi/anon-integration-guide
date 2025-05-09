@@ -14,7 +14,7 @@ import { MarketInterface } from 'ccxt';
 export async function getOpenOrders({}: {}, { exchange }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
     const orders = await getUserOpenOrders(exchange);
     if (orders.length === 0) {
-        return toResult('No open orders found', true);
+        return toResult('No open orders found'); // not an error, just a message
     }
 
     const markets = await exchange.loadMarkets();

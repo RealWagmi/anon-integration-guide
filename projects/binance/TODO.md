@@ -10,6 +10,7 @@
 
 ## Future
 
+- To improve reliability of inverse orders (i.e. when the user asks to sell or buy the quote currency instead of the base one), we could introduce a new "amountExpressedInQuoteCurrency" argument for order tools, so that we can control the calculation of the base amount to buy/sell, and introduce checks and a tolerance to make sure the order goes through even if the price has changed a bit.
 - Trailing stop support in OCO orders
 - TWAP orders
 - OTOCO orders to do stuff like "Buy 1 BTC/USDT, then place a 10% take profit and a 15% stop loss" in a single go, avoiding potential issues with price changes and fund unavailability

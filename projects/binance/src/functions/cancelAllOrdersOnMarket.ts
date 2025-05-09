@@ -25,7 +25,7 @@ export async function cancelAllOrdersOnMarket({ market }: Props, { exchange, not
     const orders = await getUserOpenOrders(exchange);
     const ordersOnMarket = market ? orders.filter((order) => order.symbol === market) : orders;
     if (ordersOnMarket.length === 0) {
-        return toResult(`No open orders found${market ? ` on ${market}` : ''}`, true);
+        return toResult(`No open orders found${market ? ` on ${market}` : ''}`); // not an error, just a message
     }
 
     // Notify the user
