@@ -1,3 +1,5 @@
+export { cancelAllOrdersOnMarket } from './cancelAllOrdersOnMarket';
+export { cancelOrderByIdAndMarket } from './cancelOrderByIdAndMarket';
 export { transferFunds } from './transferFunds';
 export { getBalance } from './getBalance';
 export { getPositions } from './getPositions';

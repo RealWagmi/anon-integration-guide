@@ -3,6 +3,29 @@ import { ACCOUNT_TYPES, MAX_MARKETS_IN_RESULTS, MAX_ORDERS_IN_RESULTS, MAX_POSIT
 
 export const tools: AiTool[] = [
     {
+        name: 'cancelOrderByIdAndMarket',
+        description: 'Cancel a specific order by ID and market symbol.  If you only have the order ID, use getOpenOrders to get the market symbol.',
+        required: ['id', 'market'],
+        props: [
+            {
+                name: 'id',
+                type: 'string',
+                description: 'Order ID to cancel',
+            },
+            {
+                name: 'market',
+                type: 'string',
+                description: 'Symbol of the market the order belongs to, e.g. "BTC/USDT"',
+            },
+        ],
+    },
+    {
+        name: 'cancelAllOrdersOnMarket',
+        description: 'Cancel all open orders on a given market',
+        required: ['market'],
+        props: [{ name: 'market', type: 'string', description: 'Symbol of the market to cancel orders on, e.g. "BTC/USDT"' }],
+    },
+    {
         name: 'transferFunds',
         description: 'Transfer funds between accounts of the same user, e.g. from spot to future account',
         required: ['currency', 'amount', 'from', 'to'],
@@ -33,7 +56,7 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getPositionOnMarket',
-        description: `Show information on the position held by the user on the given market`,
+        description: `Show information on the position held by the user on the given market.  If you only have the currency, use getPositions and filter by currency.`,
         required: ['market'],
         props: [
             {
