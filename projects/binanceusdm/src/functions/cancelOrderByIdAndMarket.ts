@@ -6,7 +6,7 @@ import { cancelOrderById, getOrderById } from '../helpers/orders';
 
 interface Props {
     id: string;
-    market?: string;
+    market: string | null;
 }
 
 /**
@@ -23,7 +23,7 @@ interface Props {
  */
 export async function cancelOrderByIdAndMarket({ id, market }: Props, { exchange, notify }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
     // Fetch the order
-    const order = await getOrderById(exchange, id, market);
+    const order = await getOrderById(exchange, id, market ?? undefined);
 
     // Notify the user
     let marketObject: MarketInterface | undefined;
@@ -48,7 +48,7 @@ export async function cancelOrderByIdAndMarket({ id, market }: Props, { exchange
     }
 
     // Cancel the order
-    await cancelOrderById(exchange, id, market);
+    await cancelOrderById(exchange, id, market ?? undefined);
 
     return toResult(`Order ${id} on ${market} cancelled`);
 }

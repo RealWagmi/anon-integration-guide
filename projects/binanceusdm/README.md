@@ -59,10 +59,9 @@ Integration between HeyAnon.ai and Binance USDM Futures trading.
 
 1. **Cancel orders**
 
- <!-- - Cancel all my orders on @binanceusdm
- - Cancel all my orders on BTC/USDT on @binanceusdm
- - Cancel my BTC orders on @binanceusdm
- - Cancel order 232168017 on @binanceusdm -->
+- Cancel all my orders on @binanceusdm
+- Cancel all my orders on BTC/USDT on @binanceusdm
+- Cancel order 232168017 on @binanceusdm
 
 ## CCXT
 
@@ -101,6 +100,7 @@ pnpm ask-binance "Show me the price of BTC/USDT:USDT" --debug-llm
 
 ## Reference
 
+- [Binance future types of orders](https://www.binance.com/en/support/faq/detail/360033779452)
 - [Binance fAPI docs](https://developers.binance.com/docs/derivatives/usds-margined-futures/general-info)
 - [Binance fAPI orders](https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api)
 - [CCXT leverage tiers](https://docs.ccxt.com/#/README?id=leverage-tiers)
