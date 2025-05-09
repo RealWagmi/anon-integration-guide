@@ -93,15 +93,16 @@ function stringifyOrder(order: Order, market?: MarketInterface): StringOrder {
     const timestamp = extractTimestamp(order);
     const quoteSymbol = market ? ` ${market.quote}` : '';
     const baseSymbol = market ? ` ${market.base}` : '';
+    order.side = undefined;
     return {
         id: order.id || 'N/A',
         timestamp: timestamp ? formatDate(timestamp) : 'N/A',
         symbol: order.symbol || 'N/A',
         type: order.type || 'N/A',
-        side: order.side || 'N/A',
+        side: order.amount ? order.side || 'N/A' : 'close',
         price: order.price !== undefined ? order.price.toString() + quoteSymbol : 'N/A',
         triggerPrice: order.triggerPrice !== undefined ? order.triggerPrice.toString() + quoteSymbol : 'N/A',
-        amount: order.amount !== undefined ? order.amount.toString() + baseSymbol : 'N/A',
+        amount: order.amount !== undefined ? order.amount.toString() + baseSymbol : `${market?.base}/${market?.quote} position`,
         filled: order.filled !== undefined ? order.filled.toString() + baseSymbol : 'N/A',
         filledPercent: order.filled !== undefined ? ((order.filled / order.amount) * 100).toFixed(0) : 'N/A',
         status: order.status || 'N/A',
@@ -133,7 +134,6 @@ export function formatOrderMultiLine(order: Order, market?: MarketInterface, pre
  */
 export function formatOrderSingleLine(order: Order, market?: MarketInterface, showStatus: boolean = true, prefix: string = ''): string {
     const { id, timestamp, symbol, type, side, price, triggerPrice, amount, filled, filledPercent, status } = stringifyOrder(order, market);
-
     const quoteSymbol = market ? ` ${market.quote}` : '';
 
     let parts = [
@@ -141,7 +141,7 @@ export function formatOrderSingleLine(order: Order, market?: MarketInterface, sh
         `${titleCase(type)} order`,
         ` to ${side} ${amount}${quoteSymbol && triggerPrice === 'N/A' && price === 'N/A' ? ` for${quoteSymbol}` : ''}`,
         `${price !== 'N/A' ? ` @ ${price}` : ''}`,
-        `${triggerPrice !== 'N/A' ? ` triggering at ${triggerPrice},` : ''}`,
+        `${triggerPrice !== 'N/A' ? ` triggering at ${triggerPrice}` : ''}`,
         ` (ID: ${id}, ${filled.startsWith('0') ? '' : `filled: ${filledPercent}%, `}${showStatus ? `status: ${status}, ` : ''}created: ${timestamp}, market: ${symbol})`,
     ];
 
