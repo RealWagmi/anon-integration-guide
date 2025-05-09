@@ -70,11 +70,12 @@ export function formatBalances(balances: Balances, prefix: string = ''): string 
  */
 export function formatMarketInfo(market: MarketInterface, ticker: Ticker, leverageTiers: LeverageTiers): string {
     const type = getMarketType(market);
+    const lowestTier = leverageTiers[market.symbol][0];
     const rows = [
         `Type: ${type}`,
         market.expiryDatetime ? `Expiry: ${formatDate(getMarketExpiry(market))}` : '',
         `Settled in: ${market.settle}`,
-        `Max leverage: ${leverageTiers[market.symbol][0].maxLeverage}`,
+        `Max leverage: ${lowestTier.maxLeverage}x${lowestTier.maxNotional ? ` (size < ${lowestTier.maxNotional} ${market.settle})` : ''}`,
         `Last price: ${ticker.last} ${market.quote}`,
         `24h high: ${ticker.high} ${market.quote}`,
         `24h low: ${ticker.low} ${market.quote}`,
