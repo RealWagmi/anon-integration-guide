@@ -93,13 +93,13 @@ function stringifyOrder(order: Order, market?: MarketInterface): StringOrder {
     const timestamp = extractTimestamp(order);
     const quoteSymbol = market ? ` ${market.quote}` : '';
     const baseSymbol = market ? ` ${market.base}` : '';
-    order.side = undefined;
+
     return {
         id: order.id || 'N/A',
         timestamp: timestamp ? formatDate(timestamp) : 'N/A',
         symbol: order.symbol || 'N/A',
         type: order.type || 'N/A',
-        side: order.amount ? order.side || 'N/A' : 'close',
+        side: order.amount ? (order.side ?? 'N/A') : 'close',
         price: order.price !== undefined ? order.price.toString() + quoteSymbol : 'N/A',
         triggerPrice: order.triggerPrice !== undefined ? order.triggerPrice.toString() + quoteSymbol : 'N/A',
         amount: order.amount !== undefined ? order.amount.toString() + baseSymbol : `${market?.base}/${market?.quote} position`,
