@@ -30,7 +30,7 @@ async function main() {
         console.error(`${result.data}`);
         process.exit(0);
     }
-    console.log(`[Response]\n${result.data}`);
+    console.log(`[Last Tool Call Response]\n${result.data}`);
 }
 
 main().catch(console.error);

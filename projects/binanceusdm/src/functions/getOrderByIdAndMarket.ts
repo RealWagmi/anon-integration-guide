@@ -14,7 +14,7 @@ interface Props {
  * Get details on the given order by its ID and market symbol.  Certain
  * exchanges do not require the market parameter to be specified.
  *
- * @param {FunctionOptions} options
+ * @param {FunctionOptions} options HeyAnon SDK options
  * @param {Object} props - The function input parameters
  * @param {string} props.id - The ID of the order to get details on
  * @param {string|null} props.market - The symbol of the market, optional for certain exchanges

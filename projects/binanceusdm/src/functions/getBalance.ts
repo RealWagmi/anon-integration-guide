@@ -15,7 +15,7 @@ interface Props {
  * @param {Object} props - The function input parameters
  * @param {string|null} props.currency - Optionally, specify a currency to get balance just for that currency, e.g. "BTC"
  * @param {string|null} props.type - Optionally, specify an account type to get balance just for that account type.  Defaults to "future".
- * @param {FunctionOptions} options
+ * @param {FunctionOptions} options HeyAnon SDK options
  * @returns {Promise<FunctionReturn>} The balance for all currencies/tokens of the user
  */
 export async function getBalance({ currency, type }: Props, { exchange }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
@@ -42,5 +42,5 @@ export async function getBalance({ currency, type }: Props, { exchange }: Functi
         }
     }
     // Return the balance for all currencies/tokens
-    return toResult(`Here is your futures balance for all currencies:\n${formatBalances(balances, ' - ')}`);
+    return toResult(`Here is your balance on Binance USDM Futures platform (does not include open positions):\n${formatBalances(balances, ' - ')}`);
 }

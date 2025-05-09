@@ -21,8 +21,15 @@ export const tools: AiTool[] = [
     {
         name: 'getPositions',
         description: `Show the user's most recent ${MAX_POSITIONS_IN_RESULTS} open positions`,
-        required: [],
-        props: [],
+        required: ['minMarginRatioPercentage'],
+        props: [
+            {
+                name: 'minMarginRatioPercentage',
+                type: ['number', 'null'],
+                description:
+                    'Optionally, show only positions with a margin ratio percentage greater than or equal to this value, e.g. 50 for 50% or more.  Useful to see positions that are at risk of liquidation.  High risk positions have a margin ratio percentage of 50% or more.',
+            },
+        ],
     },
     {
         name: 'getPositionOnMarket',
@@ -44,7 +51,8 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getOrderByIdAndMarket',
-        description: 'Show information about a specific order by ID and market symbol',
+        description:
+            'Show information about a specific order by ID and market symbol.  If the market is not specified, fetch all orders and filter by ID, without asking for confirmation.',
         required: ['id', 'market'],
         props: [
             {
@@ -61,7 +69,7 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getBalance',
-        description: 'Get user balance.  For each currency, also show how much is available to trade (free).',
+        description: 'Get user futures balance.  This does not include open positions.  For each currency, show how much is available to trade (free).',
         required: ['type', 'currency'],
         props: [
             {

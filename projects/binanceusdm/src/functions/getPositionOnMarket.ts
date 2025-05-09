@@ -12,9 +12,9 @@ interface Props {
 /**
  * Get details on the position held by the user on the given market
  *
- * @param {FunctionOptions} options
  * @param {Object} props - The function input parameters
  * @param {string} props.market - The symbol of the market
+ * @param {FunctionOptions} options HeyAnon SDK options
  * @returns {Promise<FunctionReturn>} A string with the details on the position
  */
 export async function getPositionOnMarket({ market }: Props, { exchange, notify }: FunctionOptionsWithExchange): Promise<FunctionReturn> {

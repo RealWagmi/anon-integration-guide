@@ -20,7 +20,7 @@ export async function getUserOpenPositions(exchange: Exchange): Promise<Position
  * position by symbol.  In this case, we will fetch all open positions
  * and filter them by symbol.
  */
-export async function getUserOpenPositionBySymbol(exchange: Exchange, symbol: string): Promise<Position> {
+export async function getUserOpenPositionBySymbol(exchange: Exchange, symbol: string): Promise<Position | undefined> {
     if (exchange.id.toLowerCase() === 'binanceusdm') {
         return getUserPositionBySymbolFromAllPositions(exchange, symbol);
     }
@@ -32,12 +32,10 @@ export async function getUserOpenPositionBySymbol(exchange: Exchange, symbol: st
 
 /**
  * Fetch all positions for the user, then filter them by market symbol.
+ * Returns undefined if the position is not found.
  */
-async function getUserPositionBySymbolFromAllPositions(exchange: Exchange, symbol: string): Promise<Position> {
+async function getUserPositionBySymbolFromAllPositions(exchange: Exchange, symbol: string): Promise<Position | undefined> {
     const allPositions = await getUserOpenPositions(exchange);
     const position = allPositions.find((position) => position.symbol === symbol);
-    if (typeof position === 'undefined') {
-        return {} as Position; // Mimic what ccxt returns when the position is not found
-    }
     return position;
 }

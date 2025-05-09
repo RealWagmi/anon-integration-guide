@@ -137,11 +137,12 @@ export function formatOrderSingleLine(order: Order, market?: MarketInterface, sh
     const quoteSymbol = market ? ` ${market.quote}` : '';
 
     let parts = [
-        `${titleCase(type)} order with ID ${id}`,
-        `${triggerPrice !== 'N/A' ? ` that triggers at ${triggerPrice},` : ''}`,
+        `${market ? `${titleCase(getMarketType(market))} ` : ''}`,
+        `${titleCase(type)} order`,
         ` to ${side} ${amount}${quoteSymbol && triggerPrice === 'N/A' && price === 'N/A' ? ` for${quoteSymbol}` : ''}`,
         `${price !== 'N/A' ? ` @ ${price}` : ''}`,
-        ` (${filled.startsWith('0') ? '' : `filled: ${filledPercent}%, `}${showStatus ? `status: ${status}, ` : ''}created: ${timestamp}, market: ${symbol})`,
+        `${triggerPrice !== 'N/A' ? ` triggering at ${triggerPrice},` : ''}`,
+        ` (ID: ${id}, ${filled.startsWith('0') ? '' : `filled: ${filledPercent}%, `}${showStatus ? `status: ${status}, ` : ''}created: ${timestamp}, market: ${symbol})`,
     ];
 
     return prefix + parts.join('');
@@ -246,7 +247,7 @@ function stringifyPosition(position: Position, market?: MarketInterface): String
  */
 export function formatPositionMultiLine(position: Position, market?: MarketInterface, prefix: string = '', delimiter: string = '\n'): string {
     const {
-        id,
+        // id,
         timestamp,
         symbol,
         side,
@@ -268,19 +269,18 @@ export function formatPositionMultiLine(position: Position, market?: MarketInter
         `${prefix}Symbol: ${symbol}`,
         `${prefix}Side: ${side}`,
         `${prefix}Margin Ratio: ${marginRatio}`,
-        `${prefix}Contracts: ${contracts}`,
-        `${prefix}Contract Size: ${contractSize}`,
         `${prefix}Entry Price: ${entryPrice}`,
         `${prefix}Mark Price: ${markPrice}`,
+        `${prefix}Liquidation Price: ${liquidationPrice}`,
         `${prefix}PnL: ${unrealizedPnl}`,
         `${prefix}PnL Percentage: ${unrealizedPnlPercentage}`,
         `${prefix}Notional: ${notional}`,
         `${prefix}Collateral: ${collateral}`,
         `${prefix}Margin Mode: ${marginMode}`,
         `${prefix}Leverage: ${leverage}`,
-        `${prefix}Liquidation Price: ${liquidationPrice}`,
-        `${prefix}ID: ${id}`,
-        `${prefix}Time: ${timestamp}`,
+        `${prefix}Contracts: ${contracts}`,
+        `${prefix}Contract Size: ${contractSize}`,
+        `${prefix}Created: ${timestamp}`,
     ];
 
     return rows.join(delimiter);
@@ -304,7 +304,7 @@ export function formatPositionSingleLine(position: Position, market?: MarketInte
         notional,
         marginRatio,
         // initialMargin,
-        // collateral,
+        collateral,
         marginMode,
         // leverage,
         liquidationPrice,
@@ -315,7 +315,7 @@ export function formatPositionSingleLine(position: Position, market?: MarketInte
 
     let parts = [
         `${titleCase(side)}${baseSymbol} position${id !== 'N/A' ? ` with ID ${id}` : ''} on ${marketType ? `${marketType} market ` : ''}${symbol} worth ${notional}`,
-        ` (${marginMode === 'isolated' ? `isolated margin, ` : ''}${marginRatio !== 'N/A' ? `margin ratio: ${marginRatio}, ` : ''}${liquidationPrice !== 'N/A' ? `liquidation price: ${liquidationPrice}, ` : ''}${unrealizedPnlPercentage !== 'N/A' ? `PnL: ${unrealizedPnlPercentage}, ` : ''}created: ${timestamp})`,
+        ` (${marginMode === 'isolated' ? `isolated margin, ` : ''}${marginRatio !== 'N/A' ? `margin ratio: ${marginRatio}, ` : ''}${collateral !== 'N/A' ? `collateral: ${collateral}, ` : ''}${liquidationPrice !== 'N/A' ? `liquidation price: ${liquidationPrice}, ` : ''}${unrealizedPnlPercentage !== 'N/A' ? `PnL: ${unrealizedPnlPercentage}, ` : ''}created: ${timestamp})`,
     ];
 
     return prefix + parts.join('');

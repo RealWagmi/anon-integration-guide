@@ -13,7 +13,7 @@ interface Props {
  *
  * @param {Object} props - The function input parameters
  * @param {string} props.market - The symbol of the market to get information for
- * @param {FunctionOptions} options
+ * @param {FunctionOptions} options HeyAnon SDK options
  * @returns {Promise<FunctionReturn>} A string with the market information returned by `formatMarketInfo`
  */
 export async function getMarketInfo({ market }: Props, { exchange, notify }: FunctionOptionsWithExchange): Promise<FunctionReturn> {

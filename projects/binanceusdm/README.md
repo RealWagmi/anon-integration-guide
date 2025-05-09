@@ -6,23 +6,27 @@ Integration between HeyAnon.ai and Binance USDM Futures trading.
 
 1. **Markets**
 
-- Show all future markets for BTC on @binanceusdm
-- Show last price and volume of BTC/USDT:USDT on @binanceusdm
-- Show max leverage for BTC/USDT:USDT on @binanceusdm
+- Show all BTC future markets on @binanceusdm
+- Show last price and volume of BTC/USDT on @binanceusdm
+- Show max leverage for BTC/USDT on @binanceusdm
 
-1. **Info on orders and balances**
+1. **Info on positions and balances**
 
- <!-- - Show all my open orders on @binanceusdm
- - Show my open orders on BTC/USDT on @binanceusdm
- - Show details on order 232168017 on @binanceusdm
- - Show my spot balance on @binanceusdm
- - Show my spot ETH balance on @binanceusdm -->
+- Show all my positions on @binanceusdm
+- Show my position on BTC/USDT on @binanceusdm
+- Show all of my BTC positions on @binanceusdm
+
+1. **Info on open orders**
+
+- Show all my open orders on @binanceusdm
+- Show my BTC open orders on @binanceusdm
+- Show details on order 232168017 on @binanceusdm
+- Show my balance on @binanceusdm
 
 1. **Transfer funds between accounts**
 
- <!-- - Transfer 5,000 USDT to my futures account on @binanceusdm
- - Transfer all my USDT from my futures account to my spot account on @binanceusdm
- - Sell 1 BTC for USDT then transfer the obtained USDT to my futures account on @binanceusdm -->
+- Transfer 5,000 USDT to my futures account on @binanceusdm
+- Transfer all my USDT from my futures account to my spot account on @binanceusdm
 
 1. **Market & limit orders**
 
