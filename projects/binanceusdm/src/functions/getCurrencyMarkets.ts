@@ -21,7 +21,7 @@ interface Props {
 export async function getCurrencyMarkets({ currency }: Props, { exchange }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
     const markets = await getMarketsWithCurrency(currency, exchange);
     if (markets.length === 0) {
-        return toResult('No markets found for currency ' + currency, true);
+        return toResult(`No markets found for currency ${currency}`); // not an error, just a message
     }
 
     const firstNMarkets = markets.slice(0, MAX_MARKETS_IN_RESULTS);

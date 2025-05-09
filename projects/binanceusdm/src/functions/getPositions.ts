@@ -21,7 +21,7 @@ export async function getPositions({ minMarginRatioPercentage }: Props, { exchan
     // Get all open positions
     let positions = await getUserOpenPositions(exchange);
     if (positions.length === 0) {
-        return toResult('No open positions found', false);
+        return toResult('No open positions found'); // not an error, just a message
     }
 
     // Filter positions by margin ratio percentage
