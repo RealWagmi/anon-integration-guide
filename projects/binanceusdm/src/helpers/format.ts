@@ -259,8 +259,8 @@ export function formatPositionMultiLine(position: Position, market?: MarketInter
         unrealizedPnl,
         unrealizedPnlPercentage,
         notional,
-        marginRatio,
-        collateral,
+        // marginRatio,  // CCXT margin ratio does not seem to be reliable enough to show
+        // collateral, // CCXT collateral does not seem to be reliable enough to show
         marginMode,
         leverage,
         liquidationPrice,
@@ -269,14 +269,14 @@ export function formatPositionMultiLine(position: Position, market?: MarketInter
     const rows = [
         `${prefix}Symbol: ${symbol}`,
         `${prefix}Side: ${side}`,
-        `${prefix}Margin Ratio: ${marginRatio}`,
+        // `${prefix}Margin Ratio: ${marginRatio}`,
         `${prefix}Entry Price: ${entryPrice}`,
         `${prefix}Mark Price: ${markPrice}`,
         `${prefix}Liquidation Price: ${liquidationPrice}`,
         `${prefix}PnL: ${unrealizedPnl}`,
         `${prefix}PnL Percentage: ${unrealizedPnlPercentage}`,
         `${prefix}Notional: ${notional}`,
-        `${prefix}Collateral: ${collateral}`,
+        // `${prefix}Collateral: ${collateral}`,
         `${prefix}Margin Mode: ${marginMode}`,
         `${prefix}Leverage: ${leverage}`,
         `${prefix}Contracts: ${contracts}`,
@@ -293,7 +293,7 @@ export function formatPositionMultiLine(position: Position, market?: MarketInter
 export function formatPositionSingleLine(position: Position, market?: MarketInterface, prefix: string = ''): string {
     const {
         id,
-        timestamp,
+        // timestamp,
         symbol,
         side,
         // contracts,
@@ -303,9 +303,9 @@ export function formatPositionSingleLine(position: Position, market?: MarketInte
         // unrealizedPnl,
         unrealizedPnlPercentage,
         notional,
-        marginRatio,
+        // marginRatio, // CCXT margin ratio does not seem to be reliable enough to show
         // initialMargin,
-        collateral,
+        // collateral, // CCXT collateral does not seem to be reliable enough to show
         marginMode,
         // leverage,
         liquidationPrice,
@@ -313,10 +313,18 @@ export function formatPositionSingleLine(position: Position, market?: MarketInte
 
     const baseSymbol = market ? ` ${market.base}` : '';
     const marketType = market ? getMarketType(market) : '';
+    const shortMarketType = marketType ? marketType.replace('perpetual', 'perp') : '';
 
     let parts = [
-        `${titleCase(side)}${baseSymbol} position${id !== 'N/A' ? ` with ID ${id}` : ''} on ${marketType ? `${marketType} market ` : ''}${symbol} worth ${notional}`,
-        ` (${marginMode === 'isolated' ? `isolated margin, ` : ''}${marginRatio !== 'N/A' ? `margin ratio: ${marginRatio}, ` : ''}${collateral !== 'N/A' ? `collateral: ${collateral}, ` : ''}${liquidationPrice !== 'N/A' ? `liquidation price: ${liquidationPrice}, ` : ''}${unrealizedPnlPercentage !== 'N/A' ? `PnL: ${unrealizedPnlPercentage}, ` : ''}created: ${timestamp})`,
+        `${titleCase(side)}${baseSymbol}${shortMarketType ? ` ${shortMarketType}` : ''} position${id !== 'N/A' ? ` with ID ${id}` : ''} worth ${notional}`,
+        ` (`,
+        `${marginMode === 'isolated' ? `isolated, ` : ''}`,
+        // `${marginRatio !== 'N/A' ? `margin ratio: ${marginRatio}, ` : ''}${collateral !== 'N/A' ? `collateral: ${collateral}, ` : ''}`,
+        `${liquidationPrice !== 'N/A' ? `liq price: ${liquidationPrice}, ` : ''}`,
+        `${unrealizedPnlPercentage !== 'N/A' ? `PnL: ${unrealizedPnlPercentage}, ` : ''}`,
+        `market: ${symbol}`,
+        // `created: ${timestamp}`,
+        `)`,
     ];
 
     return prefix + parts.join('');

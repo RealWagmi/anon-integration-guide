@@ -44,15 +44,8 @@ export const tools: AiTool[] = [
     {
         name: 'getPositions',
         description: `Show the user's most recent ${MAX_POSITIONS_IN_RESULTS} open positions`,
-        required: ['minMarginRatioPercentage'],
-        props: [
-            {
-                name: 'minMarginRatioPercentage',
-                type: ['number', 'null'],
-                description:
-                    'Optionally, show only positions with a margin ratio percentage greater than or equal to this value, e.g. 50 for 50% or more.  Useful to see positions that are at risk of liquidation.  High risk positions have a margin ratio percentage of 50% or more.',
-            },
-        ],
+        required: [],
+        props: [],
     },
     {
         name: 'getPositionOnMarket',
