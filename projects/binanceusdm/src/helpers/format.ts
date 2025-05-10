@@ -1,5 +1,6 @@
 import { Balances, LeverageTiers, MarketInterface, Order, Position, Ticker } from 'ccxt';
 import { getMarketExpiry, getMarketType } from './markets';
+import { buySellToLongShort } from './orders';
 
 /**
  * A stringified order object
@@ -9,7 +10,7 @@ interface StringOrder {
     timestamp: string;
     symbol: string;
     type: string;
-    side: string;
+    side: 'long' | 'short' | 'close' | 'N/A';
     price: string;
     triggerPrice: string;
     amount: string;
@@ -25,7 +26,7 @@ interface StringPosition {
     id: string;
     timestamp: string;
     symbol: string;
-    side: string;
+    side: 'long' | 'short' | 'N/A';
     contracts: string;
     contractSize: string;
     entryPrice: string;
@@ -100,7 +101,7 @@ function stringifyOrder(order: Order, market?: MarketInterface): StringOrder {
         timestamp: timestamp ? formatDate(timestamp) : 'N/A',
         symbol: order.symbol || 'N/A',
         type: order.type || 'N/A',
-        side: order.amount ? (order.side ?? 'N/A') : 'close',
+        side: order.amount ? (order.side ? buySellToLongShort(order.side as 'buy' | 'sell') : 'N/A') : 'close',
         price: order.price !== undefined ? order.price.toString() + quoteSymbol : 'N/A',
         triggerPrice: order.triggerPrice !== undefined ? order.triggerPrice.toString() + quoteSymbol : 'N/A',
         amount: order.amount !== undefined ? order.amount.toString() + baseSymbol : `${market?.base}/${market?.quote} position`,
@@ -134,7 +135,7 @@ export function formatOrderMultiLine(order: Order, market?: MarketInterface, pre
  * Format an order object into a single-line string.
  */
 export function formatOrderSingleLine(order: Order, market?: MarketInterface, showStatus: boolean = true, prefix: string = ''): string {
-    const { id, timestamp, symbol, type, side, price, triggerPrice, amount, filled, filledPercent, status } = stringifyOrder(order, market);
+    const { id, symbol, type, side, price, triggerPrice, amount, filled, filledPercent, status } = stringifyOrder(order, market);
     const quoteSymbol = market ? ` ${market.quote}` : '';
 
     let parts = [
@@ -143,7 +144,7 @@ export function formatOrderSingleLine(order: Order, market?: MarketInterface, sh
         ` to ${side} ${amount}${quoteSymbol && triggerPrice === 'N/A' && price === 'N/A' ? ` for${quoteSymbol}` : ''}`,
         `${price !== 'N/A' ? ` @ ${price}` : ''}`,
         `${triggerPrice !== 'N/A' ? ` triggering at ${triggerPrice}` : ''}`,
-        ` (ID: ${id}, ${filled.startsWith('0') ? '' : `filled: ${filledPercent}%, `}${showStatus ? `status: ${status}, ` : ''}created: ${timestamp}, market: ${symbol})`,
+        ` (ID: ${id}, ${filled.startsWith('0') ? '' : `filled: ${filledPercent}%, `}${showStatus ? `status: ${status}, ` : ''}market: ${symbol})`,
     ];
 
     return prefix + parts.join('');
@@ -226,7 +227,7 @@ function stringifyPosition(position: Position, market?: MarketInterface): String
         id: position.id?.toString() || 'N/A',
         timestamp: position.timestamp ? formatDate(position.timestamp) : 'N/A',
         symbol: position.symbol || 'N/A',
-        side: position.side || 'N/A',
+        side: position.side ? (position.side as 'long' | 'short') : 'N/A',
         contracts: position.contracts !== undefined ? position.contracts.toString() : 'N/A',
         contractSize: position.contractSize !== undefined ? position.contractSize.toString() : 'N/A',
         entryPrice: position.entryPrice !== undefined ? position.entryPrice.toString() + quoteSymbol : 'N/A',

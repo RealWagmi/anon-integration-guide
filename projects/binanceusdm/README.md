@@ -103,6 +103,7 @@ pnpm ask-binance "Show me the price of BTC/USDT:USDT" --debug-llm
 - [Binance future types of orders](https://www.binance.com/en/support/faq/detail/360033779452)
 - [Binance fAPI docs](https://developers.binance.com/docs/derivatives/usds-margined-futures/general-info)
 - [Binance fAPI orders](https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api)
+- [Binance Futures FAQ](https://www.binance.com/en/blog/futures/10-most-frequently-asked-questions-about-binance-futures-421499824684903916)
 - [CCXT leverage tiers](https://docs.ccxt.com/#/README?id=leverage-tiers)
 - [CCXT Order structure](https://docs.ccxt.com/#/?id=order-structure)
 - [CCXT Querying orders](https://docs.ccxt.com/#/README?id=querying-orders)

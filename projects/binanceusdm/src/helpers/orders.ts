@@ -61,3 +61,33 @@ export async function cancelAllOrders(exchange: Exchange, symbol?: string): Prom
     const cancelledOrders = await exchange.cancelAllOrders(symbol);
     return cancelledOrders as Order[];
 }
+
+/**
+ * Convert 'long' and 'short' to 'buy' and 'sell', for CCXT.
+ *
+ * Throws an error if the side is not 'long' or 'short'.
+ */
+export function longShortToBuySell(side: 'long' | 'short'): 'buy' | 'sell' {
+    if (side === 'long') {
+        return 'buy';
+    }
+    if (side === 'short') {
+        return 'sell';
+    }
+    throw new Error(`Invalid side: ${side}`);
+}
+
+/**
+ * Convert 'buy' and 'sell' to 'long' and 'short', for CCXT.
+ *
+ * Throws an error if the side is not 'buy' or 'sell'.
+ */
+export function buySellToLongShort(side: 'buy' | 'sell'): 'long' | 'short' {
+    if (side === 'buy') {
+        return 'long';
+    }
+    if (side === 'sell') {
+        return 'short';
+    }
+    throw new Error(`Invalid side: ${side}`);
+}
