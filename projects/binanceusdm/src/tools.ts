@@ -12,7 +12,7 @@ export const tools: AiTool[] = [
     {
         name: 'createSimpleOrder',
         description:
-            'Create an order that is activated immediately, without a trigger attached to it.  The order will execute at the current market price or a specified limit price.',
+            'Create an order that is activated immediately, without a trigger attached to it.  The order will execute at the current market price or a specified limit price.  The leverage and margin mode for the order are the user-configured leverage and margin mode for the market.',
         required: ['market', 'side', 'amount', 'limitPrice'],
         props: [
             {
@@ -35,6 +35,40 @@ export const tools: AiTool[] = [
                 name: 'limitPrice',
                 type: ['number', 'null'],
                 description: 'Price at which the order will be executed.  Include only if explicitly specified by the user.  Leave blank for a market order.',
+            },
+        ],
+    },
+    {
+        name: 'createTriggerOrder',
+        description:
+            'Create an order that is activated only after the given price condition is met. Once activated, the order will be executed at either the current market price or a specified limit price.   The leverage and margin mode for the order are the user-configured leverage and margin mode for the market.',
+        required: ['market', 'side', 'amount', 'triggerPrice', 'limitPrice'],
+        props: [
+            {
+                name: 'market',
+                type: 'string',
+                description: MARKET_DESCRIPTION,
+            },
+            {
+                name: 'side',
+                type: 'string',
+                enum: ['long', 'short'],
+                description: SIDE_DESCRIPTION,
+            },
+            {
+                name: 'amount',
+                type: 'number',
+                description: AMOUNT_DESCRIPTION,
+            },
+            {
+                name: 'limitPrice',
+                type: ['number', 'null'],
+                description: 'Price at which the order will be executed.  Include only if explicitly specified by the user.  If not specified, the order will be a market order.',
+            },
+            {
+                name: 'triggerPrice',
+                type: 'number',
+                description: 'Price at which the order will be activated',
             },
         ],
     },

@@ -1,11 +1,14 @@
 ## Bug fixes
 
+- With complex commands like "Long 1 BTC, then place an order to close the position at 10% profit" the LLM arbitrarily decides to change the leverage and/or the margin mode
 - Include trailing percent in the order formatting function
 
 ## Features
 
-- Cross margin positions
-- Isolated margin positions
+- Emulate OTOCO orders via separate TP/SL orders
+- Trailing stop orders
+- Add margin to isolated positions
+- Reduce margin from isolated positions
 
 ## Minor
 

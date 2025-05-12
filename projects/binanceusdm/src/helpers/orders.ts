@@ -30,6 +30,36 @@ export async function createSimpleOrder(
 }
 
 /**
+ * Create a trigger order, that is, an order that has a trigger price attached to it.
+ */
+export async function createTriggerOrder(
+    exchange: Exchange,
+    symbol: string,
+    side: 'buy' | 'sell',
+    amount: number,
+    triggerPrice: number,
+    limitPrice?: number,
+    params?: Record<string, any>,
+): Promise<Order> {
+    if (!exchange.features.spot.createOrder.triggerPrice) {
+        throw new Error(`Exchange ${exchange.name} does not support trigger/conditional orders.`);
+    }
+    const ccxtParams: any = {};
+    const lastPrice = await getMarketLastPriceBySymbol(symbol, exchange);
+    // Determine whether the order is take profit or stop loss
+    if ((triggerPrice > lastPrice && side === 'sell') || (triggerPrice < lastPrice && side === 'buy')) {
+        // a take profit order is a trigger order with direction from below (sell) or above (buy)
+        ccxtParams.takeProfitPrice = triggerPrice;
+    } else if ((triggerPrice > lastPrice && side === 'buy') || (triggerPrice < lastPrice && side === 'sell')) {
+        // a stop loss order is a trigger order with direction from above (sell) or below (buy)
+        ccxtParams.stopLossPrice = triggerPrice;
+    }
+    const ccxtType = limitPrice ? 'limit' : 'market';
+    const order = await exchange.createOrder(symbol, ccxtType, side, amount, limitPrice, { ...params, ...ccxtParams });
+    return order;
+}
+
+/**
  * Get all open orders of the user on the given exchange
  *
  * @link https://docs.ccxt.com/#/README?id=understanding-the-orders-api-design

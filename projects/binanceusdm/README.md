@@ -50,10 +50,10 @@ Integration between HeyAnon.ai and Binance USDM Futures trading.
 
 ### Conditional orders
 
-<!-- - Market buy 1 BTC on @binanceusdm when the price goes below 50,000 USDT
-- Buy 1 BTC at 45,000 USDT on @binanceusdm when the price goes below 50,000 USDT
-- Market buy BTC with 100 USDT, then place an order to sell it for 10% profit on @binanceusdm
-- Market buy 1 BTC with USDT then place a 15% stop loss on @binanceusdm -->
+- Long 1 BTC on @binanceusdm when the price goes below 50,000 USDT
+- Long 1 BTC at 45,000 USDT on @binanceusdm when the price goes below 50,000 USDT
+- Short 1 BTC with USDT, then place an order to close the position at 10% profit on @binanceusdm
+- Long 1 BTC with USDT, then place a 15% stop loss on @binanceusdm
 
 ### Take profit & stop loss (OCO)
 
@@ -134,8 +134,9 @@ pnpm ask-binance "Show me the price of BTC/USDT:USDT" --debug-llm
 
 ## Binance specific behaviors
 
-- Binance does not support `fetchPosition` for future and perpetual markets, see workaround in `getUserOpenPositionBySymbol`
-- Binance does not support `closePosition`, see workaround in `closePositionBySendingOppositeMarketOrder`
+- Binance fAPI does not support OTOCO orders, that is, the creation in one go of position + TP + SL. Therefore, we send 3 separate orders ([link](https://dev.binance.vision/t/how-to-implement-otoco-tp-sl-orders-using-api/1622/14)).
+- Binance fAPI does not support `fetchPosition` for future and perpetual markets, see workaround in `getUserOpenPositionBySymbol`
+- Binance fAPI does not support `closePosition`, see workaround in `closePositionBySendingOppositeMarketOrder`
 - In Binance it seems the settle currency is always the same as the quote currency. When implementing other exchanges, if this is not the case, we should consider reviewing the `completeMarketSymbol` function.
 
 ## Reference

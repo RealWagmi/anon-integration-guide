@@ -1,6 +1,6 @@
 import { FunctionReturn, toResult } from '@heyanon/sdk';
 import { FunctionOptionsWithExchange } from '../overrides';
-import { longShortToBuySell, createSimpleOrder as createSimpleOrderHelper } from '../helpers/orders';
+import { createTriggerOrder as createTriggerOrderHelper, longShortToBuySell } from '../helpers/orders';
 import { formatOrderSingleLine } from '../helpers/format';
 import { getMarketBySymbol } from '../helpers/heyanon';
 
@@ -9,10 +9,11 @@ interface Props {
     side: 'long' | 'short';
     amount: number;
     limitPrice: number | null;
+    triggerPrice: number;
 }
 
 /**
- * Create a simple order, that is, an order that has no conditions attached to it.
+ * Create a trigger order, that is, an order that has a price condition attached to it.
  *
  * @param {Object} props - The function input parameters
  * @param {string} props.market - Symbol of the market to trade, for example "BTC/USDT" or "AAVE/ETH"
@@ -22,14 +23,15 @@ interface Props {
  * @param {FunctionOptions} options
  * @returns {Promise<FunctionReturn>} A message confirming the order or an error description
  */
-export async function createSimpleOrder({ market, side, amount, limitPrice }: Props, { exchange, notify }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
+export async function createTriggerOrder({ market, side, amount, limitPrice, triggerPrice }: Props, { exchange, notify }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
     try {
         const ccxtSide = longShortToBuySell(side);
         const marketObject = await getMarketBySymbol(exchange, market, true, notify);
         market = marketObject.symbol;
-        const order = await createSimpleOrderHelper(exchange, market, ccxtSide, amount, limitPrice === null ? undefined : limitPrice);
+        const order = await createTriggerOrderHelper(exchange, market, ccxtSide, amount, triggerPrice, limitPrice === null ? undefined : limitPrice);
         return toResult(`Successfully created ${formatOrderSingleLine(order, marketObject, false)}`);
     } catch (error) {
+        console.error(error);
         return toResult(`Error creating order: ${error}`, true);
     }
 }
