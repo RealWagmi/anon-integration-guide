@@ -12,19 +12,19 @@ import { MarketInterface } from 'ccxt';
  * @returns {Promise<FunctionReturn>} A string with the list of open orders, including: order ID, timestamp, amount, etc.
  */
 export async function getOpenOrders({}: {}, { exchange }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
-    const orders = await getUserOpenOrders(exchange);
-    if (orders.length === 0) {
-        return toResult('No open orders found'); // not an error, just a message
+    try {
+        const orders = await getUserOpenOrders(exchange);
+        if (orders.length === 0) {
+            return toResult('No open orders found'); // not an error, just a message
+        }
+        const markets = await exchange.loadMarkets();
+        const mostRecentNOrders = orders.sort((a, b) => b.timestamp - a.timestamp).slice(0, MAX_ORDERS_IN_RESULTS);
+        const rows = [
+            `Found ${orders.length} open orders${orders.length > MAX_ORDERS_IN_RESULTS ? `, showing first ${MAX_ORDERS_IN_RESULTS}` : ''}:`,
+            ...mostRecentNOrders.map((order, index) => formatOrderSingleLine(order, markets[order.symbol] as MarketInterface, false, `${index + 1}. `)),
+        ];
+        return toResult(rows.join('\n'));
+    } catch (error) {
+        return toResult(`Error getting open orders: ${error}`, true);
     }
-
-    const markets = await exchange.loadMarkets();
-
-    const mostRecentNOrders = orders.sort((a, b) => b.timestamp - a.timestamp).slice(0, MAX_ORDERS_IN_RESULTS);
-
-    const rows = [
-        `Found ${orders.length} open orders${orders.length > MAX_ORDERS_IN_RESULTS ? `, showing first ${MAX_ORDERS_IN_RESULTS}` : ''}:`,
-        ...mostRecentNOrders.map((order, index) => formatOrderSingleLine(order, markets[order.symbol] as MarketInterface, false, `${index + 1}. `)),
-    ];
-
-    return toResult(rows.join('\n'));
 }

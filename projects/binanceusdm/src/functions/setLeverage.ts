@@ -1,7 +1,7 @@
 import { FunctionReturn, toResult } from '@heyanon/sdk';
 import { FunctionOptionsWithExchange } from '../overrides';
-import { completeMarketSymbol } from '../helpers/markets';
 import { setUserLeverageOnMarket } from '../helpers/leverage';
+import { sanitizeMarketSymbol } from '../helpers/heyanon';
 
 interface Props {
     market: string;
@@ -18,19 +18,11 @@ interface Props {
  * @returns {Promise<FunctionReturn>} A message with the result of the operation
  */
 export async function setLeverage({ market, leverage }: Props, { exchange, notify }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
-    // Infer market symbol from partial symbol
-    const originalMarket = market;
-    market = completeMarketSymbol(market);
-    if (originalMarket !== market) {
-        notify(`Inferred market symbol from '${originalMarket}' to '${market}'`);
+    try {
+        market = sanitizeMarketSymbol(market, notify);
+        await setUserLeverageOnMarket(exchange, market, leverage);
+        return toResult(`Successfully set leverage for ${market} to ${leverage}x`);
+    } catch (error) {
+        return toResult(`Error setting leverage: ${error}`, true);
     }
-    // Fetch market object
-    const markets = await exchange.loadMarkets();
-    const marketObject = markets[completeMarketSymbol(market)];
-    if (!marketObject) {
-        return toResult(`No market found with symbol '${market}'.  Ask "Show me markets for token <your token>" and try again with full market symbol`, true);
-    }
-    // Set leverage
-    await setUserLeverageOnMarket(exchange, market, leverage);
-    return toResult(`Successfully set leverage for ${market} to ${leverage}x`);
 }

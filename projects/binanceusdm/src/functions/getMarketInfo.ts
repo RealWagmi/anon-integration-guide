@@ -1,15 +1,16 @@
 import { FunctionReturn, toResult } from '@heyanon/sdk';
 import { FunctionOptionsWithExchange } from '../overrides';
-import { completeMarketSymbol, getMarketTickerBySymbol } from '../helpers/markets';
+import { getMarketTickerBySymbol } from '../helpers/markets';
 import { formatMarketInfo } from '../helpers/format';
 import { getMarketsLeverageTiers } from '../helpers/leverage';
+import { getMarketBySymbol } from '../helpers/heyanon';
 
 interface Props {
     market: string;
 }
 
 /**
- * Get information about a market, including price and volume data.
+ * Get information about a market, including price, volume data and max leverage.
  *
  * @param {Object} props - The function input parameters
  * @param {string} props.market - The symbol of the market to get information for
@@ -17,27 +18,21 @@ interface Props {
  * @returns {Promise<FunctionReturn>} A string with the market information returned by `formatMarketInfo`
  */
 export async function getMarketInfo({ market }: Props, { exchange, notify }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
-    // Infer market symbol from partial symbol
-    const originalMarket = market;
-    market = completeMarketSymbol(market);
-    if (originalMarket !== market) {
-        notify(`Inferred market symbol from '${originalMarket}' to '${market}'`);
+    try {
+        // Fetch market ticker
+        const marketObject = await getMarketBySymbol(exchange, market, true, notify);
+        market = marketObject.symbol;
+        const ticker = await getMarketTickerBySymbol(marketObject.symbol, exchange);
+        if (!ticker) {
+            return toResult('Could not find price info for market ' + marketObject.symbol, true);
+        }
+        // Fetch market leverage tiers
+        const leverageTiers = await getMarketsLeverageTiers(exchange, [marketObject.symbol]);
+        if (!leverageTiers) {
+            return toResult('Could not find leverage info for market ' + marketObject.symbol, true);
+        }
+        return toResult(formatMarketInfo(marketObject, ticker, leverageTiers));
+    } catch (error) {
+        return toResult(`${error}`, true);
     }
-    // Fetch market object
-    const markets = await exchange.loadMarkets();
-    const marketObject = markets[completeMarketSymbol(market)];
-    if (!marketObject) {
-        return toResult(`No market found with symbol '${market}'.  Ask "Show me markets for token <your token>" and try again with full market symbol`, true);
-    }
-    // Fetch market ticker
-    const ticker = await getMarketTickerBySymbol(market, exchange);
-    if (!ticker) {
-        return toResult('No info found on market ' + market, true);
-    }
-    // Fetch market leverage tiers
-    const leverageTiers = await getMarketsLeverageTiers(exchange, [market]);
-    if (!leverageTiers) {
-        return toResult('No leverage info found for market ' + market, true);
-    }
-    return toResult(formatMarketInfo(marketObject, ticker, leverageTiers));
 }

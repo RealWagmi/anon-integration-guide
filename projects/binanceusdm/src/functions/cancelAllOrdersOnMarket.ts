@@ -3,7 +3,7 @@ import { FunctionOptionsWithExchange } from '../overrides';
 import { formatOrderSingleLine } from '../helpers/format';
 import { MarketInterface } from 'ccxt';
 import { cancelAllOrders, getUserOpenOrders } from '../helpers/orders';
-import { completeMarketSymbol } from '../helpers/markets';
+import { getMarketBySymbol } from '../helpers/heyanon';
 
 interface Props {
     market: string | null;
@@ -22,32 +22,29 @@ interface Props {
  * @returns {Promise<FunctionReturn>} A string confirming the order was cancelled, with the order details
  */
 export async function cancelAllOrdersOnMarket({ market }: Props, { exchange, notify }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
-    // Infer market symbol from partial symbol
-    if (market) {
-        const originalMarket = market;
-        market = completeMarketSymbol(market);
-        if (originalMarket !== market) {
-            notify(`Inferred market symbol from '${originalMarket}' to '${market}'`);
+    try {
+        // Get the market object
+        let marketObject: MarketInterface | undefined = undefined;
+        if (market) {
+            marketObject = await getMarketBySymbol(exchange, market, true, notify);
+            market = marketObject.symbol;
         }
+
+        // Check if there are any open orders on the market
+        const orders = await getUserOpenOrders(exchange);
+        const ordersOnMarket = market ? orders.filter((order) => order.symbol === market) : orders;
+        if (ordersOnMarket.length === 0) {
+            return toResult(`No open orders found`); // not an error, just a message
+        }
+
+        // Notify the user
+        notify(`Orders to be cancelled:\n${ordersOnMarket.map((order) => formatOrderSingleLine(order, marketObject, false, '- ')).join('\n')}`);
+
+        // Cancel the orders
+        await cancelAllOrders(exchange, market ?? undefined);
+
+        return toResult(`Cancelled all orders on market ${market} (${ordersOnMarket.length} in total)`);
+    } catch (error) {
+        return toResult(`Error cancelling orders: ${error}`, true);
     }
-
-    // Check if there are any open orders on the market
-    const orders = await getUserOpenOrders(exchange);
-    const ordersOnMarket = market ? orders.filter((order) => order.symbol === market) : orders;
-    if (ordersOnMarket.length === 0) {
-        return toResult(`No open orders found`); // not an error, just a message
-    }
-
-    // Notify the user
-    let marketObject: MarketInterface | undefined;
-    if (market) {
-        const markets = await exchange.loadMarkets();
-        marketObject = markets[market] as MarketInterface;
-    }
-    notify(`Orders to be cancelled:\n${ordersOnMarket.map((order) => formatOrderSingleLine(order, marketObject, false, '- ')).join('\n')}`);
-
-    // Cancel the orders
-    await cancelAllOrders(exchange, market ?? undefined);
-
-    return toResult(`Cancelled all orders on market ${market} (${ordersOnMarket.length} in total)`);
 }

@@ -13,7 +13,7 @@ Integration between HeyAnon.ai and Binance USDM Futures trading.
 ### Info on positions and balances
 
 - Show all my positions on @binanceusdm
-- Show my position on BTC/USDT on @binanceusdm
+- Show my BTC/USDT position on @binanceusdm
 - Show all of my BTC positions on @binanceusdm
 
 ### Info on open orders

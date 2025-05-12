@@ -97,6 +97,21 @@ export function completeMarketSymbol(symbol: string): string {
 }
 
 /**
+ * Given an exchange and a market (trading pair) symbol, return the
+ * market object.
+ *
+ * @throws {Error} If the market is not found on the exchange.
+ */
+export async function getMarketObject(exchange: Exchange, symbol: string): Promise<MarketInterface> {
+    const markets = await exchange.loadMarkets();
+    const marketObject = markets[symbol];
+    if (!marketObject) {
+        throw new Error(`Exchange ${exchange.name} does not have market '${symbol}'`);
+    }
+    return marketObject;
+}
+
+/**
  * Given a market object, return the expiry date time object
  * for the market.
  *

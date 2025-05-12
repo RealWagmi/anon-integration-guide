@@ -19,28 +19,32 @@ interface Props {
  * @returns {Promise<FunctionReturn>} The balance for all currencies/tokens of the user
  */
 export async function getBalance({ currency, type }: Props, { exchange }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
-    // If no type is specified, default to "future"
-    if (type === null) {
-        type = 'future';
-    }
-    // This is the futures integration, so we can't get spot balance
-    if (type !== 'future') {
-        return toResult(`This is the futures integration (@binanceusdm).  To get the ${type} balance, please use the Binance Spot integration (@binance)`, true);
-    }
-    // Fetch the balance for the given account type
-    const balances = await getUserBalance(exchange, type);
-    // If a currency is specified, return the balance for that currency
-    if (currency) {
-        const balance = balances[currency];
-        if (typeof balance === 'undefined') {
-            return toResult(`Could not find currency '${currency}', make sure it is supported by the exchange.`, true);
+    try {
+        // If no type is specified, default to "future"
+        if (type === null) {
+            type = 'future';
         }
-        if (balance.used && balance.used > 0) {
-            return toResult(`Your futures balance for currency ${currency} is ${balance.total}, of which ${balance.free} can be used to trade`);
-        } else {
-            return toResult(`Your futures balance for currency ${currency} is ${balance.total}`);
+        // This is the futures integration, so we can't get spot balance
+        if (type !== 'future') {
+            return toResult(`This is the futures integration (@binanceusdm).  To get the ${type} balance, please use the Binance Spot integration (@binance)`, true);
         }
+        // Fetch the balance for the given account type
+        const balances = await getUserBalance(exchange, type);
+        // If a currency is specified, return the balance for that currency
+        if (currency) {
+            const balance = balances[currency];
+            if (typeof balance === 'undefined') {
+                return toResult(`Could not find currency '${currency}', make sure it is supported by the exchange.`, true);
+            }
+            if (balance.used && balance.used > 0) {
+                return toResult(`Your futures balance for currency ${currency} is ${balance.total}, of which ${balance.free} can be used to trade`);
+            } else {
+                return toResult(`Your futures balance for currency ${currency} is ${balance.total}`);
+            }
+        }
+        // Return the balance for all currencies/tokens
+        return toResult(`Your balance on Binance USDM Futures platform:\n${formatBalances(balances, ' - ')}`);
+    } catch (error) {
+        return toResult(`Error getting balance: ${error}`, true);
     }
-    // Return the balance for all currencies/tokens
-    return toResult(`Here is your balance on Binance USDM Futures platform (does not include open positions):\n${formatBalances(balances, ' - ')}`);
 }

@@ -19,22 +19,26 @@ interface Props {
  * @returns {Promise<FunctionReturn>} The list of markets with a short description, or an error description
  */
 export async function getCurrencyMarkets({ currency }: Props, { exchange }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
-    const markets = await getMarketsWithCurrency(currency, exchange);
-    if (markets.length === 0) {
-        return toResult(`No markets found for currency ${currency}`); // not an error, just a message
+    try {
+        const markets = await getMarketsWithCurrency(currency, exchange);
+        if (markets.length === 0) {
+            return toResult(`No markets found for currency ${currency}`); // not an error, just a message
+        }
+
+        const firstNMarkets = markets.slice(0, MAX_MARKETS_IN_RESULTS);
+        const leverageTiers = await getMarketsLeverageTiers(
+            exchange,
+            firstNMarkets.map((m) => m.symbol),
+        );
+
+        const rows = [
+            `Found ${markets.length} markets for ${currency} ${markets.length > MAX_MARKETS_IN_RESULTS ? `(showing first ${MAX_MARKETS_IN_RESULTS})` : ''}:`,
+            ...firstNMarkets.map((market) => formatMarketLine(market, leverageTiers[market.symbol])),
+        ];
+        return toResult(rows.join('\n'));
+    } catch (error) {
+        return toResult(`Error getting currency markets: ${error}`, true);
     }
-
-    const firstNMarkets = markets.slice(0, MAX_MARKETS_IN_RESULTS);
-    const leverageTiers = await getMarketsLeverageTiers(
-        exchange,
-        firstNMarkets.map((m) => m.symbol),
-    );
-
-    const rows = [
-        `Found ${markets.length} markets for ${currency} ${markets.length > MAX_MARKETS_IN_RESULTS ? `(showing first ${MAX_MARKETS_IN_RESULTS})` : ''}:`,
-        ...firstNMarkets.map((market) => formatMarketLine(market, leverageTiers[market.symbol])),
-    ];
-    return toResult(rows.join('\n'));
 }
 
 function formatMarketLine(market: MarketInterface, leverageTiers: LeverageTier[]) {

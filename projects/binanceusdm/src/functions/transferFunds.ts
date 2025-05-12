@@ -29,7 +29,6 @@ export async function transferFunds({ currency, amount, from, to }: Props, { exc
         const transfer = await transferFundsHelper(exchange, { currency, amount, from, to });
         return toResult(`Created transfer request with ID ${transfer.id}`);
     } catch (error) {
-        console.error(error);
         return toResult(`Error transferring funds from '${from}' to '${to}': ${error}`, true);
     }
 }

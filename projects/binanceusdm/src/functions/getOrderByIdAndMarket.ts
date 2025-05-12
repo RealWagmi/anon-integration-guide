@@ -21,26 +21,30 @@ interface Props {
  * @returns {Promise<FunctionReturn>} A string with the details on the order
  */
 export async function getOrderByIdAndMarket({ id, market }: Props, { exchange, notify }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
-    // Infer market symbol from partial symbol
-    if (market) {
-        const originalMarket = market;
-        market = completeMarketSymbol(market);
-        if (originalMarket !== market) {
-            notify(`Inferred market symbol from '${originalMarket}' to '${market}'`);
+    try {
+        // Infer market symbol from partial symbol
+        if (market) {
+            const originalMarket = market;
+            market = completeMarketSymbol(market);
+            if (originalMarket !== market) {
+                notify(`Inferred market symbol from '${originalMarket}' to '${market}'`);
+            }
         }
-    }
-    // Get order
-    const order = await getOrderById(exchange, id, market ?? undefined);
-    if (!order) {
-        return toResult('Order not found', true);
-    }
+        // Get order
+        const order = await getOrderById(exchange, id, market ?? undefined);
+        if (!order) {
+            return toResult('Order not found', true);
+        }
 
-    // Get market object
-    let marketObject: MarketInterface | undefined;
-    if (market) {
-        const markets = await exchange.loadMarkets();
-        marketObject = markets[market] as MarketInterface;
-    }
+        // Get market object
+        let marketObject: MarketInterface | undefined;
+        if (market) {
+            const markets = await exchange.loadMarkets();
+            marketObject = markets[market] as MarketInterface;
+        }
 
-    return toResult(formatOrderMultiLine(order, marketObject));
+        return toResult(formatOrderMultiLine(order, marketObject));
+    } catch (error) {
+        return toResult(`Error getting order: ${error}`, true);
+    }
 }

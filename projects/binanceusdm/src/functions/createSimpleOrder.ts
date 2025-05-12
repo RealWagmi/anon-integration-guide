@@ -2,6 +2,7 @@ import { FunctionReturn, toResult } from '@heyanon/sdk';
 import { FunctionOptionsWithExchange } from '../overrides';
 import { longShortToBuySell, createSimpleOrder as createSimpleOrderHelper } from '../helpers/orders';
 import { formatOrderSingleLine } from '../helpers/format';
+import { getMarketBySymbol } from '../helpers/heyanon';
 
 interface Props {
     market: string;
@@ -21,17 +22,13 @@ interface Props {
  * @param {FunctionOptions} options
  * @returns {Promise<FunctionReturn>} A message confirming the order or an error description
  */
-export async function createSimpleOrder({ market, side, amount, limitPrice }: Props, { exchange }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
-    // Fetch market object to provide better feedback to the user
-    const markets = await exchange.loadMarkets();
-    const marketObject = markets[market];
-    // Create the order
+export async function createSimpleOrder({ market, side, amount, limitPrice }: Props, { exchange, notify }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
     try {
         const ccxtSide = longShortToBuySell(side);
         const order = await createSimpleOrderHelper(exchange, market, ccxtSide, amount, limitPrice === null ? undefined : limitPrice);
+        const marketObject = await getMarketBySymbol(exchange, market, true, notify);
         return toResult(`Successfully created ${formatOrderSingleLine(order, marketObject, false)}`);
     } catch (error) {
-        console.error(error);
         return toResult(`Error creating order: ${error}`, true);
     }
 }
