@@ -42,9 +42,9 @@ Integration between HeyAnon.ai and Binance USDM Futures trading.
 
 - What is my BTC/USDT leverage on @binanceusdm?
 - What is my BTC/USDT margin mode on @binanceusdm?
-- Change my BTC/USDT leverage to 10x on @binanceusdm
-- Change my BTC/USDT margin mode to isolated on @binanceusdm
-- Change my BTC/USDT margin mode to cross on @binanceusdm
+- Set 50x leverage on BTC/USDT on @binanceusdm
+- Set isolated margin mode on BTC/USDT on @binanceusdm
+- Set cross margin mode on BTC/USDT on @binanceusdm
 
 **IMPORTANT**: The above commands change the market-level leverage and margin mode, which will affect your existing position in that market. See the [Leverage and margin mode](#changing-leverage-and-margin-mode) section for more details.
 

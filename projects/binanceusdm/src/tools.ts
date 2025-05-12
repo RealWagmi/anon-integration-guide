@@ -39,6 +39,23 @@ export const tools: AiTool[] = [
         ],
     },
     {
+        name: 'setLeverage',
+        description: 'Set the user configured leverage for a specific market.  Call this function first when the user wants to place an order with a specific leverage.',
+        required: ['market', 'leverage'],
+        props: [
+            {
+                name: 'market',
+                type: 'string',
+                description: 'Market symbol, e.g. "BTC/USDT:USDT"',
+            },
+            {
+                name: 'leverage',
+                type: 'number',
+                description: 'Leverage to set, e.g. 10 for 10x, 50 for 50x, etc.',
+            },
+        ],
+    },
+    {
         name: 'cancelOrderByIdAndMarket',
         description: 'Cancel a specific order by ID and market symbol.  If you only have the order ID, use getOpenOrders to get the market symbol.',
         required: ['id', 'market'],
