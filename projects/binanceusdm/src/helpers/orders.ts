@@ -5,7 +5,14 @@ import { getMarketLastPriceBySymbol } from './markets';
 /**
  * Create a simple order, that is, an order that has no triggers attached to it.
  */
-export async function createSimpleOrder(exchange: Exchange, symbol: string, side: 'buy' | 'sell', amount: number, limitPrice?: number): Promise<Order> {
+export async function createSimpleOrder(
+    exchange: Exchange,
+    symbol: string,
+    side: 'buy' | 'sell',
+    amount: number,
+    limitPrice?: number,
+    params?: Record<string, any>,
+): Promise<Order> {
     // Warn the user if their limit price is useless
     if (limitPrice) {
         const lastPrice = await getMarketLastPriceBySymbol(symbol, exchange);
@@ -18,7 +25,7 @@ export async function createSimpleOrder(exchange: Exchange, symbol: string, side
     }
     // Place the order
     const ccxtType = limitPrice ? 'limit' : 'market';
-    const order = await exchange.createOrder(symbol, ccxtType, side, amount, limitPrice);
+    const order = await exchange.createOrder(symbol, ccxtType, side, amount, limitPrice, params);
     return order;
 }
 

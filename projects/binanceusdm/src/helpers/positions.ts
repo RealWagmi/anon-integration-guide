@@ -80,6 +80,10 @@ async function closeUserPositionBySendingOppositeMarketOrder(exchange: Exchange,
     }
     const amount = position.contracts * position.contractSize;
     // Create and return the order
-    const order = await createSimpleOrder(exchange, symbol, side, amount);
+    let params: Record<string, any> = {};
+    if (exchange.has['createReduceOnlyOrder']) {
+        params.reduceOnly = true;
+    }
+    const order = await createSimpleOrder(exchange, symbol, side, amount, undefined, params);
     return order;
 }
