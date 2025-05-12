@@ -30,7 +30,7 @@ export async function getUserLeverageAndMarginModeOnMarket({ market }: Props, { 
         return toResult(`No market found with symbol '${market}'.  Ask "Show me markets for token <your token>" and try again with full market symbol`, true);
     }
     // Fetch market leverage structure
-    const leverageStructure = await getUserLeverageOnMarket(market, exchange);
+    const leverageStructure = await getUserLeverageOnMarket(exchange, market);
     if (!leverageStructure) {
         return toResult('No leverage and margin mode info found for market ' + market, true);
     }

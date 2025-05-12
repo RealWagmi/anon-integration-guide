@@ -35,7 +35,7 @@ export async function getMarketInfo({ market }: Props, { exchange, notify }: Fun
         return toResult('No info found on market ' + market, true);
     }
     // Fetch market leverage tiers
-    const leverageTiers = await getMarketsLeverageTiers([market], exchange);
+    const leverageTiers = await getMarketsLeverageTiers(exchange, [market]);
     if (!leverageTiers) {
         return toResult('No leverage info found for market ' + market, true);
     }

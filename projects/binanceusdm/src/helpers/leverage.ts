@@ -6,7 +6,7 @@ import { Exchange, Leverage } from 'ccxt';
  *
  * @link https://docs.ccxt.com/#/README?id=leverage-tiers
  */
-export async function getMarketsLeverageTiers(symbols: string[], exchange: Exchange) {
+export async function getMarketsLeverageTiers(exchange: Exchange, symbols: string[]) {
     if (!exchange.has['fetchLeverageTiers']) {
         throw new Error(`Exchange ${exchange.name} does not support retrieving leverage tiers`);
     }

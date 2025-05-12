@@ -26,8 +26,8 @@ export async function getCurrencyMarkets({ currency }: Props, { exchange }: Func
 
     const firstNMarkets = markets.slice(0, MAX_MARKETS_IN_RESULTS);
     const leverageTiers = await getMarketsLeverageTiers(
-        firstNMarkets.map((m) => m.symbol),
         exchange,
+        firstNMarkets.map((m) => m.symbol),
     );
 
     const rows = [
