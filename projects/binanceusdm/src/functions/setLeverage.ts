@@ -1,6 +1,6 @@
 import { FunctionReturn, toResult } from '@heyanon/sdk';
 import { FunctionOptionsWithExchange } from '../overrides';
-import { setUserLeverageOnMarket } from '../helpers/leverage';
+import { getUserLeverageOnMarket, setUserLeverageOnMarket } from '../helpers/leverage';
 import { sanitizeMarketSymbol } from '../helpers/heyanon';
 
 interface Props {
@@ -20,8 +20,13 @@ interface Props {
 export async function setLeverage({ market, leverage }: Props, { exchange, notify }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
     try {
         market = sanitizeMarketSymbol(market, notify);
-        await setUserLeverageOnMarket(exchange, market, leverage);
-        return toResult(`Successfully set leverage for ${market} to ${leverage}x`);
+        const currentLeverage = await getUserLeverageOnMarket(exchange, market);
+        if (currentLeverage.longLeverage !== leverage) {
+            await setUserLeverageOnMarket(exchange, market, leverage);
+            return toResult(`Successfully set leverage for ${market} to ${leverage}x`);
+        } else {
+            return toResult(`Leverage for ${market} is already set to ${leverage}x`);
+        }
     } catch (error) {
         return toResult(`Error setting leverage: ${error}`, true);
     }

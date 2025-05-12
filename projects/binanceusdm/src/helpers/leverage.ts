@@ -22,7 +22,11 @@ export async function getUserLeverageOnMarket(exchange: Exchange, market: string
     if (!exchange.has['fetchLeverage']) {
         throw new Error(`Exchange ${exchange.name} does not support retrieving user leverage and margin mode`);
     }
-    return await exchange.fetchLeverage(market);
+    const leverageStructure = await exchange.fetchLeverage(market);
+    if (leverageStructure.longLeverage !== leverageStructure.shortLeverage) {
+        throw new Error(`Found different values for long and short leverage on market ${market}: Not supported yet`);
+    }
+    return leverageStructure;
 }
 
 /**
@@ -35,4 +39,16 @@ export async function setUserLeverageOnMarket(exchange: Exchange, market: string
         throw new Error(`Exchange ${exchange.name} does not support setting user leverage`);
     }
     return await exchange.setLeverage(leverage, market);
+}
+
+/**
+ * Set the user configured margin mode for a specific market.
+ *
+ * @link https://docs.ccxt.com/#/README?id=set-margin-mode
+ */
+export async function setUserMarginModeOnMarket(exchange: Exchange, market: string, marginMode: 'cross' | 'isolated') {
+    if (!exchange.has['setMarginMode']) {
+        throw new Error(`Exchange ${exchange.name} does not support setting user margin mode at the market level`);
+    }
+    return await exchange.setMarginMode(marginMode, market);
 }

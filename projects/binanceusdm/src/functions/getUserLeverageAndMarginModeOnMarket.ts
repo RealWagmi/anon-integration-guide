@@ -35,10 +35,6 @@ export async function getUserLeverageAndMarginModeOnMarket({ market }: Props, { 
         if (!leverageStructure) {
             return toResult('No leverage and margin mode info found for market ' + market, true);
         }
-        // Check that the leverage structure is valid
-        if (leverageStructure.longLeverage !== leverageStructure.shortLeverage) {
-            return toResult(`Found different values for long and short leverage on market ${market}: Not supported yet`, true);
-        }
         return toResult(formatLeverageStructure(leverageStructure));
     } catch (error) {
         return toResult(`Error getting leverage: ${error}`, true);
