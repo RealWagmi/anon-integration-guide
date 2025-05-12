@@ -1,3 +1,4 @@
+export { createSimpleOrder } from './createSimpleOrder';
 export { cancelAllOrdersOnMarket } from './cancelAllOrdersOnMarket';
 export { cancelOrderByIdAndMarket } from './cancelOrderByIdAndMarket';
 export { transferFunds } from './transferFunds';

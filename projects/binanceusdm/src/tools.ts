@@ -1,7 +1,43 @@
 import { AiTool } from '@heyanon/sdk';
 import { ACCOUNT_TYPES, MAX_MARKETS_IN_RESULTS, MAX_ORDERS_IN_RESULTS, MAX_POSITIONS_IN_RESULTS } from './constants';
 
+const SIDE_DESCRIPTION = 'Side of the order, either "long" or "short".  Long and short are ALWAYS relative to the FIRST (base) currency in the market symbol.';
+
+const MARKET_DESCRIPTION =
+    'Symbol of the market to trade, e.g. "BTC/USDT:USDT".  The FIRST (base) currency is the asset you are actually longing (side = "long") or shorting (side = "short")';
+
+const AMOUNT_DESCRIPTION = 'Amount of BASE currency (i.e. the FIRST currency in the market symbol) to long or short.';
+
 export const tools: AiTool[] = [
+    {
+        name: 'createSimpleOrder',
+        description:
+            'Create an order that is activated immediately, without a trigger attached to it.  The order will execute at the current market price or a specified limit price.',
+        required: ['market', 'side', 'amount', 'limitPrice'],
+        props: [
+            {
+                name: 'market',
+                type: 'string',
+                description: MARKET_DESCRIPTION,
+            },
+            {
+                name: 'side',
+                type: 'string',
+                enum: ['long', 'short'],
+                description: SIDE_DESCRIPTION,
+            },
+            {
+                name: 'amount',
+                type: 'number',
+                description: AMOUNT_DESCRIPTION,
+            },
+            {
+                name: 'limitPrice',
+                type: ['number', 'null'],
+                description: 'Price at which the order will be executed.  Include only if explicitly specified by the user.  Leave blank for a market order.',
+            },
+        ],
+    },
     {
         name: 'cancelOrderByIdAndMarket',
         description: 'Cancel a specific order by ID and market symbol.  If you only have the order ID, use getOpenOrders to get the market symbol.',
