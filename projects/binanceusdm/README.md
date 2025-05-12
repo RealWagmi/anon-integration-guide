@@ -4,64 +4,97 @@ Integration between HeyAnon.ai and Binance USDM Futures trading.
 
 ## Common Tasks
 
-1. **Markets**
+### Markets
 
 - Show all BTC future markets on @binanceusdm
 - Show last price and volume of BTC/USDT on @binanceusdm
 - Show max leverage for BTC/USDT on @binanceusdm
 
-1. **Info on positions and balances**
+### Info on positions and balances
 
 - Show all my positions on @binanceusdm
 - Show my position on BTC/USDT on @binanceusdm
 - Show all of my BTC positions on @binanceusdm
 
-1. **Info on open orders**
+### Info on open orders
 
 - Show all my open orders on @binanceusdm
 - Show my BTC open orders on @binanceusdm
 - Show details on order 232168017 on @binanceusdm
 - Show my balance on @binanceusdm
 
-1. **Transfer funds between accounts**
+### Transfer funds between accounts
 
 - Transfer 5,000 USDT to my futures account on @binanceusdm
 - Transfer all my USDT from my futures account to my spot account on @binanceusdm
 
-1. **Market & limit orders**
+### Market & limit orders
 
- <!-- - Market buy 1 BTC with USDT on @binanceusdm
- - Buy 1 BTC at 40,000 USDT on @binanceusdm
- - Sell half of my BTC at 150,000 USDT on @binanceusdm (_TODO: Might incur LOT_MARKET_LOT_SIZE error_)
- - Ape all my USDT into BTC on @binanceusdm (_TODO: Might incur LOT_MARKET_LOT_SIZE error_) -->
+- Long 1 BTC with USDT on @binanceusdm
+- Long 1 BTC with USDT with isolated margin on @binanceusdm
+- 100x long 1 BTC with USDT on @binanceusdm
+- Long 1 BTC at limit price of 40,000 USDT on @binanceusdm
+- Short BTC with limit price of 150,000 USDT on @binanceusdm
 
-1. **Conditional orders**
+**IMPORTANT:** If you specify a leverage (5x, 10x, etc) or a margin mode (cross, isolated) for your order, the specified leverage and margin mode will be applied to the whole position, and not just to the amount you are adding/removing. This is because on Binance the leverage and margin mode are applied at the market level, and not at the order level. For more details, see the [Leverage and margin mode](#changing-leverage-and-margin-mode) section.
 
- <!-- - Market buy 1 BTC on @binanceusdm when the price goes below 50,000 USDT
- - Buy 1 BTC at 45,000 USDT on @binanceusdm when the price goes below 50,000 USDT
- - Market buy BTC with 100 USDT, then place an order to sell it for 10% profit on @binanceusdm
- - Market buy 1 BTC with USDT then place a 15% stop loss on @binanceusdm -->
+### Leverage and margin mode
 
-1. **Take profit & stop loss (OCO)**
+- What is my BTC/USDT leverage on @binanceusdm?
+- What is my BTC/USDT margin mode on @binanceusdm?
+- Change my BTC/USDT leverage to 10x on @binanceusdm
+- Change my BTC/USDT margin mode to isolated on @binanceusdm
+- Change my BTC/USDT margin mode to cross on @binanceusdm
 
- <!-- - Sell 1 BTC for USDT with a 10% take profit and a 15% stop loss on @binanceusdm
- - Market buy BTC with 100 USDT, then place a 10% take profit and a 15% stop loss on @binanceusdm
- - Sell all of my BTC for USDT with a 10% take profit and a 15% stop loss on @binanceusdm -->
+**IMPORTANT**: The above commands change the market-level leverage and margin mode, which will affect your existing position in that market. See the [Leverage and margin mode](#changing-leverage-and-margin-mode) section for more details.
 
-1. **Trailing stop orders**
+### Conditional orders
 
- <!-- - Place an order to sell 1 BTC for USDT with a trailing take profit of 10%
- - Place an order to sell 1 BTC @ 100,000 USDT with a trailing take profit of 10%
- - Place an order to sell 1 BTC for USDT with a trailing take loss of 10%
- - Place an order to sell 1 BTC @ 50,000 USDT with a trailing take loss of 10%
- - Place an order to buy 1 BTC with USDT with a trailing take profit of 10%
- - Place an order to buy 1 BTC with USDT with a trailing stop loss of 10% -->
+- Market buy 1 BTC on @binanceusdm when the price goes below 50,000 USDT
+- Buy 1 BTC at 45,000 USDT on @binanceusdm when the price goes below 50,000 USDT
+- Market buy BTC with 100 USDT, then place an order to sell it for 10% profit on @binanceusdm
+- Market buy 1 BTC with USDT then place a 15% stop loss on @binanceusdm -->
 
-1. **Cancel orders**
+### Take profit & stop loss (OCO)
+
+- Sell 1 BTC for USDT with a 10% take profit and a 15% stop loss on @binanceusdm
+- Market buy BTC with 100 USDT, then place a 10% take profit and a 15% stop loss on @binanceusdm
+- Sell all of my BTC for USDT with a 10% take profit and a 15% stop loss on @binanceusdm -->
+
+### Trailing stop orders
+
+- Place an order to sell 1 BTC for USDT with a trailing take profit of 10%
+- Place an order to sell 1 BTC @ 100,000 USDT with a trailing take profit of 10%
+- Place an order to sell 1 BTC for USDT with a trailing take loss of 10%
+- Place an order to sell 1 BTC @ 50,000 USDT with a trailing take loss of 10%
+- Place an order to buy 1 BTC with USDT with a trailing take profit of 10%
+- Place an order to buy 1 BTC with USDT with a trailing stop loss of 10% -->
+
+### Cancel orders
 
 - Cancel all my orders on @binanceusdm
 - Cancel all my orders on BTC/USDT on @binanceusdm
 - Cancel order 232168017 on @binanceusdm
+
+## Changing leverage and margin mode
+
+When you create a position without specifying the leverage or the margin mode, the position will be created with whatever is the current configuration for the market.
+
+Changing a market's leverage will affect your existing position in that market. Regardless of whether the position is isolated or cross margin, the act of increasing the leverage will have the following effects:
+
+- will free up margin
+- will NOT affect the liquidation price of existing positions, unless you use the freed margin to open new positions or withdraw from the futures account
+- will NOT affect your present or future profits on the existing position, because the position size is not affected
+
+Decreasing the market's leverage, instead, will have the following effects:
+
+- will increase the margin needed to keep the position open
+- if the margin needed is greater than the margin available, you won't be able to decrease the leverage
+- IS NOT ALLOWED if you have an isolated position on the market, because Binance requires you to manually add margin to isolated positions
+- will NOT change the liquidation price of existing positions, because liquidation price in cross-margin positions (the only ones for which you can decrease the leverage) only depends on position size and total margin in the account
+- will NOT affect your present or future profits on the existing position, because the position size is not affected
+
+Things are simpler when it comes to **changing the margin mode**: Binance does not allow you to change the margin mode of a market if you have an open position in that market.
 
 ## CCXT
 
@@ -104,6 +137,7 @@ pnpm ask-binance "Show me the price of BTC/USDT:USDT" --debug-llm
 - [Binance fAPI docs](https://developers.binance.com/docs/derivatives/usds-margined-futures/general-info)
 - [Binance fAPI orders](https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api)
 - [Binance Futures FAQ](https://www.binance.com/en/blog/futures/10-most-frequently-asked-questions-about-binance-futures-421499824684903916)
+- [Binance max leverage table](https://www.binance.com/en/futures/trading-rules/perpetual/leverage-margin)
 - [CCXT leverage tiers](https://docs.ccxt.com/#/README?id=leverage-tiers)
 - [CCXT Order structure](https://docs.ccxt.com/#/?id=order-structure)
 - [CCXT Querying orders](https://docs.ccxt.com/#/README?id=querying-orders)
