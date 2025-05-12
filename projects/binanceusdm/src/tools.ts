@@ -148,7 +148,7 @@ export const tools: AiTool[] = [
     {
         name: 'getMarketInfo',
         description:
-            'Get price, volume and leverage information about a specific market (also called a trading pair).  Prices are in quote currency.  Always use this function to get up-to-date prices.',
+            'Get price, volume and max leverage information about a specific market (also called a trading pair).  Prices are in quote currency.  Always use this function to get up-to-date prices.',
         required: ['market'],
         props: [
             {
@@ -157,5 +157,11 @@ export const tools: AiTool[] = [
                 description: 'Symbol of the market to get information for, for example "BTC/USDT:USDT"',
             },
         ],
+    },
+    {
+        name: 'getUserLeverageAndMarginModeOnMarket',
+        description: 'Get the user configured leverage (10x, 50x, etc) and margin mode (isolated, cross) for a specific market',
+        required: ['market'],
+        props: [{ name: 'market', type: 'string', description: 'Market symbol, e.g. "BTC/USDT:USDT"' }],
     },
 ];

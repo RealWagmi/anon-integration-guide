@@ -9,3 +9,4 @@ export { getOpenOrders } from './getOpenOrders';
 export { getOrderByIdAndMarket } from './getOrderByIdAndMarket';
 export { getCurrencyMarkets } from './getCurrencyMarkets';
 export { getMarketInfo } from './getMarketInfo';
+export { getUserLeverageAndMarginModeOnMarket } from './getUserLeverageAndMarginModeOnMarket';

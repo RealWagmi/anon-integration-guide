@@ -1,4 +1,4 @@
-import { Balances, LeverageTiers, MarketInterface, Order, Position, Ticker } from 'ccxt';
+import { Balances, Leverage, LeverageTiers, MarketInterface, Order, Position, Ticker } from 'ccxt';
 import { getMarketExpiry, getMarketType } from './markets';
 import { buySellToLongShort } from './orders';
 
@@ -84,6 +84,14 @@ export function formatMarketInfo(market: MarketInterface, ticker: Ticker, levera
         `24h volume in ${market.base}: ${ticker.baseVolume}`,
         `Market symbol: ${market.symbol}`,
     ];
+    return rows.filter(Boolean).join('\n');
+}
+
+/**
+ * Format a leverage structure for display in console.
+ */
+export function formatLeverageStructure(leverageStructure: Leverage): string {
+    const rows = [`Leverage: ${leverageStructure.longLeverage}x`, `Margin mode: ${leverageStructure.marginMode}`];
     return rows.filter(Boolean).join('\n');
 }
 

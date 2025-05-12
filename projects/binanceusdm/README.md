@@ -50,20 +50,20 @@ Integration between HeyAnon.ai and Binance USDM Futures trading.
 
 ### Conditional orders
 
-- Market buy 1 BTC on @binanceusdm when the price goes below 50,000 USDT
+<!-- - Market buy 1 BTC on @binanceusdm when the price goes below 50,000 USDT
 - Buy 1 BTC at 45,000 USDT on @binanceusdm when the price goes below 50,000 USDT
 - Market buy BTC with 100 USDT, then place an order to sell it for 10% profit on @binanceusdm
 - Market buy 1 BTC with USDT then place a 15% stop loss on @binanceusdm -->
 
 ### Take profit & stop loss (OCO)
 
-- Sell 1 BTC for USDT with a 10% take profit and a 15% stop loss on @binanceusdm
+<!-- - Sell 1 BTC for USDT with a 10% take profit and a 15% stop loss on @binanceusdm
 - Market buy BTC with 100 USDT, then place a 10% take profit and a 15% stop loss on @binanceusdm
 - Sell all of my BTC for USDT with a 10% take profit and a 15% stop loss on @binanceusdm -->
 
 ### Trailing stop orders
 
-- Place an order to sell 1 BTC for USDT with a trailing take profit of 10%
+<!-- - Place an order to sell 1 BTC for USDT with a trailing take profit of 10%
 - Place an order to sell 1 BTC @ 100,000 USDT with a trailing take profit of 10%
 - Place an order to sell 1 BTC for USDT with a trailing take loss of 10%
 - Place an order to sell 1 BTC @ 50,000 USDT with a trailing take loss of 10%

@@ -27,7 +27,7 @@ export async function getMarketInfo({ market }: Props, { exchange, notify }: Fun
     const markets = await exchange.loadMarkets();
     const marketObject = markets[completeMarketSymbol(market)];
     if (!marketObject) {
-        return toResult(`No market found with symbol '${market}'.  Ask "Show me market for token <your token>" and try again with full market symbol`, true);
+        return toResult(`No market found with symbol '${market}'.  Ask "Show me markets for token <your token>" and try again with full market symbol`, true);
     }
     // Fetch market ticker
     const ticker = await getMarketTickerBySymbol(market, exchange);
