@@ -1,4 +1,5 @@
 export { createSimpleOrder } from './createSimpleOrder';
+export { closePosition } from './closePositions';
 export { setLeverage } from './setLeverage';
 export { setMarginMode } from './setMarginMode';
 export { cancelAllOrdersOnMarket } from './cancelAllOrdersOnMarket';

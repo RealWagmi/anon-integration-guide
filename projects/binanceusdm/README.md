@@ -70,6 +70,12 @@ Integration between HeyAnon.ai and Binance USDM Futures trading.
 - Place an order to buy 1 BTC with USDT with a trailing take profit of 10%
 - Place an order to buy 1 BTC with USDT with a trailing stop loss of 10% -->
 
+### Close positions
+
+- Close my BTC/USDT position on @binanceusdm
+- Close all my positions on @binanceusdm
+- Close all of my BTC positions on @binanceusdm
+
 ### Cancel orders
 
 - Cancel all my orders on @binanceusdm
@@ -129,6 +135,7 @@ pnpm ask-binance "Show me the price of BTC/USDT:USDT" --debug-llm
 ## Binance specific behaviors
 
 - Binance does not support `fetchPosition` for future and perpetual markets, see workaround in `getUserOpenPositionBySymbol`
+- Binance does not support `closePosition`, see workaround in `closePositionBySendingOppositeMarketOrder`
 - In Binance it seems the settle currency is always the same as the quote currency. When implementing other exchanges, if this is not the case, we should consider reviewing the `completeMarketSymbol` function.
 
 ## Reference

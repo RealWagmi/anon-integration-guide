@@ -39,6 +39,12 @@ export const tools: AiTool[] = [
         ],
     },
     {
+        name: 'closePosition',
+        description: 'Close a position by sending an opposite market order',
+        required: ['market'],
+        props: [{ name: 'market', type: 'string', description: 'Market symbol, e.g. "BTC/USDT:USDT"' }],
+    },
+    {
         name: 'setLeverage',
         description: 'Set the user configured leverage for a specific market.  Call this function first whenever the user wants to place an order with a specific leverage.',
         required: ['market', 'leverage'],
