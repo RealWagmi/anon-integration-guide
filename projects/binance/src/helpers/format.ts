@@ -90,7 +90,7 @@ export function formatOrderMultiLine(order: Order, market?: MarketInterface, pre
  * symbols.
  */
 export function formatOrderSingleLine(order: Order, market?: MarketInterface, showStatus: boolean = true, prefix: string = ''): string {
-    const { id, timestamp, symbol, type, side, price, triggerPrice, amount, filled, filledPercent, status } = stringifyOrder(order);
+    const { id, timestamp, symbol, type, side, price, triggerPrice, amount, filledPercent, status } = stringifyOrder(order);
 
     const quoteSymbol = market ? ` ${market.quote}` : '';
     const baseSymbol = market ? ` ${market.base}` : '';
@@ -100,7 +100,7 @@ export function formatOrderSingleLine(order: Order, market?: MarketInterface, sh
         `${triggerPrice !== 'N/A' ? ` that triggers at ${triggerPrice}${quoteSymbol},` : ''}`,
         ` to ${side} ${amount}${baseSymbol}${quoteSymbol ? ` for${quoteSymbol}` : ''}`,
         `${price !== 'N/A' ? ` @ ${price}${quoteSymbol}` : ''}`,
-        ` (${filled === '0' ? '' : `filled: ${filledPercent}%, `}${showStatus ? `status: ${status}, ` : ''}created: ${timestamp}, market: ${symbol})`,
+        ` (${filledPercent === '0' ? '' : `filled: ${filledPercent}%, `}${showStatus ? `status: ${status}, ` : ''}created: ${timestamp}, market: ${symbol})`,
     ];
 
     return prefix + parts.join('');
