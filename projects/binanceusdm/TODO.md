@@ -5,7 +5,7 @@
 
 ## Features
 
-- Emulate OTOCO orders via separate TP/SL orders
+- Should TP and SL orders be always reduceOnly?
 - Trailing stop orders
 - Add margin to isolated positions
 - Reduce margin from isolated positions

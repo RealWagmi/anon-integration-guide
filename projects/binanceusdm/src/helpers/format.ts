@@ -16,6 +16,7 @@ interface StringOrder {
     amount: string;
     filled: string;
     filledPercent: string;
+    reduceOnly: string;
     status: string;
 }
 
@@ -115,6 +116,7 @@ function stringifyOrder(order: Order, market?: MarketInterface): StringOrder {
         amount: order.amount !== undefined ? order.amount.toString() + baseSymbol : `${market?.base}/${market?.quote} position`,
         filled: order.filled !== undefined ? order.filled.toString() + baseSymbol : 'N/A',
         filledPercent: order.filled !== undefined ? ((order.filled / order.amount) * 100).toFixed(0) : 'N/A',
+        reduceOnly: order.reduceOnly ? 'reduce-only' : 'N/A',
         status: order.status || 'N/A',
     };
 }
@@ -123,13 +125,14 @@ function stringifyOrder(order: Order, market?: MarketInterface): StringOrder {
  * Format an order object into a multi-line string.
  */
 export function formatOrderMultiLine(order: Order, market?: MarketInterface, prefix: string = '', delimiter: string = '\n'): string {
-    const { id, timestamp, symbol, type, side, price, triggerPrice, amount, filled, status } = stringifyOrder(order, market);
+    const { id, timestamp, symbol, type, side, price, triggerPrice, amount, filled, status, reduceOnly } = stringifyOrder(order, market);
     const rows = [
         `${prefix}Order ID: ${id}`,
         `${prefix}Timestamp: ${timestamp}`,
         `${prefix}Market: ${symbol}`,
         `${prefix}Type: ${type}`,
         `${prefix}Side: ${side}`,
+        `${prefix}Reduce Only: ${reduceOnly !== 'N/A' ? 'Yes' : 'No'}`,
         `${prefix}Price: ${price}`,
         `${prefix}Trigger: ${triggerPrice}`,
         `${prefix}Amount: ${amount}`,
@@ -143,12 +146,14 @@ export function formatOrderMultiLine(order: Order, market?: MarketInterface, pre
  * Format an order object into a single-line string.
  */
 export function formatOrderSingleLine(order: Order, market?: MarketInterface, showStatus: boolean = true, prefix: string = ''): string {
-    const { id, symbol, type, side, price, triggerPrice, amount, filledPercent, status } = stringifyOrder(order, market);
+    const { id, symbol, type, side, price, triggerPrice, amount, filledPercent, status, reduceOnly } = stringifyOrder(order, market);
     const quoteSymbol = market ? ` ${market.quote}` : '';
 
     let parts = [
         `${market ? `${titleCase(getMarketType(market))} ` : ''}`,
-        `${titleCase(type)} order`,
+        `${titleCase(type)}`,
+        `${reduceOnly !== 'N/A' ? ` ${reduceOnly}` : ''}`,
+        ` order`,
         ` to ${side} ${amount}${quoteSymbol && triggerPrice === 'N/A' && price === 'N/A' ? ` for${quoteSymbol}` : ''}`,
         `${price !== 'N/A' ? ` @ ${price}` : ''}`,
         `${triggerPrice !== 'N/A' ? ` triggering at ${triggerPrice}` : ''}`,

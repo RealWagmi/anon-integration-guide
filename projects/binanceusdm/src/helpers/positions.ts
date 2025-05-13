@@ -80,7 +80,7 @@ async function closeUserPositionBySendingOppositeMarketOrder(exchange: Exchange,
     }
     const amount = position.contracts * position.contractSize;
     // Create and return the order
-    let params: Record<string, any> = {};
+    const params: Record<string, any> = {};
     if (exchange.has['createReduceOnlyOrder']) {
         params.reduceOnly = true;
     }

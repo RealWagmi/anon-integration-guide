@@ -42,7 +42,7 @@ export const tools: AiTool[] = [
         name: 'createTriggerOrder',
         description:
             'Create an order that is activated only after the given price condition is met. Once activated, the order will be executed at either the current market price or a specified limit price.   The leverage and margin mode for the order are the user-configured leverage and margin mode for the market.',
-        required: ['market', 'side', 'amount', 'triggerPrice', 'limitPrice'],
+        required: ['market', 'side', 'amount', 'triggerPrice', 'limitPrice', 'reduceOnly'],
         props: [
             {
                 name: 'market',
@@ -69,6 +69,11 @@ export const tools: AiTool[] = [
                 name: 'triggerPrice',
                 type: 'number',
                 description: 'Price at which the order will be activated',
+            },
+            {
+                name: 'reduceOnly',
+                type: ['boolean', 'null'],
+                description: 'If true, the order will either close a position or reduce its size.  Defaults to false.',
             },
         ],
     },

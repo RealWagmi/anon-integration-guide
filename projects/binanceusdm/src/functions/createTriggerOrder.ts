@@ -10,6 +10,7 @@ interface Props {
     amount: number;
     limitPrice: number | null;
     triggerPrice: number;
+    reduceOnly: boolean | null;
 }
 
 /**
@@ -20,15 +21,23 @@ interface Props {
  * @param {'long' | 'short'} props.side - Side of the order; either "long" or "short"
  * @param {number} props.amount - Amount of base currency to long or short
  * @param {number|null} [props.limitPrice] - Price for limit orders (optional)
+ * @param {boolean|null} [props.reduceOnly] - If true, the order will only reduce the position size, not increase it, and will not result in a new position being opened.  Defaults to false.
  * @param {FunctionOptions} options
  * @returns {Promise<FunctionReturn>} A message confirming the order or an error description
  */
-export async function createTriggerOrder({ market, side, amount, limitPrice, triggerPrice }: Props, { exchange, notify }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
+export async function createTriggerOrder({ market, side, amount, limitPrice, triggerPrice, reduceOnly }: Props, { exchange, notify }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
     try {
+        if (reduceOnly && !exchange.has['createReduceOnlyOrder']) {
+            return toResult(`Error: This exchange does not support reduce-only orders`, true);
+        }
         const ccxtSide = longShortToBuySell(side);
         const marketObject = await getMarketBySymbol(exchange, market, true, notify);
         market = marketObject.symbol;
-        const order = await createTriggerOrderHelper(exchange, market, ccxtSide, amount, triggerPrice, limitPrice === null ? undefined : limitPrice);
+        const params: Record<string, any> = {};
+        if (reduceOnly) {
+            params.reduceOnly = true;
+        }
+        const order = await createTriggerOrderHelper(exchange, market, ccxtSide, amount, triggerPrice, limitPrice === null ? undefined : limitPrice, params);
         return toResult(`Successfully created ${formatOrderSingleLine(order, marketObject, true)}`);
     } catch (error) {
         console.error(error);

@@ -38,8 +38,10 @@ Integration between HeyAnon.ai and Binance USDM Futures trading.
 
 **IMPORTANT:** If you specify a leverage (5x, 10x, etc) or a margin mode (cross, isolated) for your order, the specified leverage and margin mode will be applied to the whole position, and not just to the amount you are adding/removing. This is because on Binance the leverage and margin mode are applied at the market level, and not at the order level. For more details, see the [Leverage and margin mode](#changing-leverage-and-margin-mode) section.
 
-### Leverage and margin mode
+### Leverage and margin
 
+- **TODO:** Add 100 USDT margin to my BTC/USDT position on on @binanceusdm
+- **TODO:** Remove 200 USDT margin from my BTC/USDT position on on @binanceusdm
 - What is my BTC/USDT leverage on @binanceusdm?
 - What is my BTC/USDT margin mode on @binanceusdm?
 - Set 50x leverage on BTC/USDT on @binanceusdm
@@ -50,24 +52,28 @@ Integration between HeyAnon.ai and Binance USDM Futures trading.
 
 ### Conditional orders
 
-- Long 1 BTC on @binanceusdm when the price goes below 50,000 USDT
-- Long 1 BTC at 45,000 USDT on @binanceusdm when the price goes below 50,000 USDT
+- Long 1 BTC on @binanceusdm when the price crosses 50,000 USDT
+- Long 1 BTC at 45,000 USDT on @binanceusdm when the price crosses 50,000 USDT
 
 ### Stop Loss & Take Profit
+
 - Add a 10% TP and a 15% SL to my existing BTC/USDT position
 - 20x long 1 BTC with USDT, then place a stop loss at 15% and three take profit targets at 10%-20%-30%
 - Short 1 BTC with USDT, then place an order to close the position at 10% profit on @binanceusdm
 - Long 1 BTC with USDT, then place a 10% take profit and 15% stop loss on @binanceusdm
 
+When it is clear from context that the TP and SL orders are attached to a position, they will be issued as **reduce-only** orders, to prevent accidentally increase the position size or open a new position.  To force a reduce only order, just ask for it, e.g. 
+
+- Long 1 BTC on @binanceusdm when the price crosses 50,000 USDT, *reduce only*
 
 ### Trailing stop orders
 
-<!-- - Place an order to sell 1 BTC for USDT with a trailing take profit of 10%
-- Place an order to sell 1 BTC @ 100,000 USDT with a trailing take profit of 10%
-- Place an order to sell 1 BTC for USDT with a trailing take loss of 10%
-- Place an order to sell 1 BTC @ 50,000 USDT with a trailing take loss of 10%
-- Place an order to buy 1 BTC with USDT with a trailing take profit of 10%
-- Place an order to buy 1 BTC with USDT with a trailing stop loss of 10% -->
+- **TODO:** Place an order to short 1 BTC for USDT with a trailing take profit of 10%
+- **TODO:** Place an order to short 1 BTC @ 100,000 USDT with a trailing take profit of 10%
+- **TODO:** Place an order to short 1 BTC for USDT with a trailing take loss of 10%
+- **TODO:** Place an order to short 1 BTC @ 50,000 USDT with a trailing take loss of 10%
+- **TODO:** Place an order to long 1 BTC with USDT with a trailing take profit of 10%
+- **TODO:** Place an order to long 1 BTC with USDT with a trailing stop loss of 10%
 
 ### Close positions
 
