@@ -80,7 +80,7 @@ export const tools: AiTool[] = [
     },
     {
         name: 'setLeverage',
-        description: 'Set the user configured leverage for a specific market.  Call this function first whenever the user wants to place an order with a specific leverage.',
+        description: 'Set the user configured leverage for a specific market',
         required: ['market', 'leverage'],
         props: [
             {
@@ -97,7 +97,7 @@ export const tools: AiTool[] = [
     },
     {
         name: 'setMarginMode',
-        description: 'Set the user configured margin mode for a specific market.  Call this function first whenever the user wants to place an order with a specific margin mode.',
+        description: 'Set the user configured margin mode for a specific market',
         required: ['market', 'marginMode'],
         props: [
             { name: 'market', type: 'string', description: 'Market symbol, e.g. "BTC/USDT:USDT"' },

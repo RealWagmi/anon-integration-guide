@@ -28,7 +28,7 @@ export async function createSimpleOrder({ market, side, amount, limitPrice }: Pr
         const marketObject = await getMarketBySymbol(exchange, market, true, notify);
         market = marketObject.symbol;
         const order = await createSimpleOrderHelper(exchange, market, ccxtSide, amount, limitPrice === null ? undefined : limitPrice);
-        return toResult(`Successfully created ${formatOrderSingleLine(order, marketObject, false)}`);
+        return toResult(`Successfully created ${formatOrderSingleLine(order, marketObject, true)}`);
     } catch (error) {
         return toResult(`Error creating order: ${error}`, true);
     }

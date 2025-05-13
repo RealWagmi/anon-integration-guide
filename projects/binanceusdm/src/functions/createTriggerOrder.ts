@@ -29,7 +29,7 @@ export async function createTriggerOrder({ market, side, amount, limitPrice, tri
         const marketObject = await getMarketBySymbol(exchange, market, true, notify);
         market = marketObject.symbol;
         const order = await createTriggerOrderHelper(exchange, market, ccxtSide, amount, triggerPrice, limitPrice === null ? undefined : limitPrice);
-        return toResult(`Successfully created ${formatOrderSingleLine(order, marketObject, false)}`);
+        return toResult(`Successfully created ${formatOrderSingleLine(order, marketObject, true)}`);
     } catch (error) {
         console.error(error);
         return toResult(`Error creating order: ${error}`, true);

@@ -52,14 +52,13 @@ Integration between HeyAnon.ai and Binance USDM Futures trading.
 
 - Long 1 BTC on @binanceusdm when the price goes below 50,000 USDT
 - Long 1 BTC at 45,000 USDT on @binanceusdm when the price goes below 50,000 USDT
+
+### Stop Loss & Take Profit
+- Add a 10% TP and a 15% SL to my existing BTC/USDT position
+- 20x long 1 BTC with USDT, then place a stop loss at 15% and three take profit targets at 10%-20%-30%
 - Short 1 BTC with USDT, then place an order to close the position at 10% profit on @binanceusdm
-- Long 1 BTC with USDT, then place a 15% stop loss on @binanceusdm
+- Long 1 BTC with USDT, then place a 10% take profit and 15% stop loss on @binanceusdm
 
-### Take profit & stop loss (OCO)
-
-<!-- - Sell 1 BTC for USDT with a 10% take profit and a 15% stop loss on @binanceusdm
-- Market buy BTC with 100 USDT, then place a 10% take profit and a 15% stop loss on @binanceusdm
-- Sell all of my BTC for USDT with a 10% take profit and a 15% stop loss on @binanceusdm -->
 
 ### Trailing stop orders
 

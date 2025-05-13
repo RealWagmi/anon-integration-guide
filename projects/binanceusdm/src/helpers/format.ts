@@ -143,7 +143,7 @@ export function formatOrderMultiLine(order: Order, market?: MarketInterface, pre
  * Format an order object into a single-line string.
  */
 export function formatOrderSingleLine(order: Order, market?: MarketInterface, showStatus: boolean = true, prefix: string = ''): string {
-    const { id, symbol, type, side, price, triggerPrice, amount, filled, filledPercent, status } = stringifyOrder(order, market);
+    const { id, symbol, type, side, price, triggerPrice, amount, filledPercent, status } = stringifyOrder(order, market);
     const quoteSymbol = market ? ` ${market.quote}` : '';
 
     let parts = [
@@ -152,7 +152,7 @@ export function formatOrderSingleLine(order: Order, market?: MarketInterface, sh
         ` to ${side} ${amount}${quoteSymbol && triggerPrice === 'N/A' && price === 'N/A' ? ` for${quoteSymbol}` : ''}`,
         `${price !== 'N/A' ? ` @ ${price}` : ''}`,
         `${triggerPrice !== 'N/A' ? ` triggering at ${triggerPrice}` : ''}`,
-        ` (ID: ${id}, ${filled.startsWith('0') ? '' : `filled: ${filledPercent}%, `}${showStatus ? `status: ${status}, ` : ''}market: ${symbol})`,
+        ` (ID: ${id}, ${filledPercent === '0' ? '' : `filled: ${filledPercent}%, `}${showStatus ? `status: ${status}, ` : ''}market: ${symbol})`,
     ];
 
     return prefix + parts.join('');
