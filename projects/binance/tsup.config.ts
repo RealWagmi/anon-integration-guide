@@ -1,0 +1,25 @@
+import { exec } from 'child_process';
+import { defineConfig } from 'tsup';
+
+export default defineConfig((options) => ({
+    entry: {
+        index: './src/index.ts',
+        // 'binance_cli/index': './src/binance_cli/index.ts',
+        run: './src/ask_binance/run.ts',
+    },
+    format: ['esm', 'cjs'],
+    dts: false,
+    treeshake: true,
+    splitting: true,
+    clean: !options.watch,
+    onSuccess: async () => {
+        exec('tsc --emitDeclarationOnly --declaration', (err) => {
+            if (err) {
+                console.error(err);
+                if (!options.watch) {
+                    process.exit(1);
+                }
+            }
+        });
+    },
+}));
