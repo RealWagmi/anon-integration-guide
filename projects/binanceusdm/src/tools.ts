@@ -77,10 +77,6 @@ export const tools: AiTool[] = [
             },
         ],
     },
-    // Here we are cheating a bit.  Binance Futures does not support limit price
-    // for trailing stop orders, but we are not telling the LLM that.  It will
-    // just try to use the limitPrice parameter and get an error, instead of
-    // trying a weird combination of orders to achieve the limit order request.
     {
         name: 'createTrailingStopOrder',
         description:
@@ -108,6 +104,10 @@ export const tools: AiTool[] = [
                 type: 'number',
                 description: 'Percentage change in price required to trigger order entry, expressed as a number between 0 and 100.',
             },
+            // Here we are cheating a bit.  Binance Futures does not support limit price
+            // for trailing stop orders, but we are not telling the LLM that.  It will
+            // just try to use the limitPrice parameter and get an error, instead of
+            // trying a weird combination of orders to achieve the limit order request.
             {
                 name: 'limitPrice',
                 type: ['number', 'null'],
@@ -155,6 +155,24 @@ export const tools: AiTool[] = [
         props: [
             { name: 'market', type: 'string', description: 'Market symbol, e.g. "BTC/USDT:USDT"' },
             { name: 'marginMode', type: 'string', enum: ['isolated', 'cross'], description: 'Margin mode to set, either "isolated" or "cross"' },
+        ],
+    },
+    {
+        name: 'addMarginToIsolatedPosition',
+        description: 'Add margin to an isolated margin position',
+        required: ['market', 'amount'],
+        props: [
+            { name: 'market', type: 'string', description: 'Market symbol, e.g. "BTC/USDT:USDT"' },
+            { name: 'amount', type: 'number', description: 'Amount to add' },
+        ],
+    },
+    {
+        name: 'reduceMarginFromIsolatedPosition',
+        description: 'Reduce margin from an isolated margin position',
+        required: ['market', 'amount'],
+        props: [
+            { name: 'market', type: 'string', description: 'Market symbol, e.g. "BTC/USDT:USDT"' },
+            { name: 'amount', type: 'number', description: 'Amount to reduce' },
         ],
     },
     {

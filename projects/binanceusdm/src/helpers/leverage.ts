@@ -1,4 +1,4 @@
-import { Exchange, Leverage } from 'ccxt';
+import { Exchange, Leverage, MarginModification } from 'ccxt';
 
 /**
  * Get the leverage tiers for the given market symbols;
@@ -8,7 +8,7 @@ import { Exchange, Leverage } from 'ccxt';
  */
 export async function getMarketsLeverageTiers(exchange: Exchange, symbols: string[]) {
     if (!exchange.has['fetchLeverageTiers']) {
-        throw new Error(`Exchange ${exchange.name} does not support retrieving leverage tiers`);
+        throw new Error(`Retrieving leverage tiers not supported on exchange ${exchange.name}`);
     }
     return await exchange.fetchLeverageTiers(symbols);
 }
@@ -20,7 +20,7 @@ export async function getMarketsLeverageTiers(exchange: Exchange, symbols: strin
  */
 export async function getUserLeverageOnMarket(exchange: Exchange, market: string): Promise<Leverage> {
     if (!exchange.has['fetchLeverage']) {
-        throw new Error(`Exchange ${exchange.name} does not support retrieving user leverage and margin mode`);
+        throw new Error(`Retrieving user leverage not supported on exchange ${exchange.name}`);
     }
     const leverageStructure = await exchange.fetchLeverage(market);
     if (leverageStructure.longLeverage !== leverageStructure.shortLeverage) {
@@ -36,7 +36,7 @@ export async function getUserLeverageOnMarket(exchange: Exchange, market: string
  */
 export async function setUserLeverageOnMarket(exchange: Exchange, market: string, leverage: number) {
     if (!exchange.has['setLeverage']) {
-        throw new Error(`Exchange ${exchange.name} does not support setting user leverage`);
+        throw new Error(`Setting user leverage not supported on exchange ${exchange.name}`);
     }
     return await exchange.setLeverage(leverage, market);
 }
@@ -48,7 +48,39 @@ export async function setUserLeverageOnMarket(exchange: Exchange, market: string
  */
 export async function setUserMarginModeOnMarket(exchange: Exchange, market: string, marginMode: 'cross' | 'isolated') {
     if (!exchange.has['setMarginMode']) {
-        throw new Error(`Exchange ${exchange.name} does not support setting user margin mode at the market level`);
+        throw new Error(`Setting user margin mode not supported on exchange ${exchange.name}`);
     }
     return await exchange.setMarginMode(marginMode, market);
+}
+
+/**
+ * Add margin to an isolated margin position.
+ *
+ * @link https://docs.ccxt.com/#/README?id=margin
+ */
+export async function addMarginToIsolatedPosition(exchange: Exchange, market: string, amount: number): Promise<MarginModification> {
+    if (!exchange.has['addMargin']) {
+        throw new Error(`Adding margin to isolated positions not supported on exchange ${exchange.name}`);
+    }
+    const leverageStructure = await getUserLeverageOnMarket(exchange, market);
+    if (leverageStructure.marginMode !== 'isolated') {
+        throw new Error(`Cannot add margin to ${market}: not an isolated margin position`);
+    }
+    return await exchange.addMargin(market, amount);
+}
+
+/**
+ * Reduce margin from an isolated margin position.
+ *
+ * @link https://docs.ccxt.com/#/README?id=margin
+ */
+export async function reduceMarginFromIsolatedPosition(exchange: Exchange, market: string, amount: number): Promise<MarginModification> {
+    if (!exchange.has['reduceMargin']) {
+        throw new Error(`Reducing margin from isolated positions not supported on exchange ${exchange.name}`);
+    }
+    const leverageStructure = await getUserLeverageOnMarket(exchange, market);
+    if (leverageStructure.marginMode !== 'isolated') {
+        throw new Error(`Can't reduce margin from ${market} – position is not an isolated margin position`);
+    }
+    return await exchange.reduceMargin(market, amount);
 }

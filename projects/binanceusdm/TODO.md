@@ -6,8 +6,6 @@
 ## Features
 
 - Test future non-perpetual contracts
-- Add margin to isolated positions
-- Reduce margin from isolated positions
 
 ## Minor
 
@@ -16,7 +14,7 @@
 
 ## Future
 
-- Should TP and SL orders be always reduceOnly?
+- Tools to keep track of funding rates
 - Implement open positions pagination
 - Support for hedged positions (2 positions on the same market, one long, one short)
 - Open orders pagination

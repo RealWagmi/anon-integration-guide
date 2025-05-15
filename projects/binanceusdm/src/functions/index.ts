@@ -4,6 +4,8 @@ export { createTrailingStopOrder } from './createTrailingStopOrder';
 export { closePosition } from './closePositions';
 export { setLeverage } from './setLeverage';
 export { setMarginMode } from './setMarginMode';
+export { addMarginToIsolatedPosition } from './addMarginToIsolatedPosition';
+export { reduceMarginFromIsolatedPosition } from './reduceMarginFromIsolatedPosition';
 export { cancelAllOrdersOnMarket } from './cancelAllOrdersOnMarket';
 export { cancelOrderByIdAndMarket } from './cancelOrderByIdAndMarket';
 export { transferFunds } from './transferFunds';
