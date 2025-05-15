@@ -77,6 +77,54 @@ export const tools: AiTool[] = [
             },
         ],
     },
+    // Here we are cheating a bit.  Binance Futures does not support limit price
+    // for trailing stop orders, but we are not telling the LLM that.  It will
+    // just try to use the limitPrice parameter and get an error, instead of
+    // trying a weird combination of orders to achieve the limit order request.
+    {
+        name: 'createTrailingStopOrder',
+        description:
+            'Create a trailing stop order, that is, an order that is executed only when the price moves a certain percentage away from the entry price.  The order will execute immediately as a market order when triggered.',
+        required: ['market', 'side', 'amount', 'trailingPercent', 'limitPrice', 'triggerPrice', 'reduceOnly'],
+        props: [
+            {
+                name: 'market',
+                type: 'string',
+                description: MARKET_DESCRIPTION,
+            },
+            {
+                name: 'side',
+                type: 'string',
+                enum: ['long', 'short'],
+                description: SIDE_DESCRIPTION,
+            },
+            {
+                name: 'amount',
+                type: 'number',
+                description: AMOUNT_DESCRIPTION,
+            },
+            {
+                name: 'trailingPercent',
+                type: 'number',
+                description: 'Percentage change in price required to trigger order entry, expressed as a number between 0 and 100.',
+            },
+            {
+                name: 'limitPrice',
+                type: ['number', 'null'],
+                description: 'Price at which the order will be executed.  Include only if explicitly specified by the user.  Leave blank for a market order.',
+            },
+            {
+                name: 'triggerPrice',
+                type: ['number', 'null'],
+                description: 'Price at which the order will be activated, defaults to the current market price.',
+            },
+            {
+                name: 'reduceOnly',
+                type: ['boolean', 'null'],
+                description: 'If true, the order will either close a position or reduce its size.  Defaults to false.',
+            },
+        ],
+    },
     {
         name: 'closePosition',
         description: 'Close a position by sending an opposite market order',

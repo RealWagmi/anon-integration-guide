@@ -1,22 +1,22 @@
-## Bug fixes
+## Bug fixes
 
 - With complex commands like "Long 1 BTC, then place an order to close the position at 10% profit" the LLM arbitrarily decides to change the leverage and/or the margin mode
 - Include trailing percent in the order formatting function
 
 ## Features
 
-- Should TP and SL orders be always reduceOnly?
-- Trailing stop orders
+- Test future non-perpetual contracts
 - Add margin to isolated positions
 - Reduce margin from isolated positions
 
 ## Minor
 
+- Is limit supported on trailing stop orders?
 - Test transferFunds function on mainnet (testnet does not have spot account)
 
 ## Future
 
-- Support for future non-perpetual contracts
+- Should TP and SL orders be always reduceOnly?
 - Implement open positions pagination
 - Support for hedged positions (2 positions on the same market, one long, one short)
 - Open orders pagination

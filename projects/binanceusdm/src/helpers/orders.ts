@@ -1,6 +1,6 @@
 import { Exchange, Order } from 'ccxt';
-import { LIMIT_PRICE_TOLERANCE } from '../constants';
-import { getMarketLastPriceBySymbol } from './markets';
+import { LIMIT_PRICE_TOLERANCE, MAX_TRAILING_PERCENT, MIN_TRAILING_PERCENT, SUPPORTS_LIMIT_PRICE_FOR_TRAILING_STOP_ORDERS } from '../constants';
+import { getMarketLastPriceBySymbol, getMarketObject } from './markets';
 
 /**
  * Create a simple order, that is, an order that has no triggers attached to it.
@@ -41,12 +41,17 @@ export async function createTriggerOrder(
     limitPrice?: number,
     params?: Record<string, any>,
 ): Promise<Order> {
-    if (!exchange.features.spot.createOrder.triggerPrice) {
-        throw new Error(`Exchange ${exchange.name} does not support trigger/conditional orders.`);
+    // Exchange specific checks
+    const marketObject = await getMarketObject(exchange, symbol);
+    if (!exchange.features[marketObject.type].linear.createOrder.triggerPrice) {
+        throw new Error(`Trigger/conditional orders not supported on exchange ${exchange.name}`);
     }
+    if (params?.reduceOnly === true && !exchange.has['createReduceOnlyOrder']) {
+        throw new Error(`Reduce-only orders not supported on exchange ${exchange.name}`);
+    }
+    // Determine whether the order is take profit or stop loss
     const ccxtParams: any = {};
     const lastPrice = await getMarketLastPriceBySymbol(symbol, exchange);
-    // Determine whether the order is take profit or stop loss
     if ((triggerPrice > lastPrice && side === 'sell') || (triggerPrice < lastPrice && side === 'buy')) {
         // a take profit order is a trigger order with direction from below (sell) or above (buy)
         ccxtParams.takeProfitPrice = triggerPrice;
@@ -54,6 +59,66 @@ export async function createTriggerOrder(
         // a stop loss order is a trigger order with direction from above (sell) or below (buy)
         ccxtParams.stopLossPrice = triggerPrice;
     }
+    const ccxtType = limitPrice ? 'limit' : 'market';
+    const order = await exchange.createOrder(symbol, ccxtType, side, amount, limitPrice, { ...params, ...ccxtParams });
+    return order;
+}
+
+/**
+ * Create a trailing stop order, that is, an order that triggers only
+ * when the price moves in a certain direction by a certain percentage.
+ *
+ * On binance, these are the constraints for the order:
+ * TRAILING_STOP_MARKET:
+ * - BUY: the lowest price after order placed <= activationPrice, and the latest price >= the lowest price * (1 + callbackRate)
+ * - SELL: the highest price after order placed >= activationPrice, and the latest price <= the highest price * (1 - callbackRate)
+ * For TRAILING_STOP_MARKET, if you got such error code.
+ * {"code": -2021, "msg": "Order would immediately trigger."}
+ * means that the parameters you send do not meet the following requirements:
+ * - BUY: activationPrice should be smaller than latest price.
+ * - SELL: activationPrice should be larger than latest price.
+ *
+ * @link https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api BINANCE
+ * @link https://d.pr/i/lsKnbt UI SCREENSHOT
+ * @link https://docs.ccxt.com/#/README?id=trailing-orders CCXT DOCS
+ */
+export async function createTrailingStopOrder(
+    exchange: Exchange,
+    symbol: string,
+    side: 'buy' | 'sell',
+    amount: number,
+    trailingPercentAsInteger: number,
+    limitPrice?: number,
+    triggerPrice?: number,
+    params?: Record<string, any>,
+): Promise<Order> {
+    // Exchange specific checks
+    const marketObject = await getMarketObject(exchange, symbol);
+    if (!exchange.features[marketObject.type].linear.createOrder.trailing) {
+        throw new Error(`Trailing stop orders not supported on exchange ${exchange.name}`);
+    }
+    if (params?.reduceOnly === true && !exchange.has['createReduceOnlyOrder']) {
+        throw new Error(`Reduce-only orders not supported on exchange ${exchange.name}`);
+    }
+    if (limitPrice && !SUPPORTS_LIMIT_PRICE_FOR_TRAILING_STOP_ORDERS) {
+        throw new Error(`Limit price for trailing stop orders not supported on exchange ${exchange.name}`);
+    }
+    if (trailingPercentAsInteger < MIN_TRAILING_PERCENT || trailingPercentAsInteger > MAX_TRAILING_PERCENT) {
+        throw new Error(`Trailing stop percentage must be a number between ${MIN_TRAILING_PERCENT}% and ${MAX_TRAILING_PERCENT}%.  You provided ${trailingPercentAsInteger}%.`);
+    }
+    // Determine whether the order is take profit or stop loss
+    const ccxtParams: any = {
+        trailingPercent: trailingPercentAsInteger,
+        trailingTriggerPrice: triggerPrice,
+    };
+    // const lastPrice = await getMarketLastPriceBySymbol(symbol, exchange);
+    // if ((triggerPrice > lastPrice && side === 'sell') || (triggerPrice < lastPrice && side === 'buy')) {
+    //     // a take profit order is a trigger order with direction from below (sell) or above (buy)
+    //     ccxtParams.takeProfitPrice = triggerPrice;
+    // } else if ((triggerPrice > lastPrice && side === 'buy') || (triggerPrice < lastPrice && side === 'sell')) {
+    //     // a stop loss order is a trigger order with direction from above (sell) or below (buy)
+    //     ccxtParams.stopLossPrice = triggerPrice;
+    // }
     const ccxtType = limitPrice ? 'limit' : 'market';
     const order = await exchange.createOrder(symbol, ccxtType, side, amount, limitPrice, { ...params, ...ccxtParams });
     return order;

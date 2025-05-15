@@ -62,18 +62,24 @@ Integration between HeyAnon.ai and Binance USDM Futures trading.
 - Short 1 BTC with USDT, then place an order to close the position at 10% profit on @binanceusdm
 - Long 1 BTC with USDT, then place a 10% take profit and 15% stop loss on @binanceusdm
 
-When it is clear from context that the TP and SL orders are attached to a position, they will be issued as **reduce-only** orders, to prevent accidentally increase the position size or open a new position.  To force a reduce only order, just ask for it, e.g. 
+When it is clear from context that the TP and SL orders are attached to a position, they will be issued as **reduce-only** orders, to prevent accidentally increase the position size or open a new position. To force a reduce only order, just ask for it, e.g.
 
-- Long 1 BTC on @binanceusdm when the price crosses 50,000 USDT, *reduce only*
+- Long 1 BTC on @binanceusdm when the price crosses 50,000 USDT, _reduce only_
 
 ### Trailing stop orders
 
-- **TODO:** Place an order to short 1 BTC for USDT with a trailing take profit of 10%
-- **TODO:** Place an order to short 1 BTC @ 100,000 USDT with a trailing take profit of 10%
-- **TODO:** Place an order to short 1 BTC for USDT with a trailing take loss of 10%
-- **TODO:** Place an order to short 1 BTC @ 50,000 USDT with a trailing take loss of 10%
-- **TODO:** Place an order to long 1 BTC with USDT with a trailing take profit of 10%
-- **TODO:** Place an order to long 1 BTC with USDT with a trailing stop loss of 10%
+- Place an order to long 1 BTC with USDT with a 0.5% trailing stop
+- Place a reduce-only order to long 1 BTC with USDT with a 0.5% trailing stop
+- Place an order to long 1 BTC with USDT with a 0.5% trailing stop, with activation at 95,000 USDT
+- Place an order to short 1 BTC with USDT with a 8% trailing stop
+- Place a reduce-only order to short 1 BTC with USDT with a 8% trailing stop
+- Place an order to short 1 BTC with USDT with a 8% trailing stop, with activation at 130,000 USDT
+
+Please note that:
+
+1. The trailing percent must be a number between 0.1% and 10%.
+2. The trailing stop order will be triggered as a market order once the price moves by the specified percentage in the desired direction.
+3. Contrary to spot, on futures you cannot specify whether the order is SL or TP.
 
 ### Close positions
 
@@ -139,6 +145,7 @@ pnpm ask-binance "Show me the price of BTC/USDT:USDT" --debug-llm
 
 ## Binance specific behaviors
 
+- Binance Futures trailing stop orders always execute as market orders when triggered, that is, you cannot set a limit price for the order. This is different from spot where you can specify a limit price for trailing stop orders. This is accounted for via the constant `SUPPORTS_LIMIT_PRICE_FOR_TRAILING_STOP_ORDERS`.
 - Binance fAPI does not support OTOCO orders, that is, the creation in one go of position + TP + SL. Therefore, we send 3 separate orders ([link](https://dev.binance.vision/t/how-to-implement-otoco-tp-sl-orders-using-api/1622/14)).
 - Binance fAPI does not support `fetchPosition` for future and perpetual markets, see workaround in `getUserOpenPositionBySymbol`
 - Binance fAPI does not support `closePosition`, see workaround in `closePositionBySendingOppositeMarketOrder`

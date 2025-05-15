@@ -1,3 +1,9 @@
+// ---------------------------------------------------------------
+// GLOBAL CONSTANTS
+// ---------------------------------------------------------------
+// UX and functional constants that are not exchange specific
+// ---------------------------------------------------------------
+
 /**
  * Maximum number of markets to show in results,
  * important to avoid the 500 token limit for getters.
@@ -29,3 +35,29 @@ export const LIMIT_PRICE_TOLERANCE = 0.005;
  * Possible account types
  */
 export const ACCOUNT_TYPES = ['main', 'spot', 'funding', 'margin', 'cross', 'future', 'delivery', 'linear', 'swap', 'inverse', 'option'] as const;
+
+// ---------------------------------------------------------------
+// EXCHANGE BEHAVIOR CONSTANTS
+// ---------------------------------------------------------------
+// Describe exchange specific behaviors that are not documented
+// in CCXT's own exchange.has and exchange.features properties.
+// ---------------------------------------------------------------
+
+/**
+ * Whether the exchange supports limit price for trailing stop orders
+ */
+export const SUPPORTS_LIMIT_PRICE_FOR_TRAILING_STOP_ORDERS = false;
+
+/**
+ * Minimum trailing percentage for trailing stop orders
+ *
+ * @link https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api
+ */
+export const MIN_TRAILING_PERCENT = 0.1;
+
+/**
+ * Maximum trailing percentage for trailing stop orders
+ *
+ * @link https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api
+ */
+export const MAX_TRAILING_PERCENT = 10;
