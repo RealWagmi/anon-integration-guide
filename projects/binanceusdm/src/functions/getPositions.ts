@@ -30,7 +30,7 @@ export async function getPositions({}: Props, { exchange }: FunctionOptionsWithE
 
         // Format the positions into a string
         const rows = [
-            `Found ${positions.length} open positions ${positions.length > MAX_POSITIONS_IN_RESULTS ? `(showing first ${MAX_POSITIONS_IN_RESULTS})` : ''}:`,
+            `Found ${positions.length} open position${positions.length > 1 ? 's' : ''}${positions.length > MAX_POSITIONS_IN_RESULTS ? ` (showing first ${MAX_POSITIONS_IN_RESULTS})` : ''}:`,
             ...mostRecentNPositions.map((position, index) => formatPositionSingleLine(position, markets[position.symbol] as MarketInterface, `${index + 1}. `)),
         ];
 

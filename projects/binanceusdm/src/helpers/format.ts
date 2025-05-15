@@ -1,6 +1,7 @@
 import { Balances, Leverage, LeverageTiers, MarketInterface, Order, Position, Ticker } from 'ccxt';
 import { getMarketExpiry, getMarketType } from './markets';
 import { buySellToLongShort } from './orders';
+import { getUiMargin } from './exchange';
 
 /**
  * A stringified order object
@@ -38,6 +39,7 @@ interface StringPosition {
     initialMargin: string;
     marginRatio: string;
     collateral: string;
+    uiMargin: string;
     marginMode: string;
     leverage: string;
     liquidationPrice: string;
@@ -233,8 +235,8 @@ export function formatOrderSingleLine(order: Order, market?: MarketInterface, sh
  */
 function stringifyPosition(position: Position, market?: MarketInterface): StringPosition {
     const quoteSymbol = market ? ` ${market.quote}` : '';
-    // const baseSymbol = market ? ` ${market.base}` : '';
     const settleSymbol = market ? ` ${market.settle}` : '';
+    const uiMargin = getUiMargin(position);
 
     return {
         id: position.id?.toString() || 'N/A',
@@ -251,6 +253,7 @@ function stringifyPosition(position: Position, market?: MarketInterface): String
         initialMargin: position.initialMargin !== undefined ? position.initialMargin.toString() + settleSymbol : 'N/A',
         marginRatio: position.marginRatio !== undefined ? (position.marginRatio * 100).toFixed(2) + '%' : 'N/A',
         collateral: position.collateral !== undefined ? position.collateral.toString() + settleSymbol : 'N/A',
+        uiMargin: uiMargin ? uiMargin.toString() + settleSymbol : 'N/A',
         marginMode: position.marginMode || 'N/A',
         leverage: position.leverage !== undefined ? position.leverage.toString() : 'N/A',
         liquidationPrice: position.liquidationPrice !== undefined ? position.liquidationPrice.toString() + quoteSymbol : 'N/A',
@@ -273,8 +276,9 @@ export function formatPositionMultiLine(position: Position, market?: MarketInter
         unrealizedPnl,
         unrealizedPnlPercentage,
         notional,
-        // marginRatio,  // CCXT margin ratio does not seem to be reliable enough to show
-        // collateral, // CCXT collateral does not seem to be reliable enough to show
+        // marginRatio,  // CCXT margin ratio is different than Binance's, might be confusing to show
+        uiMargin,
+        collateral,
         marginMode,
         leverage,
         liquidationPrice,
@@ -287,16 +291,17 @@ export function formatPositionMultiLine(position: Position, market?: MarketInter
         `${prefix}Entry Price: ${entryPrice}`,
         `${prefix}Mark Price: ${markPrice}`,
         `${prefix}Liquidation Price: ${liquidationPrice}`,
+        `${prefix}Notional: ${notional}`,
         `${prefix}PnL: ${unrealizedPnl}`,
         `${prefix}PnL Percentage: ${unrealizedPnlPercentage}`,
-        `${prefix}Notional: ${notional}`,
-        // `${prefix}Collateral: ${collateral}`,
+        `${prefix}Margin: ${uiMargin}`,
+        `${position.marginMode === 'isolated' ? `${prefix}Collateral (margin + PnL): ${collateral}` : ''}`,
         `${prefix}Margin Mode: ${marginMode}`,
         `${prefix}Leverage: ${leverage}`,
         `${prefix}Contracts: ${contracts}`,
         `${prefix}Contract Size: ${contractSize}`,
         `${prefix}Created: ${timestamp}`,
-    ];
+    ].filter(Boolean);
 
     return rows.join(delimiter);
 }
@@ -319,7 +324,7 @@ export function formatPositionSingleLine(position: Position, market?: MarketInte
         notional,
         // marginRatio, // CCXT margin ratio does not seem to be reliable enough to show
         // initialMargin,
-        // collateral, // CCXT collateral does not seem to be reliable enough to show
+        uiMargin,
         marginMode,
         // leverage,
         liquidationPrice,
@@ -334,6 +339,7 @@ export function formatPositionSingleLine(position: Position, market?: MarketInte
         ` (`,
         `${marginMode === 'isolated' ? `isolated, ` : ''}`,
         // `${marginRatio !== 'N/A' ? `margin ratio: ${marginRatio}, ` : ''}${collateral !== 'N/A' ? `collateral: ${collateral}, ` : ''}`,
+        `${uiMargin !== 'N/A' ? `margin: ${uiMargin}, ` : ''}`,
         `${liquidationPrice !== 'N/A' ? `liq price: ${liquidationPrice}, ` : ''}`,
         `${unrealizedPnlPercentage !== 'N/A' ? `PnL: ${unrealizedPnlPercentage}, ` : ''}`,
         `market: ${symbol}`,

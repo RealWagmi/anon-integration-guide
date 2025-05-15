@@ -216,13 +216,13 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getPositions',
-        description: `Show the user's most recent ${MAX_POSITIONS_IN_RESULTS} open positions`,
+        description: `Show the user's most recent ${MAX_POSITIONS_IN_RESULTS} open positions, including notional, margin, and PnL.`,
         required: [],
         props: [],
     },
     {
         name: 'getPositionOnMarket',
-        description: `Show information on the position held by the user on the given market.  If you only have the currency, use getPositions and filter by currency.`,
+        description: `Show information on the position held by the user on the given market, including notional, margin, and PnL.  If you only have the currency, use getPositions and filter by currency.`,
         required: ['market'],
         props: [
             {

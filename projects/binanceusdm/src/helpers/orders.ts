@@ -1,6 +1,7 @@
 import { Exchange, Order } from 'ccxt';
-import { LIMIT_PRICE_TOLERANCE, MAX_TRAILING_PERCENT, MIN_TRAILING_PERCENT, SUPPORTS_LIMIT_PRICE_FOR_TRAILING_STOP_ORDERS } from '../constants';
+import { MAX_TRAILING_PERCENT, MIN_TRAILING_PERCENT, SUPPORTS_LIMIT_PRICE_FOR_TRAILING_STOP_ORDERS } from './exchange';
 import { getMarketLastPriceBySymbol, getMarketObject } from './markets';
+import { LIMIT_PRICE_TOLERANCE } from '../constants';
 
 /**
  * Create a simple order, that is, an order that has no triggers attached to it.

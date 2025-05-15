@@ -40,13 +40,15 @@ Integration between HeyAnon.ai and Binance USDM Futures trading.
 
 ### Leverage and margin
 
-- What is my BTC/USDT leverage on @binanceusdm?
-- What is my BTC/USDT margin mode on @binanceusdm?
+- Show my margin on BTC/USDT on @binanceusdm
+- What is my leverage on BTC/USDT on @binanceusdm?
 - Set 50x leverage on BTC/USDT on @binanceusdm
 - Set isolated margin mode on BTC/USDT on @binanceusdm
 - Set cross margin mode on BTC/USDT on @binanceusdm
 - Add 100 USDT margin to my BTC/USDT position on @binanceusdm
 - Remove 200 USDT margin from my BTC/USDT position on @binanceusdm
+
+Please note that the margin shown by the tools is the same shown in the Binance UI. For cross positions, that is the initial margin, while for isolated positions it is the actual margin set aside by the user for the position.
 
 **IMPORTANT**: If you change leverage and margin mode of a pair, your existing position in that pair will be affected. See the [Leverage and margin mode](#changing-leverage-and-margin-mode) section for more details.
 
@@ -115,7 +117,7 @@ Things are simpler when it comes to **changing the margin mode**: Binance does n
 
 ## CCXT
 
-We use the [CCXT](https://github.com/ccxt/ccxt/) library to interact with the various Binance Futures APIs. Some of Binance's features are not supported by CCXT; for these cases, we implemented some helper functions to cover the gaps, that you can find in the [binance.ts](./src/helpers/binance.ts) file.
+We use the [CCXT](https://github.com/ccxt/ccxt/) library to interact with the various Binance Futures APIs. Some of Binance's features are not supported by CCXT; for these cases, we implemented some helper functions to cover the gaps, that you can find in the [exchange.ts](./src/helpers/exchange.ts) file.
 
 ## Test with the askBinance agent
 
@@ -147,7 +149,7 @@ pnpm ask-binance "Show me the price of BTC/USDT:USDT" --debug-llm
 
 - Binance Futures trailing stop orders always execute as market orders when triggered, that is, you cannot set a limit price for the order. This is different from spot where you can specify a limit price for trailing stop orders. This is accounted for via the constant `SUPPORTS_LIMIT_PRICE_FOR_TRAILING_STOP_ORDERS`.
 - Binance fAPI does not support OTOCO orders, that is, the creation in one go of position + TP + SL. Therefore, we send 3 separate orders ([link](https://dev.binance.vision/t/how-to-implement-otoco-tp-sl-orders-using-api/1622/14)).
-- Binance fAPI does not support `fetchPosition` for future and perpetual markets, see workaround in `getUserOpenPositionBySymbol`
+- CCXT does not support `fetchPosition` for Binance future and perpetual markets, see workaround in `getUserOpenPositionBySymbol`
 - Binance fAPI does not support `closePosition`, see workaround in `closePositionBySendingOppositeMarketOrder`
 - In Binance it seems the settle currency is always the same as the quote currency. When implementing other exchanges, if this is not the case, we should consider reviewing the `completeMarketSymbol` function.
 
