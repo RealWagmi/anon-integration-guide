@@ -70,13 +70,17 @@ export async function getMarketLastPriceBySymbol(symbol: string, exchange: Excha
 
 /**
  * Given a market object, return the type of market, preferring the term
- * "perpetual" for swap markets.
+ * "perpetual" for swap markets and "delivery" for future markets
+ * with an expiry date.
  *
  * @link https://docs.ccxt.com/#/?id=contract-naming-conventions
  */
 export function getMarketType(market: MarketInterface) {
     if (market.type === 'swap') {
         return 'perpetual';
+    }
+    if (market.type === 'future' && market.expiryDatetime) {
+        return 'delivery';
     }
     return market.type;
 }

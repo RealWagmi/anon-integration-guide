@@ -43,6 +43,7 @@ interface StringPosition {
     marginMode: string;
     leverage: string;
     liquidationPrice: string;
+    expiry: string; // delivery futures only
 }
 
 /**
@@ -77,7 +78,7 @@ export function formatMarketInfo(market: MarketInterface, ticker: Ticker, levera
     const lowestTier = leverageTiers[market.symbol][0];
     const rows = [
         `Type: ${type}`,
-        market.expiryDatetime ? `Expiry: ${formatDate(getMarketExpiry(market))}` : '',
+        market.expiryDatetime ? `Expiry/Delivery date: ${formatDate(getMarketExpiry(market))}` : '',
         `Settled in: ${market.settle}`,
         `Max leverage: ${lowestTier.maxLeverage}x${lowestTier.maxNotional ? ` (size < ${lowestTier.maxNotional} ${market.settle})` : ''}`,
         `Last price: ${ticker.last} ${market.quote}`,
@@ -152,7 +153,7 @@ export function formatOrderSingleLine(order: Order, market?: MarketInterface, sh
     const quoteSymbol = market ? ` ${market.quote}` : '';
 
     let parts = [
-        `${market ? `${titleCase(getMarketType(market))} ` : ''}`,
+        // `${market ? `${titleCase(getMarketType(market))} ` : ''}`,
         `${titleCase(type)}`,
         `${reduceOnly !== 'N/A' ? ` ${reduceOnly}` : ''}`,
         ` order`,
@@ -257,6 +258,7 @@ function stringifyPosition(position: Position, market?: MarketInterface): String
         marginMode: position.marginMode || 'N/A',
         leverage: position.leverage !== undefined ? position.leverage.toString() : 'N/A',
         liquidationPrice: position.liquidationPrice !== undefined ? position.liquidationPrice.toString() + quoteSymbol : 'N/A',
+        expiry: market?.expiryDatetime ? formatDate(getMarketExpiry(market)) : 'N/A',
     };
 }
 
@@ -282,6 +284,7 @@ export function formatPositionMultiLine(position: Position, market?: MarketInter
         marginMode,
         leverage,
         liquidationPrice,
+        expiry,
     } = stringifyPosition(position, market);
 
     const rows = [
@@ -298,6 +301,7 @@ export function formatPositionMultiLine(position: Position, market?: MarketInter
         `${position.marginMode === 'isolated' ? `${prefix}Collateral (margin + PnL): ${collateral}` : ''}`,
         `${prefix}Margin Mode: ${marginMode}`,
         `${prefix}Leverage: ${leverage}`,
+        `${expiry !== 'N/A' ? `${prefix}Expiry/Delivery date: ${expiry}` : ''}`,
         `${prefix}Contracts: ${contracts}`,
         `${prefix}Contract Size: ${contractSize}`,
         `${prefix}Created: ${timestamp}`,

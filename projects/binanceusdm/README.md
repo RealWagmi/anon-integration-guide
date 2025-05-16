@@ -1,6 +1,6 @@
 # Binance USDM Futures Trading
 
-Integration between HeyAnon.ai and Binance USDM Futures trading.
+Integration between HeyAnon.ai and Binance USDM Futures trading, supporting both perpetuals and delivery futures.
 
 ## Common Tasks
 
@@ -15,6 +15,7 @@ Integration between HeyAnon.ai and Binance USDM Futures trading.
 - Show all my positions on @binanceusdm
 - Show my BTC/USDT position on @binanceusdm
 - Show all of my BTC positions on @binanceusdm
+- Show all of my delivery positions on @binanceusdm
 
 ### Info on open orders
 
@@ -35,6 +36,11 @@ Integration between HeyAnon.ai and Binance USDM Futures trading.
 - 100x long 1 BTC with USDT on @binanceusdm
 - Long 1 BTC at limit price of 40,000 USDT on @binanceusdm
 - Short BTC with limit price of 150,000 USDT on @binanceusdm
+
+By default, the agent assumes you want to trade on perpetual markets. To use a delivery market instead, ask for it:
+
+- Long 1 BTC with USDT on the June 2025 delivery market
+- Long 1 BTC on USDT:USDT-250926
 
 **IMPORTANT:** If you specify a leverage (5x, 10x, etc) or a margin mode (cross, isolated) for your order, the specified leverage and margin mode will be applied to the whole position, and not just to the amount you are adding/removing. This is because on Binance the leverage and margin mode are applied at the market level, and not at the order level. For more details, see the [Leverage and margin mode](#changing-leverage-and-margin-mode) section.
 
@@ -81,7 +87,7 @@ Please note that:
 
 1. The trailing percent must be a number between 0.1% and 10%.
 2. The trailing stop order will be triggered as a market order once the price moves by the specified percentage in the desired direction.
-3. Contrary to spot, on futures you cannot specify whether the order is SL or TP.
+3. Contrary to spot, on futures you cannot specify whether the trailing stop order is SL or TP.
 
 ### Close positions
 
@@ -160,6 +166,7 @@ pnpm ask-binance "Show me the price of BTC/USDT:USDT" --debug-llm
 - [Binance fAPI orders](https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api)
 - [Binance Futures FAQ](https://www.binance.com/en/blog/futures/10-most-frequently-asked-questions-about-binance-futures-421499824684903916)
 - [Binance max leverage table](https://www.binance.com/en/futures/trading-rules/perpetual/leverage-margin)
+- [Binance FAQ on delivery futures](https://www.binance.com/en/square/post/43566)
 - [CCXT leverage tiers](https://docs.ccxt.com/#/README?id=leverage-tiers)
 - [CCXT Order structure](https://docs.ccxt.com/#/?id=order-structure)
 - [CCXT Querying orders](https://docs.ccxt.com/#/README?id=querying-orders)

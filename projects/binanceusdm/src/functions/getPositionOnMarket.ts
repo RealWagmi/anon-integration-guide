@@ -24,7 +24,7 @@ export async function getPositionOnMarket({ market }: Props, { exchange, notify 
     // Get position
     const position = await getUserOpenPositionBySymbol(exchange, market);
     if (!position) {
-        return toResult(`No position found on ${market}`, true);
+        return toResult(`No position found on ${market}`); // Not an error, just no position, so the LLM might try with a different market
     }
 
     return toResult(formatPositionMultiLine(position, marketObject));
