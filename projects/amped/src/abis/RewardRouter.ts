@@ -45,5 +45,24 @@ export const RewardRouter = [
     outputs: [{ type: 'uint256' }],
     stateMutability: 'nonpayable',
     type: 'function'
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "StakeGlp",
+    "type": "event"
   }
 ] as const satisfies Abi; 

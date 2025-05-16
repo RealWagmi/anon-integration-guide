@@ -1,14 +1,26 @@
 import { CHAIN_IDS, CONTRACT_ADDRESSES, NETWORKS, SupportedNetwork } from './constants.js';
 import { type Address } from 'viem';
+// Re-export token utilities from the new tokenList.ts implementation
+export { 
+    getTokenAddress, 
+    getTokenDecimals, 
+    getTokenSymbol, 
+    getSupportedTokens,
+    isTokenSupported,
+    type TokenSymbol 
+} from './utils/tokenList.js';
 
-// Define supported token symbols across all networks
+// Define supported token symbols across all networks (legacy, use TokenSymbol instead)
 export type SupportedToken =
     // Sonic
     | 'S'
     | 'WS'
     | 'WETH' // Note: WETH exists on both, but might have different addresses
     | 'ANON'
+    | 'Anon' // Added to match tokenList
     | 'USDC' // Note: USDC exists on both, but might have different addresses
+    | 'STS'  // Added STS token
+    | 'scUSD' // Added scUSD token
     // Removed EURC
     // Base
     | 'ETH' // Base native token
@@ -17,8 +29,8 @@ export type SupportedToken =
     | 'CBBTC'
     | 'VIRTUAL';
 
-// Helper function to get token address for a specific network
-export function getTokenAddress(symbol: SupportedToken, network: SupportedNetwork): Address {
+// Legacy function - use imported getTokenAddress from utils/tokens.js instead
+export function getTokenAddress_legacy(symbol: SupportedToken, network: SupportedNetwork): Address {
     const networkAddresses = CONTRACT_ADDRESSES[network.toLowerCase()]; // Use lowercase network key
     if (!networkAddresses) {
         throw new Error(`Unsupported network: ${network}`);
@@ -52,6 +64,12 @@ export function getTokenAddress(symbol: SupportedToken, network: SupportedNetwor
                 break;
             case 'VIRTUAL': 
                 address = networkAddresses.VIRTUAL; // Base specific
+                break;
+            case 'STS':
+                address = networkAddresses.STS; // Sonic specific
+                break;
+            case 'SCUSD': // For the uppercase conversion of 'scUSD'
+                address = networkAddresses.SCUSD; // Sonic specific
                 break;
         }
     }

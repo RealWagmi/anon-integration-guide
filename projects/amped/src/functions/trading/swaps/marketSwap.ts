@@ -8,8 +8,7 @@ import { VaultPriceFeed } from '../../../abis/VaultPriceFeed.js';
 import { getUserTokenBalances } from '../../liquidity/getUserTokenBalances.js';
 import { getSwapsLiquidity } from './getSwapsLiquidity.js';
 import { decodeEventLog } from 'viem';
-
-type TokenSymbol = 'S' | 'WS' | 'WETH' | 'ANON' | 'USDC' | 'EURC';
+import { getTokenAddress, type TokenSymbol } from '../../../utils/tokens.js';
 
 interface Props {
     chainName: (typeof NETWORKS)[keyof typeof NETWORKS];
@@ -34,25 +33,6 @@ interface SwapResult {
         executionPrice: string;
         minAmountOut: string;
     };
-}
-
-function getTokenAddress(symbol: TokenSymbol): Address {
-    switch (symbol) {
-        case 'S':
-            return CONTRACT_ADDRESSES[NETWORKS.SONIC].NATIVE_TOKEN;
-        case 'WS':
-            return CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN;
-        case 'WETH':
-            return CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH;
-        case 'ANON':
-            return CONTRACT_ADDRESSES[NETWORKS.SONIC].ANON;
-        case 'USDC':
-            return CONTRACT_ADDRESSES[NETWORKS.SONIC].USDC;
-        case 'EURC':
-            return CONTRACT_ADDRESSES[NETWORKS.SONIC].EURC;
-        default:
-            throw new Error(`Unsupported token symbol: ${symbol}`);
-    }
 }
 
 /**
@@ -84,12 +64,19 @@ export async function marketSwap(
             return toResult('Invalid slippage value. Must be between 0 and 10000 basis points', true);
         }
 
-        // Get token addresses
-        const tokenInAddress = getTokenAddress(tokenIn);
-        const tokenOutAddress = getTokenAddress(tokenOut);
+        // Get token addresses from token symbols
+        const networkName = chainName.toLowerCase();
+        let tokenInAddressResolved: Address;
+        let tokenOutAddressResolved: Address;
+        try {
+            tokenInAddressResolved = getTokenAddress(tokenIn, networkName);
+            tokenOutAddressResolved = getTokenAddress(tokenOut, networkName);
+        } catch (error) {
+            return toResult(`Token error: ${error.message}`, true);
+        }
 
         // Check if tokens are the same
-        if (tokenInAddress === tokenOutAddress) {
+        if (tokenInAddressResolved === tokenOutAddressResolved) {
             return toResult('Cannot swap token for itself', true);
         }
 
@@ -106,6 +93,16 @@ export async function marketSwap(
         if (!tokenInInfo) {
             return toResult(`Token ${tokenIn} not found in user's balance`, true);
         }
+        // Get tokenOut info for its decimals
+        const tokenOutInfo = balanceData.tokens.find((t: any) => t.symbol === tokenOut);
+        if (!tokenOutInfo) {
+            // This case might not be strictly necessary if tokenOut isn't held, 
+            // but decimals are needed. Consider fetching token info separately if not in balances.
+            // For now, assume it might be found or we need a fallback/error.
+            // A robust way would be to have a separate get token info utility.
+            // However, getUserTokenBalances should ideally return all relevant tokens from the token list.
+            return toResult(`Token ${tokenOut} info (for decimals) not found. Ensure it's in the token list used by getUserTokenBalances.`, true);
+        }
 
         // Parse amount with safe conversion
         const amountInValue = parseFloat(amountIn);
@@ -117,12 +114,20 @@ export async function marketSwap(
         const amountInWei = parseUnits(amountIn, tokenInInfo.decimals);
 
         // Check user's balance
-        const userBalance = BigInt(tokenInInfo.balance);
-        if (userBalance < amountInWei) {
-            return toResult(
-                `Insufficient ${tokenIn} balance. Required: ${amountIn}, Available: ${formatUnits(userBalance, tokenInInfo.decimals)}`,
-                true,
-            );
+        try {
+            // Safely convert the balance to a BigInt by first multiplying to get rid of decimals
+            const userBalanceNum = parseFloat(tokenInInfo.balance);
+            const decimals = tokenInInfo.decimals;
+            const userBalanceWei = parseUnits(tokenInInfo.balance, decimals);
+            
+            if (userBalanceWei < amountInWei) {
+                return toResult(
+                    `Insufficient ${tokenIn} balance. Required: ${amountIn}, Available: ${tokenInInfo.balance}`,
+                    true,
+                );
+            }
+        } catch (error) {
+            return toResult(`ERROR: Failed to execute swap: ${error.message}`, true);
         }
 
         // Check available liquidity
@@ -139,19 +144,27 @@ export async function marketSwap(
 
         const provider = getProvider(chainId);
 
+        // Determine the correct addresses for price fetching
+        const tokenInPriceFeedAddress = tokenIn === 'S' 
+            ? CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN 
+            : tokenInAddressResolved;
+        const tokenOutPriceFeedAddress = tokenOut === 'S' 
+            ? CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN 
+            : tokenOutAddressResolved;
+
         // Get token prices
         const [tokenInPrice, tokenOutPrice] = await Promise.all([
             provider.readContract({
                 address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT_PRICE_FEED,
                 abi: VaultPriceFeed,
                 functionName: 'getPrice',
-                args: [tokenInAddress, false, true, true],
+                args: [tokenInPriceFeedAddress, false, true, true], // Use potentially wrapped address
             }) as Promise<bigint>,
             provider.readContract({
                 address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT_PRICE_FEED,
                 abi: VaultPriceFeed,
                 functionName: 'getPrice',
-                args: [tokenOutAddress, false, true, true],
+                args: [tokenOutPriceFeedAddress, false, true, true], // Use potentially wrapped address
             }) as Promise<bigint>,
         ]);
 
@@ -161,16 +174,31 @@ export async function marketSwap(
 
         // Calculate expected output with safe conversion
         const amountInUsd = (amountInWei * tokenInPrice) / BigInt(10 ** tokenInInfo.decimals);
-        const expectedAmountOut = (amountInUsd * BigInt(10 ** 18)) / tokenOutPrice;
-        const minAmountOut = (expectedAmountOut * BigInt(10000 - slippageBps)) / BigInt(10000);
+        const expectedAmountOut_normalized18 = (amountInUsd * BigInt(10 ** 18)) / tokenOutPrice; // Price is likely 18-decimal based
+        const minAmountOut_normalized18 = (expectedAmountOut_normalized18 * BigInt(10000 - slippageBps)) / BigInt(10000);
+        
+        // Convert minAmountOut to tokenOut's actual decimals
+        const minAmountOut_actualDecimals = (minAmountOut_normalized18 * BigInt(10 ** tokenOutInfo.decimals)) / BigInt(10 ** 18);
 
         // Calculate price impact
-        const availableLiquidity = BigInt(tokenOutLiquidity.availableAmount);
-        const priceImpact = ((expectedAmountOut * BigInt(10000)) / availableLiquidity).toString();
+        let priceImpactBps = BigInt(0); // Changed to BigInt and BPS for clarity
+        try {
+            // availableAmount is a string representing float, parseUnits needs its actual decimals
+            const availableLiquidity_actualUnits = parseUnits(tokenOutLiquidity.availableAmount, tokenOutInfo.decimals);
+            
+            if (availableLiquidity_actualUnits > BigInt(0)) {
+                // To calculate price impact, compare expected out (in actual units) vs available liquidity (in actual units)
+                const expectedAmountOut_actualUnits = (expectedAmountOut_normalized18 * BigInt(10 ** tokenOutInfo.decimals)) / BigInt(10 ** 18);
+                priceImpactBps = (expectedAmountOut_actualUnits * BigInt(10000)) / availableLiquidity_actualUnits;
+            }
+        } catch (error) {
+            await notify(`Warning: Could not calculate price impact: ${error.message}`);
+            priceImpactBps = BigInt(0);
+        }
 
         // Warn if price impact is high
-        if (Number(priceImpact) > 100) {
-            await notify(`Warning: High price impact (${(Number(priceImpact) / 100).toFixed(2)}%). Consider reducing the amount.`);
+        if (priceImpactBps > BigInt(100)) { // 100 bps = 1%
+            await notify(`Warning: High price impact (${formatUnits(priceImpactBps, 2)}%). Consider reducing the amount.`);
         }
 
         // Prepare transactions
@@ -182,7 +210,7 @@ export async function marketSwap(
             await checkToApprove({
                 args: {
                     account,
-                    target: tokenInAddress,
+                    target: tokenInAddressResolved, 
                     spender: CONTRACT_ADDRESSES[NETWORKS.SONIC].ROUTER,
                     amount: amountInWei,
                 },
@@ -192,17 +220,30 @@ export async function marketSwap(
         }
 
         // Add swap transaction
+        const path = tokenIn === 'S' 
+            ? [CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN, tokenOutAddressResolved] 
+            : tokenOut === 'S' 
+                ? [tokenInAddressResolved, CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN] 
+                : [tokenInAddressResolved, tokenOutAddressResolved];
+
+        const selectedFunctionName = tokenIn === 'S' 
+            ? 'swapETHToTokens' 
+            : tokenOut === 'S' 
+                ? 'swapTokensToETH' 
+                : 'swap'; // Use 'swap' for generic token-to-token as per Router ABI
+
+        let swapArgs: any[];
+        if (selectedFunctionName === 'swapETHToTokens') {
+            swapArgs = [path, minAmountOut_actualDecimals, account]; // args: _path, _minOut, _receiver
+        } else {
+            // For swapTokensToETH and swap (token-to-token)
+            swapArgs = [path, amountInWei, minAmountOut_actualDecimals, account]; // args: _path, _amountIn, _minOut, _receiver
+        }
+
         const swapData = encodeFunctionData({
             abi: Router,
-            functionName: tokenIn === 'S' ? 'swapETHToTokens' : tokenOut === 'S' ? 'swapTokensToETH' : 'swapTokensToTokens',
-            args: [
-                tokenIn === 'S' ? [CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN, tokenOutAddress] : 
-                tokenOut === 'S' ? [tokenInAddress, CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN] :
-                [tokenInAddress, tokenOutAddress],
-                amountInWei,
-                minAmountOut,
-                account,
-            ],
+            functionName: selectedFunctionName,
+            args: swapArgs,
         });
 
         transactions.push({
@@ -239,12 +280,12 @@ export async function marketSwap(
                         tokenIn,
                         tokenOut,
                         amountIn: formatUnits(amountInWei, tokenInInfo.decimals),
-                        amountOut: formatUnits(minAmountOut, 18),
+                        amountOut: formatUnits(minAmountOut_actualDecimals, tokenOutInfo.decimals),
                         amountInUsd: formatUnits(amountInUsd, 30),
-                        amountOutUsd: formatUnits((minAmountOut * tokenOutPrice) / BigInt(1e18), 30),
-                        priceImpact: (Number(priceImpact) / 100).toFixed(4),
+                        amountOutUsd: formatUnits((minAmountOut_actualDecimals * tokenOutPrice) / BigInt(10 ** tokenOutInfo.decimals), 30),
+                        priceImpact: formatUnits(priceImpactBps, 2),
                         executionPrice: formatUnits((tokenInPrice * BigInt(1e18)) / tokenOutPrice, 18),
-                        minAmountOut: formatUnits(minAmountOut, 18),
+                        minAmountOut: formatUnits(minAmountOut_actualDecimals, tokenOutInfo.decimals),
                         warning: 'Could not parse Swap event from transaction receipt',
                     },
                 } as SwapResult),
@@ -284,9 +325,9 @@ export async function marketSwap(
                     amountOut: formatUnits(decodedEvent.args.amountOutAfterFees, 18),
                     amountInUsd: formatUnits(amountInUsd, 30),
                     amountOutUsd: formatUnits((decodedEvent.args.amountOutAfterFees * tokenOutPrice) / BigInt(1e18), 30),
-                    priceImpact: (Number(priceImpact) / 100).toFixed(4),
+                    priceImpact: formatUnits(priceImpactBps, 2),
                     executionPrice: formatUnits((tokenInPrice * BigInt(1e18)) / tokenOutPrice, 18),
-                    minAmountOut: formatUnits(minAmountOut, 18),
+                    minAmountOut: formatUnits(minAmountOut_actualDecimals, tokenOutInfo.decimals),
                 },
             } as SwapResult),
         );

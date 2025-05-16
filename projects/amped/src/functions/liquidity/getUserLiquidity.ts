@@ -1,6 +1,6 @@
 import { formatUnits, Address, getContract, PublicClient, Chain, Transport } from 'viem';
 import { FunctionReturn, FunctionOptions, toResult, getChainFromName } from '@heyanon/sdk';
-import { CONTRACT_ADDRESSES, NETWORKS } from '../../constants.js';
+import { CONTRACT_ADDRESSES, NETWORKS, LowercaseChainName } from '../../constants.js';
 import { GlpManager } from '../../abis/GlpManager.js';
 import { ERC20 } from '../../abis/ERC20.js';
 import { Vester } from '../../abis/Vester.js';
@@ -11,7 +11,7 @@ import { Vester } from '../../abis/Vester.js';
  * @property {string} account - The account address to check
  */
 export interface UserLiquidityProps {
-    chainName: (typeof NETWORKS)[keyof typeof NETWORKS];
+    chainName: LowercaseChainName;
     account: Address;
 }
 
@@ -68,7 +68,7 @@ export async function getUserLiquidity({ chainName, account }: UserLiquidityProp
 
         // Get fsALP balance
         const balance = await provider.readContract({
-            address: CONTRACT_ADDRESSES[NETWORKS.SONIC].FS_ALP,
+            address: CONTRACT_ADDRESSES[chainName].FS_ALP,
             abi: ERC20,
             functionName: 'balanceOf',
             args: [account],
@@ -76,7 +76,7 @@ export async function getUserLiquidity({ chainName, account }: UserLiquidityProp
 
         // Get ALP price
         const alpPrice = await provider.readContract({
-            address: CONTRACT_ADDRESSES[NETWORKS.SONIC].GLP_MANAGER,
+            address: CONTRACT_ADDRESSES[chainName].GLP_MANAGER,
             abi: GlpManager,
             functionName: 'getPrice',
             args: [false],
@@ -84,7 +84,7 @@ export async function getUserLiquidity({ chainName, account }: UserLiquidityProp
 
         // Get reserved amount in vesting
         const reservedAmount = await provider.readContract({
-            address: CONTRACT_ADDRESSES[NETWORKS.SONIC].ALP_VESTER,
+            address: CONTRACT_ADDRESSES[chainName].ALP_VESTER,
             abi: Vester,
             functionName: 'pairAmounts',
             args: [account],

@@ -74,6 +74,8 @@ export const CONTRACT_ADDRESSES: Record<string, Record<string, Address>> = {
         GLP_TOKEN: '0x6fbaeE8bEf2e8f5c34A08BdD4A4AB777Bd3f6764' as Address,
         REWARD_ROUTER: '0xE72A2d5B3b09c88D4E8Cc60e74BD438d7168e80F' as Address,
         REWARD_DISTRIBUTOR: '0xfcb51C49cE6A23d370797a7E3e601046b43B6172' as Address,
+        ALP_REWARD_DISTRIBUTOR: '0x2a7663A3e6961dC43bEcbF752DcC9798C1c22a6A' as Address,
+        ALP_FEE_REWARD_DISTRIBUTOR: '0xb6600B4328e417d21a7CfbAa11758F57A0E5A3E6' as Address,
         REWARD_TRACKER: '0x765d548229169E14b397c8c87FF7E8a64f36F469' as Address,
         VAULT: '0x5B8caae7cC6Ea61fb96Fd251C4Bc13e48749C7Da' as Address,
         NATIVE_TOKEN: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE' as Address,
@@ -84,8 +86,10 @@ export const CONTRACT_ADDRESSES: Record<string, Record<string, Address>> = {
         ROUTER: '0x451D212c080267feF47Fd777002C9186e61C5a2C' as Address,
         POSITION_ROUTER: '0x69E44517D74709d552A69046585bef02d8c34D5B' as Address,
         VAULT_PRICE_FEED: '0x51B9fcDF00423D597066A8a041ab38152a74Fe96' as Address,
-        FS_ALP: '0xfb0e5aabfac2f946d6f45fcd4303ff721a4e3237' as Address,
-        ALP_VESTER: '0x931d5560D236e0780FD872331e28D7598E0DeDcc' as Address
+        FS_ALP: '0xB895e3DBFB37A4Cc6b4FB50B1cf903608e942FF9' as Address,
+        ALP_VESTER: '0x931d5560D236e0780FD872331e28D7598E0DeDcc' as Address,
+        STS: '0xe5da20f15420ad15de0fa650600afc998bbe3955' as Address,
+        SCUSD: '0xd3DCe716f3eF535C5Ff8d041c1A41C3bd89b97aE' as Address
     },
     [NETWORKS.BASE]: baseContracts
 } as const;
@@ -94,7 +98,6 @@ export const CHAIN_CONFIG: Record<typeof NETWORKS[keyof typeof NETWORKS], Chain>
     [NETWORKS.SONIC]: {
         id: CHAIN_IDS.sonic,
         name: NETWORKS.SONIC,
-        network: NETWORKS.SONIC,
         nativeCurrency: {
             name: 'Sonic',
             symbol: 'S',
@@ -115,7 +118,6 @@ export const CHAIN_CONFIG: Record<typeof NETWORKS[keyof typeof NETWORKS], Chain>
     [NETWORKS.BASE]: {
         id: CHAIN_IDS.base,
         name: NETWORKS.BASE,
-        network: NETWORKS.BASE,
         nativeCurrency: {
             name: 'Ethereum',
             symbol: 'ETH',
@@ -137,3 +139,6 @@ export const CHAIN_CONFIG: Record<typeof NETWORKS[keyof typeof NETWORKS], Chain>
 
 // Helper type to get network names
 export type SupportedNetwork = typeof NETWORKS[keyof typeof NETWORKS];
+
+// Explicit lowercase chain name type for standardization
+export type LowercaseChainName = 'sonic' | 'base';

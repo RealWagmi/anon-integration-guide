@@ -1,5 +1,5 @@
 import { Address } from 'viem';
-import { NETWORKS } from '../../../constants.js';
+import { NETWORKS } from '../../constants.js';
 
 /**
  * Base properties for liquidity operations

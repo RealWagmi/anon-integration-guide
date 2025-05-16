@@ -1,18 +1,19 @@
 import { CONTRACT_ADDRESSES, NETWORKS } from '../../../constants.js';
 import { FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { getPosition } from './getPosition.js';
+import { getTokenSymbol, type TokenSymbol as UtilTokenSymbol } from '../../../utils/tokens.js';
 import { getChainFromName } from '../../../utils.js';
 
 interface Props {
     chainName: (typeof NETWORKS)[keyof typeof NETWORKS];
     account: `0x${string}`;
-    isLong: boolean;
 }
 
-interface Position {
-    size: string;
-    collateral: string;
-    collateralUsd: string;
+// This interface should match the structure of `position` object returned by `getPosition`
+interface PositionFromGetPosition {
+    size: string; 
+    collateralAmount: string; // Amount of collateral token
+    collateralUsd: string; // USD value of collateral
     averagePrice: string;
     currentPrice: string;
     entryFundingRate: string;
@@ -29,7 +30,7 @@ interface OpenPosition {
     indexToken: `0x${string}`;
     collateralToken: `0x${string}`;
     isLong: boolean;
-    position: Position;
+    position: PositionFromGetPosition;
     tokenSymbol: string;
     collateralSymbol: string;
 }
@@ -42,40 +43,22 @@ interface OpenPositionsResponse {
     totalCollateralValue: string;
 }
 
-function getTokenSymbol(address: `0x${string}`): string {
-    const addressLower = address.toLowerCase();
-    switch (addressLower) {
-        case CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN.toLowerCase():
-            return 'S';
-        case CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH.toLowerCase():
-            return 'WETH';
-        case CONTRACT_ADDRESSES[NETWORKS.SONIC].ANON.toLowerCase():
-            return 'ANON';
-        case CONTRACT_ADDRESSES[NETWORKS.SONIC].USDC.toLowerCase():
-            return 'USDC';
-        case CONTRACT_ADDRESSES[NETWORKS.SONIC].EURC.toLowerCase():
-            return 'EURC';
-        default:
-            return 'UNKNOWN';
-    }
-}
-
 /**
- * Gets all open perpetual trading positions for an account
+ * Gets all open perpetual trading positions (long and short) for an account
  * @param props - The function parameters
  * @param props.chainName - The name of the chain (must be "sonic")
  * @param props.account - The account address to check positions for
- * @param props.isLong - Whether to check long positions (false for short positions)
  * @param options - System tools for blockchain interactions
  * @returns Array of all open positions with their details
  */
-export async function getAllOpenPositions({ chainName, account, isLong }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+export async function getAllOpenPositions({ chainName, account }: Props, options: FunctionOptions): Promise<FunctionReturn> {
     try {
         // Validate chain using SDK helper
         const chainId = getChainFromName(chainName);
         if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
-        if (chainName !== NETWORKS.SONIC) {
-            return toResult('This function is only supported on Sonic chain', true);
+        const networkName = chainName.toLowerCase(); 
+        if (networkName !== NETWORKS.SONIC && networkName !== NETWORKS.BASE) {
+            return toResult('This function currently supports Sonic or Base chain for symbol resolution', true);
         }
 
         // Validate account
@@ -83,19 +66,20 @@ export async function getAllOpenPositions({ chainName, account, isLong }: Props,
             return toResult('Invalid account address', true);
         }
 
-        await options.notify('Checking all positions...');
+        await options.notify('Checking all positions (long and short)...');
 
         // Define valid index tokens for positions
         const indexTokens = [
             CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN,
             CONTRACT_ADDRESSES[NETWORKS.SONIC].WETH,
-            CONTRACT_ADDRESSES[NETWORKS.SONIC].ANON
+            CONTRACT_ADDRESSES[NETWORKS.SONIC].ANON,
+            CONTRACT_ADDRESSES[NETWORKS.SONIC].STS
         ] as const;
 
         // Define possible collateral tokens for short positions (only stablecoins)
         const shortCollateralTokens = [
             CONTRACT_ADDRESSES[NETWORKS.SONIC].USDC,
-            CONTRACT_ADDRESSES[NETWORKS.SONIC].EURC
+            CONTRACT_ADDRESSES[NETWORKS.SONIC].SCUSD
         ] as const;
 
         const openPositions: OpenPosition[] = [];
@@ -103,57 +87,60 @@ export async function getAllOpenPositions({ chainName, account, isLong }: Props,
         let totalUnrealizedPnl = 0;
         let totalCollateralValue = 0;
 
-        // Check each index token
-        for (const indexToken of indexTokens) {
-            const tokenSymbol = getTokenSymbol(indexToken);
+        // Iterate for both isLong true (long positions) and isLong false (short positions)
+        for (const isLongValue of [true, false]) {
             await options.notify(
-                `\nChecking ${isLong ? 'long' : 'short'} positions for ${tokenSymbol}...`,
+                `\n--- Checking ${isLongValue ? 'LONG' : 'SHORT'} positions ---`,
             );
+            // Check each index token
+            for (const indexToken of indexTokens) {
+                const currentTokenSymbol = getTokenSymbol(indexToken, networkName) || 'UNKNOWN_INDEX';
+                
+                const collateralTokensToCheck = isLongValue ? [indexToken] : shortCollateralTokens;
 
-            // For long positions, only check when collateral matches index token
-            // For short positions, check USDC and EURC as collateral
-            const collateralTokensToCheck = isLong ? [indexToken] : shortCollateralTokens;
+                for (const collateralToken of collateralTokensToCheck) {
+                    const currentCollateralSymbol = getTokenSymbol(collateralToken as `0x${string}`, networkName) || 'UNKNOWN_COLLATERAL';
+                    await options.notify(
+                        `Checking ${currentTokenSymbol}/${currentCollateralSymbol} (${isLongValue ? 'long' : 'short'})`
+                    );
+                    const positionResult = await getPosition(
+                        {
+                            chainName,
+                            account,
+                            indexToken: indexToken as `0x${string}`,
+                            collateralToken: collateralToken as `0x${string}`,
+                            isLong: isLongValue, // Pass the current isLongValue
+                        },
+                        options,
+                    );
 
-            for (const collateralToken of collateralTokensToCheck) {
-                const positionResult = await getPosition(
-                    {
-                        chainName,
-                        account,
-                        indexToken: indexToken as `0x${string}`,
-                        collateralToken: collateralToken as `0x${string}`,
-                        isLong,
-                    },
-                    options,
-                );
+                    if (!positionResult.success || !positionResult.data) {
+                        continue;
+                    }
 
-                if (!positionResult.success || !positionResult.data) {
-                    continue;
-                }
+                    const positionData = JSON.parse(positionResult.data);
+                    if (positionData.success && positionData.position && Number(positionData.position.size) > 0) {
+                        const position = positionData.position as PositionFromGetPosition;
+                        
+                        openPositions.push({
+                            indexToken: indexToken as `0x${string}`,
+                            collateralToken: collateralToken as `0x${string}`,
+                            isLong: isLongValue, // Store whether it was a long or short position
+                            position,
+                            tokenSymbol: currentTokenSymbol,
+                            collateralSymbol: currentCollateralSymbol,
+                        });
 
-                const positionData = JSON.parse(positionResult.data);
-                if (positionData.success && positionData.position && Number(positionData.position.size) > 0) {
-                    const position = positionData.position as Position;
-                    
-                    // Add position to array with token symbols
-                    openPositions.push({
-                        indexToken: indexToken as `0x${string}`,
-                        collateralToken: collateralToken as `0x${string}`,
-                        isLong,
-                        position,
-                        tokenSymbol: getTokenSymbol(indexToken as `0x${string}`),
-                        collateralSymbol: getTokenSymbol(collateralToken as `0x${string}`),
-                    });
-
-                    // Update totals with safe numeric conversion
-                    totalPositionValue += Number(position.size);
-                    totalUnrealizedPnl += Number(position.unrealizedPnlUsd);
-                    totalCollateralValue += Number(position.collateralUsd);
+                        totalPositionValue += Number(position.size);
+                        totalUnrealizedPnl += Number(position.unrealizedPnlUsd);
+                        totalCollateralValue += Number(position.collateralUsd);
+                    }
                 }
             }
         }
 
         if (openPositions.length === 0) {
-            await options.notify(`\nNo active ${isLong ? 'long' : 'short'} positions found`);
+            await options.notify(`\nNo active long or short positions found`);
             const response: OpenPositionsResponse = {
                 success: true,
                 positions: [],
@@ -164,15 +151,16 @@ export async function getAllOpenPositions({ chainName, account, isLong }: Props,
             return toResult(JSON.stringify(response));
         }
 
-        await options.notify(`\nFound ${openPositions.length} active ${isLong ? 'long' : 'short'} position(s):`);
+        await options.notify(`\nFound ${openPositions.length} active position(s) in total (long and short):`);
         
         // Log position summaries
         for (const [index, pos] of openPositions.entries()) {
-            await options.notify(`\n${index + 1}. Position Details:`);
+            await options.notify(`\n${index + 1}. Position Details (${pos.isLong ? 'LONG' : 'SHORT'}):`);
             await options.notify(`Index Token: ${pos.tokenSymbol}`);
             await options.notify(`Collateral Token: ${pos.collateralSymbol}`);
             await options.notify(`Size: ${pos.position.size} USD`);
-            await options.notify(`Collateral: ${pos.position.collateral} ${pos.collateralSymbol} (${pos.position.collateralUsd} USD)`);
+            // Use pos.position.collateralAmount for the token quantity
+            await options.notify(`Collateral: ${pos.position.collateralAmount} ${pos.collateralSymbol} (${pos.position.collateralUsd} USD)`);
             await options.notify(`Entry Price: ${pos.position.averagePrice} USD`);
             await options.notify(`Current Price: ${pos.position.currentPrice} USD`);
             await options.notify(`Leverage: ${pos.position.leverage}x`);

@@ -3,7 +3,8 @@ import { CONTRACT_ADDRESSES, NETWORKS } from '../../../constants.js';
 import { Vault } from '../../../abis/Vault.js';
 import { VaultPriceFeed } from '../../../abis/VaultPriceFeed.js';
 import { FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
-import { getChainFromName } from '../../../utils.js';
+import { getChainFromName, getTokenDecimals as sdkGetTokenDecimals, type TokenSymbol } from '../../../utils.js';
+import { getTokenSymbol } from '../../../utils/tokens.js';
 
 interface Props {
     chainName: (typeof NETWORKS)[keyof typeof NETWORKS];
@@ -15,7 +16,7 @@ interface Props {
 
 interface Position {
     size: string;
-    collateral: string;
+    collateralAmount: string;
     collateralUsd: string;
     averagePrice: string;
     currentPrice: string;
@@ -32,6 +33,8 @@ interface Position {
 interface PositionResponse {
     success: boolean;
     position: Position;
+    indexTokenAddress?: `0x${string}`;
+    collateralTokenAddress?: `0x${string}`;
 }
 
 /**
@@ -45,12 +48,13 @@ interface PositionResponse {
  * @param options - System tools for blockchain interactions
  * @returns Detailed information about the position including size, collateral, PnL, etc.
  */
-export async function getPosition({ chainName, account, indexToken, collateralToken, isLong }: Props, { notify, evm }: FunctionOptions): Promise<FunctionReturn> {
+export async function getPosition({ chainName, account, indexToken, collateralToken, isLong }: Props, { notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
     try {
+        const networkName = chainName.toLowerCase();
         // Validate chain using SDK helper
         const chainId = getChainFromName(chainName);
         if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
-        if (chainName !== NETWORKS.SONIC) {
+        if (networkName !== NETWORKS.SONIC) {
             return toResult('This function is only supported on Sonic chain', true);
         }
 
@@ -64,138 +68,144 @@ export async function getPosition({ chainName, account, indexToken, collateralTo
         }
 
         if (!collateralToken || collateralToken === '0x0000000000000000000000000000000000000000') {
-            return toResult('Invalid collateral token address', true);
+            return toResult('Invalid collateral token address (expected Wrapped Native for native collateral)', true);
         }
 
         await notify('Checking position...');
 
-        const provider = evm.getProvider(chainId);
+        const provider = getProvider(chainId);
 
         // Get raw position data
         await notify('Fetching position data...');
-        const position = await provider.readContract({
-            address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT,
+        const positionRaw = await provider.readContract({
+            address: CONTRACT_ADDRESSES[networkName].VAULT,
             abi: Vault,
             functionName: 'getPosition',
             args: [account, collateralToken, indexToken, isLong],
         }) as [bigint, bigint, bigint, bigint, bigint, bigint, boolean, bigint];
 
-        // Debug log
-        await notify('Raw position data:');
-        await notify(JSON.stringify(position.map(val => typeof val === 'bigint' ? val.toString() : val)));
+        await notify('Raw position data (size, collateralValueUsd, avgPrice, entryFunding, reserveAmount, realizedPnl, hasProfit, lastUpdated):');
+        await notify(JSON.stringify(positionRaw.map(val => typeof val === 'bigint' ? val.toString() : val)));
 
-        // Get current price with safe error handling
-        await notify('Fetching current price...');
-        const currentPrice = await provider.readContract({
-            address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT_PRICE_FEED,
+        await notify('Fetching current price (index token)...');
+        const currentPriceRaw = await provider.readContract({
+            address: CONTRACT_ADDRESSES[networkName].VAULT_PRICE_FEED,
             abi: VaultPriceFeed,
             functionName: 'getPrice',
             args: [indexToken, false, true, false],
         }) as bigint;
 
-        if (currentPrice === 0n) {
-            return toResult('Invalid price data: price is zero', true);
+        if (currentPriceRaw === 0n) {
+            return toResult('Invalid price data for index token: price is zero', true);
         }
 
-        // Get collateral token price
         await notify('Fetching collateral token price...');
-        const collateralPrice = await provider.readContract({
-            address: CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT_PRICE_FEED,
+        const collateralPriceRaw = await provider.readContract({
+            address: CONTRACT_ADDRESSES[networkName].VAULT_PRICE_FEED,
             abi: VaultPriceFeed,
             functionName: 'getPrice',
             args: [collateralToken, false, true, false],
         }) as bigint;
 
-        if (collateralPrice === 0n) {
-            return toResult('Invalid collateral price data: price is zero', true);
+        if (collateralPriceRaw === 0n && collateralToken.toLowerCase() !== CONTRACT_ADDRESSES[networkName].WRAPPED_NATIVE_TOKEN?.toLowerCase()) {
+            return toResult(`Invalid price data for collateral token ${collateralToken}: price is zero`, true);
         }
 
-        // Add type safety for position data
-        if (!position || position.length < 8) {
+        if (!positionRaw || positionRaw.length < 8) {
             return toResult('Invalid position data returned from contract', true);
         }
 
-        // Safely handle position values with destructuring and validation
-        const [size, collateral, avgPrice, entryFunding, reserveAmount, realizedPnl, hasProfit, lastUpdated] = position;
-        if (size === undefined || collateral === undefined || avgPrice === undefined || 
-            entryFunding === undefined || reserveAmount === undefined || realizedPnl === undefined) {
-            return toResult('Invalid position values returned from contract', true);
+        const [sizeUsd_raw, collateralUsd_raw, avgPrice_raw, entryFunding_raw, reserveAmount_raw, realizedPnl_raw, hasProfit_raw, lastUpdated_raw] = positionRaw;
+        
+        if ([sizeUsd_raw, collateralUsd_raw, avgPrice_raw, entryFunding_raw, reserveAmount_raw, realizedPnl_raw].some(val => val === undefined)) {
+            return toResult('Invalid position values (undefined) returned from contract', true);
         }
 
-        // Convert BigInt values to strings for calculations
-        const sizeStr = formatUnits(size, 30);
-        const collateralStr = formatUnits(collateral, 30);
-        const avgPriceStr = formatUnits(avgPrice, 30);
-        const currentPriceStr = formatUnits(currentPrice, 30);
-        const collateralPriceStr = formatUnits(collateralPrice, 30);
-        const realizedPnlStr = formatUnits(realizedPnl, 30);
+        const sizeUsdStr = formatUnits(sizeUsd_raw, 30);
+        const collateralUsdStr = formatUnits(collateralUsd_raw, 30);
+        const avgPriceStr = formatUnits(avgPrice_raw, 30);
+        const currentPriceStr = formatUnits(currentPriceRaw, 30);
+        const realizedPnlStr = formatUnits(realizedPnl_raw, 30);
 
-        // Calculate collateral in USD
-        const collateralUsd = (collateral * collateralPrice) / BigInt(1e30);
-        const collateralUsdStr = formatUnits(collateralUsd, 30);
+        // Calculate collateral token amount
+        let collateralTokenAmountStr = '0';
+        let collateralDecimals = 18;
+        if (collateralToken.toLowerCase() === CONTRACT_ADDRESSES[networkName].WETH?.toLowerCase()) {
+            collateralDecimals = 18;
+        } else if (collateralToken.toLowerCase() === CONTRACT_ADDRESSES[networkName].WRAPPED_NATIVE_TOKEN?.toLowerCase()) {
+            collateralDecimals = 18;
+        } else if (collateralToken.toLowerCase() === CONTRACT_ADDRESSES[networkName].USDC?.toLowerCase()) {
+            collateralDecimals = 6;
+        }
 
-        // Initialize position metrics
-        let unrealizedPnlUsd = '0';
-        let unrealizedPnlPercentage = '0';
-        let leverage = '0';
-        let liquidationPrice = '0';
+        if (collateralPriceRaw > 0n) {
+            const collateralAmountBigInt = (collateralUsd_raw * BigInt(10 ** collateralDecimals)) / collateralPriceRaw;
+            collateralTokenAmountStr = formatUnits(collateralAmountBigInt, collateralDecimals);
+        }
 
-        if (size > 0n) {
-            // Calculate PnL
-            const priceDelta = isLong ? currentPrice - avgPrice : avgPrice - currentPrice;
-            const unrealizedPnlBigInt = (size * priceDelta) / BigInt(1e30);
-            unrealizedPnlUsd = formatUnits(unrealizedPnlBigInt, 30);
+        let unrealizedPnlUsdStr = '0';
+        let unrealizedPnlPercentageStr = '0';
+        let leverageStr = '0';
+        let liquidationPriceStr = '0';
 
-            // Calculate percentage only if collateral is not zero
-            if (collateral > 0n) {
-                const collateralUsdBigInt = collateral * collateralPrice / BigInt(1e30);
-                if (collateralUsdBigInt > 0n) {
-                    const percentage = (unrealizedPnlBigInt * BigInt(100) * BigInt(1e30)) / collateralUsdBigInt;
-                    unrealizedPnlPercentage = formatUnits(percentage, 30);
+        if (sizeUsd_raw > 0n) {
+            const priceDelta_raw = isLong ? currentPriceRaw - avgPrice_raw : avgPrice_raw - currentPriceRaw;
+            
+            if (avgPrice_raw > 0n) {
+                const pnlBigInt = (sizeUsd_raw * priceDelta_raw) / avgPrice_raw;
+                unrealizedPnlUsdStr = formatUnits(pnlBigInt, 30);
+
+                if (collateralUsd_raw > 0n) {
+                    const percentage = (pnlBigInt * BigInt(100) * BigInt(10**30)) / collateralUsd_raw;
+                    unrealizedPnlPercentageStr = formatUnits(percentage, 30);
                 }
             }
 
-            // Calculate leverage
-            const sizeUsd = (size * currentPrice) / BigInt(1e30);
-            if (collateral > 0n) {
-                const leverageBigInt = (sizeUsd * BigInt(1e30)) / collateralUsd;
-                leverage = formatUnits(leverageBigInt, 30);
+            if (collateralUsd_raw > 0n) {
+                const leverageBigInt = (sizeUsd_raw * BigInt(10**30)) / collateralUsd_raw;
+                leverageStr = formatUnits(leverageBigInt, 30);
             }
-
-            // Calculate liquidation price
-            if (collateral > 0n) {
-                const leverageValue = Number(leverage);
-                if (leverageValue > 0) {
-                    const liquidationMultiplier = isLong 
-                        ? 1 - (1 / leverageValue)
-                        : 1 + (1 / leverageValue);
-                    const avgPriceNumber = Number(avgPriceStr);
-                    liquidationPrice = (avgPriceNumber * liquidationMultiplier).toString();
+        
+            const numericLeverage = parseFloat(leverageStr);
+            if (numericLeverage > 0) {
+                if (sizeUsd_raw > 0n) {
+                    const maintenanceMarginFraction = BigInt(8000);
+                    if (isLong) {
+                        const priceDropToLiquidate = (collateralUsd_raw * avgPrice_raw) / sizeUsd_raw;
+                        const liqPriceRaw = avgPrice_raw - priceDropToLiquidate;
+                        liquidationPriceStr = formatUnits(liqPriceRaw, 30);
+                    } else {
+                        const priceRiseToLiquidate = (collateralUsd_raw * avgPrice_raw) / sizeUsd_raw;
+                        const liqPriceRaw = avgPrice_raw + priceRiseToLiquidate;
+                        liquidationPriceStr = formatUnits(liqPriceRaw, 30);
+                    }
                 }
             }
         }
 
-        // Format position data
         const formattedPosition: Position = {
-            size: sizeStr,
-            collateral: collateralStr,
+            size: sizeUsdStr,
+            collateralAmount: collateralTokenAmountStr,
             collateralUsd: collateralUsdStr,
             averagePrice: avgPriceStr,
             currentPrice: currentPriceStr,
-            entryFundingRate: entryFunding.toString(),
-            hasProfit,
+            entryFundingRate: entryFunding_raw.toString(),
+            hasProfit: hasProfit_raw,
             realizedPnl: realizedPnlStr,
-            unrealizedPnlUsd,
-            unrealizedPnlPercentage,
-            leverage,
-            liquidationPrice,
-            lastUpdated: lastUpdated ? new Date(Number(lastUpdated) * 1000).toISOString() : null,
+            unrealizedPnlUsd: unrealizedPnlUsdStr,
+            unrealizedPnlPercentage: unrealizedPnlPercentageStr,
+            leverage: leverageStr,
+            liquidationPrice: liquidationPriceStr,
+            lastUpdated: lastUpdated_raw > 0n ? new Date(Number(lastUpdated_raw) * 1000).toISOString() : null,
         };
 
-        // Log formatted position details
-        await notify('\nPosition Details:');
+        await notify('\nPosition Details (after client-side calculation):');
         await notify(`Size: ${formattedPosition.size} USD`);
-        await notify(`Collateral: ${formattedPosition.collateral} (${formattedPosition.collateralUsd} USD)`);
+        
+        // Get collateral symbol for logging
+        const collateralSymbolForLog = getTokenSymbol(collateralToken, networkName) || 'UNKNOWN_TOKEN';
+
+        await notify(`Collateral: ${formattedPosition.collateralAmount} ${collateralSymbolForLog} (${formattedPosition.collateralUsd} USD)`);
         await notify(`Average Entry Price: ${formattedPosition.averagePrice} USD`);
         await notify(`Current Price: ${formattedPosition.currentPrice} USD`);
         await notify(`Leverage: ${formattedPosition.leverage}x`);
@@ -210,13 +220,17 @@ export async function getPosition({ chainName, account, indexToken, collateralTo
         const response: PositionResponse = {
             success: true,
             position: formattedPosition,
+            indexTokenAddress: indexToken,
+            collateralTokenAddress: collateralToken
         };
 
         return toResult(JSON.stringify(response));
     } catch (error) {
         if (error instanceof Error) {
+            await notify(`Error in getPosition: ${error.message}`);
             return toResult(`Failed to get position: ${error.message}`, true);
         }
+        await notify(`Unknown error in getPosition.`);
         return toResult('Failed to get position: Unknown error', true);
     }
 } 

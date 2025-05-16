@@ -9,7 +9,7 @@ import { formatUnits } from 'viem';
 interface Props {
     chainName: (typeof NETWORKS)[keyof typeof NETWORKS];
     account: Address;
-    publicClient: PublicClient;
+    publicClient?: PublicClient;
 }
 
 interface TokenInfo {
@@ -50,7 +50,7 @@ function safeToNumber(value: unknown): number {
  * @param props - The function parameters
  * @param props.chainName - The name of the chain (sonic or base)
  * @param props.account - The account address to check balances for
- * @param props.publicClient - Viem Public Client for interacting with the blockchain
+ * @param props.publicClient - Viem Public Client for interacting with the blockchain (optional)
  * @param options - System tools (like notify)
  * @returns Information about token balances and their USD values
  */
@@ -81,9 +81,12 @@ export async function getUserTokenBalances(
         return toResult('Wallet not connected', true);
     }
 
-    // Validate publicClient
-    if (!publicClient) {
-        return toResult('Public client not provided', true);
+    // Use publicClient from props if provided, otherwise get it from options
+    const client = publicClient || options.getProvider(chainId);
+    
+    // Validate client
+    if (!client) {
+        return toResult('Failed to get a valid provider for the blockchain', true);
     }
 
     try {
@@ -104,6 +107,8 @@ export async function getUserTokenBalances(
                 { symbol: 'WETH', address: networkContracts.WETH, decimals: 18 },
                 { symbol: 'ANON', address: networkContracts.ANON, decimals: 18 },
                 { symbol: 'USDC', address: networkContracts.USDC, decimals: 6 },
+                { symbol: 'STS', address: networkContracts.STS, decimals: 18 },
+                { symbol: 'scUSD', address: networkContracts.SCUSD, decimals: 6 },
             ];
         } else if (networkName === NETWORKS.BASE) { // Use uppercase key NETWORKS.BASE (value is 'base')
             nativeSymbol = 'ETH';
@@ -132,11 +137,11 @@ export async function getUserTokenBalances(
         // --- Native Token Balance & Price ---
         try {
             await options.notify(`Fetching ${nativeSymbol} balance...`);
-            const nativeBalanceBigInt = await publicClient.getBalance({ address: account });
+            const nativeBalanceBigInt = await client.getBalance({ address: account });
             await options.notify(`Raw ${nativeSymbol} balance: ${nativeBalanceBigInt.toString()}`);
 
             await options.notify(`Fetching ${wrappedNativeSymbol} price (used for ${nativeSymbol})...`);
-            const nativePrice = await publicClient.readContract({
+            const nativePrice = await client.readContract({
                 address: vaultPriceFeedAddress,
                 abi: VaultPriceFeed,
                 functionName: 'getPrice',
@@ -159,7 +164,7 @@ export async function getUserTokenBalances(
 
             // --- Wrapped Native Token Balance (uses same price) ---
             await options.notify(`Fetching ${wrappedNativeSymbol} balance...`);
-            const wrappedBalance = await publicClient.readContract({
+            const wrappedBalance = await client.readContract({
                 address: wrappedNativeTokenAddress,
                 abi: ERC20,
                 functionName: 'balanceOf',
@@ -186,7 +191,7 @@ export async function getUserTokenBalances(
         await options.notify(`Fetching ERC20 balances for: ${acceptedErc20Tokens.map(t => t.symbol).join(', ')}...`);
         const tokenDataPromises = acceptedErc20Tokens.map(async (token) => {
              await options.notify(`- Fetching balance for ${token.symbol} (${token.address})`);
-             const balancePromise = publicClient.readContract({
+             const balancePromise = client.readContract({
                     address: token.address,
                     abi: ERC20,
                     functionName: 'balanceOf',
@@ -194,26 +199,29 @@ export async function getUserTokenBalances(
                 }) as Promise<bigint>;
              
              await options.notify(`- Fetching price for ${token.symbol}`);
-             const pricePromise = publicClient.readContract({
+             const pricePromise = client.readContract({
                     address: vaultPriceFeedAddress, // Use network-specific price feed
                     abi: VaultPriceFeed,
                     functionName: 'getPrice',
                     args: [token.address, false, true, false],
                 }) as Promise<bigint>;
-
-            const [balance, price] = await Promise.all([balancePromise, pricePromise]);
-            await options.notify(`- ${token.symbol} Raw Balance: ${balance.toString()}, Raw Price: ${price.toString()}`);
-
-            // Price is in 1e30, balance in token decimals, result should be in USD (1e30)
-            const balanceUsd = (balance * price) / BigInt(10 ** token.decimals);
-            await options.notify(`- ${token.symbol} Balance USD: ${formatUnits(balanceUsd, 30)}`);
-
-            return {
-                ...token,
-                balance: formatUnits(balance, token.decimals),
-                balanceUsd: formatUnits(balanceUsd, 30),
-                price: formatUnits(price, 30),
-            };
+                
+             // Process results
+             const [balance, price] = await Promise.all([balancePromise, pricePromise]);
+             await options.notify(`- ${token.symbol} Raw Balance: ${balance.toString()}, Raw Price: ${price.toString()}`);
+ 
+             // Price is in 1e30, balance in token decimals, result should be in USD (1e30)
+             const balanceUsd = (balance * price) / BigInt(10 ** token.decimals);
+             await options.notify(`- ${token.symbol} Balance USD: ${formatUnits(balanceUsd, 30)}`);
+ 
+             return {
+                 symbol: token.symbol,
+                 address: token.address,
+                 decimals: token.decimals,
+                 balance: formatUnits(balance, token.decimals),
+                 balanceUsd: formatUnits(balanceUsd, 30),
+                 price: formatUnits(price, 30),
+             };
         });
 
         // Wait for all token data to be fetched
