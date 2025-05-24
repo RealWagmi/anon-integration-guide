@@ -2,6 +2,8 @@
 
 ## Features
 
+- If viable, adjust tools.ts definitions to support both spot and futures markets
+
 ## Minor
 
 ## Future

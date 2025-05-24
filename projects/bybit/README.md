@@ -10,7 +10,14 @@ Integration between HeyAnon.ai and Bybit Spot & Future trading, including perpet
 <!-- - Show last price and volume of BTC/USDT on @bybit -->
 <!-- - Show max leverage for BTC/USDT on @bybit -->
 
-### Info on positions and balances
+### Info on balance
+
+- Show my balance on @bybit
+- Show my BTC balance on @bybit
+
+Plese note that Bybit uses a Unified Trading Account (UTA) approach, so the returned balance is the total available balance regardless of the product type (spot, futures, etc).
+
+### Info on positions
 
 <!-- - Show all my positions on @bybit -->
 <!-- - Show my BTC/USDT position on @bybit -->
@@ -22,7 +29,6 @@ Integration between HeyAnon.ai and Bybit Spot & Future trading, including perpet
 <!-- - Show all my open orders on @bybit -->
 <!-- - Show my BTC open orders on @bybit -->
 <!-- - Show details on order 232168017 on @bybit -->
-<!-- - Show my balance on @bybit -->
 
 ### Transfer funds between accounts
 
@@ -77,11 +83,11 @@ Integration between HeyAnon.ai and Bybit Spot & Future trading, including perpet
 ### Trailing stop orders
 
 - Place an order to long 1 BTC with USDT with a 0.5% trailing stop
-      <!-- - Place a reduce-only order to long 1 BTC with USDT with a 0.5% trailing stop -->
-      <!-- - Place an order to long 1 BTC with USDT with a 0.5% trailing stop, with activation at 95,000 USDT -->
-      <!-- - Place an order to short 1 BTC with USDT with a 8% trailing stop -->
-      <!-- - Place a reduce-only order to short 1 BTC with USDT with a 8% trailing stop -->
-      <!-- - Place an order to short 1 BTC with USDT with a 8% trailing stop, with activation at 130,000 USDT -->
+    <!-- - Place a reduce-only order to long 1 BTC with USDT with a 0.5% trailing stop -->
+    <!-- - Place an order to long 1 BTC with USDT with a 0.5% trailing stop, with activation at 95,000 USDT -->
+    <!-- - Place an order to short 1 BTC with USDT with a 8% trailing stop -->
+    <!-- - Place a reduce-only order to short 1 BTC with USDT with a 8% trailing stop -->
+    <!-- - Place an order to short 1 BTC with USDT with a 8% trailing stop, with activation at 130,000 USDT -->
 
 <!-- Please note that:
 
@@ -155,7 +161,11 @@ pnpm ask-bybit "Show me the price of BTC/USDT:USDT" --debug-llm
 
 - Trigger direction is needed when placing trigger orders (https://discord.com/channels/690203284119617602/690203284727660739/1367189081418633389)
 
-- Bybit has unified trading (UTA) meaning there is only one account for trading, and therefore there is no need to move funds from spot to futures and viceversa. This is why there's no `transferFunds` tool. The only transfer needed is from the funding wallet to the trading wallet, which we assume is done by the user.
+- Bybit has the Unified Trading Account (UTA) meaning that:
+
+    - there is no need to move funds from spot to futures and viceversa (this is why there's no `transferFunds` tool)
+    - the only transfer needed is from the funding wallet to the trading wallet, which we assume is done by the user
+    - the `getBalance` tool will return the same result regardless of the account type (spot, futures, etc)
 
 - Bybit API keys expire after 3 months unless one adds IP whitelisting
 
