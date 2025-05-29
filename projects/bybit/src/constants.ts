@@ -1,8 +1,11 @@
-// ---------------------------------------------------------------
-// GLOBAL CONSTANTS
-// ---------------------------------------------------------------
-// UX and functional constants that are not exchange specific
-// ---------------------------------------------------------------
+/**
+ * Types of CEX markets the user can interact with using natural
+ * language in HeyAnon.
+ *
+ * See SUPPORTED_MARKET_TYPES for the subset of market types
+ * supported by this HeyAnon integration
+ */
+export const MARKET_TYPES = ['spot', 'perpetual', 'delivery', 'option', 'margin'] as const;
 
 /**
  * Maximum number of markets to show in results,
@@ -32,6 +35,6 @@ export const MAX_POSITIONS_IN_RESULTS = 25;
 export const LIMIT_PRICE_TOLERANCE = 0.005;
 
 /**
- * Possible account types supported by CCXT
+ * Account types supported by CCXT
  */
 export const ACCOUNT_TYPES = ['main', 'spot', 'funding', 'margin', 'cross', 'future', 'delivery', 'linear', 'swap', 'inverse', 'option'] as const;
