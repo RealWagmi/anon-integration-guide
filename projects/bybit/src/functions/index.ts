@@ -15,5 +15,5 @@ export { getBalance } from './getBalance';
 // export { getOpenOrders } from './getOpenOrders';
 // export { getOrderByIdAndMarket } from './getOrderByIdAndMarket';
 export { getCurrencyMarketsOfGivenType } from './getCurrencyMarketsOfGivenType';
-// export { getMarketInfo } from './getMarketInfo';
+export { getMarketInfo } from './getMarketInfo';
 // export { getUserLeverageAndMarginModeOnMarket } from './getUserLeverageAndMarginModeOnMarket';

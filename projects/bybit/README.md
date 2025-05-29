@@ -8,8 +8,12 @@ Integration between HeyAnon.ai and Bybit Spot & Future trading, including perpet
 
 - Show all BTC perpetual markets on @bybit
 - Show all BTC spot markets on @bybit
-      <!-- - Show last price and volume of BTC/USDT on @bybit -->
-      <!-- - Show max leverage for BTC/USDT on @bybit -->
+- Show last price and volume of BTC/USDT on @bybit
+- Show last price and volume of perpetual market BTC/USDT on @bybit
+- Show details on market BTC/USD:BTC-250926 on @bybit
+- Show max leverage for BTC/USDT perps on @bybit
+
+Please note that asking for future markets (e.g. "Show all BTC future markets") will return both perpetual and delivery markets.
 
 ### Info on balance
 
@@ -84,11 +88,11 @@ Plese note that Bybit uses a Unified Trading Account (UTA) approach, so the retu
 ### Trailing stop orders
 
 - Place an order to long 1 BTC with USDT with a 0.5% trailing stop
-  <!-- - Place a reduce-only order to long 1 BTC with USDT with a 0.5% trailing stop -->
-  <!-- - Place an order to long 1 BTC with USDT with a 0.5% trailing stop, with activation at 95,000 USDT -->
-  <!-- - Place an order to short 1 BTC with USDT with a 8% trailing stop -->
-  <!-- - Place a reduce-only order to short 1 BTC with USDT with a 8% trailing stop -->
-  <!-- - Place an order to short 1 BTC with USDT with a 8% trailing stop, with activation at 130,000 USDT -->
+      <!-- - Place a reduce-only order to long 1 BTC with USDT with a 0.5% trailing stop -->
+      <!-- - Place an order to long 1 BTC with USDT with a 0.5% trailing stop, with activation at 95,000 USDT -->
+      <!-- - Place an order to short 1 BTC with USDT with a 8% trailing stop -->
+      <!-- - Place a reduce-only order to short 1 BTC with USDT with a 8% trailing stop -->
+      <!-- - Place an order to short 1 BTC with USDT with a 8% trailing stop, with activation at 130,000 USDT -->
 
 <!-- Please note that:
 
@@ -160,14 +164,15 @@ pnpm ask-bybit "Show me the price of BTC/USDT:USDT" --debug-llm
 
 ## Bybit specific behaviors
 
-- Trigger direction is needed when placing trigger orders (https://discord.com/channels/690203284119617602/690203284727660739/1367189081418633389)
+- Bybit uses a Unified Trading Account (UTA) approach. This HeyAnon integration goes along with it and therefore works across both spot and perpetual markets. This has several implications:
 
-- Bybit uses a Unified Trading Account (UTA) approach. This HeyAnon integration goes along with the UTA approach and therefore works across both spot and perpetual markets. This has several implications:
-
+    - the `getBalance` tool will return a total balance, across all account types (spot, futures, etc)
     - there is no need to move funds from spot to futures and viceversa (this is why there's no `transferFunds` tool)
     - the only transfer needed is from the funding wallet to the trading wallet, which we assume is done by the user
-    - the `getBalance` tool will return a total balance, across all account types (spot, futures, etc)
+    - the LLM has to do some inference to determine the market type from the market symbol, see `MARKET_DESCRIPTION`
     - many tools require the `marketType` parameter to be explicitly provided, e.g. `getCurrencyMarketsOfGivenType`
+
+- Trigger direction is needed when placing trigger orders (https://discord.com/channels/690203284119617602/690203284727660739/1367189081418633389)
 
 - Bybit API keys expire after 3 months unless one adds IP whitelisting
 

@@ -34,14 +34,10 @@ export async function getCurrencyMarketsOfGivenType({ marketType, currency }: Pr
 
         const firstNMarkets = markets.slice(0, MAX_MARKETS_IN_RESULTS);
         let leverageTiers: LeverageTiers;
-        try {
-            leverageTiers = await getMarketsLeverageTiers(
-                exchange,
-                firstNMarkets.map((m) => m.symbol),
-            );
-        } catch (error) {
-            leverageTiers = {};
-        }
+        leverageTiers = await getMarketsLeverageTiers(
+            exchange,
+            firstNMarkets.map((m) => m.symbol),
+        );
 
         const rows = [
             `Found ${markets.length} markets for ${currency} ${markets.length > MAX_MARKETS_IN_RESULTS ? `(showing first ${MAX_MARKETS_IN_RESULTS})` : ''}:`,
