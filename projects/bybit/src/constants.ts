@@ -1,11 +1,19 @@
 /**
- * Types of CEX markets the user can interact with using natural
- * language in HeyAnon.
+ * Types of CEX markets
+ *
+ * This is slightly different from both the naming used by CCXT,
+ * which is more technical (e.g. 'swap' instead of 'perpetual'),
+ * and from the internal naming used by the exchange.
  *
  * See SUPPORTED_MARKET_TYPES for the subset of market types
- * supported by this HeyAnon integration
+ * supported by this HeyAnon integration.
  */
 export const MARKET_TYPES = ['spot', 'perpetual', 'delivery', 'option', 'margin'] as const;
+
+/**
+ * Types of margin modes.
+ */
+export const MARGIN_MODES = ['cross', 'isolated', 'portfolio'] as const;
 
 /**
  * Maximum number of markets to show in results,

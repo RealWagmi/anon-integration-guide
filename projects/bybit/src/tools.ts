@@ -1,5 +1,5 @@
 import { AiTool } from '@heyanon/sdk';
-import { MAX_MARKETS_IN_RESULTS } from './constants';
+import { MAX_MARKETS_IN_RESULTS, MAX_POSITIONS_IN_RESULTS } from './constants';
 import { SUPPORTED_MARKET_TYPES } from './helpers/exchange';
 
 const MARKET_TYPE_PARAMETER = {
@@ -11,12 +11,30 @@ const MARKET_TYPE_PARAMETER = {
 
 const MARKET_DESCRIPTION = [
     'Symbol of the market.  The type of the market can be inferred from the symbol:',
-    '- Spot market symbols have the form "BTC/USDT", where the FIRST currency is the base currency and the SECOND currency is the quote currency.',
-    '- Future market symbols have the form "BTC/USDT:USDT", where the THIRD currency is the settlement currency.',
-    '- Delivery market symbols have the form "BTC/USD:BTC-250926", where the LAST part of the symbol is the expiry date of the contract.',
+    '- Spot markets symbols have the form "BTC/USDT", where the FIRST currency is the base currency and the SECOND currency is the quote currency.',
+    '- Perpetual markets symbols have the form "BTC/USDT:USDT", where the THIRD currency is the settlement currency.',
+    '- Delivery markets (also known as expiry markets) symbols have the form "BTC/USD:BTC-250926", where the LAST part of the symbol is the expiry date of the contract.',
 ].join(' ');
 
 export const tools: AiTool[] = [
+    {
+        name: 'getPositions',
+        description: `Show the user's most recent ${MAX_POSITIONS_IN_RESULTS} open positions on future markets, including notional, margin, and PnL.`,
+        required: [],
+        props: [],
+    },
+    {
+        name: 'getPositionOnMarket',
+        description: `Show all details on the position held by the user on the given future market.  If you only have the currency, use getPositions and filter by currency.`,
+        required: ['market'],
+        props: [
+            {
+                name: 'market',
+                type: 'string',
+                description: 'Symbol of the market to get position for, e.g. "BTC/USDT:USDT"',
+            },
+        ],
+    },
     {
         name: 'getBalance',
         description: 'Get the unified user balance.  This does not include open positions.  For each currency, show how much is available to trade (free).',

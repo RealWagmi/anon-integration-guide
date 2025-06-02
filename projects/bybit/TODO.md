@@ -2,12 +2,16 @@
 
 ## Features
 
-- If viable, adjust tools.ts definitions to support both spot and futures markets
+- Show positions across different settle coins
+- Margin mode applies at account level, not per market
+- Margin mode can be changed also if there are open positions
 
 ## Minor
 
 ## Future
 
+- Support inverse markets
+- Check validity of margin metric in portfolio margin mode (list positions)
 - Include trailing percent in the order formatting function
 - Allow to get market funding rates
 - Support for hedged positions (2 positions on the same market, one long, one short)

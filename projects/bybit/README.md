@@ -24,10 +24,10 @@ Plese note that Bybit uses a Unified Trading Account (UTA) approach, so the retu
 
 ### Info on positions
 
-<!-- - Show all my positions on @bybit -->
-<!-- - Show my BTC/USDT position on @bybit -->
-<!-- - Show all of my BTC positions on @bybit -->
-<!-- - Show all of my delivery positions on @bybit -->
+- Show all my positions on @bybit
+- Show my BTC/USDT position on @bybit
+- Show all of my BTC positions on @bybit
+- Show all of my expiry positions on @bybit
 
 ### Info on open orders
 
@@ -164,13 +164,19 @@ pnpm ask-bybit "Show me the price of BTC/USDT:USDT" --debug-llm
 
 ## Bybit specific behaviors
 
-- Bybit uses a Unified Trading Account (UTA) approach. This HeyAnon integration goes along with it and therefore works across both spot and perpetual markets. This has several implications:
+- This integration embraces the Bybit Unified Trading Account approach in its latest version ([UTA 2.0 Pro](https://bybit-exchange.github.io/docs/v5/acct-mode)). This has several implications:
 
+    - the integration works seamlessly across both spot and perpetual markets
+    - the `exchange` object must have the `enableUnifiedAccount` option set to `true` ([Discord](https://discord.com/channels/690203284119617602/690203284727660739/1267775046366007339))
     - the `getBalance` tool will return a total balance, across all account types (spot, futures, etc)
     - there is no need to move funds from spot to futures and viceversa (this is why there's no `transferFunds` tool)
     - the only transfer needed is from the funding wallet to the trading wallet, which we assume is done by the user
     - the LLM has to do some inference to determine the market type from the market symbol, see `MARKET_DESCRIPTION`
     - many tools require the `marketType` parameter to be explicitly provided, e.g. `getCurrencyMarketsOfGivenType`
+
+- Bybit [no longer supports](https://bybit-exchange.github.io/docs/v5/position/cross-isolate) setting margin mode at the market level, but only at the account level. The main effect is that if you change the margin mode (e.g. from cross to isolated), the new margin mode will be applied to all of your open positions regardless of the market. Please note that leverage is still set at the market level.
+
+- Bybit allows switching margin mode (at the account level) as long as the trader has sufficient margin and the change itself doesn't trigger immediate liquidation.
 
 - Trigger direction is needed when placing trigger orders (https://discord.com/channels/690203284119617602/690203284727660739/1367189081418633389)
 
@@ -188,6 +194,7 @@ pnpm ask-bybit "Show me the price of BTC/USDT:USDT" --debug-llm
 - [Bybit API FAQ](https://www.bybit.com/future-activity/en/developer)
 - [Bybit guide to open a testnet account](https://www.bybit.com/en/help-center/article/How-to-Request-Test-Coins-on-Testnet)
 - [Bybit Postman collection](https://github.com/bybit-exchange/QuickStartWithPostman)
+- [Bybit margin mode FAQ](https://www.bybit.com/en/help-center/article/What-is-Isolated-Margin-Cross-Margin)
 - [CCXT leverage tiers](https://docs.ccxt.com/#/README?id=leverage-tiers)
 - [CCXT Order structure](https://docs.ccxt.com/#/?id=order-structure)
 - [CCXT Querying orders](https://docs.ccxt.com/#/README?id=querying-orders)

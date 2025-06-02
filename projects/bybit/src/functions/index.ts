@@ -10,8 +10,8 @@
 // export { cancelOrderByIdAndMarket } from './cancelOrderByIdAndMarket';
 // export { transferFunds } from './transferFunds';
 export { getBalance } from './getBalance';
-// export { getPositions } from './getPositions';
-// export { getPositionOnMarket } from './getPositionOnMarket';
+export { getPositions } from './getPositions';
+export { getPositionOnMarket } from './getPositionOnMarket';
 // export { getOpenOrders } from './getOpenOrders';
 // export { getOrderByIdAndMarket } from './getOrderByIdAndMarket';
 export { getCurrencyMarketsOfGivenType } from './getCurrencyMarketsOfGivenType';
