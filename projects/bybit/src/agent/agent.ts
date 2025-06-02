@@ -8,7 +8,7 @@ import chalk from 'chalk';
 import { fromHeyAnonToolsToOpenAiTools } from './helpers/openai';
 import { FunctionReturn, toResult } from '@heyanon/sdk';
 import { FunctionOptionsWithExchange } from '../overrides';
-import { EXCHANGE_NAME } from '../helpers/exchange';
+import { applyExchangeOptions, EXCHANGE_NAME } from '../helpers/exchange';
 
 // AI configuration
 const OPENAI_MODEL = 'gpt-4o';
@@ -81,6 +81,9 @@ function getExchange() {
     } catch (error) {
         throw new Error(`Failed to create ${EXCHANGE_NAME} exchange: ${error instanceof Error ? `${error.message}` : 'Unknown error'}`);
     }
+
+    // Apply exchange-specific options
+    exchange = applyExchangeOptions(exchange);
 
     // Set testnet if requested
     if (useTestnet) {

@@ -4,7 +4,7 @@
 // Anything specific to the exchange that is not covered by CCXT.
 // ---------------------------------------------------------------
 
-import { Position } from 'ccxt';
+import { Exchange, Position } from 'ccxt';
 
 /**
  * The name of the exchange in CCXT, all lowercase.
@@ -55,4 +55,13 @@ export function getUiMargin(ccxtPosition: Position): number | undefined {
         margin = ccxtPosition.initialMargin;
     }
     return margin;
+}
+
+/**
+ * Specific options to apply to the exchange object
+ */
+export function applyExchangeOptions(exchange: Exchange): Exchange {
+    // See https://discord.com/channels/690203284119617602/690203284727660739/1267775046366007339
+    exchange.options['enableUnifiedAccount'] = true;
+    return exchange;
 }
