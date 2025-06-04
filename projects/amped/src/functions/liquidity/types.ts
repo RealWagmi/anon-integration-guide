@@ -1,5 +1,4 @@
 import { Address } from 'viem';
-import { NETWORKS } from '../../constants.js';
 
 /**
  * Base properties for liquidity operations
@@ -8,7 +7,7 @@ import { NETWORKS } from '../../constants.js';
  * @property {string} amount - The amount to process
  */
 export interface BaseLiquidityProps {
-    chainName: (typeof NETWORKS)[keyof typeof NETWORKS];
+    chainName: 'sonic' | 'base';
     account: Address;
     amount: string;
 }

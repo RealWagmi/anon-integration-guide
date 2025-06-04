@@ -1,5 +1,7 @@
 import { type Address } from 'viem';
-import { CONTRACT_ADDRESSES, NETWORKS } from '../constants.js';
+import { CONTRACT_ADDRESSES } from '../constants.js';
+import { getChainFromName } from '../utils.js';
+import { getTokenFromSDK } from './sdkTokens.js';
 
 /**
  * Supported token symbols across all supported chains
@@ -24,36 +26,31 @@ export type TokenSymbol =
  */
 export function getTokenAddress(symbol: TokenSymbol, chainName: string): Address {
     const networkName = chainName.toLowerCase();
-    const contracts = CONTRACT_ADDRESSES[networkName];
+    const chainId = getChainFromName(networkName);
+    if (!chainId) {
+        throw new Error(`Unsupported network: ${networkName}`);
+    }
+    const contracts = CONTRACT_ADDRESSES[chainId];
     
     if (!contracts) {
         throw new Error(`Contract addresses not found for network: ${networkName}`);
     }
     
-    switch (symbol) {
-        case 'S':
-            return contracts.NATIVE_TOKEN;
-        case 'WS':
-            return contracts.WRAPPED_NATIVE_TOKEN;
-        case 'WETH':
-            return contracts.WETH;
-        case 'ANON':
-            return contracts.ANON;
-        case 'USDC':
-            return contracts.USDC;
-        case 'STS':
-            return contracts.STS;
-        case 'scUSD':
-            return contracts.SCUSD;
-        case 'ETH':
-            return networkName === NETWORKS.BASE ? contracts.NATIVE_TOKEN : '0x0000000000000000000000000000000000000000' as Address;
-        case 'CBBTC':
-            return contracts.CBBTC || '0x0000000000000000000000000000000000000000' as Address;
-        case 'VIRTUAL':
-            return contracts.VIRTUAL || '0x0000000000000000000000000000000000000000' as Address;
-        default:
-            throw new Error(`Unsupported token symbol: ${symbol}`);
+    // Special handling for native and wrapped native tokens
+    if (symbol === 'S' || (symbol === 'ETH' && networkName === 'base')) {
+        return contracts.NATIVE_TOKEN;
     }
+    if (symbol === 'WS' || (symbol === 'WETH' && networkName === 'base')) {
+        return contracts.WRAPPED_NATIVE_TOKEN;
+    }
+    
+    // For other tokens, use SDK
+    const tokenInfo = getTokenFromSDK(symbol, chainName);
+    if (tokenInfo) {
+        return tokenInfo.address;
+    }
+    
+    throw new Error(`Unsupported token symbol: ${symbol} on ${chainName}`);
 }
 
 /**
@@ -66,13 +63,14 @@ export function getTokenDecimals(symbol: TokenSymbol): number {
         case 'USDC':
         case 'scUSD':
             return 6;
+        case 'CBBTC':
+            return 8;
         case 'S':
         case 'WS':
         case 'WETH':
         case 'ANON':
         case 'STS':
         case 'ETH':
-        case 'CBBTC':
         case 'VIRTUAL':
             return 18;
         default:
@@ -88,7 +86,11 @@ export function getTokenDecimals(symbol: TokenSymbol): number {
  */
 export function getTokenSymbol(address: Address, chainName: string): TokenSymbol | undefined {
     const networkName = chainName.toLowerCase();
-    const contracts = CONTRACT_ADDRESSES[networkName];
+    const chainId = getChainFromName(networkName);
+    if (!chainId) {
+        return undefined;
+    }
+    const contracts = CONTRACT_ADDRESSES[chainId];
     
     if (!contracts) {
         return undefined;
@@ -97,32 +99,26 @@ export function getTokenSymbol(address: Address, chainName: string): TokenSymbol
     // Normalize addresses for comparison
     const normalizedAddress = address.toLowerCase();
     
+    // Check native and wrapped native tokens first
     if (normalizedAddress === contracts.NATIVE_TOKEN.toLowerCase()) {
-        return networkName === NETWORKS.SONIC ? 'S' : 'ETH';
+        return networkName === 'sonic' ? 'S' : 'ETH';
     }
     if (normalizedAddress === contracts.WRAPPED_NATIVE_TOKEN.toLowerCase()) {
-        return networkName === NETWORKS.SONIC ? 'WS' : 'WETH';
+        return networkName === 'sonic' ? 'WS' : 'WETH';
     }
-    if (normalizedAddress === contracts.WETH.toLowerCase()) {
-        return 'WETH';
-    }
-    if (normalizedAddress === contracts.ANON?.toLowerCase()) {
-        return 'ANON';
-    }
-    if (normalizedAddress === contracts.USDC.toLowerCase()) {
-        return 'USDC';
-    }
-    if (normalizedAddress === contracts.STS?.toLowerCase()) {
-        return 'STS';
-    }
-    if (normalizedAddress === contracts.SCUSD?.toLowerCase()) {
-        return 'scUSD';
-    }
-    if (normalizedAddress === contracts.CBBTC?.toLowerCase()) {
-        return 'CBBTC';
-    }
-    if (normalizedAddress === contracts.VIRTUAL?.toLowerCase()) {
-        return 'VIRTUAL';
+    
+    // Try all supported tokens using SDK
+    const supportedTokens: TokenSymbol[] = ['WETH', 'ANON', 'USDC', 'STS', 'scUSD', 'CBBTC', 'VIRTUAL'];
+    for (const symbol of supportedTokens) {
+        try {
+            const tokenInfo = getTokenFromSDK(symbol, chainName);
+            if (tokenInfo && normalizedAddress === tokenInfo.address.toLowerCase()) {
+                return symbol;
+            }
+        } catch {
+            // Skip tokens not available on this chain
+            continue;
+        }
     }
     
     return undefined;

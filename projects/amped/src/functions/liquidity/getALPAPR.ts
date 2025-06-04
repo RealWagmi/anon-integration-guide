@@ -1,6 +1,6 @@
 import { Address, formatUnits, type PublicClient } from 'viem';
 import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
-import { CONTRACT_ADDRESSES, NETWORKS, PRECISION, SECONDS_PER_YEAR, SupportedNetwork } from '../../constants.js';
+import { CONTRACT_ADDRESSES, SECONDS_PER_YEAR, SupportedChain } from '../../constants.js';
 import { RewardTracker } from '../../abis/RewardTracker.js';
 import { RewardDistributor } from '../../abis/RewardDistributor.js';
 import { VaultPriceFeed } from '../../abis/VaultPriceFeed.js';
@@ -8,9 +8,8 @@ import { GlpManager } from '../../abis/GlpManager.js';
 import { getChainFromName, getTokenAddress } from '../../utils.js';
 
 interface Props {
-    chainName: (typeof NETWORKS)[keyof typeof NETWORKS];
+    chainName: string;
     account: Address;
-    tokenAddress?: Address; // Make optional since we'll use REWARD_TRACKER from constants
     publicClient: PublicClient;
 }
 
@@ -37,13 +36,12 @@ function safeToNumber(value: unknown): number {
  * @param props - The function parameters, including publicClient
  * @param props.chainName - The name of the chain (sonic or base)
  * @param props.account - The account address to check APR for
- * @param props.tokenAddress - Optional - The address of the ALP token (uses REWARD_TRACKER from constants if not provided)
  * @param props.publicClient - Viem Public Client for interacting with the blockchain
  * @param options - System tools (like notify)
  * @returns APR information including base APR and reward rates
  */
 export async function getALPAPR(
-    { chainName, account, tokenAddress, publicClient }: Props, 
+    { chainName, account, publicClient }: Props, 
     options: FunctionOptions 
 ): Promise<FunctionReturn> {
     // Validate chain
@@ -52,9 +50,8 @@ export async function getALPAPR(
         return toResult(`Network ${chainName} not supported`, true);
     }
 
-    // Get network name in lowercase for CONTRACT_ADDRESSES
-    const networkName = chainName.toLowerCase() as SupportedNetwork;
-    const networkContracts = CONTRACT_ADDRESSES[networkName];
+    // Get network contracts based on chainId
+    const networkContracts = CONTRACT_ADDRESSES[chainId];
     
     // Keep uppercase version for display in log messages
     const displayNetwork = chainName.toUpperCase();
@@ -69,8 +66,6 @@ export async function getALPAPR(
         return toResult('Public client not provided in parameters', true);
     }
 
-    await options.notify(`Checking ALP APR information on ${displayNetwork}...`);
-
     try {
         // Use network-specific addresses from constants
         const rewardTrackerAddress = networkContracts.REWARD_TRACKER;
@@ -79,23 +74,12 @@ export async function getALPAPR(
         const ampRewardDistributorAddress = networkContracts.ALP_REWARD_DISTRIBUTOR;
         const lpRewardDistributorAddress = networkContracts.ALP_FEE_REWARD_DISTRIBUTOR;
         const vaultPriceFeedAddress = networkContracts.VAULT_PRICE_FEED;
-        const wrappedNativeTokenSymbol = networkName === NETWORKS.SONIC ? 'WS' : 'WETH';
-        const wrappedNativeTokenAddress = getTokenAddress(wrappedNativeTokenSymbol, networkName);
+        const wrappedNativeTokenSymbol = chainId === SupportedChain.SONIC ? 'WS' : 'WETH';
+        const wrappedNativeTokenAddress = getTokenAddress(wrappedNativeTokenSymbol, chainName.toLowerCase());
         const glpManagerAddress = networkContracts.GLP_MANAGER;
 
-        // Validate contract addresses
-        if (!rewardTrackerAddress || !ampRewardDistributorAddress || !lpRewardDistributorAddress || 
-            !vaultPriceFeedAddress || !wrappedNativeTokenAddress || !glpManagerAddress || !glpTokenAddress) {
-            return toResult(`Required contract addresses not found for network ${displayNetwork}`, true);
-        }
 
-        await options.notify(`Using Reward Tracker: ${rewardTrackerAddress}`);
-        await options.notify(`Using GLP Token: ${glpTokenAddress}`);
-        await options.notify(`Using AMP Reward Distributor: ${ampRewardDistributorAddress}`);
-        await options.notify(`Using LP Reward Distributor: ${lpRewardDistributorAddress}`);
-
-        // Fetch data using publicClient
-        await options.notify('Fetching total supply...');
+        // Fetch all data using publicClient
         const totalSupply = await publicClient.readContract({
             address: glpTokenAddress,
             abi: RewardTracker, // GLP also uses RewardTracker ABI for totalSupply
@@ -106,14 +90,12 @@ export async function getALPAPR(
             return toResult('Invalid total supply: zero or undefined', true);
         }
 
-        await options.notify('Fetching tokens per interval from AMP rewards distributor...');
         const ampTokensPerInterval = await publicClient.readContract({
             address: ampRewardDistributorAddress,
             abi: RewardDistributor,
             functionName: 'tokensPerInterval',
         }) as bigint;
 
-        await options.notify('Fetching tokens per interval from LP rewards distributor...');
         const lpTokensPerInterval = await publicClient.readContract({
             address: lpRewardDistributorAddress,
             abi: RewardDistributor,
@@ -121,7 +103,6 @@ export async function getALPAPR(
         }) as bigint;
 
         // Get reward token (wrapped native) price
-        await options.notify('Fetching reward token price...');
         const rewardTokenPrice = await publicClient.readContract({
             address: vaultPriceFeedAddress,
             abi: VaultPriceFeed,
@@ -130,7 +111,6 @@ export async function getALPAPR(
         }) as bigint;
 
         // Get ALP price from GLP Manager
-        await options.notify('Fetching ALP price...');
         const alpPrice = await publicClient.readContract({
             address: glpManagerAddress,
             abi: GlpManager,
@@ -181,23 +161,7 @@ export async function getALPAPR(
         const totalSupplyUsdFormatted = totalSupplyUsdNumber.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         const alpPriceFormatted = Number(formatUnits(alpPrice, 30)).toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 });
         const rewardTokenPriceFormatted = Number(formatUnits(rewardTokenPrice, 30)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 });
-        const rewardTokenSymbol = networkName === NETWORKS.SONIC ? 'wS' : 'WETH'; // Get symbol for logging
-
-        await options.notify('APR calculation completed');
-        await options.notify(`Base Total APR: ${totalApr.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`);
-        await options.notify(`  - AMP APR: ${ampApr.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`);
-        await options.notify(`  - LP APR: ${lpApr.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`);
-        await options.notify(`Total Yearly Rewards: ${totalYearlyRewardsFormatted} ${rewardTokenSymbol} ($${totalYearlyRewardsUsdFormatted})`);
-        await options.notify(`  - AMP Rewards: ${ampYearlyRewardsFormatted} ${rewardTokenSymbol} ($${ampYearlyRewardsUsdFormatted})`);
-        await options.notify(`  - LP Rewards: ${lpYearlyRewardsFormatted} ${rewardTokenSymbol} ($${lpYearlyRewardsUsdFormatted})`);
-        await options.notify(`Daily Rewards: ~$${dailyRewardsUsdFormatted}`);
-        await options.notify(`Weekly Rewards: ~$${weeklyRewardsUsdFormatted}`);
-        await options.notify(`Total Supply: ${totalSupplyFormatted} ALP`);
-        await options.notify(`Total Supply Value: $${totalSupplyUsdFormatted}`);
-        await options.notify(`ALP Price: $${alpPriceFormatted}`);
-        await options.notify(`AMP Tokens Per Interval: ${formatUnits(ampTokensPerInterval, 18)} ${rewardTokenSymbol}/second`);
-        await options.notify(`LP Tokens Per Interval: ${formatUnits(lpTokensPerInterval, 18)} ${rewardTokenSymbol}/second`);
-        await options.notify(`Reward Token Price: $${rewardTokenPriceFormatted}`);
+        const rewardTokenSymbol = chainId === SupportedChain.SONIC ? 'wS' : 'WETH'; // Get symbol for logging
 
         return toResult(
             JSON.stringify({
@@ -236,9 +200,7 @@ export async function getALPAPR(
             }),
         );
     } catch (error) {
-        console.error('Error details:', error);
         if (error instanceof Error) {
-            console.error('Error stack:', error.stack);
             return toResult(`Failed to get ALP APR information: ${error.message}`, true);
         }
         return toResult('Failed to get ALP APR information: Unknown error', true);

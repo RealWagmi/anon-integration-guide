@@ -8,9 +8,32 @@
 
 import dotenv from 'dotenv';
 import { tools } from '../src/tools.js';
+import { functionMap } from '../src/functionMap.js';
 import { createWalletClient, createPublicClient, http, Hex, Address, TransactionReceipt } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { CHAIN_CONFIG } from '../src/constants.js';
+import { base } from 'viem/chains';
+import { EVM } from '@heyanon/sdk';
+
+const { getChainFromName } = EVM.utils;
+
+// Define sonic chain config
+const sonic = {
+  id: 146,
+  name: 'Sonic',
+  network: 'sonic',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'Sonic',
+    symbol: 'S',
+  },
+  rpcUrls: {
+    default: { http: ['https://rpc.soniclabs.com'] },
+    public: { http: ['https://rpc.soniclabs.com'] },
+  },
+  blockExplorers: {
+    default: { name: 'SonicScan', url: 'https://sonicscan.org' },
+  },
+} as const;
 
 // Load environment variables
 dotenv.config();
@@ -79,10 +102,19 @@ async function main() {
   try {
     // Setup chain config
     const chainName = params.chainName;
-    const chainConfig = CHAIN_CONFIG[chainName?.toLowerCase()]; // Added optional chaining
+    if (!chainName) {
+      console.error('Error: chainName parameter is required');
+      process.exit(1);
+    }
     
-    if (!chainConfig) {
-      console.error(`Error: Chain "${chainName}" not supported or chainName missing`);
+    // Get chain config based on name
+    let chainConfig;
+    if (chainName.toLowerCase() === 'sonic') {
+      chainConfig = sonic;
+    } else if (chainName.toLowerCase() === 'base') {
+      chainConfig = base;
+    } else {
+      console.error(`Error: Chain "${chainName}" not supported`);
       process.exit(1);
     }
 
@@ -285,9 +317,16 @@ async function main() {
         }
     };
 
+    // Get the actual function implementation
+    const functionImpl = functionMap[functionName];
+    if (!functionImpl) {
+      console.error(`Error: Function implementation for "${functionName}" not found`);
+      process.exit(1);
+    }
+    
     // Call the function with separate props and options arguments
     console.log("\n--- Function Execution Start ---");
-    const result = await tool.function(functionProps, functionOptions);
+    const result = await functionImpl(functionProps, functionOptions);
     console.log("--- Function Execution End ---");
 
     console.log('\nResult:');
@@ -315,7 +354,7 @@ async function main() {
         // These are available from params.chainName and the derived wallet account.
 
         const txPayload = {
-          chainId: CHAIN_CONFIG[params.chainName?.toLowerCase()]?.id,
+          chainId: chainConfig.id,
           account: walletClient.account.address, // The account address
           transactions: [txParams] // Wrap the single tx in an array
         };
@@ -417,7 +456,9 @@ function parseKeyValuePairs(args) {
     } else if (!isNaN(Number(value)) && value.trim() !== '') {
       // Skip number conversion for values that look like they might be addresses
       // even if they don't exactly match the 0x + 40 hex chars format
-      if (!(typeof value === 'string' && value.startsWith('0x') && value.length > 10)) {
+      // Also skip conversion for certain parameter names that should remain strings
+      const stringParamNames = ['amount', 'amountIn', 'amountOut', 'minUsdg', 'minGlp', 'sizeUsd', 'collateralUsd'];
+      if (!(typeof value === 'string' && value.startsWith('0x') && value.length > 10) && !stringParamNames.includes(name)) {
         value = Number(value);
       }
     } else if ((value.startsWith('{') && value.endsWith('}')) || 

@@ -1,13 +1,13 @@
 import { Address, createPublicClient, http, Chain, type PublicClient } from 'viem';
 import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
-import { CONTRACT_ADDRESSES, NETWORKS, SupportedNetwork, CHAIN_CONFIG } from '../../constants.js';
+import { CONTRACT_ADDRESSES, SupportedNetwork, CHAIN_CONFIG } from '../../constants.js';
 import { ERC20 } from '../../abis/ERC20.js';
 import { VaultPriceFeed } from '../../abis/VaultPriceFeed.js';
-import { getChainFromName, getTokenAddress } from '../../utils.js';
+import { getChainFromName, getTokenAddress, getSupportedTokens, getTokenDecimals } from '../../utils.js';
 import { formatUnits } from 'viem';
 
 interface Props {
-    chainName: (typeof NETWORKS)[keyof typeof NETWORKS];
+    chainName: 'sonic' | 'base';
     account: Address;
     publicClient?: PublicClient;
 }
@@ -66,7 +66,7 @@ export async function getUserTokenBalances(
 
     // Use lowercase network name for accessing CONTRACT_ADDRESSES keys
     const networkName = chainName.toLowerCase(); 
-    const networkContracts = CONTRACT_ADDRESSES[networkName]; 
+    const networkContracts = CONTRACT_ADDRESSES[chainId]; 
     
     // Also use lowercase name for network-specific logic checks
     const network = networkName as SupportedNetwork; 
@@ -94,33 +94,37 @@ export async function getUserTokenBalances(
 
         const tokenInfos: TokenInfo[] = [];
 
-        // Define network-specific token details
+        // Get supported tokens from SDK
+        const supportedTokens = getSupportedTokens(networkName);
+        
+        // Define network-specific details
         let nativeSymbol: string;
         let wrappedNativeSymbol: string;
-        let acceptedErc20Tokens: { symbol: string; address: Address; decimals: number }[];
-
-        // Compare lowercase networkName with the VALUES from NETWORKS (which are lowercase strings)
-        if (networkName === NETWORKS.SONIC) { // Use uppercase key NETWORKS.SONIC (value is 'sonic')
+        
+        if (networkName === 'sonic') {
             nativeSymbol = 'S';
             wrappedNativeSymbol = 'WS';
-            acceptedErc20Tokens = [
-                { symbol: 'WETH', address: networkContracts.WETH, decimals: 18 },
-                { symbol: 'ANON', address: networkContracts.ANON, decimals: 18 },
-                { symbol: 'USDC', address: networkContracts.USDC, decimals: 6 },
-                { symbol: 'STS', address: networkContracts.STS, decimals: 18 },
-                { symbol: 'scUSD', address: networkContracts.SCUSD, decimals: 6 },
-            ];
-        } else if (networkName === NETWORKS.BASE) { // Use uppercase key NETWORKS.BASE (value is 'base')
+        } else if (networkName === 'base') {
             nativeSymbol = 'ETH';
             wrappedNativeSymbol = 'WETH';
-            acceptedErc20Tokens = [
-                { symbol: 'CBBTC', address: networkContracts.CBBTC, decimals: 18 }, 
-                { symbol: 'USDC', address: networkContracts.USDC, decimals: 6 },
-                { symbol: 'VIRTUAL', address: networkContracts.VIRTUAL, decimals: 18 }, 
-            ];
         } else {
-            // Handle case where networkName might be valid but not SONIC or BASE explicitly
             return toResult(`Logic not implemented for network: ${networkName}`, true);
+        }
+        
+        // Build token list using SDK utilities
+        const acceptedErc20Tokens: { symbol: string; address: Address; decimals: number }[] = [];
+        for (const symbol of supportedTokens) {
+            // Skip native tokens as they're handled separately
+            if (symbol === nativeSymbol || symbol === wrappedNativeSymbol) continue;
+            
+            try {
+                const address = getTokenAddress(symbol, networkName);
+                const decimals = getTokenDecimals(symbol, networkName);
+                acceptedErc20Tokens.push({ symbol, address, decimals });
+            } catch (e) {
+                // Skip tokens that can't be resolved
+                continue;
+            }
         }
         
         const nativeTokenAddress = networkContracts.NATIVE_TOKEN;
@@ -132,26 +136,19 @@ export async function getUserTokenBalances(
              return toResult(`Core contract addresses missing for network ${network}`, true);
         }
 
-        await options.notify(`Using Price Feed: ${vaultPriceFeedAddress}`);
-
         // --- Native Token Balance & Price ---
         try {
-            await options.notify(`Fetching ${nativeSymbol} balance...`);
             const nativeBalanceBigInt = await client.getBalance({ address: account });
-            await options.notify(`Raw ${nativeSymbol} balance: ${nativeBalanceBigInt.toString()}`);
 
-            await options.notify(`Fetching ${wrappedNativeSymbol} price (used for ${nativeSymbol})...`);
             const nativePrice = await client.readContract({
                 address: vaultPriceFeedAddress,
                 abi: VaultPriceFeed,
                 functionName: 'getPrice',
                 args: [wrappedNativeTokenAddress, false, true, false],
             }) as bigint;
-            await options.notify(`${wrappedNativeSymbol} price from Amped: ${nativePrice.toString()} (raw)`);
 
             // Price is in 1e30, balance in 1e18, result should be in USD (1e30)
             const nativeBalanceUsd = (nativeBalanceBigInt * nativePrice) / BigInt(1e18);
-            await options.notify(`${nativeSymbol} balance USD: ${formatUnits(nativeBalanceUsd, 30)}`);
 
             tokenInfos.push({
                 symbol: nativeSymbol,
@@ -163,7 +160,6 @@ export async function getUserTokenBalances(
             });
 
             // --- Wrapped Native Token Balance (uses same price) ---
-            await options.notify(`Fetching ${wrappedNativeSymbol} balance...`);
             const wrappedBalance = await client.readContract({
                 address: wrappedNativeTokenAddress,
                 abi: ERC20,
@@ -171,7 +167,6 @@ export async function getUserTokenBalances(
                 args: [account],
             }) as bigint;
             const wrappedBalanceUsd = (wrappedBalance * nativePrice) / BigInt(1e18);
-            await options.notify(`${wrappedNativeSymbol} balance USD: ${formatUnits(wrappedBalanceUsd, 30)}`);
 
             tokenInfos.push({
                 symbol: wrappedNativeSymbol,
@@ -183,14 +178,11 @@ export async function getUserTokenBalances(
             });
 
         } catch (error) {
-            console.error('Error fetching native/wrapped balances:', error);
             return toResult(`Failed to get native/wrapped balances on ${network}: ${error instanceof Error ? error.message : 'Unknown error'}`, true);
         }
 
         // --- ERC20 Token Balances & Prices ---
-        await options.notify(`Fetching ERC20 balances for: ${acceptedErc20Tokens.map(t => t.symbol).join(', ')}...`);
         const tokenDataPromises = acceptedErc20Tokens.map(async (token) => {
-             await options.notify(`- Fetching balance for ${token.symbol} (${token.address})`);
              const balancePromise = client.readContract({
                     address: token.address,
                     abi: ERC20,
@@ -198,7 +190,6 @@ export async function getUserTokenBalances(
                     args: [account],
                 }) as Promise<bigint>;
              
-             await options.notify(`- Fetching price for ${token.symbol}`);
              const pricePromise = client.readContract({
                     address: vaultPriceFeedAddress, // Use network-specific price feed
                     abi: VaultPriceFeed,
@@ -208,11 +199,9 @@ export async function getUserTokenBalances(
                 
              // Process results
              const [balance, price] = await Promise.all([balancePromise, pricePromise]);
-             await options.notify(`- ${token.symbol} Raw Balance: ${balance.toString()}, Raw Price: ${price.toString()}`);
  
              // Price is in 1e30, balance in token decimals, result should be in USD (1e30)
              const balanceUsd = (balance * price) / BigInt(10 ** token.decimals);
-             await options.notify(`- ${token.symbol} Balance USD: ${formatUnits(balanceUsd, 30)}`);
  
              return {
                  symbol: token.symbol,
@@ -234,8 +223,6 @@ export async function getUserTokenBalances(
             return sum + safeToNumber(token.balanceUsd); 
         }, 0);
 
-        await options.notify(`Total wallet balance: $${totalBalanceUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
-
         return toResult(
             JSON.stringify({
                 tokens: tokenInfos,
@@ -243,7 +230,6 @@ export async function getUserTokenBalances(
             }),
         );
     } catch (error) {
-        console.error('Error in getUserTokenBalances:', error);
         return toResult(`Failed to get token balances on ${network}: ${error instanceof Error ? error.message : 'Unknown error'}`, true);
     }
 }

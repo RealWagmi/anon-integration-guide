@@ -1,6 +1,7 @@
 import { parseUnits, encodeFunctionData, formatUnits, Address, type TransactionReceipt } from 'viem';
-import { FunctionReturn, FunctionOptions, toResult, getChainFromName, TransactionParams } from '@heyanon/sdk';
-import { CONTRACT_ADDRESSES, NETWORKS } from '../../constants.js';
+import { FunctionReturn, FunctionOptions, toResult, EVM, TransactionParams } from '@heyanon/sdk';
+const { getChainFromName } = EVM.utils;
+import { CONTRACT_ADDRESSES, SupportedChain } from '../../constants.js';
 import { RewardRouter } from '../../abis/RewardRouter.js';
 import { getUserLiquidity } from './getUserLiquidity.js';
 import { getPoolLiquidity } from './getPoolLiquidity.js';
@@ -30,33 +31,29 @@ interface Props {
  */
 export async function removeLiquidity(
     { chainName, account, tokenOutSymbol, amount, slippageTolerance = 0.5, skipSafetyChecks = false }: Props,
-    { notify, getProvider, sendTransactions }: FunctionOptions,
+    options: FunctionOptions,
 ): Promise<FunctionReturn> {
+    const { notify, getProvider, evm } = options;
+    const sendTransactions = evm?.sendTransactions || options.sendTransactions;
     // Check wallet connection
     if (!account) return toResult('Wallet not connected', true);
 
     // Validate chain
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
-    const networkName = chainName;
     
-    if (networkName !== NETWORKS.SONIC) {
-        return toResult(`Protocol is only supported on Sonic chain (received ${networkName})`, true);
+    if (chainId !== SupportedChain.SONIC) {
+        return toResult(`Protocol is only supported on Sonic chain`, true);
     }
 
-    // Explicitly get contracts for the network to satisfy linter potentially
-    const currentNetworkContracts = CONTRACT_ADDRESSES[networkName];
-    if (!currentNetworkContracts) {
-        // This should ideally not be reached if networkName is correctly 'sonic' or 'base'
-        // and CONTRACT_ADDRESSES is defined for them.
-        return toResult(`Contract addresses not found for network: ${networkName}`, true);
-    }
+    const currentNetworkContracts = CONTRACT_ADDRESSES[chainId];
+    const networkName = chainName.toLowerCase();
 
     try {
         const publicClient = getProvider(chainId);
 
         // Resolve tokenOutSymbol to an address and determine if it's native
-        const isNativeRedemption = (networkName === NETWORKS.SONIC && tokenOutSymbol === 'S');
+        const isNativeRedemption = (chainId === SupportedChain.SONIC && tokenOutSymbol === 'S');
         
         let tokenOutAddressContract: Address;
         let addressForPoolLookup: Address;
@@ -87,12 +84,10 @@ export async function removeLiquidity(
         let minOutInTokenWei: bigint;
 
         if (!skipSafetyChecks) {
-            await notify('Performing safety checks...');
-
             // First check user's available ALP balance
             const userLiquidityResult = await getUserLiquidity(
                 {
-                    chainName: networkName,
+                    chainName: chainName,
                     account,
                 },
                 { getProvider, notify, sendTransactions },
@@ -116,7 +111,7 @@ export async function removeLiquidity(
             // Then check pool liquidity and calculate minOut based on current price
             const poolLiquidityResult = await getPoolLiquidity(
                 {
-                    chainName: networkName,
+                    chainName: chainName,
                     publicClient
                 },
                 { getProvider, notify, sendTransactions }
@@ -179,8 +174,6 @@ export async function removeLiquidity(
             minOutInTokenWei = parseUnits(minOutAmount.toFixed(decimals), decimals);
         }
 
-        await notify('Preparing to remove liquidity...');
-
         // Prepare transaction based on output token type
         const tx: TransactionParams = {
             target: currentNetworkContracts.REWARD_ROUTER,
@@ -213,8 +206,6 @@ export async function removeLiquidity(
         }
 
         const txHash = sendTxInitialResult.data[0].hash;
-        await notify(`Transaction ${txHash} sent. Waiting for receipt...`);
-
         // Get transaction receipt with retry logic
         let receipt: TransactionReceipt | null = null;
         let attempts = 0;
@@ -229,11 +220,9 @@ export async function removeLiquidity(
                 }
             } catch (e) {
                 // Log error during attempts, but continue retrying
-                await notify(`Attempt ${attempts + 1} to get receipt failed: ${(e as Error).message}`);
             }
             attempts++;
             if (attempts < maxAttempts) {
-                await notify(`Retrying in ${retryDelayMs / 1000}s... (${attempts}/${maxAttempts})`);
                 await new Promise(resolve => setTimeout(resolve, retryDelayMs));
             }
         }
@@ -252,8 +241,6 @@ export async function removeLiquidity(
                 }),
             );
         }
-
-        await notify(`Transaction ${txHash} processed. Receipt status: ${receipt.status}`);
 
         if (receipt.status !== 'success') {
             return toResult(`Transaction ${txHash} failed with status: ${receipt.status}`, true);
@@ -328,9 +315,6 @@ export async function removeLiquidity(
                     tokenOutSymbol,
                     minOut: formatUnits(minOutInTokenWei, decimals),
                     amountReceived: formatUnits(decodedEvent.args.amountOut, decimals),
-                    aumInUsdg: formatUnits(decodedEvent.args.aumInUsdg, 18),
-                    glpSupply: formatUnits(decodedEvent.args.glpSupply, 18),
-                    usdgAmount: formatUnits(decodedEvent.args.usdgAmount, 18),
                 },
             }),
         );

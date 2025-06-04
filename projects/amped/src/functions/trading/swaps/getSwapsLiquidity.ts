@@ -1,11 +1,11 @@
 import { type Address, formatUnits, type PublicClient } from 'viem';
 import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
-import { CONTRACT_ADDRESSES, NETWORKS, SupportedNetwork } from '../../../constants.js';
+import { CONTRACT_ADDRESSES, SupportedNetwork } from '../../../constants.js';
 import { Vault } from '../../../abis/Vault.js';
 import { getChainFromName } from '../../../utils.js';
 
 interface Props {
-    chainName: (typeof NETWORKS)[keyof typeof NETWORKS];
+    chainName: 'sonic' | 'base';
     account: Address;
     publicClient?: PublicClient;
 }
@@ -41,7 +41,7 @@ export async function getSwapsLiquidity(
 
     // Use lowercase network name for accessing CONTRACT_ADDRESSES keys
     const networkName = chainName.toLowerCase();
-    const networkContracts = CONTRACT_ADDRESSES[networkName];
+    const networkContracts = CONTRACT_ADDRESSES[chainId];
     
     // Check if contracts for the network exist
     if (!networkContracts || !networkContracts.VAULT) {
@@ -58,14 +58,11 @@ export async function getSwapsLiquidity(
     }
     
     try {
-        await notify(`Checking swap liquidity on ${networkName}...`);
-        await notify(`Using Vault: ${vaultAddress}`);
-        
         // Define tokens to check based on network
         let tokensToCheck: { address: Address; symbol: string; decimals: number }[];
-        if (networkName === NETWORKS.SONIC) {
+        if (networkName === 'sonic') {
             tokensToCheck = [
-                { address: networkContracts.ANON, symbol: 'ANON', decimals: 18 },
+                { address: networkContracts.ANON, symbol: 'Anon', decimals: 18 },
                 { address: networkContracts.WRAPPED_NATIVE_TOKEN, symbol: 'S', decimals: 18 },
                 { address: networkContracts.WRAPPED_NATIVE_TOKEN, symbol: 'WS', decimals: 18 },
                 { address: networkContracts.USDC, symbol: 'USDC', decimals: 6 },
@@ -83,20 +80,17 @@ export async function getSwapsLiquidity(
             ];
         }
 
+        await notify(`Checking swap liquidity for ${tokensToCheck.length} tokens on ${networkName}...`);
+
         // Explicitly type the results array
         const liquidityResults: SwapLiquidity[] = [];
-        
-        const tokenSymbols = tokensToCheck.map(t => t.symbol).join(', ');
-        await notify(`Checking tokens: ${tokenSymbols}`);
 
         for (const { address, symbol, decimals } of tokensToCheck) {
             // Skip if address is somehow undefined (e.g., missing in constants)
             if (!address) {
-                 await notify(`Skipping ${symbol}: Address not found in constants for network ${networkName}`);
                  continue;
             }
             
-            await notify(`\n- Processing ${symbol} (${address})`);
             // Get raw liquidity data
             const [poolAmount, reservedAmount, maxPrice] = await Promise.all([
                 client.readContract({
@@ -121,10 +115,8 @@ export async function getSwapsLiquidity(
 
             // Add null/undefined checks
             if (poolAmount === undefined || reservedAmount === undefined || maxPrice === undefined) {
-                await notify(`- Failed to get full liquidity data for ${symbol}`);
                 continue;
             }
-            await notify(`- Raw Data: Pool=${poolAmount}, Reserved=${reservedAmount}, Price=${maxPrice}`);
 
             // Calculate available amount
             const availableAmount = poolAmount - reservedAmount;
@@ -147,13 +139,6 @@ export async function getSwapsLiquidity(
             };
 
             liquidityResults.push(swapLiquidity);
-
-            // Log liquidity details
-            await notify(`- Pool Amount: ${formattedPoolAmount}`);
-            await notify(`- Reserved Amount: ${formattedReservedAmount}`);
-            await notify(`- Available Amount: ${formattedAvailableAmount}`);
-            await notify(`- Price (USD): $${Number(formattedPriceUsd).toFixed(6)}`);
-            await notify(`- Available Value (USD): $${swapLiquidity.availableUsd}`);
         }
 
         return toResult(
@@ -163,7 +148,6 @@ export async function getSwapsLiquidity(
             }),
         );
     } catch (error) {
-        console.error('Error in getSwapsLiquidity:', error);
         return toResult(`Failed to get swap liquidity on ${networkName}: ${error instanceof Error ? error.message : 'Unknown error'}`, true);
     }
 }

@@ -1,11 +1,12 @@
 import { Address, getContract, PublicClient, Chain, Transport } from 'viem';
-import { FunctionReturn, FunctionOptions, toResult, getChainFromName } from '@heyanon/sdk';
-import { CONTRACT_ADDRESSES, NETWORKS } from '../../constants.js';
+import { FunctionReturn, FunctionOptions, toResult, EVM } from '@heyanon/sdk';
+const { getChainFromName } = EVM.utils;
+import { CONTRACT_ADDRESSES, SupportedChain } from '../../constants.js';
 import { RewardTracker } from '../../abis/RewardTracker.js';
 import { VaultPriceFeed } from '../../abis/VaultPriceFeed.js';
 
 interface Props {
-    chainName: (typeof NETWORKS)[keyof typeof NETWORKS];
+    chainName: 'sonic' | 'base';
     account: Address;
 }
 
@@ -17,20 +18,21 @@ interface Props {
  * @param options - System tools for blockchain interactions
  * @returns Earnings information including claimable rewards, staked amount, and reward token price
  */
-export async function getEarnings({ chainName, account }: Props, { getProvider, notify }: FunctionOptions): Promise<FunctionReturn> {
+export async function getEarnings({ chainName, account }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+    const { evm: { getProvider }, notify } = options;
     // Validate chain
-    if (!Object.values(NETWORKS).includes(chainName)) {
-        return toResult(`Network ${chainName} not supported`);
+    if (chainName !== 'sonic' && chainName !== 'base') {
+        return toResult(`Network ${chainName} not supported`, true);
     }
 
     await notify('Checking earnings information...');
 
     try {
         const provider = getProvider(146) as unknown as PublicClient<Transport, Chain>; // Sonic chain ID
-        const rewardTrackerAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].REWARD_TRACKER;
-        const fsAlpAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].FS_ALP;
-        const wrappedNativeTokenAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].WRAPPED_NATIVE_TOKEN;
-        const vaultPriceFeedAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].VAULT_PRICE_FEED;
+        const rewardTrackerAddress = CONTRACT_ADDRESSES[SupportedChain.SONIC].REWARD_TRACKER;
+        const fsAlpAddress = CONTRACT_ADDRESSES[SupportedChain.SONIC].FS_ALP;
+        const wrappedNativeTokenAddress = CONTRACT_ADDRESSES[SupportedChain.SONIC].WRAPPED_NATIVE_TOKEN;
+        const vaultPriceFeedAddress = CONTRACT_ADDRESSES[SupportedChain.SONIC].VAULT_PRICE_FEED;
 
         const [claimableRewards, stakedAmount, rewardTokenPrice] = await Promise.all([
             provider.readContract({

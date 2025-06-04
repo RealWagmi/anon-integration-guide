@@ -1,113 +1,23 @@
 import { type Address } from 'viem';
-import { CONTRACT_ADDRESSES, NETWORKS } from '../constants.js';
+import { getTokenFromSDK, getChainTokens, isTokenSupportedOnChain } from './sdkTokens.js';
 
 /**
  * Supported token symbols across all supported chains
- * This is based on the tokens available in the HeyAnon token list
+ * This is based on the tokens available in the SDK and custom additions
  */
 export type TokenSymbol = 
     // Sonic chain 
-    | 'S'       // Sonic native token - Implicit, not in token list
-    | 'WS'      // Wrapped Sonic
-    | 'WETH'    // Wrapped Ethereum
-    | 'Anon'    // Anon token (note the capitalization)
-    | 'ANON'    // Alias for Anon with different capitalization
-    | 'USDC'    // USD Coin
-    | 'scUSD'   // Sonic USD
-    | 'STS'     // Sonic Test Stablecoin (matches our constants but not in token list)
+    | 'S'       // Sonic native token
+    | 'WS'      // Wrapped Sonic  
+    | 'WETH'    // Wrapped Ether on Sonic
+    | 'Anon'    // Anon token
+    | 'USDC'    // USDC on Sonic
+    | 'scUSD'   // Savings-compatible USD
+    | 'STS'     // Beets Staked Sonic
     // Base chain
-    | 'ETH'     // Ethereum (Base native token) - Implicit, not in token list
-    | 'CBBTC'   // Coinbase BTC
-    | 'VIRTUAL'; // Virtual USD
-
-/**
- * Token data mapped from the HeyAnon token list or constants
- */
-interface TokenData {
-    address: Address;
-    decimals: number;
-    name?: string;
-    symbol: TokenSymbol;
-}
-
-/**
- * Maps from token symbol to token data for each supported chain
- * Using Partial<Record> to allow for partial token support on each chain
- */
-const TOKEN_MAP: Record<string, Partial<Record<TokenSymbol, TokenData>>> = {
-    sonic: {
-        // From token list
-        'WS': { 
-            symbol: 'WS',
-            address: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38' as Address,
-            decimals: 18
-        },
-        'WETH': { 
-            symbol: 'WETH',
-            address: '0x50c42dEAcD8Fc9773493ED674b675bE577f2634b' as Address,
-            decimals: 18
-        },
-        'Anon': { 
-            symbol: 'Anon',
-            address: '0x79bbF4508B1391af3A0F4B30bb5FC4aa9ab0E07C' as Address,
-            decimals: 18
-        },
-        'ANON': { 
-            symbol: 'Anon',
-            address: '0x79bbF4508B1391af3A0F4B30bb5FC4aa9ab0E07C' as Address,
-            decimals: 18
-        },
-        'USDC': { 
-            symbol: 'USDC',
-            address: '0x29219dd400f2Bf60E5a23d13Be72B486D4038894' as Address,
-            decimals: 6
-        },
-        'scUSD': { 
-            symbol: 'scUSD',
-            address: '0xd3DCe716f3eF535C5Ff8d041c1A41C3bd89b97aE' as Address,
-            decimals: 6
-        },
-        // From constants (not in token list)
-        'S': { 
-            symbol: 'S',
-            address: CONTRACT_ADDRESSES.sonic.NATIVE_TOKEN,
-            decimals: 18
-        },
-        'STS': { 
-            symbol: 'STS',
-            address: CONTRACT_ADDRESSES.sonic.STS,
-            decimals: 18
-        }
-    },
-    base: {
-        // Base tokens
-        'ETH': { 
-            symbol: 'ETH',
-            address: CONTRACT_ADDRESSES.base.NATIVE_TOKEN,
-            decimals: 18
-        },
-        'WETH': { 
-            symbol: 'WETH',
-            address: CONTRACT_ADDRESSES.base.WRAPPED_NATIVE_TOKEN,
-            decimals: 18
-        },
-        'USDC': { 
-            symbol: 'USDC',
-            address: CONTRACT_ADDRESSES.base.USDC,
-            decimals: 6
-        },
-        'CBBTC': { 
-            symbol: 'CBBTC',
-            address: CONTRACT_ADDRESSES.base.CBBTC || '0x0000000000000000000000000000000000000000' as Address,
-            decimals: 18
-        },
-        'VIRTUAL': { 
-            symbol: 'VIRTUAL',
-            address: CONTRACT_ADDRESSES.base.VIRTUAL || '0x0000000000000000000000000000000000000000' as Address,
-            decimals: 18
-        }
-    }
-};
+    | 'ETH'     // ETH native token
+    | 'CBBTC'   // Coinbase Wrapped BTC
+    | 'VIRTUAL'; // Virtual Protocol token
 
 /**
  * Gets the contract address for a token symbol on a specific chain
@@ -116,27 +26,13 @@ const TOKEN_MAP: Record<string, Partial<Record<TokenSymbol, TokenData>>> = {
  * @returns The token's contract address
  */
 export function getTokenAddress(symbol: TokenSymbol, chainName: string): Address {
-    const networkName = chainName.toLowerCase();
-    const chainTokens = TOKEN_MAP[networkName];
+    const tokenInfo = getTokenFromSDK(symbol, chainName);
     
-    if (!chainTokens) {
-        throw new Error(`Unsupported chain: ${chainName}`);
-    }
-
-    // Special case handling for symbol aliases 
-    let lookupSymbol = symbol;
-
-    // Handle special case for ANON/Anon capitalization differences
-    if (symbol === 'ANON') {
-        lookupSymbol = 'Anon' as TokenSymbol;
-    }
-    
-    const tokenData = chainTokens[lookupSymbol];
-    if (!tokenData) {
+    if (!tokenInfo) {
         throw new Error(`Token ${symbol} not supported on ${chainName}`);
     }
     
-    return tokenData.address;
+    return tokenInfo.address;
 }
 
 /**
@@ -146,95 +42,50 @@ export function getTokenAddress(symbol: TokenSymbol, chainName: string): Address
  * @returns The number of decimals for the token
  */
 export function getTokenDecimals(symbol: TokenSymbol, chainName: string): number {
-    const networkName = chainName.toLowerCase();
-    const chainTokens = TOKEN_MAP[networkName];
+    const tokenInfo = getTokenFromSDK(symbol, chainName);
     
-    if (!chainTokens) {
-        // Default decimals if chain not found
-        return symbol === 'USDC' || symbol === 'scUSD' ? 6 : 18;
-    }
-
-    // Special case handling for symbol aliases
-    let lookupSymbol = symbol;
-
-    // Handle special case for ANON/Anon capitalization differences
-    if (symbol === 'ANON') {
-        lookupSymbol = 'Anon' as TokenSymbol;
-    }
-    
-    const tokenData = chainTokens[lookupSymbol];
-    if (!tokenData) {
+    if (!tokenInfo) {
         // Default decimals if token not found
         return symbol === 'USDC' || symbol === 'scUSD' ? 6 : 18;
     }
     
-    return tokenData.decimals;
+    return tokenInfo.decimals;
 }
 
 /**
- * Gets the token symbol for an address (reverse lookup)
- * @param address - Token address to look up
- * @param chainName - The chain name (e.g., "sonic", "base")
- * @returns The token symbol or undefined if not found
+ * Gets the token symbol from an address on a specific chain
+ * @param address - Token contract address
+ * @param chainName - The chain name (e.g., "sonic", "base") 
+ * @returns The token symbol or null if not found
  */
-export function getTokenSymbol(address: Address, chainName: string): TokenSymbol | undefined {
-    const networkName = chainName.toLowerCase();
-    const chainTokens = TOKEN_MAP[networkName];
+export function getTokenSymbol(address: Address, chainName: string): TokenSymbol | null {
+    const tokens = getChainTokens(chainName);
     
-    if (!chainTokens) {
-        return undefined;
-    }
-    
-    // Normalize addresses for comparison
-    const normalizedAddress = address.toLowerCase();
-    
-    // Find matching token by address
-    for (const [symbol, data] of Object.entries(chainTokens)) {
-        if (data.address.toLowerCase() === normalizedAddress) {
-            return data.symbol;
+    for (const symbol of tokens) {
+        const tokenInfo = getTokenFromSDK(symbol, chainName);
+        if (tokenInfo && tokenInfo.address.toLowerCase() === address.toLowerCase()) {
+            return symbol as TokenSymbol;
         }
     }
     
-    return undefined;
+    return null;
 }
 
 /**
  * Gets all supported tokens for a specific chain
  * @param chainName - The chain name (e.g., "sonic", "base")
- * @returns Array of token data objects
+ * @returns Array of supported token symbols
  */
-export function getSupportedTokens(chainName: string): TokenData[] {
-    const networkName = chainName.toLowerCase();
-    const chainTokens = TOKEN_MAP[networkName];
-    
-    if (!chainTokens) {
-        return [];
-    }
-    
-    return Object.values(chainTokens);
+export function getSupportedTokens(chainName: string): TokenSymbol[] {
+    return getChainTokens(chainName) as TokenSymbol[];
 }
 
 /**
  * Checks if a token is supported on a specific chain
  * @param symbol - Token symbol to check
  * @param chainName - The chain name (e.g., "sonic", "base")
- * @returns True if the token is supported
+ * @returns Whether the token is supported
  */
 export function isTokenSupported(symbol: string, chainName: string): boolean {
-    const networkName = chainName.toLowerCase();
-    const chainTokens = TOKEN_MAP[networkName];
-    
-    if (!chainTokens) {
-        return false;
-    }
-    
-    // Special case handling for symbol aliases
-    let lookupSymbol = symbol;
-
-    // Handle special case for ANON/Anon capitalization differences
-    if (symbol === 'ANON') {
-        lookupSymbol = 'Anon';
-    }
-    
-    return !!chainTokens[lookupSymbol as TokenSymbol];
-} 
+    return isTokenSupportedOnChain(symbol, chainName);
+}

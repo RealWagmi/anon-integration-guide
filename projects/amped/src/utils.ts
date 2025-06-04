@@ -1,5 +1,8 @@
-import { CHAIN_IDS, CONTRACT_ADDRESSES, NETWORKS, SupportedNetwork } from './constants.js';
+import { CONTRACT_ADDRESSES, SupportedNetwork, SupportedChain } from './constants.js';
 import { type Address } from 'viem';
+import { EVM, type EvmChain } from '@heyanon/sdk';
+
+const { getChainFromName: sdkGetChainFromName } = EVM.utils;
 // Re-export token utilities from the new tokenList.ts implementation
 export { 
     getTokenAddress, 
@@ -31,7 +34,11 @@ export type SupportedToken =
 
 // Legacy function - use imported getTokenAddress from utils/tokens.js instead
 export function getTokenAddress_legacy(symbol: SupportedToken, network: SupportedNetwork): Address {
-    const networkAddresses = CONTRACT_ADDRESSES[network.toLowerCase()]; // Use lowercase network key
+    const chainId = getChainFromName(network);
+    if (!chainId) {
+        throw new Error(`Unsupported network: ${network}`);
+    }
+    const networkAddresses = CONTRACT_ADDRESSES[chainId];
     if (!networkAddresses) {
         throw new Error(`Unsupported network: ${network}`);
     }
@@ -39,7 +46,7 @@ export function getTokenAddress_legacy(symbol: SupportedToken, network: Supporte
     let address: Address | undefined;
 
     // Handle native token symbols explicitly
-    if ((network === NETWORKS.SONIC && symbol === 'S') || (network === NETWORKS.BASE && symbol === 'ETH')) {
+    if ((network === 'sonic' && symbol === 'S') || (network === 'base' && symbol === 'ETH')) {
         address = networkAddresses.NATIVE_TOKEN;
     } else {
         // Map symbols to contract keys (case-insensitive matching for flexibility)
@@ -50,7 +57,7 @@ export function getTokenAddress_legacy(symbol: SupportedToken, network: Supporte
                 break;
             case 'WETH':
                 // Use WRAPPED_NATIVE_TOKEN on Base, WETH on Sonic (based on constants setup)
-                address = network === NETWORKS.BASE ? networkAddresses.WRAPPED_NATIVE_TOKEN : networkAddresses.WETH;
+                address = network === 'base' ? networkAddresses.WRAPPED_NATIVE_TOKEN : networkAddresses.WETH;
                 break;
             case 'ANON':
                 address = networkAddresses.ANON; // Sonic specific
@@ -82,7 +89,11 @@ export function getTokenAddress_legacy(symbol: SupportedToken, network: Supporte
 
 // Helper function to get native token address for a specific network
 export function getNativeTokenAddress(network: SupportedNetwork): Address {
-    const networkAddresses = CONTRACT_ADDRESSES[network];
+    const chainId = getChainFromName(network);
+    if (!chainId) {
+        throw new Error(`Unsupported network: ${network}`);
+    }
+    const networkAddresses = CONTRACT_ADDRESSES[chainId];
     if (!networkAddresses || !networkAddresses.NATIVE_TOKEN) {
         throw new Error(`Native token address not found for network: ${network}`);
     }
@@ -118,24 +129,22 @@ export function safeToNumber(value: unknown): number {
 }
 
 // Helper function to get chain ID from network name
+// Re-export getChainFromName from SDK for backward compatibility
 export function getChainFromName(name: string): number | undefined {
-    const lowerName = name.toLowerCase();
-    if (lowerName === NETWORKS.SONIC) {
-        return CHAIN_IDS.sonic;
+    try {
+        return sdkGetChainFromName(name as EvmChain);
+    } catch {
+        return undefined;
     }
-    if (lowerName === NETWORKS.BASE) {
-        return CHAIN_IDS.base;
-    }
-    return undefined;
 }
 
 // Helper function to get network name from chain ID
 export function getNetworkNameFromChainId(chainId: number): SupportedNetwork | undefined {
-    if (chainId === CHAIN_IDS.sonic) {
-        return NETWORKS.SONIC;
+    if (chainId === SupportedChain.SONIC) {
+        return 'sonic';
     }
-    if (chainId === CHAIN_IDS.base) {
-        return NETWORKS.BASE;
+    if (chainId === SupportedChain.BASE) {
+        return 'base';
     }
     return undefined;
 } 

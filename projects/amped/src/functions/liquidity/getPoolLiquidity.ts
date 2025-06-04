@@ -1,7 +1,7 @@
-import { formatUnits, Address, PublicClient } from 'viem';
+import { formatUnits, Address, PublicClient, zeroAddress } from 'viem';
 // Import types from the SDK package
 import { FunctionReturn, FunctionOptions, toResult } from '@heyanon/sdk';
-import { CONTRACT_ADDRESSES, NETWORKS, LowercaseChainName } from '../../constants.js';
+import { CONTRACT_ADDRESSES } from '../../constants.js';
 // Import new token utilities
 import { getChainFromName, getSupportedTokens, type TokenSymbol, getTokenAddress } from '../../utils.js';
 import { VaultPriceFeed } from '../../abis/VaultPriceFeed.js';
@@ -10,7 +10,7 @@ import { VaultPriceFeed } from '../../abis/VaultPriceFeed.js';
 // type SupportedChainName = keyof typeof NETWORKS;
 
 interface Props {
-    chainName: LowercaseChainName;
+    chainName: string;
     publicClient: PublicClient;
 }
 
@@ -27,24 +27,11 @@ interface TokenLiquidity {
 }
 
 interface PoolLiquidity {
-    totalSupply: string;
-    totalSupplyUsd: string;
     aum: string;
-    aumPerToken: string;
     tokens: TokenLiquidity[];
 }
 
 // Define the specific ABI for the functions we need
-const GLP_TOKEN_ABI = [
-    {
-        inputs: [],
-        name: 'totalSupply',
-        outputs: [{ type: 'uint256', name: '' }],
-        stateMutability: 'view',
-        type: 'function',
-    },
-] as const;
-
 const GLP_MANAGER_ABI = [
     {
         inputs: [{ type: 'bool', name: 'maximise' }],
@@ -97,30 +84,17 @@ export async function getPoolLiquidity(props: Props, options: FunctionOptions): 
         return toResult(`Network ${chainName} not supported`, true);
     }
     // const networkName = chainName.toLowerCase(); // No longer needed, chainName is already lowercase
-    const networkContracts = CONTRACT_ADDRESSES[chainName];
+    const networkContracts = CONTRACT_ADDRESSES[chainId];
 
-    // Validate required contracts exist for the network
-    if (!networkContracts?.GLP_TOKEN || !networkContracts?.GLP_MANAGER || !networkContracts?.VAULT || !networkContracts?.VAULT_PRICE_FEED || !networkContracts?.NATIVE_TOKEN) {
-        return toResult(`Core contract addresses not found for network: ${chainName}`, true);
-    }
 
     try {
-        await notify(`Fetching pool liquidity information on ${chainName}...`);
-
-        // Get total supply and AUM in parallel using publicClient
-        const [totalSupply, aum] = await Promise.all([
-            publicClient.readContract({
-                address: networkContracts.GLP_TOKEN,
-                abi: GLP_TOKEN_ABI,
-                functionName: 'totalSupply',
-            }) as Promise<bigint>,
-            publicClient.readContract({
-                address: networkContracts.GLP_MANAGER,
-                abi: GLP_MANAGER_ABI,
-                functionName: 'getAum',
-                args: [true], // Include pending changes
-            }) as Promise<bigint>,
-        ]);
+        // Get AUM (Assets Under Management)
+        const aum = await publicClient.readContract({
+            address: networkContracts.GLP_MANAGER,
+            abi: GLP_MANAGER_ABI,
+            functionName: 'getAum',
+            args: [true], // Include pending changes
+        }) as bigint;
 
         // Define supported tokens for Vault interaction using getSupportedTokens and adjusting native tokens
         const allChainTokens = getSupportedTokens(chainName);
@@ -129,7 +103,7 @@ export async function getPoolLiquidity(props: Props, options: FunctionOptions): 
         // Define which symbols are relevant for GLP/ALP pools for each chain
         // These are the tokens whose liquidity is tracked in the Vault for GLP composition.
         const poolConstituentSymbols: Record<string, TokenSymbol[]> = {
-            sonic: ['S', 'WETH', 'ANON', 'USDC', 'STS', 'scUSD'],
+            sonic: ['S', 'WETH', 'Anon', 'USDC', 'STS', 'scUSD'],
             base: ['ETH', 'WETH', 'CBBTC', 'USDC', 'VIRTUAL'],
         };
 
@@ -157,7 +131,7 @@ export async function getPoolLiquidity(props: Props, options: FunctionOptions): 
                 displaySymbol = 'ETH'; // Ensure display symbol is native
             }
 
-            if (addressForVaultCall && addressForVaultCall !== '0x0000000000000000000000000000000000000000') {
+            if (addressForVaultCall && addressForVaultCall !== zeroAddress) {
                 supportedTokensForVault.push({
                     symbol: displaySymbol, // Use the original native symbol for display
                     address: addressForVaultCall,
@@ -167,9 +141,8 @@ export async function getPoolLiquidity(props: Props, options: FunctionOptions): 
         }
 
         // Filter out any tokens where the address might be effectively zero or missing (already done by check above)
-        // supportedTokensForVault = supportedTokensForVault.filter(t => !!t.address && t.address !== '0x0000000000000000000000000000000000000000');
+        // supportedTokensForVault = supportedTokensForVault.filter(t => !!t.address && t.address !== zeroAddress);
 
-        await notify('Fetching individual token liquidity...');
 
         // Get liquidity info for each token using publicClient
         const tokenLiquidityPromises = supportedTokensForVault.map(async (token) => {
@@ -213,7 +186,6 @@ export async function getPoolLiquidity(props: Props, options: FunctionOptions): 
                     availableAmountUsd: formatUnits(availableAmountUsd, 30),
                 };
             } catch (tokenError: any) {
-                 await notify(`Warning: Failed to fetch liquidity for ${token.symbol} (${token.address}): ${tokenError.message}`);
                  return null; // Return null for failed tokens
              }
         });
@@ -221,32 +193,18 @@ export async function getPoolLiquidity(props: Props, options: FunctionOptions): 
         const tokenLiquidityResults = await Promise.all(tokenLiquidityPromises);
         const tokenLiquidity = tokenLiquidityResults.filter(t => t !== null) as TokenLiquidity[]; // Filter out nulls
 
-        // Calculate derived values
-        const totalSupplyFormatted = formatUnits(totalSupply, 18);
+        // Format AUM
         const aumFormatted = formatUnits(aum, 30);
-        const aumPerToken = totalSupply === 0n ? '0' : formatUnits((aum * BigInt(1e18)) / totalSupply, 30);
 
         const poolLiquidity: PoolLiquidity = {
-            totalSupply: totalSupplyFormatted,
-            totalSupplyUsd: aumFormatted, // totalSupplyUsd is effectively the AUM
             aum: aumFormatted,
-            aumPerToken,
             tokens: tokenLiquidity,
         };
-
-        // Log summary
-        const aumDisplay = Number(poolLiquidity.aum).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        const priceDisplay = Number(poolLiquidity.aumPerToken).toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 });
-        await notify(`Total ALP/GLP Supply (${chainName}): ${poolLiquidity.totalSupply}`);
-        await notify(`Total Value Locked (${chainName}): $${aumDisplay}`);
-        await notify(`ALP/GLP Price (${chainName}): $${priceDisplay}`);
 
         // Stringify the result to match toResult expectation
         return toResult(JSON.stringify(poolLiquidity)); 
         
     } catch (error: any) {
-        await notify(`ERROR: Failed to fetch pool liquidity: ${error.message}`); 
-        console.error("Get Pool Liquidity Error:", error);
         return toResult(`Failed to fetch pool liquidity: ${error.message}`, true);
     }
 }

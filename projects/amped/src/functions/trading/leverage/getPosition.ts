@@ -1,16 +1,16 @@
 import { type PublicClient, formatUnits } from 'viem';
-import { CONTRACT_ADDRESSES, NETWORKS } from '../../../constants.js';
+import { CONTRACT_ADDRESSES, SupportedChain } from '../../../constants.js';
 import { Vault } from '../../../abis/Vault.js';
 import { VaultPriceFeed } from '../../../abis/VaultPriceFeed.js';
 import { FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
-import { getChainFromName, getTokenDecimals as sdkGetTokenDecimals, type TokenSymbol } from '../../../utils.js';
+import { getChainFromName, getTokenDecimals as sdkGetTokenDecimals, getTokenAddress, type TokenSymbol } from '../../../utils.js';
 import { getTokenSymbol } from '../../../utils/tokens.js';
 
 interface Props {
-    chainName: (typeof NETWORKS)[keyof typeof NETWORKS];
+    chainName: string;
     account: `0x${string}`;
-    indexToken: `0x${string}`;
-    collateralToken: `0x${string}`;
+    tokenSymbol: TokenSymbol;
+    collateralTokenSymbol: TokenSymbol;
     isLong: boolean;
 }
 
@@ -42,43 +42,31 @@ interface PositionResponse {
  * @param props - The function parameters
  * @param props.chainName - The name of the chain (must be "sonic")
  * @param props.account - The account address to check position for
- * @param props.indexToken - The token being traded (e.g., WETH, ANON)
- * @param props.collateralToken - The token used as collateral
+ * @param props.tokenSymbol - The symbol of the token being traded (e.g., WETH, ANON)
+ * @param props.collateralTokenSymbol - The symbol of the token used as collateral
  * @param props.isLong - Whether this is a long position
  * @param options - System tools for blockchain interactions
  * @returns Detailed information about the position including size, collateral, PnL, etc.
  */
-export async function getPosition({ chainName, account, indexToken, collateralToken, isLong }: Props, { notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
+export async function getPosition({ chainName, account, tokenSymbol, collateralTokenSymbol, isLong }: Props, { notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
     try {
         const networkName = chainName.toLowerCase();
         // Validate chain using SDK helper
         const chainId = getChainFromName(chainName);
         if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
-        if (networkName !== NETWORKS.SONIC) {
+        if (chainId !== SupportedChain.SONIC) {
             return toResult('This function is only supported on Sonic chain', true);
         }
 
-        // Validate addresses
-        if (!account || account === '0x0000000000000000000000000000000000000000') {
-            return toResult('Invalid account address', true);
-        }
-
-        if (!indexToken || indexToken === '0x0000000000000000000000000000000000000000') {
-            return toResult('Invalid index token address', true);
-        }
-
-        if (!collateralToken || collateralToken === '0x0000000000000000000000000000000000000000') {
-            return toResult('Invalid collateral token address (expected Wrapped Native for native collateral)', true);
-        }
-
-        await notify('Checking position...');
-
         const provider = getProvider(chainId);
+        
+        // Get token addresses from symbols
+        const indexToken = getTokenAddress(tokenSymbol, chainName);
+        const collateralToken = getTokenAddress(collateralTokenSymbol, chainName);
 
         // Get raw position data
-        await notify('Fetching position data...');
         const positionRaw = await provider.readContract({
-            address: CONTRACT_ADDRESSES[networkName].VAULT,
+            address: CONTRACT_ADDRESSES[chainId].VAULT,
             abi: Vault,
             functionName: 'getPosition',
             args: [account, collateralToken, indexToken, isLong],
@@ -89,7 +77,7 @@ export async function getPosition({ chainName, account, indexToken, collateralTo
 
         await notify('Fetching current price (index token)...');
         const currentPriceRaw = await provider.readContract({
-            address: CONTRACT_ADDRESSES[networkName].VAULT_PRICE_FEED,
+            address: CONTRACT_ADDRESSES[chainId].VAULT_PRICE_FEED,
             abi: VaultPriceFeed,
             functionName: 'getPrice',
             args: [indexToken, false, true, false],
@@ -101,13 +89,13 @@ export async function getPosition({ chainName, account, indexToken, collateralTo
 
         await notify('Fetching collateral token price...');
         const collateralPriceRaw = await provider.readContract({
-            address: CONTRACT_ADDRESSES[networkName].VAULT_PRICE_FEED,
+            address: CONTRACT_ADDRESSES[chainId].VAULT_PRICE_FEED,
             abi: VaultPriceFeed,
             functionName: 'getPrice',
             args: [collateralToken, false, true, false],
         }) as bigint;
 
-        if (collateralPriceRaw === 0n && collateralToken.toLowerCase() !== CONTRACT_ADDRESSES[networkName].WRAPPED_NATIVE_TOKEN?.toLowerCase()) {
+        if (collateralPriceRaw === 0n && collateralToken.toLowerCase() !== CONTRACT_ADDRESSES[chainId].WRAPPED_NATIVE_TOKEN?.toLowerCase()) {
             return toResult(`Invalid price data for collateral token ${collateralToken}: price is zero`, true);
         }
 
@@ -130,11 +118,11 @@ export async function getPosition({ chainName, account, indexToken, collateralTo
         // Calculate collateral token amount
         let collateralTokenAmountStr = '0';
         let collateralDecimals = 18;
-        if (collateralToken.toLowerCase() === CONTRACT_ADDRESSES[networkName].WETH?.toLowerCase()) {
+        if (collateralToken.toLowerCase() === CONTRACT_ADDRESSES[chainId].WETH?.toLowerCase()) {
             collateralDecimals = 18;
-        } else if (collateralToken.toLowerCase() === CONTRACT_ADDRESSES[networkName].WRAPPED_NATIVE_TOKEN?.toLowerCase()) {
+        } else if (collateralToken.toLowerCase() === CONTRACT_ADDRESSES[chainId].WRAPPED_NATIVE_TOKEN?.toLowerCase()) {
             collateralDecimals = 18;
-        } else if (collateralToken.toLowerCase() === CONTRACT_ADDRESSES[networkName].USDC?.toLowerCase()) {
+        } else if (collateralToken.toLowerCase() === CONTRACT_ADDRESSES[chainId].USDC?.toLowerCase()) {
             collateralDecimals = 6;
         }
 
@@ -199,38 +187,20 @@ export async function getPosition({ chainName, account, indexToken, collateralTo
             lastUpdated: lastUpdated_raw > 0n ? new Date(Number(lastUpdated_raw) * 1000).toISOString() : null,
         };
 
-        await notify('\nPosition Details (after client-side calculation):');
-        await notify(`Size: ${formattedPosition.size} USD`);
-        
-        // Get collateral symbol for logging
-        const collateralSymbolForLog = getTokenSymbol(collateralToken, networkName) || 'UNKNOWN_TOKEN';
-
-        await notify(`Collateral: ${formattedPosition.collateralAmount} ${collateralSymbolForLog} (${formattedPosition.collateralUsd} USD)`);
-        await notify(`Average Entry Price: ${formattedPosition.averagePrice} USD`);
-        await notify(`Current Price: ${formattedPosition.currentPrice} USD`);
-        await notify(`Leverage: ${formattedPosition.leverage}x`);
-        await notify(`Liquidation Price: ${formattedPosition.liquidationPrice} USD`);
-        await notify(`Has Profit: ${formattedPosition.hasProfit}`);
-        await notify(`Realized PnL: ${formattedPosition.realizedPnl} USD`);
-        await notify(`Unrealized PnL: ${formattedPosition.unrealizedPnlUsd} USD (${formattedPosition.unrealizedPnlPercentage}%)`);
-        if (formattedPosition.lastUpdated) {
-            await notify(`Last Updated: ${formattedPosition.lastUpdated}`);
-        }
+        await notify(`Position: ${formattedPosition.size} USD, Leverage: ${formattedPosition.leverage}x, PnL: ${formattedPosition.unrealizedPnlUsd} USD`);
 
         const response: PositionResponse = {
             success: true,
             position: formattedPosition,
-            indexTokenAddress: indexToken,
-            collateralTokenAddress: collateralToken
+            indexTokenAddress: indexToken as `0x${string}`,
+            collateralTokenAddress: collateralToken as `0x${string}`
         };
 
         return toResult(JSON.stringify(response));
     } catch (error) {
         if (error instanceof Error) {
-            await notify(`Error in getPosition: ${error.message}`);
             return toResult(`Failed to get position: ${error.message}`, true);
         }
-        await notify(`Unknown error in getPosition.`);
         return toResult('Failed to get position: Unknown error', true);
     }
 } 

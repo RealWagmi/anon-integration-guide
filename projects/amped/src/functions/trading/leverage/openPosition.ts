@@ -1,19 +1,18 @@
-import { type PublicClient, type Account, encodeFunctionData, Address, formatUnits, parseUnits } from 'viem';
-import { FunctionReturn, FunctionOptions, toResult, TransactionParams } from '@heyanon/sdk';
-import { CONTRACT_ADDRESSES, NETWORKS } from '../../../constants.js';
+import { type PublicClient, encodeFunctionData, Address, formatUnits, parseUnits } from 'viem';
+import { FunctionReturn, FunctionOptions, toResult, EVM } from '@heyanon/sdk';
+import { CONTRACT_ADDRESSES, SupportedChain } from '../../../constants.js';
 import { VaultPriceFeed } from '../../../abis/VaultPriceFeed.js';
 import { PositionRouter } from '../../../abis/PositionRouter.js';
 import { ERC20 } from '../../../abis/ERC20.js';
 import { getPerpsLiquidity } from './getPerpsLiquidity.js';
 import { getUserTokenBalances } from '../../liquidity/getUserTokenBalances.js';
-import { type TokenSymbol, getTokenAddress, getTokenDecimals, getSupportedTokens } from '../../../utils.js';
-import { getChainFromName } from '../../../utils.js';
+import { type TokenSymbol, getTokenAddress, getTokenDecimals, getSupportedTokens, getChainFromName } from '../../../utils.js';
 
 interface Props {
-    chainName: (typeof NETWORKS)[keyof typeof NETWORKS];
+    chainName: string;
     account: Address;
-    indexToken: TokenSymbol;
-    collateralToken: TokenSymbol;
+    tokenSymbol: TokenSymbol;
+    collateralTokenSymbol: TokenSymbol;
     isLong: boolean;
     sizeUsd: string;
     collateralUsd: string;
@@ -49,8 +48,8 @@ interface OpenPositionResponse {
     success: boolean;
     hash: string;
     details: {
-        indexToken: TokenSymbol;
-        collateralToken: TokenSymbol;
+        tokenSymbol: TokenSymbol;
+        collateralTokenSymbol: TokenSymbol;
         isLong: boolean;
         sizeUsd: string;
         collateralUsd: string;
@@ -75,7 +74,6 @@ async function checkTokenBalance(publicClient: PublicClient, tokenAddress: Addre
 
         return formatUnits(balance, decimals);
     } catch (error) {
-        console.error('Error checking token balance:', error);
         return '0';
     }
 }
@@ -85,9 +83,14 @@ export async function validateOpenPosition(
     params: Props,
     userAccountAddress: Address
 ): Promise<PositionValidation> {
-    const { chainName, indexToken: indexTokenSymbol, collateralToken: collateralTokenSymbol, isLong } = params;
+    const { chainName, tokenSymbol, collateralTokenSymbol, isLong } = params;
+    const chainId = getChainFromName(chainName);
+    if (!chainId) {
+        return { success: false, error: `Unsupported chain name: ${chainName}` };
+    }
+    
     const networkName = chainName.toLowerCase();
-    const networkContracts = CONTRACT_ADDRESSES[networkName];
+    const networkContracts = CONTRACT_ADDRESSES[chainId];
 
     if (!networkContracts || !networkContracts.VAULT_PRICE_FEED || !networkContracts.POSITION_ROUTER || !networkContracts.ROUTER) {
         return { success: false, error: `Core contract addresses not found for network: ${networkName}` };
@@ -98,9 +101,16 @@ export async function validateOpenPosition(
     let collateralTokenDecimals: number;
 
     try {
-        indexTokenAddress = getTokenAddress(indexTokenSymbol, networkName);
+        indexTokenAddress = getTokenAddress(tokenSymbol, networkName);
         collateralTokenAddress = getTokenAddress(collateralTokenSymbol, networkName);
         collateralTokenDecimals = getTokenDecimals(collateralTokenSymbol, networkName);
+        
+        if (!indexTokenAddress) {
+            return { success: false, error: `Token ${tokenSymbol} not found on ${networkName}` };
+        }
+        if (!collateralTokenAddress) {
+            return { success: false, error: `Token ${collateralTokenSymbol} not found on ${networkName}` };
+        }
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return { success: false, error: `Failed to resolve token addresses or decimals: ${errorMessage}` };
@@ -129,9 +139,7 @@ export async function validateOpenPosition(
         const indexTokenPriceStr = formatUnits(indexTokenPrice, 30);
         const collateralTokenPriceStr = formatUnits(collateralTokenPrice, 30);
 
-        console.log('\nPrice Details on', networkName);
-        console.log(`Index Token (${indexTokenSymbol}) Price:`, indexTokenPriceStr);
-        console.log(`Collateral Token (${collateralTokenSymbol}) Price:`, collateralTokenPriceStr);
+        // Price details logged internally
 
         const sizeUsdBigInt = parseUnits(params.sizeUsd, 30);
         const collateralUsdBigInt = parseUnits(params.collateralUsd, 30);
@@ -170,14 +178,13 @@ export async function validateOpenPosition(
             },
         };
     } catch (error) {
-        console.error('Error validating position:', error);
         return { success: false, error: `Failed to validate position parameters on ${networkName}` };
     }
 }
 
 async function checkAlternativeLiquidity(
     publicClient: PublicClient,
-    chainName: (typeof NETWORKS)[keyof typeof NETWORKS],
+    chainName: string,
     isLong: boolean,
     options: FunctionOptions,
     accountAddress: `0x${string}`,
@@ -186,12 +193,11 @@ async function checkAlternativeLiquidity(
     const supportedTokens = getSupportedTokens(networkName);
 
     if (!supportedTokens.length) {
-        console.warn(`No supported tokens found for ${networkName} in checkAlternativeLiquidity`);
         return [];
     }
 
     const tradablePerpSymbols: TokenSymbol[] = networkName === 'sonic' 
-        ? (isLong ? ['S', 'ANON', 'WETH', 'STS'] : ['USDC', 'scUSD']) 
+        ? (isLong ? ['S', 'Anon', 'WETH', 'STS'] : ['USDC', 'scUSD']) 
         : (isLong ? ['ETH', 'WETH', 'CBBTC'] : ['USDC']);
 
     const tokensToCheck = supportedTokens.filter(t => tradablePerpSymbols.includes(t.symbol));
@@ -204,7 +210,7 @@ async function checkAlternativeLiquidity(
                 {
                     chainName: chainName,
                     account: accountAddress,
-                    indexToken: token.symbol,
+                    tokenSymbol: token.symbol,
                     isLong,
                 },
                 options,
@@ -219,7 +225,7 @@ async function checkAlternativeLiquidity(
                 });
             }
         } catch (e) {
-            console.warn(`Failed to get liquidity for ${token.symbol} on ${networkName}:`, e)
+            // Skip tokens that fail liquidity check
         }
     }
     return results.sort((a, b) => Number(b.availableLiquidityUsd) - Number(a.availableLiquidityUsd));
@@ -229,16 +235,34 @@ function isPublicClient(client: any): client is PublicClient {
     return client && typeof client === 'object' && 'readContract' in client;
 }
 
+/**
+ * Opens a new perpetual trading position
+ * @param props - The function parameters
+ * @param props.chainName - The name of the chain (must be "sonic")
+ * @param props.account - The account address opening the position
+ * @param props.tokenSymbol - The symbol of the token being traded (e.g., WETH, ANON)
+ * @param props.collateralTokenSymbol - The symbol of the token used as collateral
+ * @param props.isLong - Whether this is a long position
+ * @param props.sizeUsd - The size of the position in USD
+ * @param props.collateralUsd - The collateral amount in USD
+ * @param props.referralCode - Optional referral code
+ * @param props.slippageBps - Optional slippage tolerance in basis points (default: 30)
+ * @param options - System tools for blockchain interactions
+ * @returns Transaction result with position opening details
+ */
 export async function openPosition(
-    { chainName, account, indexToken, collateralToken, isLong, sizeUsd, collateralUsd, referralCode, slippageBps = 30 }: Props,
+    { chainName, account, tokenSymbol, collateralTokenSymbol, isLong, sizeUsd, collateralUsd, referralCode, slippageBps = 30 }: Props,
     options: FunctionOptions,
 ): Promise<FunctionReturn> {
-    const networkName = chainName.toLowerCase() as 'sonic' | 'base';
-    const networkContracts = CONTRACT_ADDRESSES[networkName];
-
-    if (!networkContracts || !networkContracts.POSITION_ROUTER) {
-        return toResult(`PositionRouter address not found for network: ${networkName}`, true);
+    // Validate chain
+    const chainId = getChainFromName(chainName);
+    if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
+    if (chainId !== SupportedChain.SONIC) {
+        return toResult('This function is only supported on Sonic chain', true);
     }
+    
+    const networkName = chainName.toLowerCase();
+    const networkContracts = CONTRACT_ADDRESSES[chainId];
     const positionRouterAddress = networkContracts.POSITION_ROUTER as Address;
 
     let indexTokenAddress: Address;
@@ -247,26 +271,32 @@ export async function openPosition(
     let wrappedNativeAddress: Address;
 
     try {
-        indexTokenAddress = getTokenAddress(indexToken, networkName);
-        collateralTokenAddress = getTokenAddress(collateralToken, networkName);
-        nativeSymbol = networkName === 'sonic' ? 'S' : 'ETH';
-        wrappedNativeAddress = getTokenAddress(networkName === 'sonic' ? 'WS' : 'WETH', networkName);
+        indexTokenAddress = getTokenAddress(tokenSymbol, networkName);
+        collateralTokenAddress = getTokenAddress(collateralTokenSymbol, networkName);
+        nativeSymbol = 'S' as TokenSymbol;
+        wrappedNativeAddress = getTokenAddress('WS', networkName);
+        
+        if (!indexTokenAddress) {
+            return toResult(`Token ${tokenSymbol} not found on ${networkName}`, true);
+        }
+        if (!collateralTokenAddress) {
+            return toResult(`Token ${collateralTokenSymbol} not found on ${networkName}`, true);
+        }
+        if (!wrappedNativeAddress) {
+            return toResult(`Wrapped native token not found on ${networkName}`, true);
+        }
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return toResult(`Failed to resolve token addresses or decimals: ${errorMessage}`, true);
     }
 
-    const chainId = getChainFromName(networkName.toUpperCase() as 'SONIC' | 'BASE');
-    if (!chainId) {
-        return toResult(`Unsupported chain: ${networkName}`, true);
-    }
     const publicClient = options.getProvider(chainId) as PublicClient;
     if (!publicClient || !isPublicClient(publicClient)) {
         return toResult('Public client is not initialized correctly from options.getProvider.', true);
     }
     
     const userAccountAddress = account;
-    const validateProps: Props = { chainName, account: userAccountAddress, indexToken, collateralToken, isLong, sizeUsd, collateralUsd, referralCode, slippageBps };
+    const validateProps: Props = { chainName, account: userAccountAddress, tokenSymbol, collateralTokenSymbol, isLong, sizeUsd, collateralUsd, referralCode, slippageBps };
 
     const validation = await validateOpenPosition(publicClient, validateProps, userAccountAddress);
     if (!validation.success || !validation.details) {
@@ -300,7 +330,7 @@ export async function openPosition(
     const callbackTargetAddress = "0x0000000000000000000000000000000000000000" as Address;
     const minOut = BigInt(0);
 
-    if (collateralToken === nativeSymbol) {
+    if (collateralTokenSymbol === nativeSymbol) {
         const ethPath: readonly Address[] = [wrappedNativeAddress, indexTokenAddress];
         const args = [
             ethPath,
@@ -313,7 +343,7 @@ export async function openPosition(
             referralCodeBytes32,
             callbackTargetAddress
         ] as const;
-        console.log("Calling PositionRouter.createIncreasePositionETH with args:", args, "and value:", amountIn + minExecutionFee);
+        // Call PositionRouter.createIncreasePositionETH
         try {
             data = encodeFunctionData({
                 abi: PositionRouter,
@@ -322,7 +352,6 @@ export async function openPosition(
             });
             value = amountIn + minExecutionFee;
         } catch (error) {
-            console.error("Error encoding createIncreasePositionETH:", error);
             return toResult(`Error encoding createIncreasePositionETH: ${(error as Error).message}`, true);
         }
     } else {
@@ -339,7 +368,7 @@ export async function openPosition(
             referralCodeBytes32,
             callbackTargetAddress
         ] as const;
-        console.log("Calling PositionRouter.createIncreasePosition with args:", args);
+        // Call PositionRouter.createIncreasePosition
         try {
             data = encodeFunctionData({
                 abi: PositionRouter,
@@ -348,16 +377,67 @@ export async function openPosition(
             });
             value = minExecutionFee;
         } catch (error) {
-            console.error("Error encoding createIncreasePosition:", error);
             return toResult(`Error encoding createIncreasePosition: ${(error as Error).message}`, true);
         }
     }
 
-    const tx: TransactionParams = {
+    // Prepare transactions
+    const { checkToApprove } = EVM.utils;
+    const { sendTransactions, notify } = options;
+    const transactions: EVM.types.TransactionParams[] = [];
+    
+    // Check approval for ERC20 collateral
+    if (collateralTokenSymbol !== nativeSymbol) {
+        await checkToApprove({
+            args: {
+                account,
+                target: collateralTokenAddress,
+                spender: networkContracts.ROUTER,
+                amount: amountIn,
+            },
+            provider: publicClient,
+            transactions,
+        });
+    }
+    
+    // Add the position creation transaction
+    transactions.push({
         target: positionRouterAddress,
         data,
-        value,
+        value: value?.toString(),
+    });
+    
+    // Send transactions
+    const result = await sendTransactions({
+        chainId,
+        account,
+        transactions,
+    });
+    
+    if (!result.data?.[0]?.hash) {
+        return toResult('Transaction failed: No transaction hash returned', true);
+    }
+    
+    const txHash = result.data[0].hash;
+    await notify(`Position opening initiated. Transaction: ${txHash}`);
+    
+    // Return response
+    const response: OpenPositionResponse = {
+        success: true,
+        hash: txHash,
+        details: {
+            tokenSymbol,
+            collateralTokenSymbol,
+            isLong,
+            sizeUsd,
+            collateralUsd,
+            leverage: validation.details.leverage,
+            sizeDelta: formatUnits(sizeDelta, 30),
+            collateralDelta: formatUnits(amountIn, getTokenDecimals(collateralTokenSymbol, networkName)),
+            price: validation.details.indexTokenPrice,
+            fee: formatUnits(minExecutionFee, 18),
+        },
     };
-
-    return toResult(tx);
+    
+    return toResult(JSON.stringify(response));
 }

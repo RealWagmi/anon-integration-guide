@@ -1,6 +1,7 @@
-import { Address, getContract, encodeFunctionData, formatUnits } from 'viem';
-import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName } from '@heyanon/sdk';
-import { CONTRACT_ADDRESSES, NETWORKS } from '../../constants.js';
+import { Address, encodeFunctionData, formatUnits } from 'viem';
+import { FunctionReturn, FunctionOptions, TransactionParams, toResult, EVM } from '@heyanon/sdk';
+const { getChainFromName } = EVM.utils;
+import { CONTRACT_ADDRESSES, SupportedChain } from '../../constants.js';
 import { RewardTracker } from '../../abis/RewardTracker.js';
 
 interface Props {
@@ -16,14 +17,16 @@ interface Props {
  * @param options - System tools for blockchain interactions
  * @returns Transaction result with claim details
  */
-export async function claimRewards({ chainName, account }: Props, { getProvider, notify, sendTransactions }: FunctionOptions): Promise<FunctionReturn> {
+export async function claimRewards({ chainName, account }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+    const { notify, getProvider, evm } = options;
+    const sendTransactions = evm?.sendTransactions || options.sendTransactions;
     // Check wallet connection
     if (!account) return toResult('Wallet not connected', true);
 
     // Validate chain
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
-    if (chainName !== NETWORKS.SONIC) {
+    if (chainId !== SupportedChain.SONIC) {
         return toResult(`Protocol is only supported on Sonic chain`, true);
     }
 
@@ -31,16 +34,15 @@ export async function claimRewards({ chainName, account }: Props, { getProvider,
 
     try {
         const provider = getProvider(chainId);
-        const rewardTrackerAddress = CONTRACT_ADDRESSES[NETWORKS.SONIC].REWARD_TRACKER;
-
-        const rewardTracker = getContract({
-            address: rewardTrackerAddress,
-            abi: RewardTracker,
-            publicClient: provider,
-        });
+        const rewardTrackerAddress = CONTRACT_ADDRESSES[SupportedChain.SONIC].REWARD_TRACKER;
 
         // Check if there are rewards to claim
-        const claimableAmount = (await rewardTracker.read.claimable([account])) as bigint;
+        const claimableAmount = await provider.readContract({
+            address: rewardTrackerAddress,
+            abi: RewardTracker,
+            functionName: 'claimable',
+            args: [account],
+        }) as bigint;
 
         if (claimableAmount <= 0n) {
             return toResult('No rewards available to claim', true);

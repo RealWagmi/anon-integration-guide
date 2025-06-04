@@ -1,5 +1,7 @@
-import { AiTool, getChainName } from '@heyanon/sdk';
+import { AiTool, EVM } from '@heyanon/sdk';
 import { supportedChains } from './constants.js';
+
+const { getChainName } = EVM.utils;
 import { addLiquidity } from './functions/liquidity/addLiquidity.js';
 import { removeLiquidity } from './functions/liquidity/removeLiquidity.js';
 import { getPerpsLiquidity } from './functions/trading/leverage/getPerpsLiquidity.js';
@@ -19,40 +21,14 @@ import { getAllOpenPositions } from './functions/trading/leverage/getAllOpenPosi
 // Helper to generate enum based on supported chains
 const supportedChainNames = supportedChains.map(chainId => getChainName(chainId));
 
-// Define token lists for descriptions
-const sonicTokenSymbols = 'S, WS, WETH, Anon, ANON, USDC, scUSD, STS'; // Updated to reflect TokenSymbol
-const baseTokenSymbols = 'ETH, WETH, CBBTC, USDC, VIRTUAL'; // Updated to reflect TokenSymbol
-const allTokenSymbolsDescription = `Supported token symbols. Sonic: (${sonicTokenSymbols}). Base: (${baseTokenSymbols}).`;
+// Define token enums per chain
+const sonicTokens = ['S', 'WS', 'WETH', 'Anon', 'USDC', 'scUSD', 'STS'];
+const baseTokens = ['ETH', 'WETH', 'CBBTC', 'USDC', 'VIRTUAL'];
+const allTokens = [...new Set([...sonicTokens, ...baseTokens])]; // Combined unique tokens
 
-// Internal interface for our implementation needs
-interface Tool extends AiTool {
-    name: string;
-    description: string;
-    function: Function;
-    // Props is used internally by our SDK
-    props: Array<{
-        name: string;
-        type: string;
-        description: string;
-        enum?: string[];
-        optional?: boolean;
-    }>;
-    required: string[];
-    // Parameters follows OpenAI's function calling standard
-    parameters: {
-        type: 'object';
-        properties: {
-            [key: string]: {
-                type: string;
-                description: string;
-                enum?: string[];
-            };
-        };
-        required: string[];
-    };
-}
+// Tool definitions following SDK pattern
 
-export const tools: Tool[] = [
+export const tools: AiTool[] = [
     {
         name: 'addLiquidity',
         description: 'Add liquidity to the protocol by providing tokens in exchange for GLP. You must specify either amount or percentOfBalance.',
@@ -71,68 +47,33 @@ export const tools: Tool[] = [
             {
                 name: 'tokenSymbol',
                 type: 'string',
-                description: `Symbol of the token to provide as liquidity. Sonic: ${sonicTokenSymbols}, Base: ${baseTokenSymbols}`,
+                enum: allTokens,
+                description: 'Symbol of the token to provide as liquidity',
             },
             {
                 name: 'amount',
-                type: 'string',
+                type: ['string', 'null'],
                 description: 'Exact amount of tokens to provide as liquidity. Required if percentOfBalance is not provided.',
             },
             {
                 name: 'percentOfBalance',
-                type: 'number',
+                type: ['number', 'null'],
                 description: 'Percentage of your token balance to use (1-100). Required if amount is not provided.',
             },
             {
                 name: 'minUsdg',
                 type: 'string',
-                description: 'Minimum USDG to receive in decimal format (e.g., "1.5" for 1.5 USDG). Uses 18 decimals. Defaults to "0" if not specified.',
+                description: 'Minimum USDG to receive (e.g., "1.5" for 1.5 USDG). Defaults to "0".',
                 optional: true
             },
             {
                 name: 'minGlp',
                 type: 'string',
-                description: 'Minimum GLP to receive in decimal format (e.g., "1.5" for 1.5 GLP). Uses 18 decimals. Defaults to "0" if not specified.',
+                description: 'Minimum GLP to receive (e.g., "1.5" for 1.5 GLP). Defaults to "0".',
                 optional: true
             },
         ],
         required: ['chainName', 'account', 'tokenSymbol'],
-        parameters: {
-            type: 'object',
-            properties: {
-                chainName: {
-                    type: 'string',
-                    enum: supportedChainNames,
-                    description: 'Name of the blockchain network (sonic or base)',
-                },
-                account: {
-                    type: 'string',
-                    description: 'Account address that will execute the transaction',
-                },
-                tokenSymbol: {
-                    type: 'string',
-                    description: `Symbol of the token to provide as liquidity. Sonic: ${sonicTokenSymbols}, Base: ${baseTokenSymbols}`,
-                },
-                amount: {
-                    type: 'string',
-                    description: 'Exact amount of tokens to provide as liquidity. Required if percentOfBalance is not provided.',
-                },
-                percentOfBalance: {
-                    type: 'number',
-                    description: 'Percentage of your token balance to use (1-100). Required if amount is not provided.',
-                },
-                minUsdg: {
-                    type: 'string',
-                    description: 'Minimum USDG to receive in decimal format (e.g., "1.5" for 1.5 USDG). Uses 18 decimals. Defaults to "0" if not specified.',
-                },
-                minGlp: {
-                    type: 'string',
-                    description: 'Minimum GLP to receive in decimal format (e.g., "1.5" for 1.5 GLP). Uses 18 decimals. Defaults to "0" if not specified.',
-                },
-            },
-            required: ['chainName', 'account', 'tokenSymbol'],
-        },
-        function: addLiquidity,
     },
     {
         name: 'removeLiquidity',
@@ -153,12 +94,13 @@ export const tools: Tool[] = [
             {
                 name: 'tokenOutSymbol',
                 type: 'string',
-                description: `Symbol of the token to receive when removing liquidity. Sonic: ${sonicTokenSymbols}, Base: ${baseTokenSymbols}`,
+                enum: allTokens,
+                description: 'Symbol of the token to receive when removing liquidity',
             },
             {
                 name: 'amount',
                 type: 'string',
-                description: 'Amount of GLP to redeem (in decimal format)',
+                description: 'Amount of GLP to redeem',
             },
             {
                 name: 'slippageTolerance',
@@ -173,38 +115,6 @@ export const tools: Tool[] = [
             },
         ],
         required: ['chainName', 'account', 'tokenOutSymbol', 'amount', 'slippageTolerance'],
-        parameters: {
-            type: 'object',
-            properties: {
-                chainName: {
-                    type: 'string',
-                    enum: supportedChainNames,
-                    description: 'Name of the blockchain network (sonic or base)',
-                },
-                account: {
-                    type: 'string',
-                    description: 'Account address that will receive the redeemed tokens',
-                },
-                tokenOutSymbol: {
-                    type: 'string',
-                    description: `Symbol of the token to receive when removing liquidity. Sonic: ${sonicTokenSymbols}, Base: ${baseTokenSymbols}`,
-                },
-                amount: {
-                    type: 'string',
-                    description: 'Amount of GLP to redeem (in decimal format)',
-                },
-                slippageTolerance: {
-                    type: 'number',
-                    description: 'Maximum acceptable slippage as a percentage (e.g., 0.5 for 0.5%). Defaults to 0.5%.',
-                },
-                skipSafetyChecks: {
-                    type: 'boolean',
-                    description: 'Skip balance and liquidity verification checks',
-                },
-            },
-            required: ['chainName', 'account', 'tokenOutSymbol', 'amount', 'slippageTolerance'],
-        },
-        function: removeLiquidity,
     },
     {
         name: 'getPerpsLiquidity',
@@ -222,9 +132,10 @@ export const tools: Tool[] = [
                 description: 'Account address to check liquidity for',
             },
             {
-                name: 'indexToken',
+                name: 'tokenSymbol',
                 type: 'string',
-                description: `Symbol of the token to trade. ${allTokenSymbolsDescription}`,
+                enum: allTokens,
+                description: 'Symbol of the token to trade',
             },
             {
                 name: 'isLong',
@@ -232,31 +143,7 @@ export const tools: Tool[] = [
                 description: 'Whether to check long or short position liquidity',
             },
         ],
-        required: ['chainName', 'account', 'indexToken', 'isLong'],
-        parameters: {
-            type: 'object',
-            properties: {
-                chainName: {
-                    type: 'string',
-                    enum: supportedChainNames,
-                    description: 'Name of the blockchain network (sonic or base)',
-                },
-                account: {
-                    type: 'string',
-                    description: 'Account address to check liquidity for',
-                },
-                indexToken: {
-                    type: 'string',
-                    description: `Symbol of the token to trade. ${allTokenSymbolsDescription}`,
-                },
-                isLong: {
-                    type: 'boolean',
-                    description: 'Whether to check long or short position liquidity',
-                },
-            },
-            required: ['chainName', 'account', 'indexToken', 'isLong'],
-        },
-        function: getPerpsLiquidity,
+        required: ['chainName', 'account', 'tokenSymbol', 'isLong'],
     },
     {
         name: 'getALPAPR',
@@ -273,34 +160,8 @@ export const tools: Tool[] = [
                 type: 'string',
                 description: 'Account address to check APR for',
             },
-            {
-                name: 'tokenAddress',
-                type: 'string',
-                description: 'Optional - The ALP token address to check APR for. If not provided, uses REWARD_TRACKER from constants',
-                optional: true,
-            },
         ],
         required: ['chainName', 'account'],
-        parameters: {
-            type: 'object',
-            properties: {
-                chainName: {
-                    type: 'string',
-                    enum: supportedChainNames,
-                    description: 'Name of the blockchain network (currently likely Sonic only)',
-                },
-                account: {
-                    type: 'string',
-                    description: 'Account address to check APR for',
-                },
-                tokenAddress: {
-                    type: 'string',
-                    description: 'Optional - The ALP token address to check APR for. If not provided, uses REWARD_TRACKER from constants',
-                },
-            },
-            required: ['chainName', 'account'],
-        },
-        function: getALPAPR,
     },
     {
         name: 'getUserTokenBalances',
@@ -319,22 +180,6 @@ export const tools: Tool[] = [
             },
         ],
         required: ['chainName', 'account'],
-        parameters: {
-            type: 'object',
-            properties: {
-                chainName: {
-                    type: 'string',
-                    enum: supportedChainNames,
-                    description: 'Name of the blockchain network (sonic or base)',
-                },
-                account: {
-                    type: 'string',
-                    description: 'Account address to check token balances for',
-                },
-            },
-            required: ['chainName', 'account'],
-        },
-        function: getUserTokenBalances,
     },
     {
         name: 'getUserLiquidity',
@@ -353,22 +198,6 @@ export const tools: Tool[] = [
             },
         ],
         required: ['chainName', 'account'],
-        parameters: {
-            type: 'object',
-            properties: {
-                chainName: {
-                    type: 'string',
-                    enum: supportedChainNames,
-                    description: 'Name of the blockchain network (currently likely Sonic only)',
-                },
-                account: {
-                    type: 'string',
-                    description: 'Account address to check liquidity for',
-                },
-            },
-            required: ['chainName', 'account'],
-        },
-        function: getUserLiquidity,
     },
     {
         name: 'getPoolLiquidity',
@@ -382,18 +211,6 @@ export const tools: Tool[] = [
             },
         ],
         required: ['chainName'],
-        parameters: {
-            type: 'object',
-            properties: {
-                chainName: {
-                    type: 'string',
-                    enum: supportedChainNames,
-                    description: 'Name of the blockchain network (sonic or base)',
-                },
-            },
-            required: ['chainName'],
-        },
-        function: getPoolLiquidity,
     },
     {
         name: 'getPosition',
@@ -411,14 +228,16 @@ export const tools: Tool[] = [
                 description: 'Account address to check position for',
             },
             {
-                name: 'indexToken',
+                name: 'tokenSymbol',
                 type: 'string',
-                description: 'Address of the token being traded',
+                enum: allTokens,
+                description: 'Symbol of the token being traded',
             },
             {
-                name: 'collateralToken',
+                name: 'collateralTokenSymbol',
                 type: 'string',
-                description: 'Address of the token used as collateral',
+                enum: allTokens,
+                description: 'Symbol of the token used as collateral',
             },
             {
                 name: 'isLong',
@@ -426,35 +245,7 @@ export const tools: Tool[] = [
                 description: 'Whether this is a long position (true) or short position (false)',
             },
         ],
-        required: ['chainName', 'account', 'indexToken', 'collateralToken', 'isLong'],
-        parameters: {
-            type: 'object',
-            properties: {
-                chainName: {
-                    type: 'string',
-                    enum: supportedChainNames,
-                    description: 'Name of the blockchain network (sonic or base)',
-                },
-                account: {
-                    type: 'string',
-                    description: 'Account address to check position for',
-                },
-                indexToken: {
-                    type: 'string',
-                    description: 'Address of the token being traded',
-                },
-                collateralToken: {
-                    type: 'string',
-                    description: 'Address of the token used as collateral',
-                },
-                isLong: {
-                    type: 'boolean',
-                    description: 'Whether this is a long position (true) or short position (false)',
-                },
-            },
-            required: ['chainName', 'account', 'indexToken', 'collateralToken', 'isLong'],
-        },
-        function: getPosition,
+        required: ['chainName', 'account', 'tokenSymbol', 'collateralTokenSymbol', 'isLong'],
     },
     {
         name: 'closePosition',
@@ -492,7 +283,7 @@ export const tools: Tool[] = [
             {
                 name: 'sizeDelta',
                 type: 'string',
-                description: 'Optional amount to close (in USD, with 30 decimals). If not provided, closes entire position.',
+                description: 'Optional amount to close in USD (e.g., "100" for $100). If not provided, closes entire position.',
                 optional: true,
             },
             {
@@ -508,46 +299,6 @@ export const tools: Tool[] = [
             },
         ],
         required: ['chainName', 'account', 'slippageBps'],
-        parameters: {
-            type: 'object',
-            properties: {
-                chainName: {
-                    type: 'string',
-                    enum: supportedChainNames,
-                    description: 'Name of the blockchain network (sonic or base)',
-                },
-                account: {
-                    type: 'string',
-                    description: 'Account address that owns the position(s)',
-                },
-                indexToken: {
-                    type: 'string',
-                    description: 'Optional address of the token being traded. If not provided, closes positions for all tokens.',
-                },
-                collateralToken: {
-                    type: 'string',
-                    description: 'Optional address of the token used as collateral. If not provided, closes positions with any collateral.',
-                },
-                isLong: {
-                    type: 'boolean',
-                    description: 'Optional position type. If not provided, closes both long and short positions.',
-                },
-                sizeDelta: {
-                    type: 'string',
-                    description: 'Optional amount to close (in USD, with 30 decimals). If not provided, closes entire position.',
-                },
-                slippageBps: {
-                    type: 'number',
-                    description: 'Slippage tolerance in basis points (1 bps = 0.01%). Defaults to 30.',
-                },
-                withdrawETH: {
-                    type: 'boolean',
-                    description: 'Whether to withdraw in native token (S/ETH) instead of wrapped token. Defaults to false.',
-                },
-            },
-            required: ['chainName', 'account', 'slippageBps'],
-        },
-        function: closePosition,
     },
     {
         name: 'claimRewards',
@@ -566,22 +317,6 @@ export const tools: Tool[] = [
             },
         ],
         required: ['chainName', 'account'],
-        parameters: {
-            type: 'object',
-            properties: {
-                chainName: {
-                    type: 'string',
-                    enum: supportedChainNames,
-                    description: 'Name of the blockchain network (currently likely Sonic only)',
-                },
-                account: {
-                    type: 'string',
-                    description: 'Account address to claim rewards for',
-                },
-            },
-            required: ['chainName', 'account'],
-        },
-        function: claimRewards,
     },
     {
         name: 'getEarnings',
@@ -600,22 +335,6 @@ export const tools: Tool[] = [
             },
         ],
         required: ['chainName', 'account'],
-        parameters: {
-            type: 'object',
-            properties: {
-                chainName: {
-                    type: 'string',
-                    enum: supportedChainNames,
-                    description: 'Name of the blockchain network (currently likely Sonic only)',
-                },
-                account: {
-                    type: 'string',
-                    description: 'Account address to check earnings for',
-                },
-            },
-            required: ['chainName', 'account'],
-        },
-        function: getEarnings,
     },
     {
         name: 'marketSwap',
@@ -635,12 +354,14 @@ export const tools: Tool[] = [
             {
                 name: 'tokenIn',
                 type: 'string',
-                description: `Token symbol to swap from. Sonic: ${sonicTokenSymbols}, Base: ${baseTokenSymbols}`,
+                enum: allTokens,
+                description: 'Token symbol to swap from',
             },
             {
                 name: 'tokenOut',
                 type: 'string',
-                description: `Token symbol to swap to. Sonic: ${sonicTokenSymbols}, Base: ${baseTokenSymbols}`,
+                enum: allTokens,
+                description: 'Token symbol to swap to',
             },
             {
                 name: 'amountIn',
@@ -654,38 +375,6 @@ export const tools: Tool[] = [
             },
         ],
         required: ['chainName', 'account', 'tokenIn', 'tokenOut', 'amountIn', 'slippageBps'],
-        parameters: {
-            type: 'object',
-            properties: {
-                chainName: {
-                    type: 'string',
-                    enum: supportedChainNames,
-                    description: 'Name of the blockchain network (sonic or base)',
-                },
-                account: {
-                    type: 'string',
-                    description: 'Account address executing the swap',
-                },
-                tokenIn: {
-                    type: 'string',
-                    description: `Token symbol to swap from. Sonic: ${sonicTokenSymbols}, Base: ${baseTokenSymbols}`,
-                },
-                tokenOut: {
-                    type: 'string',
-                    description: `Token symbol to swap to. Sonic: ${sonicTokenSymbols}, Base: ${baseTokenSymbols}`,
-                },
-                amountIn: {
-                    type: 'string',
-                    description: 'Amount of input token to swap',
-                },
-                slippageBps: {
-                    type: 'number',
-                    description: 'Slippage tolerance in basis points (1 bps = 0.01%). Defaults to 100.',
-                },
-            },
-            required: ['chainName', 'account', 'tokenIn', 'tokenOut', 'amountIn', 'slippageBps'],
-        },
-        function: marketSwap,
     },
     {
         name: 'getSwapsLiquidity',
@@ -704,22 +393,6 @@ export const tools: Tool[] = [
             },
         ],
         required: ['chainName', 'account'],
-        parameters: {
-            type: 'object',
-            properties: {
-                chainName: {
-                    type: 'string',
-                    enum: supportedChainNames,
-                    description: 'Name of the blockchain network (sonic or base)',
-                },
-                account: {
-                    type: 'string',
-                    description: 'Account address to check liquidity for',
-                },
-            },
-            required: ['chainName', 'account'],
-        },
-        function: getSwapsLiquidity,
     },
     {
         name: 'openPosition',
@@ -737,14 +410,16 @@ export const tools: Tool[] = [
                 description: 'Account address initiating the position',
             },
             {
-                name: 'indexToken',
+                name: 'tokenSymbol',
                 type: 'string',
-                description: `Symbol of the token for the position market. ${allTokenSymbolsDescription}`,
+                enum: allTokens,
+                description: 'Symbol of the token for the position market',
             },
             {
-                name: 'collateralToken',
+                name: 'collateralTokenSymbol',
                 type: 'string',
-                description: `Symbol of the token to use as collateral. ${allTokenSymbolsDescription}`,
+                enum: allTokens,
+                description: 'Symbol of the token to use as collateral',
             },
             {
                 name: 'isLong',
@@ -773,51 +448,7 @@ export const tools: Tool[] = [
                 optional: true,
             },
         ],
-        required: ['chainName', 'account', 'indexToken', 'collateralToken', 'isLong', 'sizeUsd', 'collateralUsd', 'slippageBps'],
-        parameters: {
-            type: 'object',
-            properties: {
-                chainName: {
-                    type: 'string',
-                    enum: supportedChainNames,
-                    description: 'Name of the blockchain network (sonic or base)',
-                },
-                account: {
-                    type: 'string',
-                    description: 'Account address initiating the position',
-                },
-                indexToken: {
-                    type: 'string',
-                    description: `Symbol of the token for the position market. ${allTokenSymbolsDescription}`,
-                },
-                collateralToken: {
-                    type: 'string',
-                    description: `Symbol of the token to use as collateral. ${allTokenSymbolsDescription}`,
-                },
-                isLong: {
-                    type: 'boolean',
-                    description: 'Whether to open a long position (true) or short position (false)',
-                },
-                sizeUsd: {
-                    type: 'string',
-                    description: 'Size of the position in USD (minimum $11)',
-                },
-                collateralUsd: {
-                    type: 'string',
-                    description: 'Amount of collateral in USD (minimum $10)',
-                },
-                slippageBps: {
-                    type: 'number',
-                    description: 'Slippage tolerance in basis points (1 bps = 0.01%). Defaults to 30.',
-                },
-                referralCode: {
-                    type: 'string',
-                    description: 'Optional referral code',
-                },
-            },
-            required: ['chainName', 'account', 'indexToken', 'collateralToken', 'isLong', 'sizeUsd', 'collateralUsd', 'slippageBps'],
-        },
-        function: openPosition,
+        required: ['chainName', 'account', 'tokenSymbol', 'collateralTokenSymbol', 'isLong', 'sizeUsd', 'collateralUsd', 'slippageBps'],
     },
     {
         name: 'getAllOpenPositions',
@@ -836,21 +467,5 @@ export const tools: Tool[] = [
             },
         ],
         required: ['chainName', 'account'],
-        parameters: {
-            type: 'object',
-            properties: {
-                chainName: {
-                    type: 'string',
-                    enum: supportedChainNames,
-                    description: 'Name of the blockchain network (sonic or base)',
-                },
-                account: {
-                    type: 'string',
-                    description: 'Account address to check positions for',
-                },
-            },
-            required: ['chainName', 'account'],
-        },
-        function: getAllOpenPositions,
     },
 ];

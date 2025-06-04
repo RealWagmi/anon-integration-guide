@@ -1,6 +1,7 @@
 import { formatUnits, Address, getContract, PublicClient, Chain, Transport } from 'viem';
-import { FunctionReturn, FunctionOptions, toResult, getChainFromName } from '@heyanon/sdk';
-import { CONTRACT_ADDRESSES, NETWORKS, LowercaseChainName } from '../../constants.js';
+import { FunctionReturn, FunctionOptions, toResult, EVM } from '@heyanon/sdk';
+const { getChainFromName } = EVM.utils;
+import { CONTRACT_ADDRESSES, LowercaseChainName } from '../../constants.js';
 import { GlpManager } from '../../abis/GlpManager.js';
 import { ERC20 } from '../../abis/ERC20.js';
 import { Vester } from '../../abis/Vester.js';
@@ -43,13 +44,14 @@ export interface UserLiquidityInfo {
  * @param {FunctionOptions} options - The function options
  * @returns {Promise<FunctionReturn>} The user's ALP information including balances and values
  */
-export async function getUserLiquidity({ chainName, account }: UserLiquidityProps, { notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
+export async function getUserLiquidity({ chainName, account }: UserLiquidityProps, options: FunctionOptions): Promise<FunctionReturn> {
+    const { evm: { getProvider }, notify } = options;
     // Validate chain
     const chainId = getChainFromName(chainName);
     if (!chainId) {
         return toResult(`Network ${chainName} not supported`, true);
     }
-    if (chainName !== NETWORKS.SONIC) {
+    if (chainName !== 'sonic') {
         return toResult('This function is only supported on Sonic chain', true);
     }
 
@@ -68,7 +70,7 @@ export async function getUserLiquidity({ chainName, account }: UserLiquidityProp
 
         // Get fsALP balance
         const balance = await provider.readContract({
-            address: CONTRACT_ADDRESSES[chainName].FS_ALP,
+            address: CONTRACT_ADDRESSES[chainId].FS_ALP,
             abi: ERC20,
             functionName: 'balanceOf',
             args: [account],
@@ -76,7 +78,7 @@ export async function getUserLiquidity({ chainName, account }: UserLiquidityProp
 
         // Get ALP price
         const alpPrice = await provider.readContract({
-            address: CONTRACT_ADDRESSES[chainName].GLP_MANAGER,
+            address: CONTRACT_ADDRESSES[chainId].GLP_MANAGER,
             abi: GlpManager,
             functionName: 'getPrice',
             args: [false],
@@ -84,7 +86,7 @@ export async function getUserLiquidity({ chainName, account }: UserLiquidityProp
 
         // Get reserved amount in vesting
         const reservedAmount = await provider.readContract({
-            address: CONTRACT_ADDRESSES[chainName].ALP_VESTER,
+            address: CONTRACT_ADDRESSES[chainId].ALP_VESTER,
             abi: Vester,
             functionName: 'pairAmounts',
             args: [account],
