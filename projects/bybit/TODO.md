@@ -2,7 +2,7 @@
 
 ## Features
 
-- Show positions across different settle coins
+- Test spot
 - Margin mode applies at account level, not per market
 - Margin mode can be changed also if there are open positions
 

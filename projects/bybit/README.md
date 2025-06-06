@@ -59,7 +59,7 @@ Plese note that Bybit uses a Unified Trading Account (UTA) approach, so the retu
 
 <!-- - Show my margin on BTC/USDT on @bybit -->
 <!-- - What is my leverage on BTC/USDT on @bybit? -->
-<!-- - Set 50x leverage on BTC/USDT on @bybit -->
+- Set 50x leverage on BTC/USDT on @bybit
 <!-- - Set isolated margin mode on BTC/USDT on @bybit -->
 <!-- - Set cross margin mode on BTC/USDT on @bybit -->
 <!-- - Add 100 USDT margin to my BTC/USDT position on @bybit -->

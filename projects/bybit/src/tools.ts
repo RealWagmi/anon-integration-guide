@@ -67,4 +67,21 @@ export const tools: AiTool[] = [
             },
         ],
     },
+    {
+        name: 'setMarketLeverage',
+        description: 'Set the user configured leverage for a specific futures market',
+        required: ['market', 'leverage'],
+        props: [
+            {
+                name: 'market',
+                type: 'string',
+                description: 'Market symbol, e.g. "BTC/USDT:USDT" or "BTC/USDT:USDT-250926"',
+            },
+            {
+                name: 'leverage',
+                type: 'number',
+                description: 'Leverage to set, e.g. 10 for 10x, 50 for 50x, etc.',
+            },
+        ],
+    },
 ];

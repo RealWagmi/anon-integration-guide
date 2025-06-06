@@ -10,7 +10,7 @@ interface Props {
 }
 
 /**
- * Get details on the position held by the user on the given market
+ * Get details on the leveraged position held by the user on the given market
  *
  * @param {Object} props - The function input parameters
  * @param {string} props.market - The symbol of the market
