@@ -3,7 +3,7 @@ import { FunctionOptionsWithExchange } from '../overrides';
 import { formatPositionMultiLine } from '../helpers/format';
 import { getUserOpenPositionBySymbol } from '../helpers/positions';
 import { getAccountMarginMode, SUPPORTS_SETTING_MARGIN_MODE_AT_MARKET_LEVEL } from '../helpers/exchange';
-import { getMarketObject } from '../helpers/markets';
+import { fromCcxtMarketToMarketType, getMarketObject } from '../helpers/markets';
 
 interface Props {
     market: string;
@@ -20,6 +20,10 @@ interface Props {
 export async function getPositionOnMarket({ market }: Props, { exchange, notify }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
     // Get market object
     const marketObject = await getMarketObject(exchange, market);
+    const marketType = fromCcxtMarketToMarketType(marketObject);
+    if (marketType !== 'perpetual' && marketType !== 'delivery') {
+        return toResult(`This function supports only perpetual or delivery markets, but ${market} is a ${marketType} market`, true);
+    }
 
     // Get position
     const position = await getUserOpenPositionBySymbol(exchange, market);
@@ -38,8 +42,6 @@ export async function getPositionOnMarket({ market }: Props, { exchange, notify 
     } catch (error) {
         notify(`Could not fetch margin mode for the account, margin metric might be inaccurate`);
     }
-
-    console.log(position);
 
     return toResult(formatPositionMultiLine(position, marketObject));
 }

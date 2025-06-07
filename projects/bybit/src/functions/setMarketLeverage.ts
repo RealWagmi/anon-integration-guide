@@ -22,7 +22,7 @@ export async function setMarketLeverage({ market, leverage }: Props, { exchange 
     const marketObject = await getMarketObject(exchange, market);
     const marketType = fromCcxtMarketToMarketType(marketObject);
     if (marketType !== 'perpetual' && marketType !== 'delivery') {
-        return toResult(`This function supports only perpetual or delivery markets, but ${market} is a ${marketType} market`);
+        return toResult(`This function supports only perpetual or delivery markets, but ${market} is a ${marketType} market`, true);
     }
     // Set leverage
     try {
