@@ -6,64 +6,64 @@ Integration between HeyAnon.ai and Bybit Spot & Future trading, including perpet
 
 ### Info on markets
 
-- Show all BTC perpetual markets on @bybit
-- Show all BTC spot markets on @bybit
-- Show last price and volume of BTC/USDT on @bybit
-- Show last price and volume of perpetual market BTC/USDT on @bybit
-- Show details on market BTC/USD:BTC-250926 on @bybit
-- Show max leverage for BTC/USDT perps on @bybit
+- Show all BTC perpetual markets
+- Show all BTC spot markets
+- Show last price and volume of BTC/USDT
+- Show last price and volume of perpetual market BTC/USDT
+- Show details on market BTC/USD:BTC-250926
+- Show max leverage for BTC/USDT perps
 
 Please note that asking for future markets (e.g. "Show all BTC future markets") will return both perpetual and delivery markets.
 
 ### Info on balance
 
-- Show my balance on @bybit
-- Show my BTC balance on @bybit
+- Show my balance
+- Show my BTC balance
 
 Plese note that Bybit uses a Unified Trading Account (UTA) approach, so the returned balance is the total available balance regardless of the product type (spot, futures, etc).
 
 ### Info on open orders
 
-- TO DO: Show all my open orders on @bybit
-- TO DO: Show my BTC open orders on @bybit
-- TO DO: Show details on order 232168017 on @bybit
+- TO DO: Show all my open orders
+- TO DO: Show my BTC open orders
+- TO DO: Show details on order 232168017
 
 ### Cancel orders
 
-- TO DO: Cancel all my orders on @bybit
-- TO DO: Cancel all my orders on BTC/USDT on @bybit
-- TO DO: Cancel order 232168017 on @bybit
+- TO DO: Cancel all my orders
+- TO DO: Cancel all my orders on BTC/USDT
+- TO DO: Cancel order 232168017
 
 ## Spot trading commands
 
 ### Spot - Market & limit orders
 
-- Market buy 1 BTC with USDT on @binance
-- Buy 1 BTC at 40,000 USDT on @binance
-- Sell half of my BTC at 150,000 USDT on @binance
-- Buy BTC with all my USDT on @binance
+- TO DO: Market buy 1 BTC with USDT
+- TO DO: Buy 1 BTC at 40,000 USDT
+- TO DO: Sell half of my BTC at 150,000 USDT
+- TO DO: Buy BTC with all my USDT
 
 ### Spot - Conditional orders
 
-- Market buy 1 BTC on @binance when the price goes below 50,000 USDT
-- Buy 1 BTC at 45,000 USDT on @binance when the price goes below 50,000 USDT
-- Market buy BTC with 100 USDT, then place an order to sell it for 10% profit on @binance
-- Market buy 1 BTC with USDT then place a 15% stop loss on @binance
+- TO DO: Market buy 1 BTC when the price goes below 50,000 USDT
+- TO DO: Buy 1 BTC at 45,000 USDT when the price goes below 50,000 USDT
+- TO DO: Market buy BTC with 100 USDT, then place an order to sell it for 10% profit
+- TO DO: Market buy 1 BTC with USDT then place a 15% stop loss
 
 ### Spot - Stop loss & take profit (OCO)
 
-- Sell 1 BTC for USDT with a 10% take profit and a 15% stop loss on @binance
-- Market buy BTC with 100 USDT, then place a 10% take profit and a 15% stop loss on @binance
-- Sell all of my BTC for USDT with a 10% take profit and a 15% stop loss on @binance
+- TO DO: Sell 1 BTC for USDT with a 10% take profit and a 15% stop loss
+- TO DO: Market buy BTC with 100 USDT, then place a 10% take profit and a 15% stop loss
+- TO DO: Sell all of my BTC for USDT with a 10% take profit and a 15% stop loss
 
 ### Spot - Trailing stop orders
 
-- Place an order to sell 1 BTC for USDT with a trailing take profit of 10%
-- Place an order to sell 1 BTC @ 100,000 USDT with a trailing take profit of 10%
-- Place an order to sell 1 BTC for USDT with a trailing take loss of 10%
-- Place an order to sell 1 BTC @ 50,000 USDT with a trailing take loss of 10%
-- Place an order to buy 1 BTC with USDT with a trailing take profit of 10%
-- Place an order to buy 1 BTC with USDT with a trailing stop loss of 10%
+- TO DO: Place an order to sell 1 BTC for USDT with a trailing take profit of 10%
+- TO DO: Place an order to sell 1 BTC @ 100,000 USDT with a trailing take profit of 10%
+- TO DO: Place an order to sell 1 BTC for USDT with a trailing take loss of 10%
+- TO DO: Place an order to sell 1 BTC @ 50,000 USDT with a trailing take loss of 10%
+- TO DO: Place an order to buy 1 BTC with USDT with a trailing take profit of 10%
+- TO DO: Place an order to buy 1 BTC with USDT with a trailing stop loss of 10%
 
 ## Futures trading commands
 
@@ -71,53 +71,53 @@ By "futures" we mean both perpetual futures and delivery (aka "expiry") futures.
 
 ### Futures - Info on positions
 
-- Show all my positions on @bybit
-- Show my BTC/USDT position on @bybit
-- Show all of my BTC positions on @bybit
-- Show all of my expiry positions on @bybit
+- Show all my positions
+- Show my BTC/USDT position
+- Show all of my BTC positions
+- Show all of my expiry positions
 
 ### Futures - Market & limit orders
 
-- TO DO: Long 1 BTC with USDT on @bybit
-- TO DO: Long 1 BTC with USDT with isolated margin on @bybit
-- TO DO: 100x long 1 BTC with USDT on @bybit
-- TO DO: Long 1 BTC at limit price of 40,000 USDT on @bybit
-- TO DO: Short BTC with limit price of 150,000 USDT on @bybit
+- TO DO: Long 1 BTC with USDT
+- TO DO: Long 1 BTC with USDT with isolated margin
+- TO DO: 100x long 1 BTC with USDT
+- TO DO: Long 1 BTC at limit price of 40,000 USDT
+- TO DO: Short BTC with limit price of 150,000 USDT
 
 By default, the agent assumes you want to trade on perpetual markets. To use a delivery market instead, ask for it:
 
-- TO DO: Long 1 BTC with USDT on the June 2025 delivery market on @bybit
-- TO DO: Long 1 BTC on BTC:USDT-250926 on @bybit
+- TO DO: Long 1 BTC with USDT on the June 2025 delivery market
+- TO DO: Long 1 BTC on BTC:USDT-250926
 
 **IMPORTANT:** If you specify a leverage (5x, 10x, etc) or a margin mode (cross, isolated) for your order, the specified leverage and margin mode will be applied to the whole position and account, respectively, and not just to the amount you are adding/removing. This is because on Bybit the leverage is applied at the market level and the margin mode is applied at the whole account level.
 
 ### Futures - Leverage and margin
 
-- TO DO: Show my margin on BTC/USDT on @bybit
-- TO DO: What is my leverage on BTC/USDT on @bybit?
-- Set 50x leverage on BTC/USDT on @bybit
-- TO DO: Set isolated margin mode on BTC/USDT on @bybit
-- TO DO: Set cross margin mode on BTC/USDT on @bybit
-- TO DO: Add 100 USDT margin to my BTC/USDT position on @bybit
-- TO DO: Remove 200 USDT margin from my BTC/USDT position on @bybit
+- TO DO: Show my margin on BTC/USDT
+- TO DO: What is my leverage on BTC/USDT?
+- Set 50x leverage on BTC/USDT
+- TO DO: Set isolated margin mode on BTC/USDT
+- TO DO: Set cross margin mode on BTC/USDT
+- TO DO: Add 100 USDT margin to my BTC/USDT position
+- TO DO: Remove 200 USDT margin from my BTC/USDT position
 
 Please note that the margin shown by the tools is the same shown in the Bybit UI. For cross positions, that is the initial margin, while for isolated positions **(TO DO: test this)** it is the actual margin set aside by the user for the position.
 
 ### Futures - Conditional orders
 
-- TO DO: Long 1 BTC on @bybit when the price crosses 50,000 USDT
-- TO DO: Long 1 BTC at 45,000 USDT on @bybit when the price crosses 50,000 USDT
+- TO DO: Long 1 BTC when the price crosses 50,000 USDT
+- TO DO: Long 1 BTC at 45,000 USDT when the price crosses 50,000 USDT
 
 ### Futures - Stop loss & take profit
 
 - TO DO: Add a 10% TP and a 15% SL to my existing BTC/USDT position
 - TO DO: 20x long 1 BTC with USDT, then place a stop loss at 15% and three take profit targets at 10%-20%-30%
-- TO DO: Short 1 BTC with USDT, then place an order to close the position at 10% profit on @bybit
-- TO DO: Long 1 BTC with USDT, then place a 10% take profit and 15% stop loss on @bybit
+- TO DO: Short 1 BTC with USDT, then place an order to close the position at 10% profit
+- TO DO: Long 1 BTC with USDT, then place a 10% take profit and 15% stop loss
 
 When it is clear from context that the TP and SL orders are attached to a position, they will be issued as **reduce-only** orders, to prevent accidentally increase the position size or open a new position. To force a reduce only order, just ask for it, e.g.
 
-- TO DO: Long 1 BTC on @bybit when the price crosses 50,000 USDT, _reduce only_
+- TO DO: Long 1 BTC when the price crosses 50,000 USDT, _reduce only_
 
 ### Futures - Trailing stop orders
 
@@ -136,9 +136,9 @@ When it is clear from context that the TP and SL orders are attached to a positi
 
 ### Futures - Close positions
 
-- TO DO: Close my BTC/USDT position on @bybit
-- TO DO: Close all my positions on @bybit
-- TO DO: Close all of my BTC positions on @bybit
+- TO DO: Close my BTC/USDT position
+- TO DO: Close all my positions
+- TO DO: Close all of my BTC positions
 
 ## CCXT
 
