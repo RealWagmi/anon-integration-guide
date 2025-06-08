@@ -2,7 +2,7 @@
 // export { createTriggerOrder } from './createTriggerOrder';
 // export { createTrailingStopOrder } from './createTrailingStopOrder';
 // export { closePosition } from './closePositions';
-export { setMarketLeverage } from './setMarketLeverage';
+export { setUserLeverageOnMarket } from './setUserLeverageOnMarket';
 // export { setMarginMode } from './setMarginMode';
 // export { addMarginToIsolatedPosition } from './addMarginToIsolatedPosition';
 // export { reduceMarginFromIsolatedPosition } from './reduceMarginFromIsolatedPosition';

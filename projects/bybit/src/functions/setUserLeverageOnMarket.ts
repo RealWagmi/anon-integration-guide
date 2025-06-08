@@ -1,6 +1,6 @@
 import { FunctionReturn, toResult } from '@heyanon/sdk';
 import { FunctionOptionsWithExchange } from '../overrides';
-import { getUserLeverageOnMarket, setUserLeverageOnMarket } from '../helpers/leverage';
+import { getUserLeverageOnMarket, setUserLeverageOnMarket as setUserLeverageOnMarketHelper } from '../helpers/leverage';
 import { fromCcxtMarketToMarketType, getMarketObject } from '../helpers/markets';
 
 interface Props {
@@ -17,7 +17,7 @@ interface Props {
  * @param {FunctionOptions} options HeyAnon SDK options
  * @returns {Promise<FunctionReturn>} A message with the result of the operation
  */
-export async function setMarketLeverage({ market, leverage }: Props, { exchange }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
+export async function setUserLeverageOnMarket({ market, leverage }: Props, { exchange }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
     // Ensure market type is correct
     const marketObject = await getMarketObject(exchange, market);
     const marketType = fromCcxtMarketToMarketType(marketObject);
@@ -28,7 +28,7 @@ export async function setMarketLeverage({ market, leverage }: Props, { exchange 
     try {
         const currentLeverage = await getUserLeverageOnMarket(exchange, market);
         if (currentLeverage.longLeverage !== leverage) {
-            await setUserLeverageOnMarket(exchange, market, leverage);
+            await setUserLeverageOnMarketHelper(exchange, market, leverage);
             return toResult(`Successfully set leverage for ${market} to ${leverage}x`);
         } else {
             return toResult(`Leverage for ${market} is already set to ${leverage}x`);

@@ -68,7 +68,7 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'setMarketLeverage',
+        name: 'setUserLeverageOnMarket',
         description: 'Set the user configured leverage for a specific futures market',
         required: ['market', 'leverage'],
         props: [
