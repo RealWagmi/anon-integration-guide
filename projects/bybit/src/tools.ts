@@ -68,6 +68,18 @@ export const tools: AiTool[] = [
         ],
     },
     {
+        name: 'getUserLeverageOnMarket',
+        description: 'Get the user configured leverage for the given futures market',
+        required: ['market'],
+        props: [
+            {
+                name: 'market',
+                type: 'string',
+                description: 'Market symbol, e.g. "BTC/USDT:USDT" or "BTC/USDT:USDT-250926"',
+            },
+        ],
+    },
+    {
         name: 'setUserLeverageOnMarket',
         description: 'Set the user configured leverage for a specific futures market',
         required: ['market', 'leverage'],
