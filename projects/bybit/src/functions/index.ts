@@ -2,8 +2,8 @@
 // export { createTriggerOrder } from './createTriggerOrder';
 // export { createTrailingStopOrder } from './createTrailingStopOrder';
 // export { closePosition } from './closePositions';
+export { setUserMarginMode } from './setUserMarginMode';
 export { setUserLeverageOnMarket } from './setUserLeverageOnMarket';
-// export { setMarginMode } from './setMarginMode';
 // export { addMarginToIsolatedPosition } from './addMarginToIsolatedPosition';
 // export { reduceMarginFromIsolatedPosition } from './reduceMarginFromIsolatedPosition';
 // export { cancelAllOrdersOnMarket } from './cancelAllOrdersOnMarket';

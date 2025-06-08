@@ -93,15 +93,19 @@ By default, the agent assumes you want to trade on perpetual markets. To use a d
 
 ### Futures - Leverage and margin
 
-- TO DO: Show my margin on BTC/USDT
-- TO DO: What is my leverage on BTC/USDT?
+- Show my margin on BTC/USDT
+- What is my leverage on BTC/USDT?
 - Set 50x leverage on BTC/USDT
-- TO DO: Set isolated margin mode on BTC/USDT
-- TO DO: Set cross margin mode on BTC/USDT
+- Change margin mode to isolated
+- Change margin mode to cross
+- Change margin mode to portfolio
 - TO DO: Add 100 USDT margin to my BTC/USDT position
 - TO DO: Remove 200 USDT margin from my BTC/USDT position
 
-Please note that the margin shown by the tools is the same shown in the Bybit UI. For cross positions, that is the initial margin, while for isolated positions **(TO DO: test this)** it is the actual margin set aside by the user for the position.
+Please note that:
+
+- on Bybit, be careful changing the margin mode, as it will be applied to all of your open positions regardless of the market.
+- the margin shown by the tools is the same shown in the Bybit UI. For cross positions, that is the initial margin, while for isolated positions it is the actual margin set aside by the user for the position.
 
 ### Futures - Conditional orders
 

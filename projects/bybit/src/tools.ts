@@ -1,5 +1,5 @@
 import { AiTool } from '@heyanon/sdk';
-import { MAX_MARKETS_IN_RESULTS, MAX_POSITIONS_IN_RESULTS } from './constants';
+import { MARGIN_MODES, MAX_MARKETS_IN_RESULTS, MAX_POSITIONS_IN_RESULTS } from './constants';
 import { SUPPORTED_MARKET_TYPES } from './helpers/exchange';
 
 const MARKET_TYPE_PARAMETER = {
@@ -17,6 +17,36 @@ const MARKET_DESCRIPTION = [
 ].join(' ');
 
 export const tools: AiTool[] = [
+    {
+        name: 'setUserMarginMode',
+        description: "Set the margin mode for the user account.  This will change the margin mode for all of the user's open positions.",
+        required: ['marginMode'],
+        props: [
+            {
+                name: 'marginMode',
+                type: 'string',
+                description: `Margin mode to set`,
+                enum: MARGIN_MODES,
+            },
+        ],
+    },
+    {
+        name: 'setUserLeverageOnMarket',
+        description: 'Set the user configured leverage for a specific futures market',
+        required: ['market', 'leverage'],
+        props: [
+            {
+                name: 'market',
+                type: 'string',
+                description: 'Market symbol, e.g. "BTC/USDT:USDT" or "BTC/USDT:USDT-250926"',
+            },
+            {
+                name: 'leverage',
+                type: 'number',
+                description: 'Leverage to set, e.g. 10 for 10x, 50 for 50x, etc.',
+            },
+        ],
+    },
     {
         name: 'getPositions',
         description: `Show the user's most recent ${MAX_POSITIONS_IN_RESULTS} open positions on future markets, including notional, margin, and PnL.`,
@@ -82,23 +112,6 @@ export const tools: AiTool[] = [
                 name: 'market',
                 type: 'string',
                 description: 'Market symbol, e.g. "BTC/USDT:USDT" or "BTC/USDT:USDT-250926"',
-            },
-        ],
-    },
-    {
-        name: 'setUserLeverageOnMarket',
-        description: 'Set the user configured leverage for a specific futures market',
-        required: ['market', 'leverage'],
-        props: [
-            {
-                name: 'market',
-                type: 'string',
-                description: 'Market symbol, e.g. "BTC/USDT:USDT" or "BTC/USDT:USDT-250926"',
-            },
-            {
-                name: 'leverage',
-                type: 'number',
-                description: 'Leverage to set, e.g. 10 for 10x, 50 for 50x, etc.',
             },
         ],
     },

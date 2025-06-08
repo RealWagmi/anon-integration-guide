@@ -4,7 +4,7 @@ import { MAX_POSITIONS_IN_RESULTS } from '../constants';
 import { formatPositionSingleLine } from '../helpers/format';
 import { MarketInterface, Position } from 'ccxt';
 import { getUserOpenPositions } from '../helpers/positions';
-import { getAccountMarginMode, SETTLE_CURRENCIES, SUPPORTS_SETTING_MARGIN_MODE_AT_MARKET_LEVEL } from '../helpers/exchange';
+import { getAccountMarginMode, SUPPORTED_SETTLE_CURRENCIES, EXCHANGE_SUPPORTS_SETTING_MARGIN_MODE_AT_MARKET_LEVEL } from '../helpers/exchange';
 
 interface Props {}
 
@@ -19,7 +19,7 @@ export async function getPositions({}: Props, { exchange, notify }: FunctionOpti
     try {
         // Get all open positions
         const positions: Position[] = [];
-        for (const settle of SETTLE_CURRENCIES) {
+        for (const settle of SUPPORTED_SETTLE_CURRENCIES) {
             const positionsForSettle = await getUserOpenPositions(exchange, { settleCoin: settle });
             positions.push(...positionsForSettle);
         }
@@ -29,7 +29,7 @@ export async function getPositions({}: Props, { exchange, notify }: FunctionOpti
 
         // Fetch margin mode at the account level, if needed
         try {
-            if (positions.some((p) => typeof p.marginMode === 'undefined' && !SUPPORTS_SETTING_MARGIN_MODE_AT_MARKET_LEVEL)) {
+            if (positions.some((p) => typeof p.marginMode === 'undefined' && !EXCHANGE_SUPPORTS_SETTING_MARGIN_MODE_AT_MARKET_LEVEL)) {
                 const marginMode = await getAccountMarginMode(exchange);
                 if (marginMode) {
                     positions.forEach((position) => {

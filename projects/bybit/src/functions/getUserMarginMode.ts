@@ -14,7 +14,7 @@ interface Props {}
 export async function getUserMarginMode({}: Props, { exchange }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
     try {
         const marginMode = await getAccountMarginMode(exchange);
-        return toResult(`The margin mode for your account is: ${marginMode}`);
+        return toResult(`The margin mode for your account is ${marginMode} margin`);
     } catch (error) {
         return toResult(`Error getting margin mode: ${error}`, true);
     }

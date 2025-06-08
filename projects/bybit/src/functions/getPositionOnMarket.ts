@@ -2,7 +2,7 @@ import { FunctionReturn, toResult } from '@heyanon/sdk';
 import { FunctionOptionsWithExchange } from '../overrides';
 import { formatPositionMultiLine } from '../helpers/format';
 import { getUserOpenPositionBySymbol } from '../helpers/positions';
-import { getAccountMarginMode, SUPPORTS_SETTING_MARGIN_MODE_AT_MARKET_LEVEL } from '../helpers/exchange';
+import { getAccountMarginMode, EXCHANGE_SUPPORTS_SETTING_MARGIN_MODE_AT_MARKET_LEVEL } from '../helpers/exchange';
 import { fromCcxtMarketToMarketType, getMarketObject } from '../helpers/markets';
 
 interface Props {
@@ -33,7 +33,7 @@ export async function getPositionOnMarket({ market }: Props, { exchange, notify 
 
     // Fetch margin mode at the account level, if needed
     try {
-        if (typeof position.marginMode === 'undefined' && !SUPPORTS_SETTING_MARGIN_MODE_AT_MARKET_LEVEL) {
+        if (typeof position.marginMode === 'undefined' && !EXCHANGE_SUPPORTS_SETTING_MARGIN_MODE_AT_MARKET_LEVEL) {
             const marginMode = await getAccountMarginMode(exchange);
             if (marginMode) {
                 position.marginMode = marginMode;
