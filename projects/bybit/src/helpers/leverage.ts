@@ -1,6 +1,7 @@
 import { Exchange, Leverage, LeverageTiers, MarginModification, MarketInterface } from 'ccxt';
 import { fromCcxtMarketToMarketType, getMarketObject } from './markets';
 import { MARKET_TYPES } from '../constants';
+import { SUPPORTS_SETTING_MARGIN_MODE_AT_MARKET_LEVEL } from './exchange';
 
 /**
  * Get the leverage tiers for all of the given market symbols;
@@ -26,6 +27,9 @@ export async function getMarketsLeverageTiers(exchange: Exchange, symbols: strin
 
 /**
  * Get the user configured leverage and margin mode for a specific market.
+ *
+ * For exchanges where the margin mode is set at the account level, the
+ * `marginMode` property will be `undefined`.
  *
  * @link https://docs.ccxt.com/#/README?id=leverage
  */
@@ -55,9 +59,15 @@ export async function setUserLeverageOnMarket(exchange: Exchange, market: string
 /**
  * Set the user configured margin mode for a specific market.
  *
+ * Will likely throw an error if the exchange doesn't support setting
+ * the margin mode at the market level.
+ *
  * @link https://docs.ccxt.com/#/README?id=set-margin-mode
  */
 export async function setUserMarginModeOnMarket(exchange: Exchange, market: string, marginMode: 'cross' | 'isolated') {
+    if (!SUPPORTS_SETTING_MARGIN_MODE_AT_MARKET_LEVEL) {
+        throw new Error(`Setting margin mode at the market level is not supported on exchange ${exchange.name}`);
+    }
     if (!exchange.has['setMarginMode']) {
         throw new Error(`Setting user margin mode not supported on exchange ${exchange.name}`);
     }

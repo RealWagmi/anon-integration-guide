@@ -16,4 +16,5 @@ export { getPositionOnMarket } from './getPositionOnMarket';
 // export { getOrderByIdAndMarket } from './getOrderByIdAndMarket';
 export { getCurrencyMarketsOfGivenType } from './getCurrencyMarketsOfGivenType';
 export { getMarketInfo } from './getMarketInfo';
+export { getUserMarginMode } from './getUserMarginMode';
 export { getUserLeverageOnMarket } from './getUserLeverageOnMarket';

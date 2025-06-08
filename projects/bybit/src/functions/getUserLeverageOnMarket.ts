@@ -5,7 +5,6 @@ import { fromCcxtMarketToMarketType, getMarketObject } from '../helpers/markets'
 
 interface Props {
     market: string;
-    leverage: number;
 }
 
 /**
@@ -26,7 +25,6 @@ export async function getUserLeverageOnMarket({ market }: Props, { exchange }: F
     // Get leverage
     try {
         const leverage = await getUserLeverageOnMarketHelper(exchange, market);
-        console.log('leverage', leverage);
         return toResult(`Your leverage for ${market} is ${leverage.longLeverage}x`);
     } catch (error) {
         return toResult(`Error getting leverage: ${error}`, true);

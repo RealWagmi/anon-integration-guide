@@ -68,6 +68,12 @@ export const tools: AiTool[] = [
         ],
     },
     {
+        name: 'getUserMarginMode',
+        description: 'Get the user configured margin mode (set at the account level)',
+        required: [],
+        props: [],
+    },
+    {
         name: 'getUserLeverageOnMarket',
         description: 'Get the user configured leverage for the given futures market',
         required: ['market'],
