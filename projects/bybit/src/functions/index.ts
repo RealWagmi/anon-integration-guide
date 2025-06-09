@@ -4,8 +4,8 @@
 // export { closePosition } from './closePositions';
 export { setUserMarginMode } from './setUserMarginMode';
 export { setUserLeverageOnMarket } from './setUserLeverageOnMarket';
-// export { addMarginToIsolatedPosition } from './addMarginToIsolatedPosition';
-// export { reduceMarginFromIsolatedPosition } from './reduceMarginFromIsolatedPosition';
+export { addMarginToPosition } from './addMarginToPosition';
+export { reduceMarginFromPosition } from './reduceMarginFromPosition';
 // export { cancelAllOrdersOnMarket } from './cancelAllOrdersOnMarket';
 // export { cancelOrderByIdAndMarket } from './cancelOrderByIdAndMarket';
 // export { transferFunds } from './transferFunds';

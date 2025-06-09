@@ -4,8 +4,16 @@
 // Anything specific to the exchange that is not covered by CCXT.
 // ---------------------------------------------------------------
 
-import { bybit, Exchange, Position } from 'ccxt';
+import { bybit, Exchange, MarketInterface, Position } from 'ccxt';
 import { MARGIN_MODES as HEYANON_MARGIN_MODES } from '../constants';
+
+export interface AddOrReducePositionMarginResult {
+    liqPrice: string;
+    riskId: string;
+    positionStatus: string;
+    positionIM: string;
+    positionMM: string;
+}
 
 /**
  * The name of the exchange in CCXT, all lowercase.
@@ -94,6 +102,49 @@ export async function getAccountMarginMode(exchange: Exchange): Promise<(typeof 
             return 'portfolio';
     }
     throw new Error(`Unknown margin mode: ${accountInfo.result.marginMode}`);
+}
+
+/**
+ * Add margin to an existing position; will throw an error if the account
+ * margin mode is not isolated.
+ *
+ * @link https://bybit-exchange.github.io/docs/v5/position/manual-add-margin
+ *
+ * @param exchange - The exchange object
+ * @param marketObject - The market object
+ * @param amount - The amount of margin to add, can be a positive or negative number
+ * @param category - The category of the position (linear or inverse)
+ * @param positionIdx - Required only for hedge mode position: 0: One-Way Mode, 1: Buy side of both side mode, 2: Sell side of both side mode
+ * @returns The risk data about the position, including the new liquidation price and the new margin
+ */
+export async function addOrReducePositionMargin(
+    exchange: Exchange,
+    marketObject: MarketInterface,
+    amount: number,
+    category: 'linear' | 'inverse' = 'linear',
+    positionIdx: 0 | 1 | 2 = 0,
+): Promise<AddOrReducePositionMarginResult> {
+    const params = {
+        category,
+        symbol: marketObject.id,
+        margin: amount.toString(),
+        positionIdx: positionIdx.toString(),
+    };
+    console.log('params', params);
+    const response = await (exchange as bybit).privatePostV5PositionAddMargin(params);
+    console.log('response', response);
+    if (response.retMsg !== 'OK') {
+        throw new Error(`Could not add margin to position: ${response.retMsg}`);
+    }
+    const result: AddOrReducePositionMarginResult = {
+        liqPrice: response.result.liqPrice,
+        riskId: response.result.riskId,
+        positionStatus: response.result.positionStatus,
+        positionIM: response.result.positionIM,
+        positionMM: response.result.positionMM,
+    };
+    console.log('result', result);
+    return result;
 }
 
 /**

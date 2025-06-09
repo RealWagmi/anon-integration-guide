@@ -99,8 +99,8 @@ By default, the agent assumes you want to trade on perpetual markets. To use a d
 - Change margin mode to isolated
 - Change margin mode to cross
 - Change margin mode to portfolio
-- TO DO: Add 100 USDT margin to my BTC/USDT position
-- TO DO: Remove 200 USDT margin from my BTC/USDT position
+- Add 100 USDT margin to my BTC/USDT position
+- Remove 200 USDT margin from my BTC/USDT position
 
 Please note that:
 
@@ -195,6 +195,11 @@ pnpm ask-bybit "Show me the price of BTC/USDT:USDT" --debug-llm
 - Trigger direction is needed when placing trigger orders (https://discord.com/channels/690203284119617602/690203284727660739/1367189081418633389)
 
 - Bybit API keys expire after 3 months unless one adds IP whitelisting
+
+- Had to implement the following functions in [exchange.ts](./src/helpers/exchange.ts) to cover the gaps in CCXT:
+    - `getAccountMarginMode`
+    - `addMarginToPosition`
+    - `reduceMarginFromPosition`
 
 ## Reference
 

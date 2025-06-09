@@ -48,6 +48,24 @@ export const tools: AiTool[] = [
         ],
     },
     {
+        name: 'addMarginToPosition',
+        description: 'Add margin to an existing position',
+        required: ['market', 'amount'],
+        props: [
+            { name: 'market', type: 'string', description: 'Market symbol, e.g. "BTC/USDT:USDT"' },
+            { name: 'amount', type: 'number', description: 'Amount to add' },
+        ],
+    },
+    {
+        name: 'reduceMarginFromPosition',
+        description: 'Reduce margin from an existing position',
+        required: ['market', 'amount'],
+        props: [
+            { name: 'market', type: 'string', description: 'Market symbol, e.g. "BTC/USDT:USDT"' },
+            { name: 'amount', type: 'number', description: 'Amount to reduce' },
+        ],
+    },
+    {
         name: 'getPositions',
         description: `Show the user's most recent ${MAX_POSITIONS_IN_RESULTS} open positions on future markets, including notional, margin, and PnL.`,
         required: [],
