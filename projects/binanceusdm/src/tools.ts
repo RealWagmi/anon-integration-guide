@@ -6,13 +6,32 @@ const SIDE_DESCRIPTION = 'Side of the order, either "long" or "short".  Long and
 const MARKET_DESCRIPTION =
     'Symbol of the market to trade, e.g. "BTC/USDT:USDT".  The FIRST (base) currency is the asset you are actually longing (side = "long") or shorting (side = "short")';
 
-const AMOUNT_DESCRIPTION = 'Amount of BASE currency (i.e. the FIRST currency in the market symbol) to long or short.';
+const MARGIN_CALCULATION_INSTRUCTIONS = [
+    'IMPORTANT: When the user specifies margin amount (e.g., "with X USDT at Nx leverage"), you must:',
+    '1. Use getMarketInfo to get the current price',
+    '2. Calculate position size as: (margin_amount * leverage) / current_price',
+    '3. Use the calculated amount in base currency for this order',
+    'For the purpose of margin calculation, assume that $1 = 1 USDT = 1 USDC',
+].join('\n');
+
+const AMOUNT_DESCRIPTION = [
+    'Amount to trade. This can be specified in two ways:',
+    '1. Direct base currency amount: e.g., "1 SOL" means trade exactly 1 SOL',
+    '2. Margin-based sizing: e.g., "5 USDT at 30x leverage" means use 5 USDT as margin to open a position worth 150 USDT (5 * 30x)',
+    '',
+    'When the user specifies an amount in the quote currency (e.g., "with 5 USDT"), first get the current market price using getMarketInfo, then calculate the base currency amount as: (margin_amount * leverage) / current_price',
+    '',
+    'Always return the amount in BASE currency (the FIRST currency in the market symbol).',
+].join('\n');
 
 export const tools: AiTool[] = [
     {
         name: 'createSimpleOrder',
-        description:
-            'Create an order that is activated immediately, without a trigger attached to it.  The order will execute at the current market price or a specified limit price.  The leverage and margin mode for the order are the user-configured leverage and margin mode for the market.',
+        description: [
+            'Create an order that is activated immediately, without a trigger attached to it. The order will execute at the current market price or a specified limit price. The leverage and margin mode for the order are the user-configured leverage and margin mode for the market.',
+            '',
+            MARGIN_CALCULATION_INSTRUCTIONS,
+        ].join('\n'),
         required: ['market', 'side', 'amount', 'limitPrice'],
         props: [
             {
@@ -40,8 +59,11 @@ export const tools: AiTool[] = [
     },
     {
         name: 'createTriggerOrder',
-        description:
-            'Create an order that is activated only after the given price condition is met. Once activated, the order will be executed at either the current market price or a specified limit price.   The leverage and margin mode for the order are the user-configured leverage and margin mode for the market.',
+        description: [
+            'Create an order that is activated only after the given price condition is met. Once activated, the order will be executed at either the current market price or a specified limit price. The leverage and margin mode for the order are the user-configured leverage and margin mode for the market.',
+            '',
+            MARGIN_CALCULATION_INSTRUCTIONS,
+        ].join('\n'),
         required: ['market', 'side', 'amount', 'triggerPrice', 'limitPrice', 'reduceOnly'],
         props: [
             {
@@ -79,8 +101,11 @@ export const tools: AiTool[] = [
     },
     {
         name: 'createTrailingStopOrder',
-        description:
-            'Create a trailing stop order, that is, an order that is executed only when the price moves a certain percentage away from the entry price.  The order will execute immediately as a market order when triggered.',
+        description: [
+            'Create a trailing stop order, that is, an order that is executed only when the price moves a certain percentage away from the entry price. The order will execute immediately as a market order when triggered.',
+            '',
+            MARGIN_CALCULATION_INSTRUCTIONS,
+        ].join('\n'),
         required: ['market', 'side', 'amount', 'trailingPercent', 'limitPrice', 'triggerPrice', 'reduceOnly'],
         props: [
             {

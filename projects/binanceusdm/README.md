@@ -36,6 +36,7 @@ Integration between HeyAnon.ai and Binance USDM Futures trading, supporting both
 - 100x long 1 BTC with USDT on @binanceusdm
 - Long 1 BTC at limit price of 40,000 USDT on @binanceusdm
 - Short BTC with limit price of 150,000 USDT on @binanceusdm
+- 30x long BTC with a margin of 10 USDT on @binanceusdm
 
 By default, the agent assumes you want to trade on perpetual markets. To use a delivery market instead, ask for it:
 
