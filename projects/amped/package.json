@@ -1,0 +1,28 @@
+{
+  "name": "amped",
+  "version": "1.0.0",
+  "description": "Amped Finance Integration",
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "function": "tsx scripts/direct-function-call.ts",
+    "example:get-protocol-info": "node scripts/examples/get-protocol-info.js",
+    "test:add-liquidity": "tsx scripts/tests/test-add-liquidity.ts",
+    "ethers-liquidity": "tsx scripts/test-ethers-liquidity.ts",
+    "test:all": "tsx scripts/test-all-functions.ts",
+    "test:detailed": "tsx scripts/test-all-functions-with-results.ts",
+    "test:with-txs": "RUN_STATE_CHANGING=true tsx scripts/test-all-functions-with-results.ts"
+  },
+  "dependencies": {
+    "@heyanon/sdk": "^2.0.2",
+    "dotenv": "^16.3.1",
+    "ethers": "^6.13.5",
+    "viem": "^2.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "tsup": "^8.5.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}
