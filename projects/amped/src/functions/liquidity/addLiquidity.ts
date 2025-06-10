@@ -129,14 +129,62 @@ export async function addLiquidity(
             );
         }
 
-        // Get pool liquidity (optional)
+        // Get pool liquidity to check capacity
+        let estimatedImpact = "0.00%";
         const poolLiquidityResult = await getPoolLiquidity({ 
             chainName: networkName as ('sonic' | 'base'), 
             publicClient 
         } as any, options);
         
-        if (!poolLiquidityResult.success || !poolLiquidityResult.data) {
-            // Continue anyway, this is not critical
+        if (poolLiquidityResult.success && poolLiquidityResult.data) {
+            try {
+                const poolData = JSON.parse(poolLiquidityResult.data);
+                
+                // Find the token we're trying to deposit
+                const tokenData = poolData.tokens.find((t: any) => t.symbol === tokenSymbol);
+                
+                if (tokenData && tokenData.depositCapacity) {
+                    // Check if deposits are allowed
+                    if (!tokenData.depositCapacity.canDeposit) {
+                        return toResult(
+                            `Cannot add liquidity: ${tokenSymbol} pool is over-utilized (${tokenData.depositCapacity.utilizationPercent}% utilized)`,
+                            true
+                        );
+                    }
+                    
+                    // Check if deposit amount exceeds theoretical max
+                    const theoreticalMaxAmount = parseFloat(tokenData.depositCapacity.theoreticalMax);
+                    if (numericAmountToAdd > theoreticalMaxAmount) {
+                        return toResult(
+                            `Deposit amount (${amountToAddString}) exceeds maximum allowed (${theoreticalMaxAmount.toFixed(6)} ${tokenSymbol})`,
+                            true
+                        );
+                    }
+                    
+                    // Calculate and warn about price impact
+                    const depositValueUsd = numericAmountToAdd * parseFloat(tokenData.price);
+                    
+                    if (depositValueUsd < 5000) {
+                        estimatedImpact = tokenData.depositCapacity.priceImpactEstimates.small;
+                    } else if (depositValueUsd < 50000) {
+                        estimatedImpact = tokenData.depositCapacity.priceImpactEstimates.medium;
+                    } else {
+                        estimatedImpact = tokenData.depositCapacity.priceImpactEstimates.large;
+                    }
+                    
+                    // Warn if price impact is significant
+                    const impactValue = parseFloat(estimatedImpact);
+                    if (impactValue > 1) {
+                        await notify(`⚠️ Warning: Estimated price impact of ${estimatedImpact} for this deposit`);
+                    }
+                    
+                    // Log pool utilization info
+                    await notify(`Pool utilization for ${tokenSymbol}: ${tokenData.depositCapacity.utilizationPercent}%`);
+                }
+            } catch (e) {
+                // If parsing fails, continue anyway
+                await notify(`Could not parse pool liquidity data, continuing...`);
+            }
         }
 
         if (!tokenAddress && tokenSymbol !== 'S' && tokenSymbol !== 'ETH') {
@@ -273,6 +321,23 @@ export async function addLiquidity(
                 }
             }
             
+            // Include capacity check results in response
+            let capacityInfo = {};
+            if (poolLiquidityResult.success && poolLiquidityResult.data) {
+                try {
+                    const poolData = JSON.parse(poolLiquidityResult.data);
+                    const tokenData = poolData.tokens.find((t: any) => t.symbol === tokenSymbol);
+                    if (tokenData && tokenData.depositCapacity) {
+                        capacityInfo = {
+                            poolUtilization: tokenData.depositCapacity.utilizationPercent + "%",
+                            estimatedPriceImpact: estimatedImpact || "N/A",
+                        };
+                    }
+                } catch (e) {
+                    // Ignore parse errors
+                }
+            }
+            
             return toResult(
                 JSON.stringify({
                     success: true,
@@ -284,6 +349,7 @@ export async function addLiquidity(
                         minUsdgSet: minUsdg,
                         minGlpSet: minGlp,
                         transactionCount: transactions.length,
+                        ...capacityInfo,
                     },
                 }),
             );

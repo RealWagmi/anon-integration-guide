@@ -24,10 +24,28 @@ interface TokenLiquidity {
     poolAmountUsd: string;
     reservedAmountUsd: string;
     availableAmountUsd: string;
+    // Deposit capacity information
+    depositCapacity: {
+        // Theoretical maximum that could be deposited without constraints
+        theoreticalMax: string;
+        theoreticalMaxUsd: string;
+        // Pool utilization percentage (reserved/pool * 100)
+        utilizationPercent: string;
+        // Whether deposits are currently possible
+        canDeposit: boolean;
+        // Estimated price impact for different deposit sizes
+        priceImpactEstimates: {
+            small: string;  // $1,000 worth
+            medium: string; // $10,000 worth
+            large: string;  // $100,000 worth
+        };
+    };
 }
 
 interface PoolLiquidity {
     aum: string;
+    totalCapacityUsd: string;
+    totalUtilizationPercent: string;
     tokens: TokenLiquidity[];
 }
 
@@ -67,12 +85,12 @@ const VAULT_ABI = [
 ] as const;
 
 /**
- * Gets the total liquidity pool (ALP/GLP) supply and Assets Under Management (AUM)
+ * Gets the total liquidity pool (ALP/GLP) supply, Assets Under Management (AUM), and deposit capacity information
  * @param props - The function parameters
  * @param props.chainName - The name of the chain (sonic or base)
  * @param props.publicClient - Viem Public Client for blockchain interaction
  * @param options - System tools (only notify is used)
- * @returns Pool information including total supply, AUM, and individual token liquidity
+ * @returns Pool information including total supply, AUM, individual token liquidity, and deposit capacity for each token
  */
 export async function getPoolLiquidity(props: Props, options: FunctionOptions): Promise<FunctionReturn> {
     const { chainName, publicClient } = props;
@@ -174,6 +192,36 @@ export async function getPoolLiquidity(props: Props, options: FunctionOptions): 
                 const reservedAmountUsd = (reservedAmount * price) / BigInt(10 ** token.decimals);
                 const availableAmountUsd = (availableAmount * price) / BigInt(10 ** token.decimals);
 
+                // Calculate deposit capacity metrics
+                const utilizationPercent = poolAmount > 0n 
+                    ? Number((reservedAmount * 10000n) / poolAmount) / 100 
+                    : 0;
+
+                // Theoretical max deposit - using a conservative 5x multiplier of current pool amount
+                // This prevents extreme pool imbalances
+                const theoreticalMax = poolAmount * 5n;
+                const theoreticalMaxUsd = (theoreticalMax * price) / BigInt(10 ** token.decimals);
+
+                // Check if deposits are possible (pool has some liquidity and not over-utilized)
+                const canDeposit = poolAmount > 0n && utilizationPercent < 95;
+
+                // Estimate price impact for different deposit sizes
+                // These are rough estimates - actual impact depends on AMM curve
+                const estimatePriceImpact = (depositUsd: bigint): string => {
+                    if (poolAmountUsd === 0n) return "N/A";
+                    
+                    // Simple linear approximation: impact = depositSize / (poolSize * factor)
+                    // factor = 50 means 2% impact for deposit equal to pool size
+                    const factor = 50n;
+                    const impactBasisPoints = (depositUsd * 10000n) / (poolAmountUsd * factor);
+                    return (Number(impactBasisPoints) / 100).toFixed(2);
+                };
+
+                // Calculate price impacts for standard sizes
+                const smallDepositUsd = BigInt(1000) * BigInt(10 ** 30); // $1,000
+                const mediumDepositUsd = BigInt(10000) * BigInt(10 ** 30); // $10,000
+                const largeDepositUsd = BigInt(100000) * BigInt(10 ** 30); // $100,000
+
                 return {
                     symbol: token.symbol, // This is now correctly the display symbol (e.g., 'S')
                     address: token.address, // This is the address used for vault calls (e.g., Wrapped Sonic address)
@@ -184,6 +232,17 @@ export async function getPoolLiquidity(props: Props, options: FunctionOptions): 
                     poolAmountUsd: formatUnits(poolAmountUsd, 30),
                     reservedAmountUsd: formatUnits(reservedAmountUsd, 30),
                     availableAmountUsd: formatUnits(availableAmountUsd, 30),
+                    depositCapacity: {
+                        theoreticalMax: formatUnits(theoreticalMax, token.decimals),
+                        theoreticalMaxUsd: formatUnits(theoreticalMaxUsd, 30),
+                        utilizationPercent: utilizationPercent.toFixed(2),
+                        canDeposit,
+                        priceImpactEstimates: {
+                            small: estimatePriceImpact(smallDepositUsd) + "%",
+                            medium: estimatePriceImpact(mediumDepositUsd) + "%",
+                            large: estimatePriceImpact(largeDepositUsd) + "%",
+                        },
+                    },
                 };
             } catch (tokenError: any) {
                  return null; // Return null for failed tokens
@@ -196,8 +255,23 @@ export async function getPoolLiquidity(props: Props, options: FunctionOptions): 
         // Format AUM
         const aumFormatted = formatUnits(aum, 30);
 
+        // Calculate total capacity metrics
+        let totalPoolAmountUsd = 0;
+        let totalReservedAmountUsd = 0;
+        
+        tokenLiquidity.forEach(token => {
+            totalPoolAmountUsd += parseFloat(token.poolAmountUsd);
+            totalReservedAmountUsd += parseFloat(token.reservedAmountUsd);
+        });
+        
+        const totalUtilizationPercent = totalPoolAmountUsd > 0 
+            ? (totalReservedAmountUsd / totalPoolAmountUsd * 100).toFixed(2)
+            : "0.00";
+
         const poolLiquidity: PoolLiquidity = {
             aum: aumFormatted,
+            totalCapacityUsd: totalPoolAmountUsd.toFixed(2),
+            totalUtilizationPercent,
             tokens: tokenLiquidity,
         };
 
