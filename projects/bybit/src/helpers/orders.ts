@@ -1,4 +1,33 @@
 import { Exchange, Order } from 'ccxt';
+import { getMarketLastPriceBySymbol } from './markets';
+import { LIMIT_PRICE_TOLERANCE } from '../constants';
+
+/**
+ * Create a simple order, that is, an order that has no triggers attached to it.
+ */
+export async function createSimpleOrder(
+    exchange: Exchange,
+    symbol: string,
+    side: 'buy' | 'sell',
+    amount: number,
+    limitPrice?: number,
+    params?: Record<string, any>,
+): Promise<Order> {
+    // Warn the user if their limit price is useless
+    if (limitPrice) {
+        const lastPrice = await getMarketLastPriceBySymbol(symbol, exchange);
+        if (side === 'buy' && limitPrice * (1 - LIMIT_PRICE_TOLERANCE) > lastPrice) {
+            throw new Error(`Current price ${lastPrice} is higher than your limit price ${limitPrice}, so the order will be filled immediately.  Use a market order instead.`);
+        }
+        if (side === 'sell' && limitPrice * (1 + LIMIT_PRICE_TOLERANCE) < lastPrice) {
+            throw new Error(`Current price ${lastPrice} is lower than your limit price ${limitPrice}, so the order will be filled immediately.  Use a market order instead.`);
+        }
+    }
+    // Place the order
+    const ccxtType = limitPrice ? 'limit' : 'market';
+    const order = await exchange.createOrder(symbol, ccxtType, side, amount, limitPrice, params);
+    return order;
+}
 
 /**
  * Get all open orders of the user on the given exchange
@@ -61,4 +90,22 @@ export async function cancelAllOrders(exchange: Exchange, symbol?: string): Prom
     }
     const cancelledOrders = await exchange.cancelAllOrders(symbol);
     return cancelledOrders as Order[];
+}
+
+/**
+ * Convert a mixed side parameter (that is, a side parameter that
+ * can be any of 'long', 'short', 'buy', 'sell') to a CCXT side,
+ * which is either 'buy' or 'sell'.
+ */
+export function toCcxtSide(side: 'long' | 'short' | 'buy' | 'sell'): 'buy' | 'sell' {
+    switch (side) {
+        case 'long':
+        case 'buy':
+            return 'buy';
+        case 'short':
+        case 'sell':
+            return 'sell';
+        default:
+            throw new Error(`Invalid side: ${side}`);
+    }
 }

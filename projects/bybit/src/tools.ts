@@ -2,12 +2,26 @@ import { AiTool } from '@heyanon/sdk';
 import { MARGIN_MODES, MAX_MARKETS_IN_RESULTS, MAX_ORDERS_IN_RESULTS, MAX_POSITIONS_IN_RESULTS } from './constants';
 import { SUPPORTED_MARKET_TYPES } from './helpers/exchange';
 
+/**
+ * For those tools that need to know the market type (spot,
+ * perpetual, delivery) we use this parameter.
+ */
 const MARKET_TYPE_PARAMETER = {
     name: 'marketType',
     type: 'string',
     description: `Market type`,
     enum: SUPPORTED_MARKET_TYPES,
 };
+
+/**
+ * Description of the side parameter, to be included in all order
+ * creation tools.
+ */
+const SIDE_DESCRIPTION = [
+    'Side of the order, either "buy", "sell", "long" or "short".  The side is ALWAYS relative to the FIRST (base) currency in the market symbol.',
+    '',
+    'For spot markets, the side is always "buy" or "sell".  For futures markets, the side is always "long" or "short".',
+].join('\n');
 
 /**
  * Description of the market parameter, to be included in all tools
@@ -20,7 +34,71 @@ const MARKET_DESCRIPTION = [
     '- Delivery markets (also known as expiry markets) symbols have the form "BTC/USD:BTC-250926", where the LAST part of the symbol is the expiry date of the contract.',
 ].join(' ');
 
+/**
+ * Description of the market parameter, to be included in all tools
+ * that work for futures markets (that is, perpetual and delivery).
+ */
+const FUTURES_MARKET_DESCRIPTION = ['Futures market symbol, e.g. "BTC/USDT:USDT" or "BTC/USDT:USDT-250926"'].join('\n');
+
+/**
+ * Allow the user to specify the order size by specifying the margin amount
+ */
+const MARGIN_CALCULATION_INSTRUCTIONS = [
+    'IMPORTANT: For perpetual and delivery markets, the user can specify the margin amount (e.g., "with X USDT at Nx leverage").  In this case, you must:',
+    '1. Use getMarketInfo to get the current price',
+    '2. Calculate position size as: (margin_amount * leverage) / current_price',
+    '3. Use the calculated amount in base currency for this order',
+    'For the purpose of margin calculation, assume that $1 = 1 USDT = 1 USDC',
+].join('\n');
+
+/**
+ * Description of the amount parameter, to be included in all order
+ * creation tools, taking into account that the user can specify the
+ * order size by specifying the margin amount.
+ */
+const AMOUNT_DESCRIPTION = [
+    'Amount to trade.  For perpetual and delivery markets this can be specified in two ways:',
+    '1. Direct base currency amount: e.g., "1 SOL" means trade exactly 1 SOL',
+    '2. Margin-based sizing: e.g., "5 USDT at 30x leverage" means use 5 USDT as margin to open a position worth 150 USDT (5 * 30x)',
+    '',
+    'When the user specifies an amount in the quote currency (e.g., "with 5 USDT"), first get the current market price using getMarketInfo, then calculate the base currency amount as: (margin_amount * leverage) / current_price',
+    '',
+    'Always return the amount in BASE currency (the FIRST currency in the market symbol).',
+].join('\n');
+
 export const tools: AiTool[] = [
+    {
+        name: 'createSimpleOrder',
+        description: [
+            'Create an order that is activated immediately, without a trigger attached to it. The order will execute at the current market price or a specified limit price. The leverage and margin mode for the order are the user-configured leverage and margin mode for the market.',
+            '',
+            MARGIN_CALCULATION_INSTRUCTIONS,
+        ].join('\n'),
+        required: ['market', 'side', 'amount', 'limitPrice'],
+        props: [
+            {
+                name: 'market',
+                type: 'string',
+                description: MARKET_DESCRIPTION,
+            },
+            {
+                name: 'side',
+                type: 'string',
+                enum: ['buy', 'sell', 'long', 'short'],
+                description: SIDE_DESCRIPTION,
+            },
+            {
+                name: 'amount',
+                type: 'number',
+                description: AMOUNT_DESCRIPTION,
+            },
+            {
+                name: 'limitPrice',
+                type: ['number', 'null'],
+                description: 'Price at which the order will be executed.  Include only if explicitly specified by the user.  Leave blank for a market order.',
+            },
+        ],
+    },
     {
         name: 'setUserMarginMode',
         description: "Set the margin mode for the user account.  This will change the margin mode for all of the user's open positions.",
@@ -36,13 +114,14 @@ export const tools: AiTool[] = [
     },
     {
         name: 'setUserLeverageOnMarket',
-        description: 'Set the user configured leverage for a specific futures market',
+        description:
+            'Set the user configured leverage for a specific futures market.  The function will automatically check the current leverage and only set it if it is different from the requested leverage.',
         required: ['market', 'leverage'],
         props: [
             {
                 name: 'market',
                 type: 'string',
-                description: 'Futures market symbol, e.g. "BTC/USDT:USDT" or "BTC/USDT:USDT-250926"',
+                description: FUTURES_MARKET_DESCRIPTION,
             },
             {
                 name: 'leverage',
@@ -56,7 +135,7 @@ export const tools: AiTool[] = [
         description: 'Add margin to an existing futures position',
         required: ['market', 'amount'],
         props: [
-            { name: 'market', type: 'string', description: 'Futures market symbol, e.g. "BTC/USDT:USDT" or "BTC/USDT:USDT-250926"' },
+            { name: 'market', type: 'string', description: FUTURES_MARKET_DESCRIPTION },
             { name: 'amount', type: 'number', description: 'Amount to add' },
         ],
     },
@@ -65,7 +144,7 @@ export const tools: AiTool[] = [
         description: 'Reduce margin from an existing futures position',
         required: ['market', 'amount'],
         props: [
-            { name: 'market', type: 'string', description: 'Futures market symbol, e.g. "BTC/USDT:USDT" or "BTC/USDT:USDT-250926"' },
+            { name: 'market', type: 'string', description: FUTURES_MARKET_DESCRIPTION },
             { name: 'amount', type: 'number', description: 'Amount to reduce' },
         ],
     },
@@ -106,7 +185,7 @@ export const tools: AiTool[] = [
             {
                 name: 'market',
                 type: 'string',
-                description: 'Futures market symbol, e.g. "BTC/USDT:USDT" or "BTC/USDT:USDT-250926"',
+                description: FUTURES_MARKET_DESCRIPTION,
             },
         ],
     },
@@ -180,7 +259,7 @@ export const tools: AiTool[] = [
             {
                 name: 'market',
                 type: 'string',
-                description: 'Futures market symbol, e.g. "BTC/USDT:USDT" or "BTC/USDT:USDT-250926"',
+                description: FUTURES_MARKET_DESCRIPTION,
             },
         ],
     },

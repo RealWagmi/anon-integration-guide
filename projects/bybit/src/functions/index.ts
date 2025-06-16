@@ -1,4 +1,4 @@
-// export { createSimpleOrder } from './createSimpleOrder';
+export { createSimpleOrder } from './createSimpleOrder';
 // export { createTriggerOrder } from './createTriggerOrder';
 // export { createTrailingStopOrder } from './createTrailingStopOrder';
 // export { closePosition } from './closePositions';

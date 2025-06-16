@@ -81,10 +81,11 @@ By "futures" we mean both perpetual futures and delivery (aka "expiry") futures.
 
 ### Futures - Market & limit orders
 
-- TO DO: Long 1 BTC with USDT
-- TO DO: Long 1 BTC with USDT with isolated margin
-- TO DO: 100x long 1 BTC with USDT
-- TO DO: Long 1 BTC at limit price of 40,000 USDT
+- Long 1 BTC with USDT
+- Long BTC with 100 USDT
+- 100x long BTC with 100 USDT
+- 100x long BTC with 100 USDT isolated margin
+- Long 1 BTC at limit price of 40,000 USDT
 - TO DO: Short BTC with limit price of 150,000 USDT
 
 By default, the agent assumes you want to trade on perpetual markets. To use a delivery market instead, ask for it:
@@ -194,6 +195,8 @@ pnpm ask-bybit "Show me the price of BTC/USDT:USDT" --debug-llm
 - On the contrary, Bybit DOES allow you to change leverage at the market level, just like Binance and most exchanges.
 
 - Bybit allows switching margin mode (at the account level) as long as the trader has sufficient margin and the change itself doesn't trigger immediate liquidation.
+
+- The Bybit API upon order creation only returns the order ID, not the order object ([docs](https://bybit-exchange.github.io/docs/v5/order/create-order)). Hence, after creating an order, we always use the `getOrderById` tool to fetch the order object.
 
 - Trigger direction is needed when placing trigger orders (https://discord.com/channels/690203284119617602/690203284727660739/1367189081418633389)
 
