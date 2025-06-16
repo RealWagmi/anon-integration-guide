@@ -2,9 +2,8 @@
 
 ## Features
 
+- Test closing position
 - Test spot
-- Margin mode applies at account level, not per market
-- Margin mode can be changed also if there are open positions
 - Test reduce only (see _When it is clear from context_ in README.md)
 
 ## Minor

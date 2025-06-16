@@ -10,10 +10,11 @@ interface StringOrder {
     timestamp: string;
     symbol: string;
     type: string;
-    // side: 'long' | 'short' | 'close' | 'N/A';
     side: string;
     price: string;
     triggerPrice: string;
+    takeProfitPrice: string;
+    stopLossPrice: string;
     amount: string;
     filled: string;
     filledPercent: string;
@@ -28,7 +29,7 @@ interface StringPosition {
     id: string;
     timestamp: string;
     symbol: string;
-    side: 'long' | 'short' | 'N/A';
+    side: string;
     contracts: string;
     contractSize: string;
     entryPrice: string;
@@ -112,10 +113,11 @@ function stringifyOrder(order: Order, market?: MarketInterface): StringOrder {
         timestamp: timestamp ? formatDate(timestamp) : 'N/A',
         symbol: order.symbol || 'N/A',
         type: order.type || 'N/A',
-        // side: order.amount ? (order.side ? buySellToLongShort(order.side as 'buy' | 'sell') : 'N/A') : 'close',
         side: order.amount ? (order.side ? order.side : 'N/A') : 'close',
         price: order.price !== undefined ? order.price.toString() + quoteSymbol : 'N/A',
         triggerPrice: order.triggerPrice !== undefined ? order.triggerPrice.toString() + quoteSymbol : 'N/A',
+        takeProfitPrice: order.takeProfitPrice !== undefined ? order.takeProfitPrice.toString() + quoteSymbol : 'N/A',
+        stopLossPrice: order.stopLossPrice !== undefined ? order.stopLossPrice.toString() + quoteSymbol : 'N/A',
         amount: order.amount !== undefined ? order.amount.toString() + baseSymbol : `${market?.base}/${market?.quote} position`,
         filled: order.filled !== undefined ? order.filled.toString() + baseSymbol : 'N/A',
         filledPercent: order.filled !== undefined ? ((order.filled / order.amount) * 100).toFixed(0) : 'N/A',
@@ -128,7 +130,7 @@ function stringifyOrder(order: Order, market?: MarketInterface): StringOrder {
  * Format an order object into a multi-line string.
  */
 export function formatOrderMultiLine(order: Order, market?: MarketInterface, prefix: string = '', delimiter: string = '\n'): string {
-    const { id, timestamp, symbol, type, side, price, triggerPrice, amount, filled, status, reduceOnly } = stringifyOrder(order, market);
+    const { id, timestamp, symbol, type, side, price, triggerPrice, stopLossPrice, takeProfitPrice, amount, filled, status, reduceOnly } = stringifyOrder(order, market);
     const rows = [
         `${prefix}Order ID: ${id}`,
         `${prefix}Timestamp: ${timestamp}`,
@@ -138,6 +140,8 @@ export function formatOrderMultiLine(order: Order, market?: MarketInterface, pre
         `${prefix}Reduce Only: ${reduceOnly !== 'N/A' ? 'Yes' : 'No'}`,
         `${prefix}Price: ${price}`,
         `${prefix}Trigger: ${triggerPrice}`,
+        `${prefix}Take Profit: ${takeProfitPrice}`,
+        `${prefix}Stop Loss: ${stopLossPrice}`,
         `${prefix}Amount: ${amount}`,
         `${prefix}Filled: ${filled}`,
         `${prefix}Status: ${status}`,
@@ -149,17 +153,19 @@ export function formatOrderMultiLine(order: Order, market?: MarketInterface, pre
  * Format an order object into a single-line string.
  */
 export function formatOrderSingleLine(order: Order, market?: MarketInterface, showStatus: boolean = true, prefix: string = ''): string {
-    const { id, symbol, type, side, price, triggerPrice, amount, filledPercent, status, reduceOnly } = stringifyOrder(order, market);
+    const { id, symbol, type, side, price, triggerPrice, takeProfitPrice, stopLossPrice, amount, filledPercent, status, reduceOnly } = stringifyOrder(order, market);
     const quoteSymbol = market ? ` ${market.quote}` : '';
 
     let parts = [
-        // `${market ? `${titleCase(fromCcxtMarketToMarketType(market))} ` : ''}`,
+        `${market ? `${titleCase(fromCcxtMarketToMarketType(market))} ` : ''}`,
         `${titleCase(type)}`,
         `${reduceOnly !== 'N/A' ? ` ${reduceOnly}` : ''}`,
         ` order`,
         ` to ${side} ${amount}${quoteSymbol && triggerPrice === 'N/A' && price === 'N/A' ? ` for${quoteSymbol}` : ''}`,
         `${price !== 'N/A' ? ` @ ${price}` : ''}`,
         `${triggerPrice !== 'N/A' ? ` triggering at ${triggerPrice}` : ''}`,
+        `${takeProfitPrice !== 'N/A' ? `, Take profit: ${takeProfitPrice}` : ''}`,
+        `${stopLossPrice !== 'N/A' ? `, Stop loss: ${stopLossPrice}` : ''}`,
         ` (ID: ${id}, ${filledPercent === '0' ? '' : `filled: ${filledPercent}%, `}${showStatus ? `status: ${status}, ` : ''}market: ${symbol})`,
     ];
 

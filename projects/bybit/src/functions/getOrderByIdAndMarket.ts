@@ -10,8 +10,7 @@ interface Props {
 }
 
 /**
- * Get details on the given order by its ID and market symbol.  Certain
- * exchanges do not require the market parameter to be specified.
+ * Get details on the given order by its ID and market symbol
  *
  * @param props - The function input parameters
  * @param props.id - The ID of the order to get details on

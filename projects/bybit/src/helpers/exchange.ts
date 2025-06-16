@@ -151,9 +151,12 @@ export async function addOrReducePositionMargin(
  * Get a specific order by ID on the given exchange.
  *
  * On Bybit, fetchOrder() can only access an order if it is in last 500
- * orders (of any status) for your account.  Furthermore, it is not
- * sufficient to know the ID and the market symbol: we also need to
- * specify whether the order is a trigger order or not.
+ * orders (of any status) for your account.
+ *
+ * Furthermore, it is not sufficient to know the ID and the market symbol:
+ * we also need to specify whether the order is a trigger order or not.
+ * Since we do not have a way to know this information, we try to fetch
+ * the order with and without the trigger parameter.
  */
 export async function getOrderById(exchange: Exchange, id: string, symbol?: string): Promise<Order | null> {
     if (!exchange.has['fetchOrder']) {
@@ -166,7 +169,6 @@ export async function getOrderById(exchange: Exchange, id: string, symbol?: stri
     } catch (error) {
         try {
             params.trigger = true;
-            console.log('params', params);
             order = await exchange.fetchOrder(id, symbol, params);
         } catch (error) {
             return null;
