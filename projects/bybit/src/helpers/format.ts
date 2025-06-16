@@ -9,8 +9,10 @@ interface StringOrder {
     id: string;
     timestamp: string;
     symbol: string;
+    marketType: string;
     type: string;
-    side: string;
+    side: string; // buy or sell
+    adjustedSide: string; // buy or sell for spot markets, long or short for futures and options
     price: string;
     triggerPrice: string;
     takeProfitPrice: string;
@@ -107,13 +109,25 @@ function stringifyOrder(order: Order, market?: MarketInterface): StringOrder {
     const timestamp = extractTimestamp(order);
     const quoteSymbol = market ? ` ${market.quote}` : '';
     const baseSymbol = market ? ` ${market.base}` : '';
+    const marketType = market ? fromCcxtMarketToMarketType(market) : 'N/A';
+    // Computed adjusted side (buy/sell for spot markets, long/short for futures and options)
+    let adjustedSide = order.side || 'N/A';
+    if (order.side && marketType && marketType !== 'spot') {
+        if (order.side === 'buy') {
+            adjustedSide = 'long';
+        } else if (order.side === 'sell') {
+            adjustedSide = 'short';
+        }
+    }
 
     return {
         id: order.id || 'N/A',
         timestamp: timestamp ? formatDate(timestamp) : 'N/A',
         symbol: order.symbol || 'N/A',
+        marketType: market ? fromCcxtMarketToMarketType(market) : 'N/A',
         type: order.type || 'N/A',
-        side: order.amount ? (order.side ? order.side : 'N/A') : 'close',
+        side: order.side || 'N/A',
+        adjustedSide,
         price: order.price !== undefined ? order.price.toString() + quoteSymbol : 'N/A',
         triggerPrice: order.triggerPrice !== undefined ? order.triggerPrice.toString() + quoteSymbol : 'N/A',
         takeProfitPrice: order.takeProfitPrice !== undefined ? order.takeProfitPrice.toString() + quoteSymbol : 'N/A',
@@ -130,13 +144,17 @@ function stringifyOrder(order: Order, market?: MarketInterface): StringOrder {
  * Format an order object into a multi-line string.
  */
 export function formatOrderMultiLine(order: Order, market?: MarketInterface, prefix: string = '', delimiter: string = '\n'): string {
-    const { id, timestamp, symbol, type, side, price, triggerPrice, stopLossPrice, takeProfitPrice, amount, filled, status, reduceOnly } = stringifyOrder(order, market);
+    const { id, timestamp, symbol, marketType, type, adjustedSide, price, triggerPrice, stopLossPrice, takeProfitPrice, amount, filled, status, reduceOnly } = stringifyOrder(
+        order,
+        market,
+    );
     const rows = [
         `${prefix}Order ID: ${id}`,
         `${prefix}Timestamp: ${timestamp}`,
         `${prefix}Market: ${symbol}`,
-        `${prefix}Type: ${type}`,
-        `${prefix}Side: ${side}`,
+        `${prefix}Market Type: ${marketType}`,
+        `${prefix}Order type: ${type}`,
+        `${prefix}Side: ${adjustedSide}`,
         `${prefix}Reduce Only: ${reduceOnly !== 'N/A' ? 'Yes' : 'No'}`,
         `${prefix}Price: ${price}`,
         `${prefix}Trigger: ${triggerPrice}`,
@@ -153,15 +171,18 @@ export function formatOrderMultiLine(order: Order, market?: MarketInterface, pre
  * Format an order object into a single-line string.
  */
 export function formatOrderSingleLine(order: Order, market?: MarketInterface, showStatus: boolean = true, prefix: string = ''): string {
-    const { id, symbol, type, side, price, triggerPrice, takeProfitPrice, stopLossPrice, amount, filledPercent, status, reduceOnly } = stringifyOrder(order, market);
+    const { id, symbol, marketType, type, adjustedSide, price, triggerPrice, takeProfitPrice, stopLossPrice, amount, filledPercent, status, reduceOnly } = stringifyOrder(
+        order,
+        market,
+    );
     const quoteSymbol = market ? ` ${market.quote}` : '';
 
     let parts = [
-        `${market ? `${titleCase(fromCcxtMarketToMarketType(market))} ` : ''}`,
+        `${marketType ? `${titleCase(marketType)} ` : ''}`,
         `${titleCase(type)}`,
         `${reduceOnly !== 'N/A' ? ` ${reduceOnly}` : ''}`,
         ` order`,
-        ` to ${side} ${amount}${quoteSymbol && triggerPrice === 'N/A' && price === 'N/A' ? ` for${quoteSymbol}` : ''}`,
+        ` to ${adjustedSide} ${amount}${quoteSymbol && triggerPrice === 'N/A' && price === 'N/A' ? ` for${quoteSymbol}` : ''}`,
         `${price !== 'N/A' ? ` @ ${price}` : ''}`,
         `${triggerPrice !== 'N/A' ? ` triggering at ${triggerPrice}` : ''}`,
         `${takeProfitPrice !== 'N/A' ? `, Take profit: ${takeProfitPrice}` : ''}`,

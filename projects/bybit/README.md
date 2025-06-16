@@ -25,8 +25,9 @@ Plese note that Bybit uses a Unified Trading Account (UTA) approach, so the retu
 ### Info on open orders
 
 - Show all my open orders
-- TO DO: Show my BTC open orders
-- TO DO: Show details on order 232168017
+- Show my BTC open orders
+- Show my stop loss orders
+- Show details on order 6d264a83-ed27-4a91-bd86-a9b7b68c96b7
 
 ### Cancel orders
 
@@ -209,6 +210,8 @@ pnpm ask-bybit "Show me the price of BTC/USDT:USDT" --debug-llm
     - `getAccountMarginMode`
     - `addMarginToPosition`
     - `reduceMarginFromPosition`
+    - `getUserOpenOrders`
+    - `getOrderById`
 
 - Bybit API keys expire after 3 months unless one adds IP whitelisting
 

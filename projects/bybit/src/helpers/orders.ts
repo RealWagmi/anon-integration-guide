@@ -10,7 +10,7 @@ export async function getUserOpenOrders(exchange: Exchange): Promise<Order[]> {
         throw new Error(`Exchange ${exchange.name} does not support fetching open orders.`);
     }
     exchange.options['warnOnFetchOpenOrdersWithoutSymbol'] = false;
-    const orders = await exchange.fetchOpenOrders(undefined, undefined, undefined, { type: 'spot' });
+    const orders = await exchange.fetchOpenOrders();
     return orders;
 }
 

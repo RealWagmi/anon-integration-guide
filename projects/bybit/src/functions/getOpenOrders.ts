@@ -3,7 +3,7 @@ import { FunctionOptionsWithExchange } from '../overrides';
 import { MAX_ORDERS_IN_RESULTS } from '../constants';
 import { formatOrderSingleLine } from '../helpers/format';
 import { MarketInterface } from 'ccxt';
-import { getUserOpenOrders } from '../helpers/orders';
+import { getUserOpenOrders } from '../helpers/exchange';
 
 /**
  * Get a list of the user's open orders, sorted in descending order of timestamp.

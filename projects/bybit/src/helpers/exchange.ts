@@ -6,6 +6,7 @@
 
 import { bybit, Exchange, MarketInterface, Order, Position } from 'ccxt';
 import { MARGIN_MODES as HEYANON_MARGIN_MODES } from '../constants';
+import { toCcxtMarketType } from './markets';
 
 export interface AddOrReducePositionMarginResult {
     liqPrice: string;
@@ -175,6 +176,44 @@ export async function getOrderById(exchange: Exchange, id: string, symbol?: stri
         }
     }
     return order;
+}
+
+/**
+ * Get all open orders of the user on the given exchange, regardless
+ * of the market type, the settle currency, or whether they are trigger
+ * orders or not.
+ *
+ * Since the Bybit endpoint is very narrow with its arguments, we need to
+ * call it multple times, @see https://bybit-exchange.github.io/docs/v5/order/open-order
+ *
+ * @link https://docs.ccxt.com/#/README?id=understanding-the-orders-api-design
+ */
+export async function getUserOpenOrders(exchange: Exchange): Promise<Order[]> {
+    if (!exchange.has['fetchOpenOrders']) {
+        throw new Error(`Exchange ${exchange.name} does not support fetching open orders.`);
+    }
+    exchange.options['warnOnFetchOpenOrdersWithoutSymbol'] = false;
+    let orders: Order[] = [];
+    const ccxtMarketTypes = [...new Set(SUPPORTED_MARKET_TYPES.map(toCcxtMarketType))];
+    // Fetch normal orders and trigger orders
+    for (const trigger of [false, true]) {
+        // Fetch orders from all market types (spot, futures, option)
+        for (const ccxtMarketType of ccxtMarketTypes) {
+            if (ccxtMarketType === 'spot') {
+                const ccxtOrders = await exchange.fetchOpenOrders(undefined, undefined, undefined, { type: ccxtMarketType, trigger });
+                orders.push(...ccxtOrders);
+            } else {
+                // For leveraged markets, we need to fetch orders for all supported settle currencies
+                for (const settleCoin of SUPPORTED_SETTLE_CURRENCIES) {
+                    const ccxtOrders = await exchange.fetchOpenOrders(undefined, undefined, undefined, { type: ccxtMarketType, trigger, settleCoin });
+                    orders.push(...ccxtOrders);
+                }
+            }
+        }
+    }
+    // Remove duplicates according to the order ID
+    orders = orders.filter((order, index, self) => self.findIndex((t) => t.id === order.id) === index);
+    return orders;
 }
 
 /**
