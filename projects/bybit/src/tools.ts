@@ -38,7 +38,7 @@ export const tools: AiTool[] = [
             {
                 name: 'market',
                 type: 'string',
-                description: 'Market symbol, e.g. "BTC/USDT:USDT" or "BTC/USDT:USDT-250926"',
+                description: 'Futures market symbol, e.g. "BTC/USDT:USDT" or "BTC/USDT:USDT-250926"',
             },
             {
                 name: 'leverage',
@@ -49,19 +49,19 @@ export const tools: AiTool[] = [
     },
     {
         name: 'addMarginToPosition',
-        description: 'Add margin to an existing position',
+        description: 'Add margin to an existing futures position',
         required: ['market', 'amount'],
         props: [
-            { name: 'market', type: 'string', description: 'Market symbol, e.g. "BTC/USDT:USDT"' },
+            { name: 'market', type: 'string', description: 'Futures market symbol, e.g. "BTC/USDT:USDT" or "BTC/USDT:USDT-250926"' },
             { name: 'amount', type: 'number', description: 'Amount to add' },
         ],
     },
     {
         name: 'reduceMarginFromPosition',
-        description: 'Reduce margin from an existing position',
+        description: 'Reduce margin from an existing futures position',
         required: ['market', 'amount'],
         props: [
-            { name: 'market', type: 'string', description: 'Market symbol, e.g. "BTC/USDT:USDT"' },
+            { name: 'market', type: 'string', description: 'Futures market symbol, e.g. "BTC/USDT:USDT" or "BTC/USDT:USDT-250926"' },
             { name: 'amount', type: 'number', description: 'Amount to reduce' },
         ],
     },
@@ -73,13 +73,13 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getPositionOnMarket',
-        description: `Show all details on the position held by the user on the given future market.  If you only have the currency, use getPositions and filter by currency.`,
+        description: `Show all details on the futures position held by the user on the given future market.  If you only have the currency, use getPositions and filter by currency.`,
         required: ['market'],
         props: [
             {
                 name: 'market',
                 type: 'string',
-                description: 'Symbol of the market to get position for, e.g. "BTC/USDT:USDT"',
+                description: 'Futures market symbol, e.g. "BTC/USDT:USDT" or "BTC/USDT:USDT-250926"',
             },
         ],
     },
@@ -103,7 +103,7 @@ export const tools: AiTool[] = [
             {
                 name: 'market',
                 type: 'string',
-                description: 'Symbol of the market the order belongs to, e.g. "BTC/USDT:USDT"',
+                description: MARKET_DESCRIPTION,
             },
         ],
     },
@@ -153,7 +153,7 @@ export const tools: AiTool[] = [
             {
                 name: 'market',
                 type: 'string',
-                description: 'Market symbol, e.g. "BTC/USDT:USDT" or "BTC/USDT:USDT-250926"',
+                description: 'Futures market symbol, e.g. "BTC/USDT:USDT" or "BTC/USDT:USDT-250926"',
             },
         ],
     },
