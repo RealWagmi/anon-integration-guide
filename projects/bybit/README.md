@@ -86,7 +86,7 @@ By "futures" we mean both perpetual futures and delivery (aka "expiry") futures.
 - 100x long BTC with 100 USDT
 - 100x long BTC with 100 USDT isolated margin
 - Long 1 BTC at limit price of 40,000 USDT
-- TO DO: Short BTC with limit price of 150,000 USDT
+- Short 1 BTC at limit price of 150,000 USDT
 
 By default, the agent assumes you want to trade on perpetual markets. To use a delivery market instead, ask for it:
 

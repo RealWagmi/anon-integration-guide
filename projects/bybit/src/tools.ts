@@ -20,7 +20,9 @@ const MARKET_TYPE_PARAMETER = {
 const SIDE_DESCRIPTION = [
     'Side of the order, either "buy", "sell", "long" or "short".  The side is ALWAYS relative to the FIRST (base) currency in the market symbol.',
     '',
-    'For spot markets, the side is always "buy" or "sell".  For futures markets, the side is always "long" or "short".',
+    'The behavior of the side is different for spot and futures (that is, perpetual and delivery) markets:',
+    '- For spot markets, the side is always "buy" or "sell".',
+    "- For futures markets, the side is always 'long' or 'short'.  When longing or shorting, if the leverage is not specified, the user-configured leverage for the market will be automatically used.",
 ].join('\n');
 
 /**
