@@ -122,21 +122,6 @@ export function toCcxtMarketType(marketType: (typeof MARKET_TYPES)[number]): Ccx
 }
 
 /**
- * Complete a partial market symbol with the settle currency.  For example,
- * "BTC/USDT" becomes "BTC/USDT:USDT", "ETH/BTC" becomes "ETH/BTC:BTC"
- *
- * If the market symbol is fully specified, e.g. "BTC/USDT:USDT",
- * return it unchanged.
- */
-export function completeMarketSymbol(symbol: string): string {
-    if (symbol.includes(':')) {
-        return symbol;
-    }
-    const quote = symbol.split('/')[1];
-    return `${symbol}:${quote}`;
-}
-
-/**
  * Given an exchange and a market (trading pair) symbol, return the
  * market object.
  *

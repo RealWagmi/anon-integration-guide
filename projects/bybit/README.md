@@ -24,7 +24,7 @@ Plese note that Bybit uses a Unified Trading Account (UTA) approach, so the retu
 
 ### Info on open orders
 
-- TO DO: Show all my open orders
+- Show all my open orders
 - TO DO: Show my BTC open orders
 - TO DO: Show details on order 232168017
 
@@ -194,12 +194,23 @@ pnpm ask-bybit "Show me the price of BTC/USDT:USDT" --debug-llm
 
 - Trigger direction is needed when placing trigger orders (https://discord.com/channels/690203284119617602/690203284727660739/1367189081418633389)
 
-- Bybit API keys expire after 3 months unless one adds IP whitelisting
+- Orders with TP/SL (regardless of spot or futures) appear as a single order in the API (and in the UI, [screenshot](https://d.pr/i/n1b05r)). When the main order is filled, the TP/SL orders appear as a single separate order.
+
+- When adding a TP/SL order to an existing position, it will appear as a single order rather than two separate orders (see [screenshot](https://d.pr/i/CgH0vF)).
+
+- When listing orders and positions, Bybit requires the `settleCoin` parameter, therefore it is needed to loop through settlement coins. This integration supports USDC and USDT as settlement coins, via the `SUPPORTED_SETTLE_CURRENCIES` constant.
+
+- Orders that are not in the last 500 orders (of any status) are not accessible via the API.
+
+- To fetch information about a specific order, it is not sufficient to know the ID and the market symbol: we also need to specify whether the order is a trigger order or not.
 
 - Had to implement the following functions in [exchange.ts](./src/helpers/exchange.ts) to cover the gaps in CCXT:
+
     - `getAccountMarginMode`
     - `addMarginToPosition`
     - `reduceMarginFromPosition`
+
+- Bybit API keys expire after 3 months unless one adds IP whitelisting
 
 ## Reference
 

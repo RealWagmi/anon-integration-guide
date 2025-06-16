@@ -4,7 +4,7 @@
 // Anything specific to the exchange that is not covered by CCXT.
 // ---------------------------------------------------------------
 
-import { bybit, Exchange, MarketInterface, Position } from 'ccxt';
+import { bybit, Exchange, MarketInterface, Order, Position } from 'ccxt';
 import { MARGIN_MODES as HEYANON_MARGIN_MODES } from '../constants';
 
 export interface AddOrReducePositionMarginResult {
@@ -145,6 +145,34 @@ export async function addOrReducePositionMargin(
     };
     console.log('result', result);
     return result;
+}
+
+/**
+ * Get a specific order by ID on the given exchange.
+ *
+ * On Bybit, fetchOrder() can only access an order if it is in last 500
+ * orders (of any status) for your account.  Furthermore, it is not
+ * sufficient to know the ID and the market symbol: we also need to
+ * specify whether the order is a trigger order or not.
+ */
+export async function getOrderById(exchange: Exchange, id: string, symbol?: string): Promise<Order | null> {
+    if (!exchange.has['fetchOrder']) {
+        throw new Error(`Exchange ${exchange.name} does not support fetching a single order.`);
+    }
+    const params = { acknowledged: true, trigger: false }; // to suppress the error about the 500 orders limit
+    let order: Order;
+    try {
+        order = await exchange.fetchOrder(id, symbol, params);
+    } catch (error) {
+        try {
+            params.trigger = true;
+            console.log('params', params);
+            order = await exchange.fetchOrder(id, symbol, params);
+        } catch (error) {
+            return null;
+        }
+    }
+    return order;
 }
 
 /**

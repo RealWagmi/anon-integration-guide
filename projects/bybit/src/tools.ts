@@ -1,5 +1,5 @@
 import { AiTool } from '@heyanon/sdk';
-import { MARGIN_MODES, MAX_MARKETS_IN_RESULTS, MAX_POSITIONS_IN_RESULTS } from './constants';
+import { MARGIN_MODES, MAX_MARKETS_IN_RESULTS, MAX_ORDERS_IN_RESULTS, MAX_POSITIONS_IN_RESULTS } from './constants';
 import { SUPPORTED_MARKET_TYPES } from './helpers/exchange';
 
 const MARKET_TYPE_PARAMETER = {
@@ -80,6 +80,30 @@ export const tools: AiTool[] = [
                 name: 'market',
                 type: 'string',
                 description: 'Symbol of the market to get position for, e.g. "BTC/USDT:USDT"',
+            },
+        ],
+    },
+    {
+        name: 'getOpenOrders',
+        description: `Show the user's most recent ${MAX_ORDERS_IN_RESULTS} open orders`,
+        required: [],
+        props: [],
+    },
+    {
+        name: 'getOrderByIdAndMarket',
+        description:
+            'Show information about a specific order by ID and market symbol.  If the market is not specified, fetch all orders and filter by ID, without asking for confirmation.',
+        required: ['id', 'market'],
+        props: [
+            {
+                name: 'id',
+                type: 'string',
+                description: 'Order ID to get information for',
+            },
+            {
+                name: 'market',
+                type: 'string',
+                description: 'Symbol of the market the order belongs to, e.g. "BTC/USDT:USDT"',
             },
         ],
     },
