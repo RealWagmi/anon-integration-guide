@@ -46,11 +46,12 @@ const FUTURES_MARKET_DESCRIPTION = ['Futures market symbol, e.g. "BTC/USDT:USDT"
  * Allow the user to specify the order size by specifying the margin amount
  */
 const MARGIN_CALCULATION_INSTRUCTIONS = [
-    'IMPORTANT: For perpetual and delivery markets, the user can specify the margin amount (e.g., "with X USDT at Nx leverage").  In this case, you must:',
+    'IMPORTANT: For perpetual and delivery markets, the user can specify the margin amount (e.g., "with X USDT" or "with X USDT at Nx leverage").  In this case, you must:',
     '1. Use getMarketInfo to get the current price',
-    '2. Calculate position size as: (margin_amount * leverage) / current_price',
-    '3. Use the calculated amount in base currency for this order',
-    'For the purpose of margin calculation, assume that $1 = 1 USDT = 1 USDC',
+    '2. If the user did not specify the leverage, obtain the market leverage using the tool `getUserLeverageOnMarket`',
+    '3. Calculate position size as: (margin_amount * leverage) / current_price',
+    '4. Use the calculated amount in base currency for this order',
+    'For the purpose of margin calculation, assume that $1.00 = 1.00 USDT = 1.00 USDC',
 ].join('\n');
 
 /**
@@ -64,6 +65,7 @@ const AMOUNT_DESCRIPTION = [
     '2. Margin-based sizing: e.g., "5 USDT at 30x leverage" means use 5 USDT as margin to open a position worth 150 USDT (5 * 30x)',
     '',
     'When the user specifies an amount in the quote currency (e.g., "with 5 USDT"), first get the current market price using getMarketInfo, then calculate the base currency amount as: (margin_amount * leverage) / current_price',
+    'If the user did not specify the leverage, obtain the market leverage using the tool `getUserLeverageOnMarket`.',
     '',
     'Always return the amount in BASE currency (the FIRST currency in the market symbol).',
 ].join('\n');
@@ -100,6 +102,12 @@ export const tools: AiTool[] = [
                 description: 'Price at which the order will be executed.  Include only if explicitly specified by the user.  Leave blank for a market order.',
             },
         ],
+    },
+    {
+        name: 'closePosition',
+        description: 'Close a futures position by sending an opposite market order',
+        required: ['market'],
+        props: [{ name: 'market', type: 'string', description: FUTURES_MARKET_DESCRIPTION }],
     },
     {
         name: 'setUserMarginMode',

@@ -144,9 +144,9 @@ When it is clear from context that the TP and SL orders are attached to a positi
 
 ### Futures - Close positions
 
-- TO DO: Close my BTC/USDT position
-- TO DO: Close all my positions
-- TO DO: Close all of my BTC positions
+- Close my BTC/USDT position
+- Close all my positions
+- Close all of my BTC positions
 
 ## CCXT
 

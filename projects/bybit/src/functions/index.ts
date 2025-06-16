@@ -1,7 +1,7 @@
 export { createSimpleOrder } from './createSimpleOrder';
 // export { createTriggerOrder } from './createTriggerOrder';
 // export { createTrailingStopOrder } from './createTrailingStopOrder';
-// export { closePosition } from './closePositions';
+export { closePosition } from './closePosition';
 export { setUserMarginMode } from './setUserMarginMode';
 export { setUserLeverageOnMarket } from './setUserLeverageOnMarket';
 export { addMarginToPosition } from './addMarginToPosition';
