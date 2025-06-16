@@ -31,9 +31,11 @@ Plese note that Bybit uses a Unified Trading Account (UTA) approach, so the retu
 
 ### Cancel orders
 
-- TO DO: Cancel all my orders
-- TO DO: Cancel all my orders on BTC/USDT
-- TO DO: Cancel order 232168017
+- Cancel all my orders
+- Cancel all of my spot orders
+- Cancel all of my perpetual orders
+- Cancel all my orders on BTC/USDT
+- Cancel order 63460f59-4c17-4c12-8adb-47ec5da1c949
 
 ## Spot trading commands
 

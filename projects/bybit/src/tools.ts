@@ -9,6 +9,10 @@ const MARKET_TYPE_PARAMETER = {
     enum: SUPPORTED_MARKET_TYPES,
 };
 
+/**
+ * Description of the market parameter, to be included in all tools
+ * that work for both spot and futures markets.
+ */
 const MARKET_DESCRIPTION = [
     'Symbol of the market.  The type of the market can be inferred from the symbol:',
     '- Spot markets symbols have the form "BTC/USDT", where the FIRST currency is the base currency and the SECOND currency is the quote currency.',
@@ -64,6 +68,29 @@ export const tools: AiTool[] = [
             { name: 'market', type: 'string', description: 'Futures market symbol, e.g. "BTC/USDT:USDT" or "BTC/USDT:USDT-250926"' },
             { name: 'amount', type: 'number', description: 'Amount to reduce' },
         ],
+    },
+    {
+        name: 'cancelOrderByIdAndMarket',
+        description: 'Cancel a specific order by ID and market symbol.  If you only have the order ID, use getOpenOrders to get the market symbol.',
+        required: ['id', 'market'],
+        props: [
+            {
+                name: 'id',
+                type: 'string',
+                description: 'Order ID to cancel',
+            },
+            {
+                name: 'market',
+                type: 'string',
+                description: MARKET_DESCRIPTION,
+            },
+        ],
+    },
+    {
+        name: 'cancelAllOrdersOnMarket',
+        description: 'Cancel all open orders on a given market.  Before executing the tool, always get the open orders to make sure you are cancelling the correct orders.',
+        required: ['market'],
+        props: [{ name: 'market', type: 'string', description: MARKET_DESCRIPTION }],
     },
     {
         name: 'getPositions',

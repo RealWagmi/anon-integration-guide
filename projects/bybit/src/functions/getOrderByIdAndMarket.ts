@@ -10,7 +10,8 @@ interface Props {
 }
 
 /**
- * Get details on the given order by its ID and market symbol
+ * Get details on the given order by its ID and market symbol.  Certain
+ * exchanges do not require the market parameter to be specified.
  *
  * @param props - The function input parameters
  * @param props.id - The ID of the order to get details on
@@ -22,9 +23,6 @@ export async function getOrderByIdAndMarket({ id, market }: Props, { exchange }:
     try {
         // Get order
         const order = await getOrderById(exchange, id, market ?? undefined);
-        if (!order) {
-            return toResult('Order not found or too old', true);
-        }
 
         // Get market object
         let marketObject: MarketInterface | undefined;

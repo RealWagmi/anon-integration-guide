@@ -4,7 +4,7 @@
 // Anything specific to the exchange that is not covered by CCXT.
 // ---------------------------------------------------------------
 
-import { bybit, Exchange, MarketInterface, Order, Position } from 'ccxt';
+import { bybit, Exchange, MarketInterface, Order, OrderNotFound, Position } from 'ccxt';
 import { MARGIN_MODES as HEYANON_MARGIN_MODES } from '../constants';
 import { toCcxtMarketType } from './markets';
 
@@ -158,8 +158,10 @@ export async function addOrReducePositionMargin(
  * we also need to specify whether the order is a trigger order or not.
  * Since we do not have a way to know this information, we try to fetch
  * the order with and without the trigger parameter.
+ *
+ * @throws {OrderNotFound} If the order does not exist or is too old
  */
-export async function getOrderById(exchange: Exchange, id: string, symbol?: string): Promise<Order | null> {
+export async function getOrderById(exchange: Exchange, id: string, symbol?: string): Promise<Order> {
     if (!exchange.has['fetchOrder']) {
         throw new Error(`Exchange ${exchange.name} does not support fetching a single order.`);
     }
@@ -168,11 +170,19 @@ export async function getOrderById(exchange: Exchange, id: string, symbol?: stri
     try {
         order = await exchange.fetchOrder(id, symbol, params);
     } catch (error) {
+        // If the order is not found, try again with the trigger parameter
+        // it any other error happens, rethrow it
+        if (error instanceof OrderNotFound === false) {
+            throw new Error(`Could not get order: ${error}`);
+        }
         try {
             params.trigger = true;
             order = await exchange.fetchOrder(id, symbol, params);
         } catch (error) {
-            return null;
+            if (error instanceof OrderNotFound) {
+                throw new OrderNotFound(`Could not get order: order does not exist or is too old`);
+            }
+            throw new Error(`Could not get order: ${error}`);
         }
     }
     return order;
