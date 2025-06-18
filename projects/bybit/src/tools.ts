@@ -49,6 +49,17 @@ const MARKET_DESCRIPTION = [
 const FUTURES_MARKET_DESCRIPTION = ['Futures market symbol, e.g. "BTC/USDT:USDT" or "BTC/USDT:USDT-250926"'].join('\n');
 
 /**
+ * Instructions for the market type inference to be included in the description
+ * of the create orders tools
+ */
+const MARKET_TYPE_INSTRUCTIONS = [
+    'Market type defaults:',
+    '- Long/short orders default to PERPETUAL markets',
+    '- Buy/sell orders default to SPOT markets',
+    '- Only use DELIVERY markets when explicitly mentioned or when an expiry date is mentioned',
+].join('\n');
+
+/**
  * Allow the user to specify the order size by specifying the quote currency amount for spot markets
  */
 const SPOT_QUOTE_CURRENCY_INSTRUCTIONS = [
@@ -117,10 +128,7 @@ export const tools: AiTool[] = [
         description: [
             'Create an order that is activated immediately, without a trigger attached to it. The order will execute at the current market price or a specified limit price.',
             '',
-            'Market type defaults:',
-            '- Long/short orders default to PERPETUAL markets',
-            '- Buy/sell orders default to SPOT markets',
-            '- Only use DELIVERY markets when explicitly mentioned or when an expiry date is mentioned',
+            MARKET_TYPE_INSTRUCTIONS,
             '',
             SPOT_QUOTE_CURRENCY_INSTRUCTIONS,
             '',
