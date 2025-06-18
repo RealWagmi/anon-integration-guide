@@ -13,7 +13,7 @@ Integration between HeyAnon.ai and Bybit Spot & Future trading, including perpet
 - Show details on market BTC/USD:BTC-250926
 - Show max leverage for BTC/USDT perps
 
-Please note that asking for future markets (e.g. "Show all BTC future markets") will return both perpetual and delivery markets.
+Please note that asking for future markets (e.g. "Show all BTC future markets") will return both perpetual and delivery (a.k.a. expiry) markets.
 
 ### Info on balance
 
@@ -41,10 +41,12 @@ Plese note that Bybit uses a Unified Trading Account (UTA) approach, so the retu
 
 ### Spot - Market & limit orders
 
-- TO DO: Market buy 1 BTC with USDT
-- TO DO: Buy 1 BTC at 40,000 USDT
-- TO DO: Sell half of my BTC at 150,000 USDT
-- TO DO: Buy BTC with all my USDT
+- Market buy 1 BTC with USDT
+- Buy 1 BTC at a limit price of 40,000 USDT
+- Sell half of my BTC at a limit price of 150,000 USDT
+- Market buy BTC with all my USDT
+
+The LLM will try to classify buy/sell orders as spot orders, and long/short orders as futures orders. If it is not clear from the context, it will ask the user for clarification.
 
 ### Spot - Conditional orders
 
@@ -189,6 +191,8 @@ pnpm ask-bybit "Show me the price of BTC/USDT:USDT" --debug-llm
     - the only transfer needed is from the funding wallet to the trading wallet, which we assume is done by the user
     - the LLM has to do some inference to determine the market type from the market symbol, see `MARKET_DESCRIPTION`
     - many tools require the `marketType` parameter to be explicitly provided, e.g. `getCurrencyMarketsOfGivenType`
+
+- The assistant will try to classify buy/sell orders as spot orders, and long/short orders as futures orders. If it is not clear from the context, or the market symbol, it will ask the user for clarification.
 
 - Bybit [no longer supports](https://bybit-exchange.github.io/docs/v5/position/cross-isolate) setting margin mode at the market level, but only at the account level, hence the tools `getUserMarginMode` and `setUserMarginMode` do not have a `market` parameter. The main effect is that if you change the margin mode (e.g. from cross to isolated), the new margin mode will be applied to all of your open positions regardless of the market. The leverage, instead, is still set at the market level, hence the tools `getUserLeverageOnMarket` and `setUserLeverageOnMarket` have a `market` parameter.
 

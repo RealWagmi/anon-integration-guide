@@ -3,13 +3,19 @@ import { MARGIN_MODES, MAX_MARKETS_IN_RESULTS, MAX_ORDERS_IN_RESULTS, MAX_POSITI
 import { SUPPORTED_MARKET_TYPES } from './helpers/exchange';
 
 /**
- * For those tools that need to know the market type (spot,
- * perpetual, delivery) we use this parameter.
+ * Order creation tools need to know the market type (spot,
+ * perpetual, delivery)
  */
 const MARKET_TYPE_PARAMETER = {
     name: 'marketType',
     type: 'string',
-    description: `Market type`,
+    description: [
+        'Market type. Inference rules:',
+        '- "buy"/"sell" → spot market',
+        '- "long"/"short" → perpetual market (default for futures)',
+        '- Delivery dates mentioned → delivery market',
+        'Only ask for clarification if genuinely ambiguous.',
+    ].join(' '),
     enum: SUPPORTED_MARKET_TYPES,
 };
 
@@ -43,15 +49,41 @@ const MARKET_DESCRIPTION = [
 const FUTURES_MARKET_DESCRIPTION = ['Futures market symbol, e.g. "BTC/USDT:USDT" or "BTC/USDT:USDT-250926"'].join('\n');
 
 /**
+ * Allow the user to specify the order size by specifying the quote currency amount for spot markets
+ */
+const SPOT_QUOTE_CURRENCY_INSTRUCTIONS = [
+    'For spot markets, when the user specifies "with X [quote currency]" (e.g., "with 10000 USDT"), this means they want to spend that amount of quote currency. You must:',
+    '1. If a limit price is provided, use that price for calculation',
+    '2. If no limit price is provided, use getMarketInfo to get the current price',
+    '3. Calculate the base currency amount as: quote_currency_amount / price',
+    '4. Use the calculated amount in base currency for this order',
+    'Example: "Buy BTC at 50000 with 10000 USDT" means buy 0.2 BTC (10000 / 50000 = 0.2)',
+].join('\n');
+
+/**
  * Allow the user to specify the order size by specifying the margin amount
  */
 const MARGIN_CALCULATION_INSTRUCTIONS = [
-    'IMPORTANT: For perpetual and delivery markets, the user can specify the margin amount (e.g., "with X USDT" or "with X USDT at Nx leverage").  In this case, you must:',
-    '1. Use getMarketInfo to get the current price',
-    '2. If the user did not specify the leverage, obtain the market leverage using the tool `getUserLeverageOnMarket`',
-    '3. Calculate position size as: (margin_amount * leverage) / current_price',
-    '4. Use the calculated amount in base currency for this order',
-    'For the purpose of margin calculation, assume that $1.00 = 1.00 USDT = 1.00 USDC',
+    'CRITICAL: For perpetual and delivery markets, when the user specifies "with X USDT" or "with X USDC", this ALWAYS means margin amount, NOT the total position value.',
+    '',
+    'You MUST follow these steps:',
+    '1. Identify the margin amount from the prompt (e.g., "with 100 USDT" means margin = 100)',
+    '2. Get the price: use the limit price if provided, otherwise get the price from tool getMarketInfo',
+    '3. Get the leverage: if not specified in the prompt, you MUST call getUserLeverageOnMarket first',
+    '4. Calculate: base_amount = (margin × leverage) ÷ price',
+    '',
+    'LEVERAGE REQUIREMENT:',
+    '- If prompt mentions leverage (e.g., "50x", "at 10x leverage"), use that value',
+    '- If NO leverage mentioned, you MUST call getUserLeverageOnMarket before calculating',
+    '- NEVER assume default leverage values without calling the tool',
+    '',
+    'Example: "Long BTC at 50000 with 100 USDT" with 50x leverage:',
+    '- Margin = 100 USDT',
+    '- Price = 50,000 USDT',
+    '- Leverage = 50x (obtained from getUserLeverageOnMarket)',
+    '- Base amount = (100 × 50) ÷ 50,000 = 0.1 BTC',
+    '',
+    'NEVER treat "with X USDT" as a spot-style calculation for futures markets!',
 ].join('\n');
 
 /**
@@ -60,31 +92,48 @@ const MARGIN_CALCULATION_INSTRUCTIONS = [
  * order size by specifying the margin amount.
  */
 const AMOUNT_DESCRIPTION = [
-    'Amount to trade.  For perpetual and delivery markets this can be specified in two ways:',
-    '1. Direct base currency amount: e.g., "1 SOL" means trade exactly 1 SOL',
-    '2. Margin-based sizing: e.g., "5 USDT at 30x leverage" means use 5 USDT as margin to open a position worth 150 USDT (5 * 30x)',
+    'Amount to trade in BASE currency (the FIRST currency in the market symbol).',
     '',
-    'When the user specifies an amount in the quote currency (e.g., "with 5 USDT"), first get the current market price using getMarketInfo, then calculate the base currency amount as: (margin_amount * leverage) / current_price',
-    'If the user did not specify the leverage, obtain the market leverage using the tool `getUserLeverageOnMarket`.',
+    'CRITICAL DISTINCTION:',
+    '- For SPOT markets: "with X USDT" = spend X USDT (divide by price)',
+    '- For FUTURES markets: "with X USDT" = use X USDT as MARGIN (multiply by leverage, then divide by price)',
     '',
-    'Always return the amount in BASE currency (the FIRST currency in the market symbol).',
+    'For SPOT markets:',
+    '1. Direct: "buy 1 BTC" → amount = 1',
+    '2. Quote spending: "buy BTC with 10000 USDT" → amount = 10000 / price',
+    '',
+    'For FUTURES markets (MUST apply leverage):',
+    '1. Direct: "long 1 BTC" → amount = 1',
+    '2. Margin-based: "long BTC with 100 USDT" → amount = (100 × leverage) / price',
+    '   Example: 100 USDT margin, 50x leverage, 50000 price → (100 × 50) / 50000 = 0.1 BTC',
+    '',
+    'If the prompt includes "long" or "short", you MUST use the futures calculation with leverage.',
+    'Always return the amount in BASE currency.',
 ].join('\n');
 
 export const tools: AiTool[] = [
     {
         name: 'createSimpleOrder',
         description: [
-            'Create an order that is activated immediately, without a trigger attached to it. The order will execute at the current market price or a specified limit price. The leverage and margin mode for the order are the user-configured leverage and margin mode for the market.',
+            'Create an order that is activated immediately, without a trigger attached to it. The order will execute at the current market price or a specified limit price.',
+            '',
+            'Market type defaults:',
+            '- Long/short orders default to PERPETUAL markets',
+            '- Buy/sell orders default to SPOT markets',
+            '- Only use DELIVERY markets when explicitly mentioned or when an expiry date is mentioned',
+            '',
+            SPOT_QUOTE_CURRENCY_INSTRUCTIONS,
             '',
             MARGIN_CALCULATION_INSTRUCTIONS,
         ].join('\n'),
-        required: ['market', 'side', 'amount', 'limitPrice'],
+        required: ['market', 'marketType', 'side', 'amount', 'limitPrice'],
         props: [
             {
                 name: 'market',
                 type: 'string',
                 description: MARKET_DESCRIPTION,
             },
+            MARKET_TYPE_PARAMETER,
             {
                 name: 'side',
                 type: 'string',
@@ -234,7 +283,12 @@ export const tools: AiTool[] = [
         description: `Show active markets (also called trading pairs) with the given currency or token.  Show only the first ${MAX_MARKETS_IN_RESULTS} markets.  If the user asks for future markets, the function should be called for both perpetual and delivery markets.`,
         required: ['marketType', 'currency'],
         props: [
-            MARKET_TYPE_PARAMETER,
+            {
+                name: 'marketType',
+                type: 'string',
+                description: `Market type`,
+                enum: SUPPORTED_MARKET_TYPES,
+            },
             {
                 name: 'currency',
                 type: 'string',
