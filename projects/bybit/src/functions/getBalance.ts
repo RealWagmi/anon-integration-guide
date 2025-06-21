@@ -10,10 +10,10 @@ interface Props {
 /**
  * Get the unified user balance on the exchange.
  *
- * @param {Object} props - The function input parameters
- * @param {string|null} props.currency - Optionally, specify a currency to get balance just for that currency, e.g. "BTC"
- * @param {FunctionOptions} options HeyAnon SDK options
- * @returns {Promise<FunctionReturn>} The balance for all currencies/tokens of the user
+ * @param props - The function input parameters
+ * @param props.currency - Optionally, specify a currency to get balance just for that currency, e.g. "BTC"
+ * @param options HeyAnon SDK options
+ * @returns The balance for all currencies/tokens of the user
  */
 export async function getBalance({ currency }: Props, { exchange }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
     try {

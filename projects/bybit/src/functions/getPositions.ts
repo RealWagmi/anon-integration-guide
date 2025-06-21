@@ -11,9 +11,9 @@ interface Props {}
 /**
  * Get a list of the user's open positions, sorted in descending order of timestamp.
  *
- * @param {Object} props - The function input parameters
- * @param {FunctionOptions} options HeyAnon SDK options
- * @returns {Promise<FunctionReturn>} A string with the list of open positions, including: position ID, notional, PNL, timestamp, etc.
+ * @param props - The function input parameters
+ * @param options HeyAnon SDK options
+ * @returns A string with the list of open positions, including: position ID, notional, PNL, timestamp, etc.
  */
 export async function getPositions({}: Props, { exchange, notify }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
     try {

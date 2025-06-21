@@ -10,10 +10,10 @@ interface Props {
 /**
  * Get information about a market, including price, volume data and max leverage.
  *
- * @param {Object} props - The function input parameters
- * @param {string} props.market - The symbol of the market to get information for
- * @param {FunctionOptions} options HeyAnon SDK options
- * @returns {Promise<FunctionReturn>} A string with the market information returned by `formatMarketInfo`
+ * @param props - The function input parameters
+ * @param props.market - The symbol of the market to get information for
+ * @param options HeyAnon SDK options
+ * @returns A string with the market information returned by `formatMarketInfo`
  */
 export async function getMarketInfo({ market }: Props, { exchange }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
     try {

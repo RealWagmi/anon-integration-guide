@@ -20,7 +20,7 @@ interface Props {
  * @param props.id - The ID of the order to cancel
  * @param props.market - The symbol of the market
  * @param options
- * @returns {Promise<FunctionReturn>} A string confirming the order was cancelled, with the order details
+ * @returns A string confirming the order was cancelled, with the order details
  */
 export async function cancelOrderByIdAndMarket({ id, market }: Props, { exchange, notify }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
     try {

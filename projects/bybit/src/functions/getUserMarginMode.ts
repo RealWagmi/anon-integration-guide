@@ -7,9 +7,9 @@ interface Props {}
 /**
  * Get the user configured margin mode (set at the account level).
  *
- * @param {Object} props - The function input parameters
- * @param {FunctionOptions} options HeyAnon SDK options
- * @returns {Promise<FunctionReturn>} A message with the result of the operation
+ * @param props - The function input parameters
+ * @param options HeyAnon SDK options
+ * @returns A message with the result of the operation
  */
 export async function getUserMarginMode({}: Props, { exchange }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
     try {

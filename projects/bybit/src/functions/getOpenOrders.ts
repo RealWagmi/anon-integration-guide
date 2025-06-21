@@ -8,8 +8,8 @@ import { getUserOpenOrders } from '../helpers/exchange';
 /**
  * Get a list of the user's open orders, sorted in descending order of timestamp.
  *
- * @param {FunctionOptions} options HeyAnon SDK options
- * @returns {Promise<FunctionReturn>} A string with the list of open orders, including: order ID, timestamp, amount, etc.
+ * @param options HeyAnon SDK options
+ * @returns A string with the list of open orders, including: order ID, timestamp, amount, etc.
  */
 export async function getOpenOrders({}: {}, { exchange }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
     try {

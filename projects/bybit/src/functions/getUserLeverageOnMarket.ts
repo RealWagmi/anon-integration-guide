@@ -10,10 +10,10 @@ interface Props {
 /**
  * Get the user configured leverage for a specific market.
  *
- * @param {Object} props - The function input parameters
- * @param {string} props.market - The symbol of the market
- * @param {FunctionOptions} options HeyAnon SDK options
- * @returns {Promise<FunctionReturn>} A message with the result of the operation
+ * @param props - The function input parameters
+ * @param props.market - The symbol of the market
+ * @param options HeyAnon SDK options
+ * @returns A message with the result of the operation
  */
 export async function getUserLeverageOnMarket({ market }: Props, { exchange }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
     // Ensure market type is correct

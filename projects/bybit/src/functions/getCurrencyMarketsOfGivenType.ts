@@ -15,11 +15,11 @@ interface Props {
 /**
  * Get a list of all active markets that include a given currency, for the given market type.
  *
- * @param {Object} props - The function input parameters
- * @param {string} props.marketType - The market type to get markets for, e.g. 'spot' or 'perpetual'
- * @param {string} props.currency - The currency to get markets for
- * @param {FunctionOptions} options HeyAnon SDK optionsyp
- * @returns {Promise<FunctionReturn>} The list of markets with a short description, or an error description
+ * @param props - The function input parameters
+ * @param props.marketType - The market type to get markets for, e.g. 'spot' or 'perpetual'
+ * @param props.currency - The currency to get markets for
+ * @param options HeyAnon SDK options
+ * @returns The list of markets with a short description, or an error description
  */
 export async function getCurrencyMarketsOfGivenType({ marketType, currency }: Props, { exchange }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
     if (!SUPPORTED_MARKET_TYPES.includes(marketType as (typeof SUPPORTED_MARKET_TYPES)[number])) {

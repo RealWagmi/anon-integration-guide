@@ -12,10 +12,10 @@ interface Props {
 /**
  * Get details on the leveraged position held by the user on the given market
  *
- * @param {Object} props - The function input parameters
- * @param {string} props.market - The symbol of the market
- * @param {FunctionOptions} options HeyAnon SDK options
- * @returns {Promise<FunctionReturn>} A string with the details on the position
+ * @param props - The function input parameters
+ * @param props.market - The symbol of the market
+ * @param options HeyAnon SDK options
+ * @returns A string with the details on the position
  */
 export async function getPositionOnMarket({ market }: Props, { exchange, notify }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
     // Get market object

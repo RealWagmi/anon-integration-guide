@@ -11,10 +11,10 @@ interface Props {
 /**
  * Set the account-level margin mode for the user
  *
- * @param {Object} props - The function input parameters
- * @param {string} props.marginMode - The margin mode to set, one of: cross, isolated, portfolio
- * @param {FunctionOptions} options HeyAnon SDK options
- * @returns {Promise<FunctionReturn>} A message with the result of the operation
+ * @param props - The function input parameters
+ * @param props.marginMode - The margin mode to set, one of: cross, isolated, portfolio
+ * @param options HeyAnon SDK options
+ * @returns A message with the result of the operation
  */
 export async function setUserMarginMode({ marginMode }: Props, { exchange, notify }: FunctionOptionsWithExchange): Promise<FunctionReturn> {
     try {
