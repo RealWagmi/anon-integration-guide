@@ -3,7 +3,6 @@
 ## Features
 
 - To add TP/SL to existing position, try tpslMode
-- Implement feature checking in createPositionWithTakeProfitAndOrStopLossOrderAttached
 - Test reduce only (see _When it is clear from context_ in README.md)
 
 ## Minor

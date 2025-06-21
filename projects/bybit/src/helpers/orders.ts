@@ -61,25 +61,25 @@ export async function createPositionWithTakeProfitAndOrStopLossOrderAttached(
     // We are permissive, that is, we throw an error only if the CCXT exchange explicitly
     // says that it does not support it.
     let supported: boolean = true;
-    // const features = exchange.features[marketObject.type];
-    // switch (marketObject.type) {
-    //     case 'swap':
-    //     case 'future':
-    //     case 'option':
-    //         switch (marketObject.subType) {
-    //             case 'linear':
-    //                 if (!features.linear.createOrder.attachedStopLossTakeProfit.triggerPriceType) {
-    //                     supported = false;
-    //                 }
-    //                 break;
-    //             case 'inverse':
-    //                 if (!features.inverse.createOrder.attachedStopLossTakeProfit.triggerPriceType) {
-    //                     supported = false;
-    //                 }
-    //                 break;
-    //         }
-    //         break;
-    // }
+    const features = exchange.features[marketObject.type];
+    switch (marketObject.type) {
+        case 'swap':
+        case 'future':
+        case 'option':
+            switch (marketObject.subType) {
+                case 'linear':
+                    if (typeof features.linear.createOrder.attachedStopLossTakeProfit.triggerPriceType === 'undefined') {
+                        supported = false;
+                    }
+                    break;
+                case 'inverse':
+                    if (typeof features.inverse.createOrder.attachedStopLossTakeProfit.triggerPriceType === 'undefined') {
+                        supported = false;
+                    }
+                    break;
+            }
+            break;
+    }
     if (!supported) {
         throw new Error(`Creating a TP/SL position not supported on this market type`);
     }
