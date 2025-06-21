@@ -142,6 +142,7 @@ Please note that you can also cancel any existing TP/SL order:
 
 - Spend 100 USDT to 10x long BTC/USDT with a 10% take profit and a 15% stop loss
 - 10x long 0.005 BTC/USDT with a 10% take profit and a 15% stop loss
+- 10x long 0.005 BTC/USDT at a limit price of 50,000 USDT with a 10% take profit and a 15% stop loss
 - 20x short 0.005 BTC/USDT with a 50,000 USDT take profit
 
 #### Reduce only
@@ -229,9 +230,9 @@ pnpm ask-bybit "Show me the price of BTC/USDT:USDT" --debug-llm
 
 - Trigger direction is needed when placing trigger orders (https://discord.com/channels/690203284119617602/690203284727660739/1367189081418633389)
 
-- Orders with TP/SL (regardless of spot or futures) appear as a single order in the API (and in the UI, [screenshot](https://d.pr/i/n1b05r)). When the main order is filled, the TP/SL orders appear as a single separate order.
+- Limit orders with TP/SL (regardless of spot or futures) appear as a single order both in the API and in the UI ([spot screenshot](https://d.pr/i/n1b05r), [futures screenshot](https://d.pr/i/nWzWRG)) with the "Trade Type" set to "Open long" or "Open short". When the main order is filled, the TP/SL orders will still appear as a single separate TP/SL order, but it will have the "Trade Type" set to "Close long" or "Close short".
 
-- When adding a TP/SL order to an existing position, or creating a new position with TP/SL attached, it will appear as a single order rather than two separate orders (see [screenshot](https://d.pr/i/CgH0vF)).
+- When adding a TP/SL order to an existing position (or creating a new position with TP/SL attached) the TP/SL will appear in the UI as a single order (see [screenshot](https://d.pr/i/CgH0vF)).
 
 - When listing orders and positions, Bybit requires the `settleCoin` parameter, therefore it is needed to loop through settlement coins. This integration supports USDC and USDT as settlement coins, via the `SUPPORTED_SETTLE_CURRENCIES` constant.
 
@@ -244,10 +245,8 @@ pnpm ask-bybit "Show me the price of BTC/USDT:USDT" --debug-llm
 - Had to implement the following functions in [exchange.ts](./src/helpers/exchange.ts) to cover the gaps in CCXT:
 
     - `attachTakeProfitAndOrStopLossOrderToExistingPosition`
-    - `createPositionWithTakeProfitAndOrStopLossOrderAttached`
-      `getAccountMarginMode`
-    - `addMarginToPosition`
-    - `reduceMarginFromPosition`
+    - `getAccountMarginMode`
+    - `addOrReducePositionMargin`
     - `getUserOpenOrders`
     - `getOrderById`
 
@@ -257,6 +256,7 @@ pnpm ask-bybit "Show me the price of BTC/USDT:USDT" --debug-llm
 
 - [Bybit V5 API docs](https://bybit-exchange.github.io/docs/v5/intro)
 - [Bybit API FAQ](https://www.bybit.com/future-activity/en/developer)
+- [Bybit API trading-stop endpoint](https://bybit-exchange.github.io/docs/v5/position/trading-stop) to set TP/SL on futures positions
 - [Bybit guide to open a testnet account](https://www.bybit.com/en/help-center/article/How-to-Request-Test-Coins-on-Testnet)
 - [Bybit Postman collection](https://github.com/bybit-exchange/QuickStartWithPostman)
 - [Bybit margin mode FAQ](https://www.bybit.com/en/help-center/article/What-is-Isolated-Margin-Cross-Margin)
