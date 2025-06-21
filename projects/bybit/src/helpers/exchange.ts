@@ -146,6 +146,47 @@ export async function addOrReducePositionMargin(
 }
 
 /**
+ * Attach take profit and/or stop loss orders to an existing position,
+ * using the /v5/position/trading-stop endpoint of the Bybit API.
+ *
+ * @throws {Error} If something goes wrong
+ * @link https://bybit-exchange.github.io/docs/v5/position/trading-stop
+ */
+export async function attachTakeProfitAndOrStopLossOrderToExistingPosition(
+    exchange: Exchange,
+    marketObject: MarketInterface,
+    takeProfitPrice: number | null,
+    stopLossPrice: number | null,
+): Promise<void> {
+    // Check that at least one price is provided
+    if (takeProfitPrice === null && stopLossPrice === null) {
+        throw new Error('At least one of the stop loss or take profit prices must be provided');
+    }
+
+    // Build the request parameters
+    const params: Record<string, any> = {
+        category: 'linear', // Only supporting linear for now
+        symbol: marketObject.id, // Use the exchange-specific symbol ID
+        tpslMode: 'Full', // Using Full mode as the most common, meaning that the TP/SL will close the position
+        positionIdx: '0', // Assuming one-way mode (0). Would need to check position mode for hedge mode support
+    };
+    if (takeProfitPrice !== null) {
+        params.takeProfit = takeProfitPrice.toString();
+        params.tpTriggerBy = 'MarkPrice';
+    }
+    if (stopLossPrice !== null) {
+        params.stopLoss = stopLossPrice.toString();
+        params.slTriggerBy = 'MarkPrice';
+    }
+
+    // Call the API
+    const response = await (exchange as bybit).privatePostV5PositionTradingStop(params);
+    if (response.retMsg !== 'OK') {
+        throw new Error(`Could not attach TP/SL orders to position: ${response.retMsg}`);
+    }
+}
+
+/**
  * Get a specific order by ID on the given exchange.
  *
  * On Bybit, fetchOrder() can only access an order if it is in last 500

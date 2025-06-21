@@ -36,6 +36,7 @@ Plese note that Bybit uses a Unified Trading Account (UTA) approach, so the retu
 - Cancel all of my perpetual orders
 - Cancel all my orders on BTC/USDT
 - Cancel order 63460f59-4c17-4c12-8adb-47ec5da1c949
+- Cancel the TP order on my BTC/USDT:USDT position
 
 ## Spot trading commands
 
@@ -124,17 +125,22 @@ Please note that:
 
 ### Futures - Take profit & stop loss
 
-On Bybit futures markets, you can either add TP/SL to an existing position, or create a new position with TP/SL attached.
+On Bybit futures markets, you can either set TP/SL on an existing position, or directlycreate a new position with TP/SL.
 
-#### Add TP/SL to an existing position
+#### Set TP/SL on an existing position
 
-- TO DO: Add a 10% TP and a 15% SL to my BTC/USDT position
-- TO DO: Add a TP @ 200,000 USDT on my BTC position
-- TO DO: Add a SL @ 50,000 USDT on my BTC position
+- Set a 10% TP and a 10% SL on my BTC/USDT position
+- Set a TP @ 200,000 USDT on my BTC position
+- Set a SL @ 50,000 USDT on my BTC position
+
+Please note that you can also cancel any existing TP/SL order:
+
+- Cancel the TP order on my BTC/USDT position
+- Cancel the SL order on my BTC/USDT position
 
 #### Create a new position with TP/SL attached
 
-- Spend 100 USDC to 10x long BTC/USDT with a 10% take profit and a 15% stop loss
+- Spend 100 USDT to 10x long BTC/USDT with a 10% take profit and a 15% stop loss
 - 10x long 0.005 BTC/USDT with a 10% take profit and a 15% stop loss
 - 20x short 0.005 BTC/USDT with a 50,000 USDT take profit
 

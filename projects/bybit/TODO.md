@@ -2,7 +2,8 @@
 
 ## Features
 
-- To add TP/SL to existing position, try tpslMode
+- Are inverse markets supported? If not, throw when marketObject.subType is inverse
+- How to handle TP/SL orders for spot?
 - Test reduce only (see _When it is clear from context_ in README.md)
 
 ## Minor

@@ -83,6 +83,7 @@ export function formatMarketInfo(market: MarketInterface, ticker: Ticker, levera
         market.expiryDatetime ? `Expiry/Delivery date: ${formatDate(getMarketExpiry(market))}` : '',
         `${market.settle ? `Settled in: ${market.settle}` : ''}`,
         `${lowestTier ? `Max leverage: ${lowestTier.maxLeverage}x${lowestTier.maxNotional ? ` (size < ${lowestTier.maxNotional} ${market.settle})` : ''}` : ''}`,
+        `Mark price: ${ticker.markPrice} ${market.quote}`,
         `Last price: ${ticker.last} ${market.quote}`,
         `24h high: ${ticker.high} ${market.quote}`,
         `24h low: ${ticker.low} ${market.quote}`,

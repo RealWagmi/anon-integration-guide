@@ -244,6 +244,32 @@ export const tools: AiTool[] = [
         ],
     },
     {
+        name: 'attachTakeProfitAndOrStopLossOrderToExistingPosition',
+        description:
+            'Attach take profit and/or stop loss orders to an existing futures position.  If the position already has TP/SL orders attached, they will be replaced.  Pass 0 as the TP price or SL price to cancel any existing TP or SL orders, respectively.',
+        required: ['market', 'marketType', 'takeProfitPrice', 'stopLossPrice'],
+        props: [
+            {
+                name: 'market',
+                type: 'string',
+                description: FUTURES_MARKET_DESCRIPTION,
+            },
+            MARKET_TYPE_PARAMETER_FUTURES_ONLY,
+            {
+                name: 'takeProfitPrice',
+                type: ['number', 'null'],
+                description:
+                    'Price at which the take profit order will be activated. At least one of takeProfitPrice or stopLossPrice must be provided.  Set to 0 to cancel any existing take profit order attached to the position.',
+            },
+            {
+                name: 'stopLossPrice',
+                type: ['number', 'null'],
+                description:
+                    'Price at which the stop loss order will be activated. At least one of takeProfitPrice or stopLossPrice must be provided.  Set to 0 to cancel any existing stop loss order attached to the position.',
+            },
+        ],
+    },
+    {
         name: 'closePosition',
         description: 'Close a futures position by sending an opposite market order',
         required: ['market'],
