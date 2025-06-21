@@ -1,8 +1,7 @@
 import { FunctionReturn, toResult } from '@heyanon/sdk';
 import { FunctionOptionsWithExchange } from '../overrides';
 import { fromCcxtMarketToMarketType, getMarketExpiry, getMarketsWithCurrencyAndType, toCcxtMarketType } from '../helpers/markets';
-import { getMarketsLeverageTiers } from '../helpers/leverage';
-import { LeverageTier, LeverageTiers, MarketInterface } from 'ccxt';
+import { MarketInterface } from 'ccxt';
 import { MARKET_TYPES, MAX_MARKETS_IN_RESULTS } from '../constants';
 import { formatDate } from '../helpers/format';
 import { SUPPORTED_MARKET_TYPES } from '../helpers/exchange';
@@ -33,15 +32,14 @@ export async function getCurrencyMarketsOfGivenType({ marketType, currency }: Pr
         }
 
         const firstNMarkets = markets.slice(0, MAX_MARKETS_IN_RESULTS);
-        let leverageTiers: LeverageTiers;
-        leverageTiers = await getMarketsLeverageTiers(
-            exchange,
-            firstNMarkets.map((m) => m.symbol),
-        );
+        let maxLeverages: (number | undefined)[] = [];
+        for (const market of firstNMarkets) {
+            maxLeverages.push(market.limits?.leverage?.max);
+        }
 
         const rows = [
             `Found ${markets.length} markets for ${currency} ${markets.length > MAX_MARKETS_IN_RESULTS ? `(showing first ${MAX_MARKETS_IN_RESULTS})` : ''}:`,
-            ...firstNMarkets.map((market) => formatMarketLine(market, leverageTiers[market.symbol])),
+            ...firstNMarkets.map((market) => formatMarketLine(market)),
         ];
         return toResult(rows.join('\n'));
     } catch (error) {
@@ -53,7 +51,7 @@ export async function getCurrencyMarketsOfGivenType({ marketType, currency }: Pr
  * Format a market object (with no ticker data) for display in console as
  * a single line.
  */
-function formatMarketLine(market: MarketInterface, leverageTiers?: LeverageTier[]) {
+function formatMarketLine(market: MarketInterface) {
     let output = ` - ${market.base}/${market.quote} ${fromCcxtMarketToMarketType(market)}`;
     if (market.settle) {
         output += ` settled in ${market.settle}`;
@@ -61,8 +59,9 @@ function formatMarketLine(market: MarketInterface, leverageTiers?: LeverageTier[
     if (market.type === 'future') {
         output += ` with expiry ${formatDate(getMarketExpiry(market))}`;
     }
-    if (leverageTiers) {
-        output += ` with max leverage ${leverageTiers[0].maxLeverage}x`;
+    const maxLeverage = market.limits?.leverage?.max;
+    if (maxLeverage) {
+        output += ` with max leverage ${maxLeverage}x`;
     }
     output += ` (symbol: ${market.symbol})`;
     return output;
