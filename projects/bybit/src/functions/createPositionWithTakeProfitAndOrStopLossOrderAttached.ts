@@ -7,7 +7,7 @@ import { fromCcxtMarketToMarketType, getMarketObject } from '../helpers/markets'
 
 interface Props {
     market: string;
-    side: 'buy' | 'sell' | 'long' | 'short';
+    side: 'long' | 'short';
     marketType: (typeof SUPPORTED_MARKET_TYPES)[number];
     amount: number;
     takeProfitPrice: number | null;
@@ -24,7 +24,7 @@ interface Props {
  *
  * @param props - The function input parameters
  * @param props.market - Symbol of the market to trade, for example "BTC/USDT" or "AAVE/ETH"
- * @param props.marketType - Market type as inferred from the prompt, e.g. "spot" or "perpetual", used to validate the order
+ * @param props.marketType - Market type as inferred from the prompt, used to validate the order
  * @param props.side - Side of the order; either "long" or "short"
  * @param props.amount - Amount of base currency to long or short
  * @param props.takeProfitPrice - Price for take profit orders
@@ -41,6 +41,7 @@ export async function createPositionWithTakeProfitAndOrStopLossOrderAttached(
     try {
         // Convert the mixed side to a CCXT side
         const ccxtSide = toCcxtSide(side);
+
         // Validate the market type
         const marketObject = await getMarketObject(exchange, market);
         const marketTypeInferredFromMarketSymbol = fromCcxtMarketToMarketType(marketObject);
@@ -50,16 +51,13 @@ export async function createPositionWithTakeProfitAndOrStopLossOrderAttached(
         if (!SUPPORTED_MARKET_TYPES.includes(marketType as (typeof SUPPORTED_MARKET_TYPES)[number])) {
             throw new Error(`HeyAnon does not support markets of type ${marketType}`);
         }
-        // Make sure that the side is compatible with the market type;
-        // if not, tell the LLM to ask the user for clarification
-        if (marketType === 'spot' && side !== 'buy' && side !== 'sell') {
-            return toResult(`You cannot ${side} a spot market.  If you want to proceed please use '${ccxtSide}' instead of '${side}'.`);
-        }
+
         // Include optional parameter reduceOnly
         const params: Record<string, any> = {};
         if (reduceOnly) {
             params.reduceOnly = true;
         }
+
         // Create the order
         const order = await createPositionWithTakeProfitAndOrStopLossOrderAttachedHelper(
             exchange,
@@ -72,6 +70,7 @@ export async function createPositionWithTakeProfitAndOrStopLossOrderAttached(
             params,
         );
         notify(`Successfully submitted order with ID ${order.id}, now getting order status...`);
+
         // Get the order object
         const orderObject = await getOrderById(exchange, order.id, marketObject.symbol);
         return toResult(`Successfully created ${formatOrderSingleLine(orderObject, marketObject, true)}`);

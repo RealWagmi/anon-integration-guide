@@ -225,7 +225,7 @@ pnpm ask-bybit "Show me the price of BTC/USDT:USDT" --debug-llm
 
 - Orders with TP/SL (regardless of spot or futures) appear as a single order in the API (and in the UI, [screenshot](https://d.pr/i/n1b05r)). When the main order is filled, the TP/SL orders appear as a single separate order.
 
-- When adding a TP/SL order to an existing position, it will appear as a single order rather than two separate orders (see [screenshot](https://d.pr/i/CgH0vF)).
+- When adding a TP/SL order to an existing position, or creating a new position with TP/SL attached, it will appear as a single order rather than two separate orders (see [screenshot](https://d.pr/i/CgH0vF)).
 
 - When listing orders and positions, Bybit requires the `settleCoin` parameter, therefore it is needed to loop through settlement coins. This integration supports USDC and USDT as settlement coins, via the `SUPPORTED_SETTLE_CURRENCIES` constant.
 
@@ -237,7 +237,9 @@ pnpm ask-bybit "Show me the price of BTC/USDT:USDT" --debug-llm
 
 - Had to implement the following functions in [exchange.ts](./src/helpers/exchange.ts) to cover the gaps in CCXT:
 
-    - `getAccountMarginMode`
+    - `attachTakeProfitAndOrStopLossOrderToExistingPosition`
+    - `createPositionWithTakeProfitAndOrStopLossOrderAttached`
+      `getAccountMarginMode`
     - `addMarginToPosition`
     - `reduceMarginFromPosition`
     - `getUserOpenOrders`

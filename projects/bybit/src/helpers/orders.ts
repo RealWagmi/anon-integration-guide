@@ -96,7 +96,6 @@ export async function createPositionWithTakeProfitAndOrStopLossOrderAttached(
         };
     }
     const ccxtType = limitPrice ? 'limit' : 'market';
-    console.log('params', { ...params, ...ccxtParams });
     const order = await exchange.createOrder(symbol, ccxtType, side, amount, limitPrice, { ...params, ...ccxtParams });
     return order;
 }

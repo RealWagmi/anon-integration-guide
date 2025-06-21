@@ -131,9 +131,7 @@ export async function addOrReducePositionMargin(
         margin: amount.toString(),
         positionIdx: positionIdx.toString(),
     };
-    console.log('params', params);
     const response = await (exchange as bybit).privatePostV5PositionAddMargin(params);
-    console.log('response', response);
     if (response.retMsg !== 'OK') {
         throw new Error(`Could not add margin to position: ${response.retMsg}`);
     }
@@ -144,7 +142,6 @@ export async function addOrReducePositionMargin(
         positionIM: response.result.positionIM,
         positionMM: response.result.positionMM,
     };
-    console.log('result', result);
     return result;
 }
 

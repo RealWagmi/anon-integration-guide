@@ -214,12 +214,12 @@ export const tools: AiTool[] = [
                 name: 'side',
                 type: 'string',
                 enum: ['long', 'short'],
-                description: SIDE_DESCRIPTION,
+                description: 'Side of the order',
             },
             {
                 name: 'amount',
                 type: 'number',
-                description: AMOUNT_DESCRIPTION,
+                description: 'Amount to trade in BASE currency (the FIRST currency in the market symbol)',
             },
             {
                 name: 'limitPrice',
@@ -367,7 +367,13 @@ export const tools: AiTool[] = [
         name: 'getBalance',
         description: 'Get the unified user balance.  This does not include open positions.  For each currency, show how much is available to trade (free).',
         required: ['currency'],
-        props: [{ name: 'currency', type: ['string', 'null'], description: 'Optionally, specify a currency to show balance just for that currency, e.g. "BTC"' }],
+        props: [
+            {
+                name: 'currency',
+                type: ['string', 'null'],
+                description: 'Optionally, specify a currency to show balance just for that currency, e.g. "BTC"',
+            },
+        ],
     },
     {
         name: 'getCurrencyMarketsOfGivenType',
