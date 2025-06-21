@@ -233,6 +233,8 @@ pnpm ask-bybit "Show me the price of BTC/USDT:USDT" --debug-llm
 
 - To fetch information about a specific order, it is not sufficient to know the ID and the market symbol: we also need to specify whether the order is a trigger order or not.
 
+- The `fetchLeverageTiers` method is supported by CCXT, but it takes forever as it goes through 40 pages of markets, so we just infer the max leverage from the market object, without showing the actual tier for that leverage.
+
 - Had to implement the following functions in [exchange.ts](./src/helpers/exchange.ts) to cover the gaps in CCXT:
 
     - `getAccountMarginMode`

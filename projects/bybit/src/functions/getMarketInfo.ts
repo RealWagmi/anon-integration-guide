@@ -2,7 +2,6 @@ import { FunctionReturn, toResult } from '@heyanon/sdk';
 import { FunctionOptionsWithExchange } from '../overrides';
 import { getMarketObject, getMarketTickerBySymbol } from '../helpers/markets';
 import { formatMarketInfo } from '../helpers/format';
-import { getMarketsLeverageTiers } from '../helpers/leverage';
 
 interface Props {
     market: string;
@@ -24,9 +23,14 @@ export async function getMarketInfo({ market }: Props, { exchange }: FunctionOpt
         if (!ticker) {
             return toResult('Could not find price info for market ' + marketObject.symbol, true);
         }
-        // Fetch market leverage tiers (will return empty object for a spot market)
-        const leverageTiers = await getMarketsLeverageTiers(exchange, [marketObject.symbol]);
-        return toResult(formatMarketInfo(marketObject, ticker, leverageTiers));
+        // Build output string
+        let output = formatMarketInfo(marketObject, ticker);
+        // Extract max leverage for the market
+        const maxLeverage = marketObject.limits?.leverage?.max;
+        if (maxLeverage) {
+            output += `\nMax leverage: ${maxLeverage}x`;
+        }
+        return toResult(output);
     } catch (error) {
         return toResult(`${error}`, true);
     }
