@@ -1,5 +1,5 @@
 export { createSimpleOrder } from './createSimpleOrder';
-// export { createTriggerOrder } from './createTriggerOrder';
+export { createPositionWithTakeProfitAndOrStopLossOrderAttached } from './createPositionWithTakeProfitAndOrStopLossOrderAttached';
 // export { createTrailingStopOrder } from './createTrailingStopOrder';
 export { closePosition } from './closePosition';
 export { setUserMarginMode } from './setUserMarginMode';

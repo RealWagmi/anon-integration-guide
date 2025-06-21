@@ -1,5 +1,5 @@
 import { Exchange, Order } from 'ccxt';
-import { getMarketLastPriceBySymbol } from './markets';
+import { getMarketLastPriceBySymbol, getMarketObject } from './markets';
 import { LIMIT_PRICE_TOLERANCE } from '../constants';
 
 /**
@@ -26,6 +26,78 @@ export async function createSimpleOrder(
     // Place the order
     const ccxtType = limitPrice ? 'limit' : 'market';
     const order = await exchange.createOrder(symbol, ccxtType, side, amount, limitPrice, params);
+    return order;
+}
+
+/**
+ * Create a position with take profit and/or stop loss orders attached to it.
+ *
+ * @link https://docs.ccxt.com/#/README?id=stoploss-and-takeprofit-orders-attached-to-a-position
+ */
+export async function createPositionWithTakeProfitAndOrStopLossOrderAttached(
+    exchange: Exchange,
+    symbol: string,
+    side: 'buy' | 'sell',
+    amount: number,
+    takeProfitPrice: number | null,
+    stopLossPrice: number | null,
+    limitPrice?: number,
+    params?: Record<string, any>,
+): Promise<Order> {
+    // Cannot create a position on spot markets
+    const marketObject = await getMarketObject(exchange, symbol);
+    if (marketObject.type === 'spot') {
+        throw new Error(`Cannot create positions in spot markets`);
+    }
+    // Check if exchange supports reduce only orders
+    if (params?.reduceOnly === true && !exchange.has['createReduceOnlyOrder']) {
+        throw new Error(`Reduce-only orders not supported on exchange ${exchange.name}`);
+    }
+    // Make sure that at least one of the stop loss or take profit prices is provided
+    if (!takeProfitPrice && !stopLossPrice) {
+        throw new Error('At least one of the stop loss or take profit prices must be provided');
+    }
+    // Check if exchange supports creating a position with TP/SL orders attached to it
+    // We are permissive, that is, we throw an error only if the CCXT exchange explicitly
+    // says that it does not support it.
+    let supported: boolean = true;
+    // const features = exchange.features[marketObject.type];
+    // switch (marketObject.type) {
+    //     case 'swap':
+    //     case 'future':
+    //     case 'option':
+    //         switch (marketObject.subType) {
+    //             case 'linear':
+    //                 if (!features.linear.createOrder.attachedStopLossTakeProfit.triggerPriceType) {
+    //                     supported = false;
+    //                 }
+    //                 break;
+    //             case 'inverse':
+    //                 if (!features.inverse.createOrder.attachedStopLossTakeProfit.triggerPriceType) {
+    //                     supported = false;
+    //                 }
+    //                 break;
+    //         }
+    //         break;
+    // }
+    if (!supported) {
+        throw new Error(`Creating a TP/SL position not supported on this market type`);
+    }
+    // Create the order
+    const ccxtParams: any = {};
+    if (takeProfitPrice) {
+        ccxtParams.takeProfit = {
+            triggerPrice: takeProfitPrice,
+        };
+    }
+    if (stopLossPrice) {
+        ccxtParams.stopLoss = {
+            triggerPrice: stopLossPrice,
+        };
+    }
+    const ccxtType = limitPrice ? 'limit' : 'market';
+    console.log('params', { ...params, ...ccxtParams });
+    const order = await exchange.createOrder(symbol, ccxtType, side, amount, limitPrice, { ...params, ...ccxtParams });
     return order;
 }
 

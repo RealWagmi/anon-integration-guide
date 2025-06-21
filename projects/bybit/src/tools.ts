@@ -20,6 +20,16 @@ const MARKET_TYPE_PARAMETER = {
 };
 
 /**
+ * Market types available for tools that work only with futures markets (perpetual and delivery)
+ */
+const MARKET_TYPE_PARAMETER_FUTURES_ONLY = {
+    name: 'marketType',
+    type: 'string',
+    description: 'Market type (only futures markets are supported)',
+    enum: [...SUPPORTED_MARKET_TYPES].filter((type) => type === 'perpetual' || type === 'delivery'),
+};
+
+/**
  * Description of the side parameter, to be included in all order
  * creation tools.
  */
@@ -98,6 +108,27 @@ const MARGIN_CALCULATION_INSTRUCTIONS = [
 ].join('\n');
 
 /**
+ * General instructions for handling futures positions (long/short orders)
+ */
+const FUTURES_POSITION_INSTRUCTIONS = [
+    'GENERAL FLOW FOR FUTURES POSITIONS (long/short):',
+    '',
+    '1. LEVERAGE HANDLING:',
+    '   - If leverage is specified in the prompt (e.g., "10x", "with 50x leverage"), ALWAYS call setUserLeverageOnMarket FIRST',
+    "   - If leverage is NOT specified, proceed without setting it (the user's current leverage will be used)",
+    '',
+    '2. POSITION CREATION:',
+    '   - For simple positions without TP/SL: use createSimpleOrder',
+    '   - For positions with TP and/or SL: use createPositionWithTakeProfitAndOrStopLossOrderAttached',
+    '',
+    '3. AMOUNT CALCULATION:',
+    '   - Direct amount: "long 1 BTC" → use 1 as the amount',
+    '   - Margin-based: "long BTC with 100 USDT" → calculate using margin formula',
+    '',
+    "4. NEVER skip the leverage setting step when it's explicitly mentioned in the prompt!",
+].join('\n');
+
+/**
  * Description of the amount parameter, to be included in all order
  * creation tools, taking into account that the user can specify the
  * order size by specifying the margin amount.
@@ -130,6 +161,8 @@ export const tools: AiTool[] = [
             '',
             MARKET_TYPE_INSTRUCTIONS,
             '',
+            FUTURES_POSITION_INSTRUCTIONS,
+            '',
             SPOT_QUOTE_CURRENCY_INSTRUCTIONS,
             '',
             MARGIN_CALCULATION_INSTRUCTIONS,
@@ -157,6 +190,56 @@ export const tools: AiTool[] = [
                 name: 'limitPrice',
                 type: ['number', 'null'],
                 description: 'Price at which the order will be executed.  Include only if explicitly specified by the user.  Leave blank for a market order.',
+            },
+        ],
+    },
+    {
+        name: 'createPositionWithTakeProfitAndOrStopLossOrderAttached',
+        description: [
+            'Create a futures position with take profit and/or stop loss orders attached to it.',
+            '',
+            FUTURES_POSITION_INSTRUCTIONS,
+            '',
+            MARGIN_CALCULATION_INSTRUCTIONS,
+        ].join('\n'),
+        required: ['market', 'marketType', 'side', 'amount', 'takeProfitPrice', 'stopLossPrice', 'limitPrice', 'reduceOnly'],
+        props: [
+            {
+                name: 'market',
+                type: 'string',
+                description: FUTURES_MARKET_DESCRIPTION,
+            },
+            MARKET_TYPE_PARAMETER_FUTURES_ONLY,
+            {
+                name: 'side',
+                type: 'string',
+                enum: ['long', 'short'],
+                description: SIDE_DESCRIPTION,
+            },
+            {
+                name: 'amount',
+                type: 'number',
+                description: AMOUNT_DESCRIPTION,
+            },
+            {
+                name: 'limitPrice',
+                type: ['number', 'null'],
+                description: 'Price at which the position will be opened.  Include only if explicitly specified by the user.  Leave blank for a market order.',
+            },
+            {
+                name: 'takeProfitPrice',
+                type: ['number', 'null'],
+                description: 'Price at which the take profit order will be activated.  At least one of takeProfitPrice or stopLossPrice must be provided.',
+            },
+            {
+                name: 'stopLossPrice',
+                type: ['number', 'null'],
+                description: 'Price at which the stop loss order will be activated.  At least one of takeProfitPrice or stopLossPrice must be provided.',
+            },
+            {
+                name: 'reduceOnly',
+                type: ['boolean', 'null'],
+                description: 'If true, the order will either close a position or reduce its size.  Defaults to false.',
             },
         ],
     },

@@ -55,7 +55,7 @@ The LLM will try to classify buy/sell orders as spot orders, and long/short orde
 - TO DO: Market buy BTC with 100 USDT, then place an order to sell it for 10% profit
 - TO DO: Market buy 1 BTC with USDT then place a 15% stop loss
 
-### Spot - Stop loss & take profit (OCO)
+### Spot - Take profit and stop loss (TP/SL)
 
 - TO DO: Sell 1 BTC for USDT with a 10% take profit and a 15% stop loss
 - TO DO: Market buy BTC with 100 USDT, then place a 10% take profit and a 15% stop loss
@@ -84,11 +84,15 @@ By "futures" we mean both perpetual futures and delivery (aka "expiry") futures.
 ### Futures - Market & limit orders
 
 - Long 1 BTC with USDT
+- Long 1 BTC at limit price of 40,000 USDT
+- Short 1 BTC at limit price of 150,000 USDT
+
+You can also specify the position size in terms of margin;
+
 - Long BTC with 100 USDT
 - 100x long BTC with 100 USDT
 - 100x long BTC with 100 USDT isolated margin
-- Long 1 BTC at limit price of 40,000 USDT
-- Short 1 BTC at limit price of 150,000 USDT
+- Spend 100 USDT to long BTC
 
 By default, the agent assumes you want to trade on perpetual markets. To use a delivery market instead, ask for it:
 
@@ -118,12 +122,23 @@ Please note that:
 - TO DO: Long 1 BTC when the price crosses 50,000 USDT
 - TO DO: Long 1 BTC at 45,000 USDT when the price crosses 50,000 USDT
 
-### Futures - Stop loss & take profit
+### Futures - Take profit & stop loss
 
-- TO DO: Add a 10% TP and a 15% SL to my existing BTC/USDT position
-- TO DO: 20x long 1 BTC with USDT, then place a stop loss at 15% and three take profit targets at 10%-20%-30%
-- TO DO: Short 1 BTC with USDT, then place an order to close the position at 10% profit
-- TO DO: Long 1 BTC with USDT, then place a 10% take profit and 15% stop loss
+On Bybit futures markets, you can either add TP/SL to an existing position, or create a new position with TP/SL attached.
+
+#### Add TP/SL to an existing position
+
+- TO DO: Add a 10% TP and a 15% SL to my BTC/USDT position
+- TO DO: Add a TP @ 200,000 USDT on my BTC position
+- TO DO: Add a SL @ 50,000 USDT on my BTC position
+
+#### Create a new position with TP/SL attached
+
+- Spend 100 USDC to 10x long BTC/USDT with a 10% take profit and a 15% stop loss
+- 10x long 0.005 BTC/USDT with a 10% take profit and a 15% stop loss
+- 20x short 0.005 BTC/USDT with a 50,000 USDT take profit
+
+#### Reduce only
 
 When it is clear from context that the TP and SL orders are attached to a position, they will be issued as **reduce-only** orders, to prevent accidentally increase the position size or open a new position. To force a reduce only order, just ask for it, e.g.
 
@@ -197,6 +212,10 @@ pnpm ask-bybit "Show me the price of BTC/USDT:USDT" --debug-llm
 - Bybit [no longer supports](https://bybit-exchange.github.io/docs/v5/position/cross-isolate) setting margin mode at the market level, but only at the account level, hence the tools `getUserMarginMode` and `setUserMarginMode` do not have a `market` parameter. The main effect is that if you change the margin mode (e.g. from cross to isolated), the new margin mode will be applied to all of your open positions regardless of the market. The leverage, instead, is still set at the market level, hence the tools `getUserLeverageOnMarket` and `setUserLeverageOnMarket` have a `market` parameter.
 
 - On the contrary, Bybit DOES allow you to change leverage at the market level, just like Binance and most exchanges.
+
+- Bybit supports OCO orders only for SPOT markets, and only at the UI level. There's no support for OCO orders at the API level at all ([link](https://www.bybit.com/en/help-center/article/One-Cancels-the-Other-OCO-Orders)).
+
+- Bybit however supports creating a FUTURES position with a TP/SL order attached, via the TP/SL checkbox ([screenshot](https://d.pr/i/v4jUor)), and this is what we have implemented in the `createPositionWithTakeProfitAndOrStopLossOrderAttached` tool, using the CCXT feature described [here](https://docs.ccxt.com/#/README?id=stoploss-and-takeprofit-orders-attached-to-a-position).
 
 - Bybit allows switching margin mode (at the account level) as long as the trader has sufficient margin and the change itself doesn't trigger immediate liquidation.
 
