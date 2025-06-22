@@ -1,5 +1,7 @@
 ## Bug fixes
 
+- Sort out what "Buy 1 BTC with 10% TP and 15% SL" means
+
 ## Features
 
 - Set TP/SL orders for spot (createSpotTakeProfitAndOrStopLossOrder)
@@ -10,7 +12,6 @@
 
 ## Future
 
-- Support for "Conditional" orders, that is, trigger orders that do not utilize your balance until triggered
 - Support for market buys with amount in quote currency using `createMarketBuyOrderRequiresPrice=false` (https://docs.ccxt.com/#/README?id=market-buys)
 - Support inverse markets
 - Check validity of margin metric in portfolio margin mode (list positions)

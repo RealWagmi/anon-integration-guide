@@ -4,12 +4,14 @@ import { createPositionWithTakeProfitAndOrStopLossOrderAttached as createPositio
 import { formatOrderSingleLine } from '../helpers/format';
 import { getOrderById, SUPPORTED_MARKET_TYPES } from '../helpers/exchange';
 import { fromCcxtMarketToMarketType, getMarketObject } from '../helpers/markets';
+import { convertToBaseAmount } from '../helpers/amount';
 
 interface Props {
     market: string;
     side: 'long' | 'short';
     marketType: (typeof SUPPORTED_MARKET_TYPES)[number];
     amount: number;
+    amountCurrency: 'base' | 'spend';
     takeProfitPrice: number | null;
     stopLossPrice: number | null;
     limitPrice: number | null;
@@ -19,11 +21,16 @@ interface Props {
 /**
  * Send an order to create a position with a TP/SL order attached to it.
  *
+ * TODO: Might be a good idea to warn the user if there's already an existing
+ * position on the market, because the TP/SL will be attached to the whole
+ * existing position, and not just to the amount being added/removed.
+ *
  * @param props - The function input parameters
  * @param props.market - Symbol of the market to trade, for example "BTC/USDT" or "AAVE/ETH"
  * @param props.marketType - Market type as inferred from the prompt, used to validate the order
  * @param props.side - Side of the order; either "long" or "short"
- * @param props.amount - Amount of base currency to long or short
+ * @param props.amount - Amount to trade (in either base or spend currency)
+ * @param props.amountCurrency - Whether the amount is in base or spend currency
  * @param props.takeProfitPrice - Price for take profit orders
  * @param props.stopLossPrice - Price for stop loss orders
  * @param props.limitPrice - Price for limit orders (optional)
@@ -32,7 +39,7 @@ interface Props {
  * @returns A message confirming the order or an error description
  */
 export async function createPositionWithTakeProfitAndOrStopLossOrderAttached(
-    { market, marketType, side, amount, takeProfitPrice, stopLossPrice, limitPrice, reduceOnly }: Props,
+    { market, marketType, side, amount, amountCurrency, takeProfitPrice, stopLossPrice, limitPrice, reduceOnly }: Props,
     { exchange, notify }: FunctionOptionsWithExchange,
 ): Promise<FunctionReturn> {
     try {
@@ -49,6 +56,16 @@ export async function createPositionWithTakeProfitAndOrStopLossOrderAttached(
             throw new Error(`HeyAnon does not support markets of type ${marketType}`);
         }
 
+        // Convert amount to base currency if needed
+        const baseAmount = await convertToBaseAmount({
+            amount,
+            amountCurrency,
+            market,
+            marketType,
+            limitPrice,
+            exchange,
+        });
+
         // Include optional parameter reduceOnly
         const params: Record<string, any> = {};
         if (reduceOnly) {
@@ -60,7 +77,7 @@ export async function createPositionWithTakeProfitAndOrStopLossOrderAttached(
             exchange,
             market,
             ccxtSide,
-            amount,
+            baseAmount,
             takeProfitPrice,
             stopLossPrice,
             limitPrice === null ? undefined : limitPrice,

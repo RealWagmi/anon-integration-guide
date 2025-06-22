@@ -171,11 +171,19 @@ export async function attachTakeProfitAndOrStopLossOrderToExistingPosition(
         positionIdx: '0', // Assuming one-way mode (0). Would need to check position mode for hedge mode support
     };
     if (takeProfitPrice !== null) {
-        params.takeProfit = exchange.priceToPrecision(marketObject.symbol, takeProfitPrice);
+        if (takeProfitPrice === 0) {
+            params.takeProfit = '0';
+        } else {
+            params.takeProfit = exchange.priceToPrecision(marketObject.symbol, takeProfitPrice);
+        }
         params.tpTriggerBy = 'MarkPrice';
     }
     if (stopLossPrice !== null) {
-        params.stopLoss = exchange.priceToPrecision(marketObject.symbol, stopLossPrice);
+        if (stopLossPrice === 0) {
+            params.stopLoss = '0';
+        } else {
+            params.stopLoss = exchange.priceToPrecision(marketObject.symbol, stopLossPrice);
+        }
         params.slTriggerBy = 'MarkPrice';
     }
 

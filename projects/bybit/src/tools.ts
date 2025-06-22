@@ -76,88 +76,41 @@ const MARKET_TYPE_INSTRUCTIONS = [
 ].join('\n');
 
 /**
- * Allow the user to specify the order size by specifying the quote currency amount for spot markets
- */
-const SPOT_QUOTE_CURRENCY_INSTRUCTIONS = [
-    'For spot markets, when the user specifies "with X [quote currency]" (e.g., "with 10000 USDT"), this means they want to spend that amount of quote currency. You must:',
-    '1. If a limit price is provided, use that price for calculation',
-    '2. If no limit price is provided, use getMarketInfo to get the current price',
-    '3. Calculate the base currency amount as: quote_currency_amount / price',
-    '4. Use the calculated amount in base currency for this order',
-    'Example: "Buy BTC at 50000 with 10000 USDT" means buy 0.2 BTC (10000 / 50000 = 0.2)',
-].join('\n');
-
-/**
- * Allow the user to specify the order size by specifying the margin amount
- */
-const MARGIN_CALCULATION_INSTRUCTIONS = [
-    'CRITICAL: For perpetual and delivery markets, when the user specifies "with X USDT" or "with X USDC", this ALWAYS means margin amount, NOT the total position value.',
-    '',
-    'You MUST follow these steps:',
-    '1. Identify the margin amount from the prompt (e.g., "with 100 USDT" means margin = 100)',
-    '2. Get the price: use the limit price if provided, otherwise get the price from tool getMarketInfo',
-    '3. Get the leverage: if not specified in the prompt, you MUST call getUserLeverageOnMarket first',
-    '4. Calculate: base_amount = (margin × leverage) ÷ price',
-    '',
-    'LEVERAGE REQUIREMENT:',
-    '- If prompt mentions leverage (e.g., "50x", "at 10x leverage"), use that value',
-    '- If NO leverage mentioned, you MUST call getUserLeverageOnMarket before calculating',
-    '- NEVER assume default leverage values without calling the tool',
-    '',
-    'Example: "Long BTC at 50000 with 100 USDT" with 50x leverage:',
-    '- Margin = 100 USDT',
-    '- Price = 50,000 USDT',
-    '- Leverage = 50x (obtained from getUserLeverageOnMarket)',
-    '- Base amount = (100 × 50) ÷ 50,000 = 0.1 BTC',
-    '',
-    'NEVER treat "with X USDT" as a spot-style calculation for futures markets!',
-].join('\n');
-
-/**
  * General instructions for handling futures positions (long/short orders)
  */
 const FUTURES_POSITION_INSTRUCTIONS = [
-    'GENERAL FLOW FOR FUTURES POSITIONS (long/short):',
-    '',
-    '1. LEVERAGE HANDLING:',
-    '   - If leverage is specified in the prompt (e.g., "10x", "with 50x leverage"), ALWAYS call setUserLeverageOnMarket FIRST',
-    "   - If leverage is NOT specified, proceed without setting it (the user's current leverage will be used)",
-    '',
-    '2. POSITION CREATION:',
-    '   - For simple positions without TP/SL: use createSimpleOrder',
-    '   - For positions with TP and/or SL: use createPositionWithTakeProfitAndOrStopLossOrderAttached',
-    '',
-    '3. AMOUNT CALCULATION:',
-    '   - Direct amount: "long 1 BTC" → use 1 as the amount',
-    '   - Margin-based: "long BTC with 100 USDT" → calculate using margin formula',
-    '',
-    "4. NEVER skip the leverage setting step when it's explicitly mentioned in the prompt!",
+    'LEVERAGE HANDLING (FUTURES ONLY):',
+    '- If leverage is specified in the prompt (e.g., "10x", "with 50x leverage"), ALWAYS call setUserLeverageOnMarket FIRST',
+    "- If leverage is NOT specified, proceed without setting it (the user's current leverage will be used)",
 ].join('\n');
 
 /**
- * Description of the amount parameter, to be included in all order
- * creation tools, taking into account that the user can specify the
- * order size by specifying the margin amount.
+ * Description of the amount parameter
  */
-const AMOUNT_DESCRIPTION = [
-    'Amount to trade in BASE currency (the FIRST currency in the market symbol).',
+const AMOUNT_DESCRIPTION = 'Amount to trade (in either base or spend currency, as specified by amountCurrency parameter)';
+
+/**
+ * Description of the amountCurrency parameter
+ */
+const AMOUNT_CURRENCY_DESCRIPTION = [
+    'Currency type for the amount parameter:',
+    '- "base": Amount is in base currency (e.g., "1 BTC")',
+    '- "spend": Amount is in spend/margin currency (e.g., "100 USDT")',
     '',
-    'CRITICAL DISTINCTION:',
-    '- For SPOT markets: "with X USDT" = spend X USDT (divide by price)',
-    '- For FUTURES markets: "with X USDT" = use X USDT as MARGIN (multiply by leverage, then divide by price)',
-    '',
-    'For SPOT markets:',
-    '1. Direct: "buy 1 BTC" → amount = 1',
-    '2. Quote spending: "buy BTC with 10000 USDT" → amount = 10000 / price',
-    '',
-    'For FUTURES markets (MUST apply leverage):',
-    '1. Direct: "long 1 BTC" → amount = 1',
-    '2. Margin-based: "long BTC with 100 USDT" → amount = (100 × leverage) / price',
-    '   Example: 100 USDT margin, 50x leverage, 50000 price → (100 × 50) / 50000 = 0.1 BTC',
-    '',
-    'If the prompt includes "long" or "short", you MUST use the futures calculation with leverage.',
-    'Always return the amount in BASE currency.',
+    'Inference rules:',
+    '- Direct amounts like "1 BTC" → use "base"',
+    '- "with X USDT" or "spend X USDT" → use "spend"',
 ].join('\n');
+
+/**
+ * Standard amountCurrency parameter to be used in order creation tools
+ */
+const AMOUNT_CURRENCY_PARAMETER = {
+    name: 'amountCurrency',
+    type: 'string',
+    enum: ['base', 'spend'],
+    description: AMOUNT_CURRENCY_DESCRIPTION,
+};
 
 export const tools: AiTool[] = [
     {
@@ -168,12 +121,8 @@ export const tools: AiTool[] = [
             MARKET_TYPE_INSTRUCTIONS,
             '',
             FUTURES_POSITION_INSTRUCTIONS,
-            '',
-            SPOT_QUOTE_CURRENCY_INSTRUCTIONS,
-            '',
-            MARGIN_CALCULATION_INSTRUCTIONS,
         ].join('\n'),
-        required: ['market', 'marketType', 'side', 'amount', 'limitPrice'],
+        required: ['market', 'marketType', 'side', 'amount', 'amountCurrency', 'limitPrice'],
         props: [
             {
                 name: 'market',
@@ -192,6 +141,7 @@ export const tools: AiTool[] = [
                 type: 'number',
                 description: AMOUNT_DESCRIPTION,
             },
+            AMOUNT_CURRENCY_PARAMETER,
             {
                 name: 'limitPrice',
                 type: ['number', 'null'],
@@ -207,12 +157,8 @@ export const tools: AiTool[] = [
             MARKET_TYPE_INSTRUCTIONS,
             '',
             FUTURES_POSITION_INSTRUCTIONS,
-            '',
-            SPOT_QUOTE_CURRENCY_INSTRUCTIONS,
-            '',
-            MARGIN_CALCULATION_INSTRUCTIONS,
         ].join('\n'),
-        required: ['market', 'marketType', 'side', 'amount', 'triggerPrice', 'limitPrice'],
+        required: ['market', 'marketType', 'side', 'amount', 'amountCurrency', 'triggerPrice', 'limitPrice'],
         props: [
             {
                 name: 'market',
@@ -231,6 +177,7 @@ export const tools: AiTool[] = [
                 type: 'number',
                 description: AMOUNT_DESCRIPTION,
             },
+            AMOUNT_CURRENCY_PARAMETER,
             {
                 name: 'triggerPrice',
                 type: 'number',
@@ -249,10 +196,8 @@ export const tools: AiTool[] = [
             'Create a futures position with take profit and/or stop loss orders attached to it.  (This is sometimes called a futures OTOCO order.)',
             '',
             FUTURES_POSITION_INSTRUCTIONS,
-            '',
-            MARGIN_CALCULATION_INSTRUCTIONS,
         ].join('\n'),
-        required: ['market', 'marketType', 'side', 'amount', 'takeProfitPrice', 'stopLossPrice', 'limitPrice', 'reduceOnly'],
+        required: ['market', 'marketType', 'side', 'amount', 'amountCurrency', 'takeProfitPrice', 'stopLossPrice', 'limitPrice', 'reduceOnly'],
         props: [
             {
                 name: 'market',
@@ -269,8 +214,9 @@ export const tools: AiTool[] = [
             {
                 name: 'amount',
                 type: 'number',
-                description: 'Amount to trade in BASE currency (the FIRST currency in the market symbol)',
+                description: AMOUNT_DESCRIPTION,
             },
+            AMOUNT_CURRENCY_PARAMETER,
             {
                 name: 'limitPrice',
                 type: ['number', 'null'],
@@ -321,12 +267,8 @@ export const tools: AiTool[] = [
     },
     {
         name: 'createSpotEntryOrderWithTakeProfitAndOrStopLossAttached',
-        description: [
-            'Create a spot entry order with take profit and/or stop loss attached to it. (This is sometimes called a spot OTOCO order.)',
-            '',
-            SPOT_QUOTE_CURRENCY_INSTRUCTIONS,
-        ].join('\n'),
-        required: ['market', 'side', 'amount', 'takeProfitPrice', 'stopLossPrice', 'limitPrice'],
+        description: 'Create a spot entry order with take profit and/or stop loss attached to it. (This is sometimes called a spot OTOCO order.)',
+        required: ['market', 'side', 'amount', 'amountCurrency', 'takeProfitPrice', 'stopLossPrice', 'limitPrice'],
         props: [
             {
                 name: 'market',
@@ -342,8 +284,9 @@ export const tools: AiTool[] = [
             {
                 name: 'amount',
                 type: 'number',
-                description: 'Amount to trade in BASE currency (the FIRST currency in the market symbol)',
+                description: AMOUNT_DESCRIPTION,
             },
+            AMOUNT_CURRENCY_PARAMETER,
             {
                 name: 'limitPrice',
                 type: ['number', 'null'],

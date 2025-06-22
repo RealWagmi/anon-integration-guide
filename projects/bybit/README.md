@@ -43,6 +43,7 @@ Plese note that Bybit uses a Unified Trading Account (UTA) approach, so the retu
 ### Spot - Market & limit orders
 
 - Market buy 1 BTC with USDT
+- Spend 500 USDT to buy BTC
 - Buy 1 BTC at a limit price of 40,000 USDT
 - Sell half of my BTC at a limit price of 150,000 USDT
 - Market buy BTC with all my USDT
@@ -106,6 +107,7 @@ By "futures" we mean both perpetual futures and delivery (aka "expiry") futures.
 ### Futures - Market & limit orders
 
 - Long 1 BTC with USDT
+- 50x long 1 BTC with USDT
 - Long 1 BTC at limit price of 40,000 USDT
 - Short 1 BTC at limit price of 150,000 USDT
 
@@ -113,7 +115,7 @@ You can also specify the position size in terms of margin;
 
 - Long BTC with 100 USDT
 - 100x long BTC with 100 USDT
-- 100x long BTC with 100 USDT isolated margin
+- 100x long BTC with 100 USDT using isolated margin
 - Spend 100 USDT to long BTC
 
 By default, the agent assumes you want to trade on perpetual markets. To use a delivery market instead, ask for it:
@@ -121,7 +123,7 @@ By default, the agent assumes you want to trade on perpetual markets. To use a d
 - Long 1 BTC with USDT on the June 2025 delivery market
 - Long 1 BTC on BTC:USDT-250926
 
-**IMPORTANT:** If you specify a leverage (5x, 10x, etc) or a margin mode (cross, isolated) for your order, the specified leverage and margin mode will be applied to the whole position and account, respectively, and not just to the amount you are adding/removing. This is because on Bybit the leverage is applied at the market level and the margin mode is applied at the whole account level.
+**IMPORTANT:** If you specify a leverage (5x, 10x, etc) for your order, the specified leverage will be applied to the whole position, and not just to the amount you are adding/removing. This is because on Bybit the leverage is applied at the market level. The margin, instead, is applied at the account level, so be careful when specifying a different margin mode than the current one, because the change will be applied to all of your open positions.
 
 ### Futures - Leverage and margin
 
@@ -143,6 +145,7 @@ Please note that:
 
 - Long 1 BTC when the price crosses 50,000 USDT
 - Long 1 BTC at 45,000 USDT when the price crosses 50,000 USDT
+- 100x short BTC with 100 USDT when the price crosses 150,000 USDT
 
 ### Futures - Take profit & stop loss
 
