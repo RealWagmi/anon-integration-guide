@@ -58,9 +58,26 @@ The LLM will try to classify buy/sell orders as spot orders, and long/short orde
 
 ### Spot - Take profit and stop loss (TP/SL)
 
-- TO DO: Sell 1 BTC for USDT with a 10% take profit and a 15% stop loss
-- TO DO: Market buy BTC with 100 USDT, then place a 10% take profit and a 15% stop loss
+On Bybit spot markets, you can create a entry order with TP/SL orders attached, similar to an OTOCO order, or simply set a TP or SL condition.
+
+#### Create an entry order with TP/SL attached (OTOCO)
+
+- Sell 1 BTC at a limit price 150,000 with a 10% take profit and a 15% stop loss
+- Market buy BTC with 100 USDT, then place a 10% take profit and a 15% stop loss
 - TO DO: Sell all of my BTC for USDT with a 10% take profit and a 15% stop loss
+
+Please note that Bybit requires a limit price to be always set for spot OTOCO orders. If your prompt does not specify a limit price, the tool will automatically set the limit price equal to the current market price.
+
+#### Set a TP or SL condition
+
+- TO DO: Set a 10% TP to sell 1 BTC for USDT
+- TO DO: Set a 10% SL to sell 1 BTC for USDT
+- TO DO: Set a TP @ 200,000 USDT to sell 1 BTC
+- TO DO: Set a SL @ 50,000 USDT to sell 1 BTC
+
+Please note that it is not currently possible to set simultaneous TP/SL orders in isolation, without an entry (that is, it is not possible to send an OCO order). If you ask to set TP/SL orders, they will be created as separate orders:
+
+- Set a 10% TP and a 10% SL to sell 1 BTC for USDT
 
 ### Spot - Trailing stop orders
 
@@ -97,8 +114,8 @@ You can also specify the position size in terms of margin;
 
 By default, the agent assumes you want to trade on perpetual markets. To use a delivery market instead, ask for it:
 
-- TO DO: Long 1 BTC with USDT on the June 2025 delivery market
-- TO DO: Long 1 BTC on BTC:USDT-250926
+- Long 1 BTC with USDT on the June 2025 delivery market
+- Long 1 BTC on BTC:USDT-250926
 
 **IMPORTANT:** If you specify a leverage (5x, 10x, etc) or a margin mode (cross, isolated) for your order, the specified leverage and margin mode will be applied to the whole position and account, respectively, and not just to the amount you are adding/removing. This is because on Bybit the leverage is applied at the market level and the margin mode is applied at the whole account level.
 
@@ -125,9 +142,9 @@ Please note that:
 
 ### Futures - Take profit & stop loss
 
-On Bybit futures markets, you can either set TP/SL on an existing position, or directlycreate a new position with TP/SL.
+On Bybit futures markets, you can either set TP/SL on an existing position (similar to an OCO order), or directly create a new position with TP/SL (similar to an OTOCO order).
 
-#### Set TP/SL on an existing position
+#### Set TP/SL on an existing position (OCO)
 
 - Set a 10% TP and a 10% SL on my BTC/USDT position
 - Set a TP @ 200,000 USDT on my BTC position
@@ -138,7 +155,7 @@ Please note that you can also cancel any existing TP/SL order:
 - Cancel the TP order on my BTC/USDT position
 - Cancel the SL order on my BTC/USDT position
 
-#### Create a new position with TP/SL attached
+#### Create a new position with TP/SL attached (OTOCO)
 
 - Spend 100 USDT to 10x long BTC/USDT with a 10% take profit and a 15% stop loss
 - 10x long 0.005 BTC/USDT with a 10% take profit and a 15% stop loss
@@ -220,7 +237,12 @@ pnpm ask-bybit "Show me the price of BTC/USDT:USDT" --debug-llm
 
 - On the contrary, Bybit DOES allow you to change leverage at the market level, just like Binance and most exchanges.
 
-- Bybit supports OCO orders only for SPOT markets, and only at the UI level. There's no support for OCO orders at the API level at all ([link](https://www.bybit.com/en/help-center/article/One-Cancels-the-Other-OCO-Orders)).
+- Bybit supports OCO orders only for SPOT markets, and only at the UI level. There's no explicit support for OCO orders at the API level ([link](https://www.bybit.com/en/help-center/article/One-Cancels-the-Other-OCO-Orders)). However, this is a semantic distinction, as Bybit's TP/SL orders which can be attached to a position or a spot entry order, can be thought as OCO orders. More precisely, when you create a spot limit order with TP/SL attached, or when you create a position with TP/SL attached, you are performing an OTOCO order (one-triggers-a-one-cancels-the-other-order). Instead, when you add a TP/SL order to an existing position, you are performing an OCO order (one-cancels-the-other-order). On the contrary, there currently does not seem to be a way to create a simple OCO order (that is, a simultaneousTP/SL order without an entry order) for spot markets at the API level. In this integration we implement all these different types of orders in the following way:
+
+    - Futures OTOCO order: `createPositionWithTakeProfitAndOrStopLossOrderAttached`
+    - Futures OCO order: `attachTakeProfitAndOrStopLossOrderToExistingPosition`
+    - Spot OTOCO order: `createSpotEntryOrderWithTakeProfitAndOrStopLossAttached`. Can only be a limit order.
+    - Spot OCO order: not implemented directy, as it is not supported by the API, but can be simulated as two separate TP and SL orders via the tool `createSpotTakeProfitAndOrStopLossOrder`
 
 - Bybit however supports creating a FUTURES position with a TP/SL order attached, via the TP/SL checkbox ([screenshot](https://d.pr/i/v4jUor)), and this is what we have implemented in the `createPositionWithTakeProfitAndOrStopLossOrderAttached` tool, using the CCXT feature described [here](https://docs.ccxt.com/#/README?id=stoploss-and-takeprofit-orders-attached-to-a-position).
 
@@ -230,7 +252,7 @@ pnpm ask-bybit "Show me the price of BTC/USDT:USDT" --debug-llm
 
 - Trigger direction is needed when placing trigger orders (https://discord.com/channels/690203284119617602/690203284727660739/1367189081418633389)
 
-- Limit orders with TP/SL (regardless of spot or futures) appear as a single order both in the API and in the UI ([spot screenshot](https://d.pr/i/n1b05r), [futures screenshot](https://d.pr/i/nWzWRG)) with the "Trade Type" set to "Open long" or "Open short". When the main order is filled, the TP/SL orders will still appear as a single separate TP/SL order, but it will have the "Trade Type" set to "Close long" or "Close short".
+- Limit orders with TP/SL (regardless of spot or futures) appear as a single order both in the API and in the UI; for futures orders, the "Trade Type" is set to "Open long" or "Open short" ([spot screenshot](https://d.pr/i/n1b05r), [futures screenshot](https://d.pr/i/nWzWRG)). When the main order is filled, the TP/SL orders will still appear as a single separate TP/SL order ([spot screenshot](https://d.pr/i/yJtL3X)); for futures orders it will have the "Trade Type" set to "Close long" or "Close short".
 
 - When adding a TP/SL order to an existing position (or creating a new position with TP/SL attached) the TP/SL will appear in the UI as a single order (see [screenshot](https://d.pr/i/CgH0vF)).
 
@@ -256,6 +278,7 @@ pnpm ask-bybit "Show me the price of BTC/USDT:USDT" --debug-llm
 
 - [Bybit V5 API docs](https://bybit-exchange.github.io/docs/v5/intro)
 - [Bybit API FAQ](https://www.bybit.com/future-activity/en/developer)
+- [Bybit API Place order](https://bybit-exchange.github.io/docs/v5/order/create-order)
 - [Bybit API trading-stop endpoint](https://bybit-exchange.github.io/docs/v5/position/trading-stop) to set TP/SL on futures positions
 - [Bybit guide to open a testnet account](https://www.bybit.com/en/help-center/article/How-to-Request-Test-Coins-on-Testnet)
 - [Bybit Postman collection](https://github.com/bybit-exchange/QuickStartWithPostman)

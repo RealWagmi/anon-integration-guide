@@ -54,9 +54,15 @@ const MARKET_DESCRIPTION = [
 
 /**
  * Description of the market parameter, to be included in all tools
- * that work for futures markets (that is, perpetual and delivery).
+ * that work only for futures markets (that is, perpetual and delivery).
  */
 const FUTURES_MARKET_DESCRIPTION = ['Futures market symbol, e.g. "BTC/USDT:USDT" or "BTC/USDT:USDT-250926"'].join('\n');
+
+/**
+ * Description of the market parameter, to be included in all tools
+ * that work only for spot markets
+ */
+const SPOT_MARKET_DESCRIPTION = ['Spot market symbol, e.g. "BTC/USDT"'].join('\n');
 
 /**
  * Instructions for the market type inference to be included in the description
@@ -196,7 +202,7 @@ export const tools: AiTool[] = [
     {
         name: 'createPositionWithTakeProfitAndOrStopLossOrderAttached',
         description: [
-            'Create a futures position with take profit and/or stop loss orders attached to it.',
+            'Create a futures position with take profit and/or stop loss orders attached to it.  (This is sometimes called a futures OTOCO order.)',
             '',
             FUTURES_POSITION_INSTRUCTIONS,
             '',
@@ -229,12 +235,12 @@ export const tools: AiTool[] = [
             {
                 name: 'takeProfitPrice',
                 type: ['number', 'null'],
-                description: 'Price at which the take profit order will be activated.  At least one of takeProfitPrice or stopLossPrice must be provided.',
+                description: 'Absolute price at which the take profit order will be activated.  At least one of takeProfitPrice or stopLossPrice must be provided.',
             },
             {
                 name: 'stopLossPrice',
                 type: ['number', 'null'],
-                description: 'Price at which the stop loss order will be activated.  At least one of takeProfitPrice or stopLossPrice must be provided.',
+                description: 'Absolute price at which the stop loss order will be activated.  At least one of takeProfitPrice or stopLossPrice must be provided.',
             },
             {
                 name: 'reduceOnly',
@@ -246,7 +252,7 @@ export const tools: AiTool[] = [
     {
         name: 'attachTakeProfitAndOrStopLossOrderToExistingPosition',
         description:
-            'Attach take profit and/or stop loss orders to an existing futures position.  If the position already has TP/SL orders attached, they will be replaced.  Pass 0 as the TP price or SL price to cancel any existing TP or SL orders, respectively.',
+            'Attach take profit and/or stop loss orders to an existing futures position.  (This is sometimes called a futures OCO order.)  If the position already has TP/SL orders attached, they will be replaced.  Pass 0 as the TP price or SL price to cancel any existing TP or SL orders, respectively.',
         required: ['market', 'marketType', 'takeProfitPrice', 'stopLossPrice'],
         props: [
             {
@@ -259,13 +265,55 @@ export const tools: AiTool[] = [
                 name: 'takeProfitPrice',
                 type: ['number', 'null'],
                 description:
-                    'Price at which the take profit order will be activated. At least one of takeProfitPrice or stopLossPrice must be provided.  Set to 0 to cancel any existing take profit order attached to the position.',
+                    'Absolute price at which the take profit order will be activated. At least one of takeProfitPrice or stopLossPrice must be provided.  Set to 0 to cancel any existing take profit order attached to the position.',
             },
             {
                 name: 'stopLossPrice',
                 type: ['number', 'null'],
                 description:
-                    'Price at which the stop loss order will be activated. At least one of takeProfitPrice or stopLossPrice must be provided.  Set to 0 to cancel any existing stop loss order attached to the position.',
+                    'Absolute price at which the stop loss order will be activated. At least one of takeProfitPrice or stopLossPrice must be provided.  Set to 0 to cancel any existing stop loss order attached to the position.',
+            },
+        ],
+    },
+    {
+        name: 'createSpotEntryOrderWithTakeProfitAndOrStopLossAttached',
+        description: [
+            'Create a spot entry order with take profit and/or stop loss attached to it. (This is sometimes called a spot OTOCO order.)',
+            '',
+            SPOT_QUOTE_CURRENCY_INSTRUCTIONS,
+        ].join('\n'),
+        required: ['market', 'side', 'amount', 'takeProfitPrice', 'stopLossPrice', 'limitPrice'],
+        props: [
+            {
+                name: 'market',
+                type: 'string',
+                description: SPOT_MARKET_DESCRIPTION,
+            },
+            {
+                name: 'side',
+                type: 'string',
+                enum: ['buy', 'sell'],
+                description: 'Side of the order',
+            },
+            {
+                name: 'amount',
+                type: 'number',
+                description: 'Amount to trade in BASE currency (the FIRST currency in the market symbol)',
+            },
+            {
+                name: 'limitPrice',
+                type: ['number', 'null'],
+                description: 'Price at which the entry order will be placed.  Include only if explicitly specified by the user.  Leave blank to set it to the market last price.',
+            },
+            {
+                name: 'takeProfitPrice',
+                type: ['number', 'null'],
+                description: 'Absolute price at which the take profit order will be activated.  At least one of takeProfitPrice or stopLossPrice must be provided.',
+            },
+            {
+                name: 'stopLossPrice',
+                type: ['number', 'null'],
+                description: 'Absolute price at which the stop loss order will be activated.  At least one of takeProfitPrice or stopLossPrice must be provided.',
             },
         ],
     },

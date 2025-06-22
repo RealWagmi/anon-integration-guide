@@ -17,10 +17,7 @@ interface Props {
 }
 
 /**
- * Create a TP/SL order, that is, an order that has a take profit or stop loss price condition attached,
- * or even both at the same time.
- *
- * You must provide at least one of the take profit or stop loss prices.
+ * Send an order to create a position with a TP/SL order attached to it.
  *
  * @param props - The function input parameters
  * @param props.market - Symbol of the market to trade, for example "BTC/USDT" or "AAVE/ETH"
@@ -75,6 +72,6 @@ export async function createPositionWithTakeProfitAndOrStopLossOrderAttached(
         const orderObject = await getOrderById(exchange, order.id, marketObject.symbol);
         return toResult(`Successfully created ${formatOrderSingleLine(orderObject, marketObject, true)}`);
     } catch (error) {
-        return toResult(`Error creating trigger order: ${error}`, true);
+        return toResult(`Error creating position with TP/SL attached: ${error}`, true);
     }
 }

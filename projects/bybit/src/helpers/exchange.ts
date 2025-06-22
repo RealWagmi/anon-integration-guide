@@ -171,11 +171,11 @@ export async function attachTakeProfitAndOrStopLossOrderToExistingPosition(
         positionIdx: '0', // Assuming one-way mode (0). Would need to check position mode for hedge mode support
     };
     if (takeProfitPrice !== null) {
-        params.takeProfit = takeProfitPrice.toString();
+        params.takeProfit = exchange.priceToPrecision(marketObject.symbol, takeProfitPrice);
         params.tpTriggerBy = 'MarkPrice';
     }
     if (stopLossPrice !== null) {
-        params.stopLoss = stopLossPrice.toString();
+        params.stopLoss = exchange.priceToPrecision(marketObject.symbol, stopLossPrice);
         params.slTriggerBy = 'MarkPrice';
     }
 
@@ -183,6 +183,79 @@ export async function attachTakeProfitAndOrStopLossOrderToExistingPosition(
     const response = await (exchange as bybit).privatePostV5PositionTradingStop(params);
     if (response.retMsg !== 'OK') {
         throw new Error(`Could not attach TP/SL orders to position: ${response.retMsg}`);
+    }
+}
+
+/**
+ * Create a spot entry order with take profit and/or stop loss orders
+ * attached to it (UI > https://d.pr/i/b9wWuL + https://d.pr/i/opvK3j)
+ *
+ * Limit price is compulsory due to both API and UI limitations.
+ *
+ * The payload sent to the Bybit /v5/order/create endpoint will
+ * be of the following form:
+ *
+ * {
+ *   "category":"spot",
+ *   "symbol":"BTCUSDT",
+ *   "orderType":"Limit",
+ *   "side":"Buy",
+ *   "qty":"0.001",
+ *   "price":"100000",
+ *   "timeInForce":"GTC",
+ *   "takeProfit": "200000",
+ *   "tpOrderType": "Market",
+ *   "stopLoss": "50000",
+ *   "slOrderType": "Market"
+ * }
+ *
+ * @throws {Error} If something goes wrong
+ * @link https://bybit-exchange.github.io/docs/v5/order/create
+ */
+export async function createSpotEntryOrderWithTakeProfitAndOrStopLossAttached(
+    exchange: Exchange,
+    marketObject: MarketInterface,
+    side: 'buy' | 'sell',
+    amount: number,
+    limitPrice: number,
+    takeProfitPrice: number | null,
+    stopLossPrice: number | null,
+): Promise<Order> {
+    // Check that at least one price is provided
+    if (takeProfitPrice === null && stopLossPrice === null) {
+        throw new Error('At least one of the stop loss or take profit prices must be provided');
+    }
+
+    // Build the request parameters
+    const params: Record<string, any> = {
+        category: 'spot',
+        symbol: marketObject.id, // Use the exchange-specific symbol ID
+        orderType: 'Limit',
+        side: side.charAt(0).toUpperCase() + side.slice(1),
+        qty: exchange.amountToPrecision(marketObject.symbol, amount),
+        price: exchange.priceToPrecision(marketObject.symbol, limitPrice),
+        timeInForce: 'GTC',
+        tpOrderType: 'Market',
+        slOrderType: 'Market',
+    };
+    if (takeProfitPrice !== null) {
+        params.takeProfit = exchange.priceToPrecision(marketObject.symbol, takeProfitPrice);
+    }
+    if (stopLossPrice !== null) {
+        params.stopLoss = exchange.priceToPrecision(marketObject.symbol, stopLossPrice);
+    }
+
+    // Call the API
+    const response = await (exchange as bybit).privatePostV5OrderCreate(params);
+    if (response.retMsg !== 'OK') {
+        throw new Error(`Could not create spot entry order with TP/SL attached: ${response.retMsg}`);
+    }
+
+    // Parse the response into an order
+    try {
+        return exchange.parseOrder(response, marketObject);
+    } catch (error) {
+        throw new Error(`Spot entry order sent, but I could not parse Bybit response.  Response: ${response}`);
     }
 }
 
