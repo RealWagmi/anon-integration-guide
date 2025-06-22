@@ -51,10 +51,14 @@ The LLM will try to classify buy/sell orders as spot orders, and long/short orde
 
 ### Spot - Conditional orders
 
-- TO DO: Market buy 1 BTC when the price goes below 50,000 USDT
-- TO DO: Buy 1 BTC at 45,000 USDT when the price goes below 50,000 USDT
+- Market buy 1 BTC when the price goes below 50,000 USDT
+- Buy 1 BTC at 45,000 USDT when the price goes below 50,000 USDT
 - TO DO: Market buy BTC with 100 USDT, then place an order to sell it for 10% profit
 - TO DO: Market buy 1 BTC with USDT then place a 15% stop loss
+
+Please note that on Bybit, conditional orders have the desirable property of not utilizing your balance until triggered. This allows you to simultaneously place both a take profit and a stop loss order to sell all of your balance, similar to an OCO order but without the automatic cancellation:
+
+- Place a conditional order to sell 1 BTC at 100,000 USDT, and 1 BTC at 150,000 USDT
 
 ### Spot - Take profit and stop loss (TP/SL)
 
@@ -62,9 +66,9 @@ On Bybit spot markets, you can create a entry order with TP/SL orders attached, 
 
 #### Create an entry order with TP/SL attached (OTOCO)
 
-- Sell 1 BTC at a limit price 150,000 with a 10% take profit and a 15% stop loss
-- Market buy BTC with 100 USDT, then place a 10% take profit and a 15% stop loss
-- TO DO: Sell all of my BTC for USDT with a 10% take profit and a 15% stop loss
+- TO DO: Sell 1 BTC at a limit price 150,000 with a 10% take profit and a 15% stop loss
+- TO DO: Market buy BTC with 100 USDT, then place a 10% take profit and a 15% stop loss
+- TO DO: Sell all of my BTC for 150,000 USDT with a 10% take profit and a 15% stop loss
 
 Please note that Bybit requires a limit price to be always set for spot OTOCO orders. If your prompt does not specify a limit price, the tool will automatically set the limit price equal to the current market price.
 
@@ -75,9 +79,9 @@ Please note that Bybit requires a limit price to be always set for spot OTOCO or
 - TO DO: Set a TP @ 200,000 USDT to sell 1 BTC
 - TO DO: Set a SL @ 50,000 USDT to sell 1 BTC
 
-Please note that it is not currently possible to set simultaneous TP/SL orders in isolation, without an entry (that is, it is not possible to send an OCO order). If you ask to set TP/SL orders, they will be created as separate orders:
+Please note that Bybit APIs do not to allow to place simultaneous spot TP/SL orders in isolation, without an entry (that is, it is not possible to send an OCO order via API). You can achieve something similar by sending two conditional orders, see
 
-- Set a 10% TP and a 10% SL to sell 1 BTC for USDT
+- Place a conditional order to sell 1 BTC at 100,000 USDT, and 1 BTC at 150,000 USDT
 
 ### Spot - Trailing stop orders
 
@@ -137,8 +141,8 @@ Please note that:
 
 ### Futures - Conditional orders
 
-- TO DO: Long 1 BTC when the price crosses 50,000 USDT
-- TO DO: Long 1 BTC at 45,000 USDT when the price crosses 50,000 USDT
+- Long 1 BTC when the price crosses 50,000 USDT
+- Long 1 BTC at 45,000 USDT when the price crosses 50,000 USDT
 
 ### Futures - Take profit & stop loss
 
@@ -242,7 +246,7 @@ pnpm ask-bybit "Show me the price of BTC/USDT:USDT" --debug-llm
     - Futures OTOCO order: `createPositionWithTakeProfitAndOrStopLossOrderAttached`
     - Futures OCO order: `attachTakeProfitAndOrStopLossOrderToExistingPosition`
     - Spot OTOCO order: `createSpotEntryOrderWithTakeProfitAndOrStopLossAttached`. Can only be a limit order.
-    - Spot OCO order: not implemented directy, as it is not supported by the API, but can be simulated as two separate TP and SL orders via the tool `createSpotTakeProfitAndOrStopLossOrder`
+    - Spot OCO order: not implemented directy, as it is not supported by the API, but can be simulated as two separate TP and SL orders via repeated calls to the tool `createConditionalOrder` (which does not utilize your balance until triggered)
 
 - Bybit however supports creating a FUTURES position with a TP/SL order attached, via the TP/SL checkbox ([screenshot](https://d.pr/i/v4jUor)), and this is what we have implemented in the `createPositionWithTakeProfitAndOrStopLossOrderAttached` tool, using the CCXT feature described [here](https://docs.ccxt.com/#/README?id=stoploss-and-takeprofit-orders-attached-to-a-position).
 

@@ -38,7 +38,7 @@ const SIDE_DESCRIPTION = [
     '',
     'The behavior of the side is different for spot and futures (that is, perpetual and delivery) markets:',
     '- For spot markets, the side is always "buy" or "sell".',
-    "- For futures markets, the side is always 'long' or 'short'.  When longing or shorting, if the leverage is not specified, the user-configured leverage for the market will be automatically used.",
+    "- For futures markets, the side is always 'long' or 'short'.  If the leverage is not specified, the user-configured leverage for the market will be automatically used.",
 ].join('\n');
 
 /**
@@ -196,6 +196,50 @@ export const tools: AiTool[] = [
                 name: 'limitPrice',
                 type: ['number', 'null'],
                 description: 'Price at which the order will be executed.  Include only if explicitly specified by the user.  Leave blank for a market order.',
+            },
+        ],
+    },
+    {
+        name: 'createConditionalOrder',
+        description: [
+            'Create an order that is activated only after the given price condition is met, and does not utilize your balance until triggered. Once activated, the order will be executed at either the current market price or a specified limit price.  On spot markets, this tool can be used to place TP and SL orders in absence of an entry order.',
+            '',
+            MARKET_TYPE_INSTRUCTIONS,
+            '',
+            FUTURES_POSITION_INSTRUCTIONS,
+            '',
+            SPOT_QUOTE_CURRENCY_INSTRUCTIONS,
+            '',
+            MARGIN_CALCULATION_INSTRUCTIONS,
+        ].join('\n'),
+        required: ['market', 'marketType', 'side', 'amount', 'triggerPrice', 'limitPrice'],
+        props: [
+            {
+                name: 'market',
+                type: 'string',
+                description: MARKET_DESCRIPTION,
+            },
+            MARKET_TYPE_PARAMETER,
+            {
+                name: 'side',
+                type: 'string',
+                enum: ['buy', 'sell', 'long', 'short'],
+                description: SIDE_DESCRIPTION,
+            },
+            {
+                name: 'amount',
+                type: 'number',
+                description: AMOUNT_DESCRIPTION,
+            },
+            {
+                name: 'triggerPrice',
+                type: 'number',
+                description: 'Price at which the order will be activated',
+            },
+            {
+                name: 'limitPrice',
+                type: ['number', 'null'],
+                description: 'Price at which the order will be executed.  Include only if explicitly specified by the user.  If not specified, the order will be a market order.',
             },
         ],
     },

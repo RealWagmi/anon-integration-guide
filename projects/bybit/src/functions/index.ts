@@ -1,4 +1,5 @@
 export { createSimpleOrder } from './createSimpleOrder';
+export { createConditionalOrder } from './createConditionalOrder';
 export { createPositionWithTakeProfitAndOrStopLossOrderAttached } from './createPositionWithTakeProfitAndOrStopLossOrderAttached';
 export { attachTakeProfitAndOrStopLossOrderToExistingPosition } from './attachTakeProfitAndOrStopLossOrderToExistingPosition';
 export { createSpotEntryOrderWithTakeProfitAndOrStopLossAttached } from './createSpotEntryOrderWithTakeProfitAndOrStopLossAttached';

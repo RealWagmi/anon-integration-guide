@@ -83,7 +83,6 @@ export function formatMarketInfo(market: MarketInterface, ticker: Ticker, levera
         market.expiryDatetime ? `Expiry/Delivery date: ${formatDate(getMarketExpiry(market))}` : '',
         `${market.settle ? `Settled in: ${market.settle}` : ''}`,
         `${lowestTier ? `Max leverage: ${lowestTier.maxLeverage}x${lowestTier.maxNotional ? ` (size < ${lowestTier.maxNotional} ${market.settle})` : ''}` : ''}`,
-        `Mark price: ${ticker.markPrice} ${market.quote}`,
         `Last price: ${ticker.last} ${market.quote}`,
         `24h high: ${ticker.high} ${market.quote}`,
         `24h low: ${ticker.low} ${market.quote}`,
@@ -177,7 +176,6 @@ export function formatOrderSingleLine(order: Order, market?: MarketInterface, sh
         market,
     );
     const quoteSymbol = market ? ` ${market.quote}` : '';
-
     let parts = [
         `${marketType ? `${titleCase(marketType)} ` : ''}`,
         `${titleCase(type)}`,
@@ -301,7 +299,6 @@ export function formatPositionMultiLine(position: Position, market?: MarketInter
         contracts,
         contractSize,
         entryPrice,
-        markPrice,
         unrealizedPnl,
         unrealizedPnlPercentage,
         notional,
@@ -319,7 +316,6 @@ export function formatPositionMultiLine(position: Position, market?: MarketInter
         `${prefix}Side: ${side}`,
         // `${prefix}Margin Ratio: ${marginRatio}`,
         `${prefix}Entry Price: ${entryPrice}`,
-        `${prefix}Mark Price: ${markPrice}`,
         `${prefix}Liquidation Price: ${liquidationPrice}`,
         `${prefix}Notional: ${notional}`,
         `${prefix}PnL: ${unrealizedPnl}`,

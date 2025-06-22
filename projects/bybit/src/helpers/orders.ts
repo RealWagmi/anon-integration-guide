@@ -30,6 +30,31 @@ export async function createSimpleOrder(
 }
 
 /**
+ * Create a conditional order, that is, an order that has a trigger price
+ * attached to it and does not utilize your balance until triggered.
+ *
+ * @link https://docs.ccxt.com/#/README?id=conditional-orders
+ */
+export async function createConditionalOrder(
+    exchange: Exchange,
+    symbol: string,
+    side: 'buy' | 'sell',
+    amount: number,
+    triggerPrice: number,
+    triggerDirection?: 'above' | 'below',
+    limitPrice?: number,
+): Promise<Order> {
+    const ccxtParams: any = {};
+    ccxtParams.triggerPrice = triggerPrice;
+    if (triggerDirection) {
+        ccxtParams.triggerDirection = triggerDirection;
+    }
+    const ccxtType = limitPrice ? 'limit' : 'market';
+    const order = await exchange.createOrder(symbol, ccxtType, side, amount, limitPrice, ccxtParams);
+    return order;
+}
+
+/**
  * Create a position with take profit and/or stop loss orders attached to it.
  *
  * @link https://docs.ccxt.com/#/README?id=stoploss-and-takeprofit-orders-attached-to-a-position
