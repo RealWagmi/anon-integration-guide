@@ -192,7 +192,21 @@ export const tools: AiTool[] = [
     },
     {
         name: 'createSpotTakeProfitAndOrStopLossOrder',
-        description: 'Create take profit and/or stop loss orders on a spot market',
+        description: [
+            'Create ONLY conditional TP/SL orders (no immediate buy/sell). These are standalone orders that trigger at specified prices.',
+            '',
+            'USE THIS TOOL WHEN user wants ONLY TP/SL orders:',
+            '- "Set a 10% TP and 15% SL to buy 1 BTC" (creates conditional buy orders)',
+            '- "Set stop loss at $60k to sell my BTC" (creates conditional sell order)',
+            '- "Place take profit at $4000 to sell ETH" (creates conditional sell order)',
+            '- "Create TP/SL orders to buy back ETH at better prices" (creates conditional buy orders)',
+            '',
+            'DO NOT USE when user wants IMMEDIATE execution + TP/SL:',
+            '- "Buy 1 BTC now with stop loss" → Use createSpotEntryOrderWithTakeProfitAndOrStopLossAttached',
+            '- "Sell ETH at market with take profit" → Use createSpotEntryOrderWithTakeProfitAndOrStopLossAttached',
+            '',
+            'Key difference: This tool creates WAITING orders, not immediate trades',
+        ].join('\n'),
         required: ['market', 'side', 'amount', 'takeProfitTriggerPrice', 'takeProfitLimitPrice', 'stopLossTriggerPrice', 'stopLossLimitPrice'],
         props: [
             {
@@ -311,7 +325,20 @@ export const tools: AiTool[] = [
     },
     {
         name: 'createSpotEntryOrderWithTakeProfitAndOrStopLossAttached',
-        description: 'Create a spot entry order with take profit and/or stop loss attached to it. (This is sometimes called a spot OTOCO order.)',
+        description: [
+            'Create a PRIMARY buy/sell order WITH take profit and/or stop loss attached (OTOCO order).',
+            '',
+            'USE THIS TOOL when user wants ENTRY ORDER + TP/SL:',
+            '- "Buy 1 BTC with stop loss at $60k" (creates buy order + SL)',
+            '- "Sell ETH at $3500 with take profit at $4000" (creates sell limit order + TP)',
+            '- "Purchase BTC at market with 10% TP and 5% SL" (creates market buy + both)',
+            '',
+            'DO NOT USE when user wants ONLY TP/SL orders:',
+            '- "Set a 10% TP to buy BTC" → Use createSpotTakeProfitAndOrStopLossOrder',
+            '- "Place stop loss order at $60k" → Use createSpotTakeProfitAndOrStopLossOrder',
+            '',
+            'Key: Creates ENTRY order (market or limit) that triggers TP/SL when filled',
+        ].join('\n'),
         required: ['market', 'side', 'amount', 'amountCurrency', 'takeProfitPrice', 'stopLossPrice', 'limitPrice'],
         props: [
             {
