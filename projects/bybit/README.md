@@ -67,11 +67,11 @@ On Bybit spot markets, you can create a entry order with TP/SL orders attached, 
 
 #### Create an entry order with TP/SL attached (OTOCO)
 
-- TO DO: Sell 1 BTC at a limit price 150,000 with a 10% take profit and a 15% stop loss
-- TO DO: Market buy BTC with 100 USDT, then place a 10% take profit and a 15% stop loss
-- TO DO: Sell all of my BTC for 150,000 USDT with a 10% take profit and a 15% stop loss
+- Market buy BTC with 100 USDT, then place a 10% take profit and a 15% stop loss
+- Sell 1 BTC at a limit price 150,000 with a 10% take profit and a 15% stop loss
+- Sell all of my BTC for 150,000 USDT with a 10% take profit and a 15% stop loss
 
-Please note that Bybit requires a limit price to be always set for spot OTOCO orders. If your prompt does not specify a limit price, the tool will automatically set the limit price equal to the current market price.
+Please note that Bybit requires a limit price to be always set for spot OTOCO orders. If your prompt does not specify a limit price, the tool will automatically set the limit price slightly below/above the current market price to ensure the order is executed.
 
 #### Set a TP or SL condition
 

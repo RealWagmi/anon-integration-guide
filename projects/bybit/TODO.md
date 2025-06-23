@@ -1,6 +1,7 @@
 ## Bug fixes
 
 - Sort out what "Buy 1 BTC with 10% TP and 15% SL" means
+- Check orderId returned by all exchange.ts functions
 
 ## Features
 

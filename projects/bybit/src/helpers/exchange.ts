@@ -217,6 +217,7 @@ export async function attachTakeProfitAndOrStopLossOrderToExistingPosition(
  *   "slOrderType": "Market"
  * }
  *
+ * @returns The order id as a string
  * @throws {Error} If something goes wrong
  * @link https://bybit-exchange.github.io/docs/v5/order/create
  */
@@ -228,7 +229,7 @@ export async function createSpotEntryOrderWithTakeProfitAndOrStopLossAttached(
     limitPrice: number,
     takeProfitPrice: number | null,
     stopLossPrice: number | null,
-): Promise<Order> {
+): Promise<string> {
     // Check that at least one price is provided
     if (takeProfitPrice === null && stopLossPrice === null) {
         throw new Error('At least one of the stop loss or take profit prices must be provided');
@@ -259,12 +260,12 @@ export async function createSpotEntryOrderWithTakeProfitAndOrStopLossAttached(
         throw new Error(`Could not create spot entry order with TP/SL attached: ${response.retMsg}`);
     }
 
-    // Parse the response into an order
-    try {
-        return exchange.parseOrder(response, marketObject);
-    } catch (error) {
-        throw new Error(`Spot entry order sent, but I could not parse Bybit response.  Response: ${response}`);
+    // Return the order ID
+    const orderId = response?.result?.orderId;
+    if (!orderId) {
+        throw new Error(`Spot entry order sent, but I could not parse the order ID from Bybit response.  Response: ${response}`);
     }
+    return orderId;
 }
 
 /**

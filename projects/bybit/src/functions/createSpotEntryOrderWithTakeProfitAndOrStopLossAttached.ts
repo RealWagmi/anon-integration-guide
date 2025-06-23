@@ -5,6 +5,7 @@ import { formatOrderSingleLine } from '../helpers/format';
 import { getOrderById } from '../helpers/exchange';
 import { getMarketLastPriceBySymbol, getMarketObject } from '../helpers/markets';
 import { convertToBaseAmount } from '../helpers/amount';
+import { LIMIT_PRICE_TOLERANCE } from '../constants';
 
 interface Props {
     market: string;
@@ -35,11 +36,19 @@ export async function createSpotEntryOrderWithTakeProfitAndOrStopLossAttached(
     { exchange, notify }: FunctionOptionsWithExchange,
 ): Promise<FunctionReturn> {
     try {
-        // If the limit price is not provided, set it to the market price
+        // If the limit price is not provided, simulate a market order by
+        // setting it slightly above/below the market price.
         if (!limitPrice) {
             const lastPrice = await getMarketLastPriceBySymbol(market, exchange);
-            notify(`No limit price provided, setting it to the market price: ${lastPrice}`);
-            limitPrice = lastPrice;
+            let aboveOrBelow;
+            if (side === 'buy') {
+                limitPrice = lastPrice * (1 + LIMIT_PRICE_TOLERANCE);
+                aboveOrBelow = 'above';
+            } else {
+                limitPrice = lastPrice * (1 - LIMIT_PRICE_TOLERANCE);
+                aboveOrBelow = 'below';
+            }
+            notify(`No limit price provided, setting it slightly ${aboveOrBelow} the market price: ${limitPrice}`);
         }
 
         // Validate the market type
@@ -59,11 +68,11 @@ export async function createSpotEntryOrderWithTakeProfitAndOrStopLossAttached(
         });
 
         // Create the order
-        const order = await createSpotEntryOrderWithTakeProfitAndOrStopLossAttachedHelper(exchange, marketObject, side, baseAmount, limitPrice, takeProfitPrice, stopLossPrice);
-        notify(`Successfully submitted order with ID ${order.id}, now getting order status...`);
+        const orderId = await createSpotEntryOrderWithTakeProfitAndOrStopLossAttachedHelper(exchange, marketObject, side, baseAmount, limitPrice, takeProfitPrice, stopLossPrice);
+        notify(`Successfully submitted order with ID ${orderId}, now getting order status...`);
 
         // Get the order object
-        const orderObject = await getOrderById(exchange, order.id, marketObject.symbol);
+        const orderObject = await getOrderById(exchange, orderId, marketObject.symbol);
         return toResult(`Successfully created ${formatOrderSingleLine(orderObject, marketObject, true)}`);
     } catch (error) {
         return toResult(`Error creating spot entry order with TP/SL attached: ${error}`, true);
