@@ -207,7 +207,7 @@ export const tools: AiTool[] = [
             '',
             'Key difference: This tool creates WAITING orders, not immediate trades',
         ].join('\n'),
-        required: ['market', 'side', 'amount', 'takeProfitTriggerPrice', 'takeProfitLimitPrice', 'stopLossTriggerPrice', 'stopLossLimitPrice'],
+        required: ['market', 'side', 'amount', 'takeProfitTriggerPrice', 'takeProfitType', 'takeProfitLimitPrice', 'stopLossTriggerPrice', 'stopLossType', 'stopLossLimitPrice'],
         props: [
             {
                 name: 'market',
@@ -229,7 +229,13 @@ export const tools: AiTool[] = [
                 name: 'takeProfitTriggerPrice',
                 type: ['number', 'null'],
                 description:
-                    'Price at which the take profit order will be activated.  For sell orders, must be higher than stop loss trigger price.  For buy orders, must be lower than stop loss trigger price.  If not specified, the take profit order will not be created.',
+                    'Price at which the take profit order will be activated. Can be specified as absolute price or percentage. For sell orders, must be higher than stop loss trigger price. For buy orders, must be lower than stop loss trigger price. If not specified, the take profit order will not be created.',
+            },
+            {
+                name: 'takeProfitType',
+                type: 'string',
+                enum: ['absolute', 'percentage'],
+                description: 'Whether takeProfitTriggerPrice is an absolute price or a percentage from current/limit price.',
             },
             {
                 name: 'takeProfitLimitPrice',
@@ -239,7 +245,14 @@ export const tools: AiTool[] = [
             {
                 name: 'stopLossTriggerPrice',
                 type: ['number', 'null'],
-                description: 'Price at which the stop loss order will be activated.  If not specified, the stop loss order will not be created.',
+                description:
+                    'Price at which the stop loss order will be activated. Can be specified as absolute price or percentage. If not specified, the stop loss order will not be created.',
+            },
+            {
+                name: 'stopLossType',
+                type: 'string',
+                enum: ['absolute', 'percentage'],
+                description: 'Whether stopLossTriggerPrice is an absolute price or a percentage from current/limit price.',
             },
             {
                 name: 'stopLossLimitPrice',
@@ -255,7 +268,7 @@ export const tools: AiTool[] = [
             '',
             FUTURES_POSITION_INSTRUCTIONS,
         ].join('\n'),
-        required: ['market', 'marketType', 'side', 'amount', 'amountCurrency', 'takeProfitPrice', 'stopLossPrice', 'limitPrice', 'reduceOnly'],
+        required: ['market', 'marketType', 'side', 'amount', 'amountCurrency', 'takeProfitPrice', 'takeProfitType', 'stopLossPrice', 'stopLossType', 'limitPrice', 'reduceOnly'],
         props: [
             {
                 name: 'market',
@@ -283,12 +296,26 @@ export const tools: AiTool[] = [
             {
                 name: 'takeProfitPrice',
                 type: ['number', 'null'],
-                description: 'Absolute price at which the take profit order will be activated.  At least one of takeProfitPrice or stopLossPrice must be provided.',
+                description:
+                    'Price at which the take profit order will be activated. Can be specified as absolute price or percentage. At least one of takeProfitPrice or stopLossPrice must be provided.',
+            },
+            {
+                name: 'takeProfitType',
+                type: 'string',
+                enum: ['absolute', 'percentage'],
+                description: 'Whether takeProfitPrice is an absolute price or a percentage from current/limit price.',
             },
             {
                 name: 'stopLossPrice',
                 type: ['number', 'null'],
-                description: 'Absolute price at which the stop loss order will be activated.  At least one of takeProfitPrice or stopLossPrice must be provided.',
+                description:
+                    'Price at which the stop loss order will be activated. Can be specified as absolute price or percentage. At least one of takeProfitPrice or stopLossPrice must be provided.',
+            },
+            {
+                name: 'stopLossType',
+                type: 'string',
+                enum: ['absolute', 'percentage'],
+                description: 'Whether stopLossPrice is an absolute price or a percentage from current/limit price.',
             },
             {
                 name: 'reduceOnly',
@@ -301,7 +328,7 @@ export const tools: AiTool[] = [
         name: 'attachTakeProfitAndOrStopLossOrderToExistingPosition',
         description:
             'Attach take profit and/or stop loss orders to an existing futures position.  (This is sometimes called a futures OCO order.)  If the position already has TP/SL orders attached, they will be replaced.  Pass 0 as the TP price or SL price to cancel any existing TP or SL orders, respectively.',
-        required: ['market', 'marketType', 'takeProfitPrice', 'stopLossPrice'],
+        required: ['market', 'marketType', 'takeProfitPrice', 'takeProfitType', 'stopLossPrice', 'stopLossType'],
         props: [
             {
                 name: 'market',
@@ -313,13 +340,25 @@ export const tools: AiTool[] = [
                 name: 'takeProfitPrice',
                 type: ['number', 'null'],
                 description:
-                    'Absolute price at which the take profit order will be activated. At least one of takeProfitPrice or stopLossPrice must be provided.  Set to 0 to cancel any existing take profit order attached to the position.',
+                    'Price at which the take profit order will be activated. Can be specified as absolute price or percentage. At least one of takeProfitPrice or stopLossPrice must be provided. Set to 0 to cancel any existing take profit order attached to the position.',
+            },
+            {
+                name: 'takeProfitType',
+                type: 'string',
+                enum: ['absolute', 'percentage'],
+                description: 'Whether takeProfitPrice is an absolute price or a percentage from current price.',
             },
             {
                 name: 'stopLossPrice',
                 type: ['number', 'null'],
                 description:
-                    'Absolute price at which the stop loss order will be activated. At least one of takeProfitPrice or stopLossPrice must be provided.  Set to 0 to cancel any existing stop loss order attached to the position.',
+                    'Price at which the stop loss order will be activated. Can be specified as absolute price or percentage. At least one of takeProfitPrice or stopLossPrice must be provided. Set to 0 to cancel any existing stop loss order attached to the position.',
+            },
+            {
+                name: 'stopLossType',
+                type: 'string',
+                enum: ['absolute', 'percentage'],
+                description: 'Whether stopLossPrice is an absolute price or a percentage from current price.',
             },
         ],
     },
@@ -339,7 +378,7 @@ export const tools: AiTool[] = [
             '',
             'Key: Creates ENTRY order (market or limit) that triggers TP/SL when filled',
         ].join('\n'),
-        required: ['market', 'side', 'amount', 'amountCurrency', 'takeProfitPrice', 'stopLossPrice', 'limitPrice'],
+        required: ['market', 'side', 'amount', 'amountCurrency', 'takeProfitPrice', 'takeProfitType', 'stopLossPrice', 'stopLossType', 'limitPrice'],
         props: [
             {
                 name: 'market',
@@ -366,12 +405,26 @@ export const tools: AiTool[] = [
             {
                 name: 'takeProfitPrice',
                 type: ['number', 'null'],
-                description: 'Absolute price at which the take profit order will be activated.  At least one of takeProfitPrice or stopLossPrice must be provided.',
+                description:
+                    'Price at which the take profit order will be activated. Can be specified as absolute price or percentage. At least one of takeProfitPrice or stopLossPrice must be provided.',
+            },
+            {
+                name: 'takeProfitType',
+                type: 'string',
+                enum: ['absolute', 'percentage'],
+                description: 'Whether takeProfitPrice is an absolute price or a percentage from current/limit price.',
             },
             {
                 name: 'stopLossPrice',
                 type: ['number', 'null'],
-                description: 'Absolute price at which the stop loss order will be activated.  At least one of takeProfitPrice or stopLossPrice must be provided.',
+                description:
+                    'Price at which the stop loss order will be activated. Can be specified as absolute price or percentage. At least one of takeProfitPrice or stopLossPrice must be provided.',
+            },
+            {
+                name: 'stopLossType',
+                type: 'string',
+                enum: ['absolute', 'percentage'],
+                description: 'Whether stopLossPrice is an absolute price or a percentage from current/limit price.',
             },
         ],
     },

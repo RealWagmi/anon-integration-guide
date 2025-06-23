@@ -58,6 +58,9 @@ export async function createSimpleOrder(
             limitPrice,
             exchange,
         });
+        if (amountCurrency === 'spend') {
+            notify(`${amount} ${amountCurrency} converted to ${baseAmount} base currency`);
+        }
         // Create the order
         const order = await createSimpleOrderHelper(exchange, market, ccxtSide, baseAmount, limitPrice === null ? undefined : limitPrice);
         notify(`Successfully submitted order with ID ${order.id}, now getting order status...`);

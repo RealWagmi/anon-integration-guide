@@ -54,8 +54,6 @@ The LLM will try to classify buy/sell orders as spot orders, and long/short orde
 
 - Market buy 1 BTC when the price goes below 50,000 USDT
 - Buy 1 BTC at 45,000 USDT when the price goes below 50,000 USDT
-- TO DO: Market buy BTC with 100 USDT, then place an order to sell it for 10% profit
-- TO DO: Market buy 1 BTC with USDT then place a 15% stop loss
 
 Please note that on Bybit, conditional orders have the desirable property of not utilizing your balance until triggered. This allows you to simultaneously place both a take profit and a stop loss order to sell all of your balance, similar to an OCO order but without the automatic cancellation:
 
@@ -67,17 +65,17 @@ On Bybit spot markets, you can create a entry order with TP/SL orders attached, 
 
 #### Create an entry order with TP/SL attached (OTOCO)
 
+- Sell 1 BTC/USDT at a limit price 150,000 with a 10% take profit and a 15% stop loss
+- Sell all of my BTC at 150,000 USDT with a 10% take profit and a 15% stop loss
 - Market buy BTC with 100 USDT, then place a 10% take profit and a 15% stop loss
-- Sell 1 BTC at a limit price 150,000 with a 10% take profit and a 15% stop loss
-- Sell all of my BTC for 150,000 USDT with a 10% take profit and a 15% stop loss
 
 Please note that Bybit requires a limit price to be always set for spot OTOCO orders. If your prompt does not specify a limit price, the tool will automatically set the limit price slightly below/above the current market price to ensure the order is executed.
 
 #### Set a TP and/or SL condition
 
-- Set a 10% TP and a 15% SL to sell 1 BTC for USDT
-- Set a 10% TP and a 15% SL to buy 1 BTC for USDT
-- Set a 10% TP to sell 1 BTC for USDT
+- Set a 10% TP and a 15% SL to sell 1 BTC/USDT
+- Set a 10% TP and a 15% SL to buy 1 BTC/USDT
+- Set a 10% TP to sell 1 BTC/USDT
 - Set a SL triggering at 150,000 USDT to sell 1 BTC at a limit price of 200,000 USDT
 
 Please note that Bybit APIs do not to allow to place simultaneous spot TP/SL orders in isolation, without an entry (that is, it is not possible to send an OCO order via API). Under the hood, commands like "Set a 10% TP and a 15% SL to sell 0.5 BTC for USDT" will be translated into two conditional orders, which do not utilize the user balance until triggered.
@@ -147,7 +145,14 @@ Please note that:
 
 ### Futures - Take profit & stop loss
 
-On Bybit futures markets, you can either set TP/SL on an existing position (similar to an OCO order), or directly create a new position with TP/SL (similar to an OTOCO order).
+On Bybit futures markets, you can either create a new position with TP/SL attached to it (similar to an OTOCO order), or set TP/SL on an existing position (similar to an OCO order).
+
+#### Create a new position with TP/SL attached (OTOCO)
+
+- Spend 100 USDT to 10x long BTC/USDT with a 10% take profit and a 15% stop loss
+- 10x long 0.005 BTC/USDT with a 10% take profit and a 15% stop loss
+- 10x long 0.005 BTC/USDT at a limit price of 50,000 USDT with a 10% take profit and a 15% stop loss
+- 20x short 0.005 BTC/USDT with a 50,000 USDT take profit
 
 #### Set TP/SL on an existing position (OCO)
 
@@ -159,13 +164,6 @@ Please note that you can also cancel any existing TP/SL order:
 
 - Cancel the TP order on my BTC/USDT position
 - Cancel the SL order on my BTC/USDT position
-
-#### Create a new position with TP/SL attached (OTOCO)
-
-- Spend 100 USDT to 10x long BTC/USDT with a 10% take profit and a 15% stop loss
-- 10x long 0.005 BTC/USDT with a 10% take profit and a 15% stop loss
-- 10x long 0.005 BTC/USDT at a limit price of 50,000 USDT with a 10% take profit and a 15% stop loss
-- 20x short 0.005 BTC/USDT with a 50,000 USDT take profit
 
 #### Reduce only
 
@@ -237,6 +235,8 @@ pnpm ask-bybit "Show me the price of BTC/USDT:USDT" --debug-llm
     - many tools require the `marketType` parameter to be explicitly provided, e.g. `getCurrencyMarketsOfGivenType`
 
 - The assistant will try to classify buy/sell orders as spot orders, and long/short orders as futures orders. If it is not clear from the context, or the market symbol, it will ask the user for clarification.
+
+- In general, the LLM will suffer more cognitive load to distinguish between spot and futures orders. To reduce the token cost and risk of hallucinations, with respect to the Binance integration, we have moved the margin calculation & take profit/stop loss inferences to the tools implementation level, relieving the LLM of this burden (see parameters `amountCurrency`, `takeProfitType`, `stopLossType`).
 
 - Bybit [no longer supports](https://bybit-exchange.github.io/docs/v5/position/cross-isolate) setting margin mode at the market level, but only at the account level, hence the tools `getUserMarginMode` and `setUserMarginMode` do not have a `market` parameter. The main effect is that if you change the margin mode (e.g. from cross to isolated), the new margin mode will be applied to all of your open positions regardless of the market. The leverage, instead, is still set at the market level, hence the tools `getUserLeverageOnMarket` and `setUserLeverageOnMarket` have a `market` parameter.
 

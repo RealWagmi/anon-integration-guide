@@ -69,6 +69,9 @@ export async function createConditionalOrder(
             limitPrice,
             exchange,
         });
+        if (amountCurrency === 'spend') {
+            notify(`${amount} ${amountCurrency} converted to ${baseAmount} base currency`);
+        }
         // Create the order
         const order = await createConditionalOrderHelper(exchange, market, ccxtSide, baseAmount, triggerPrice, triggerDirection, limitPrice === null ? undefined : limitPrice);
         notify(`Successfully submitted order with ID ${order.id}, now getting order status...`);

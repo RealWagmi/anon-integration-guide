@@ -4,7 +4,7 @@ import { createPositionWithTakeProfitAndOrStopLossOrderAttached as createPositio
 import { formatOrderSingleLine } from '../helpers/format';
 import { getOrderById, SUPPORTED_MARKET_TYPES } from '../helpers/exchange';
 import { fromCcxtMarketToMarketType, getMarketObject } from '../helpers/markets';
-import { convertToBaseAmount } from '../helpers/amount';
+import { convertToBaseAmount, convertTargetToAbsolutePrice } from '../helpers/amount';
 
 interface Props {
     market: string;
@@ -13,7 +13,9 @@ interface Props {
     amount: number;
     amountCurrency: 'base' | 'spend';
     takeProfitPrice: number | null;
+    takeProfitType: 'absolute' | 'percentage' | null;
     stopLossPrice: number | null;
+    stopLossType: 'absolute' | 'percentage' | null;
     limitPrice: number | null;
     reduceOnly: boolean | null;
 }
@@ -39,7 +41,7 @@ interface Props {
  * @returns A message confirming the order or an error description
  */
 export async function createPositionWithTakeProfitAndOrStopLossOrderAttached(
-    { market, marketType, side, amount, amountCurrency, takeProfitPrice, stopLossPrice, limitPrice, reduceOnly }: Props,
+    { market, marketType, side, amount, amountCurrency, takeProfitPrice, takeProfitType, stopLossPrice, stopLossType, limitPrice, reduceOnly }: Props,
     { exchange, notify }: FunctionOptionsWithExchange,
 ): Promise<FunctionReturn> {
     try {
@@ -65,6 +67,51 @@ export async function createPositionWithTakeProfitAndOrStopLossOrderAttached(
             limitPrice,
             exchange,
         });
+        if (amountCurrency === 'spend') {
+            notify(`${amount} ${marketObject.settle} converted to ${baseAmount} ${marketObject.base}`);
+        }
+
+        // Convert TP percentage values to absolute prices if needed
+        let absoluteTakeProfitPrice: number | null = null;
+        if (takeProfitPrice) {
+            if (takeProfitType === null) {
+                throw new Error('Could not determine whether the take profit price is an absolute or percentage value');
+            }
+            absoluteTakeProfitPrice = await convertTargetToAbsolutePrice({
+                targetValue: takeProfitPrice,
+                targetType: takeProfitType,
+                type: 'takeProfit',
+                side: side,
+                direction: 'opposite', // trigger order opposite to the position side
+                market: market,
+                limitPrice: limitPrice,
+                exchange: exchange,
+            });
+            if (takeProfitType === 'percentage') {
+                notify(`${takeProfitPrice}% TP price: ${absoluteTakeProfitPrice}`);
+            }
+        }
+
+        // Convert SL percentage values to absolute prices if needed
+        let absoluteStopLossPrice: number | null = null;
+        if (stopLossPrice) {
+            if (stopLossType === null) {
+                throw new Error('Could not determine whether the stop loss price is an absolute or percentage value');
+            }
+            absoluteStopLossPrice = await convertTargetToAbsolutePrice({
+                targetValue: stopLossPrice,
+                targetType: stopLossType,
+                type: 'stopLoss',
+                side: side,
+                direction: 'opposite', // trigger order opposite to the position side
+                market: market,
+                limitPrice: limitPrice,
+                exchange: exchange,
+            });
+            if (stopLossType === 'percentage') {
+                notify(`${stopLossPrice}% SL price: ${absoluteStopLossPrice}`);
+            }
+        }
 
         // Include optional parameter reduceOnly
         const params: Record<string, any> = {};
@@ -78,8 +125,8 @@ export async function createPositionWithTakeProfitAndOrStopLossOrderAttached(
             market,
             ccxtSide,
             baseAmount,
-            takeProfitPrice,
-            stopLossPrice,
+            absoluteTakeProfitPrice,
+            absoluteStopLossPrice,
             limitPrice === null ? undefined : limitPrice,
             params,
         );

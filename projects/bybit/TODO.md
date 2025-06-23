@@ -1,5 +1,7 @@
 ## Bug fixes
 
+- `cancelAllOrdersOnMarket` does not seem to work
+
 ## Features
 
 - Set TP/SL orders for spot (createSpotTakeProfitAndOrStopLossOrder)
