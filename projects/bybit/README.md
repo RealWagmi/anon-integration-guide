@@ -73,16 +73,14 @@ On Bybit spot markets, you can create a entry order with TP/SL orders attached, 
 
 Please note that Bybit requires a limit price to be always set for spot OTOCO orders. If your prompt does not specify a limit price, the tool will automatically set the limit price slightly below/above the current market price to ensure the order is executed.
 
-#### Set a TP or SL condition
+#### Set a TP and/or SL condition
 
-- TO DO: Set a 10% TP to sell 1 BTC for USDT
-- TO DO: Set a 10% SL to sell 1 BTC for USDT
-- TO DO: Set a TP @ 200,000 USDT to sell 1 BTC
-- TO DO: Set a SL @ 50,000 USDT to sell 1 BTC
+- Set a 10% TP and a 15% SL to sell 1 BTC for USDT
+- Set a 10% TP and a 15% SL to buy 1 BTC for USDT
+- Set a 10% TP to sell 1 BTC for USDT
+- Set a SL triggering at 150,000 USDT to sell 1 BTC at a limit price of 200,000 USDT
 
-Please note that Bybit APIs do not to allow to place simultaneous spot TP/SL orders in isolation, without an entry (that is, it is not possible to send an OCO order via API). You can achieve something similar by sending two conditional orders, see
-
-- Place a conditional order to sell 1 BTC at 100,000 USDT, and 1 BTC at 150,000 USDT
+Please note that Bybit APIs do not to allow to place simultaneous spot TP/SL orders in isolation, without an entry (that is, it is not possible to send an OCO order via API). Under the hood, commands like "Set a 10% TP and a 15% SL to sell 0.5 BTC for USDT" will be translated into two conditional orders, which do not utilize the user balance until triggered.
 
 ### Spot - Trailing stop orders
 

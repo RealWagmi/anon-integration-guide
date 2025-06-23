@@ -191,6 +191,50 @@ export const tools: AiTool[] = [
         ],
     },
     {
+        name: 'createSpotTakeProfitAndOrStopLossOrder',
+        description: 'Create take profit and/or stop loss orders on a spot market',
+        required: ['market', 'side', 'amount', 'takeProfitTriggerPrice', 'takeProfitLimitPrice', 'stopLossTriggerPrice', 'stopLossLimitPrice'],
+        props: [
+            {
+                name: 'market',
+                type: 'string',
+                description: SPOT_MARKET_DESCRIPTION,
+            },
+            {
+                name: 'side',
+                type: 'string',
+                enum: ['buy', 'sell'],
+                description: 'Side of the order',
+            },
+            {
+                name: 'amount',
+                type: 'number',
+                description: AMOUNT_DESCRIPTION,
+            },
+            {
+                name: 'takeProfitTriggerPrice',
+                type: ['number', 'null'],
+                description:
+                    'Price at which the take profit order will be activated.  For sell orders, must be higher than stop loss trigger price.  For buy orders, must be lower than stop loss trigger price.  If not specified, the take profit order will not be created.',
+            },
+            {
+                name: 'takeProfitLimitPrice',
+                type: ['number', 'null'],
+                description: 'Price at which the take profit order will be executed.  If not specified, the order will be a market order.',
+            },
+            {
+                name: 'stopLossTriggerPrice',
+                type: ['number', 'null'],
+                description: 'Price at which the stop loss order will be activated.  If not specified, the stop loss order will not be created.',
+            },
+            {
+                name: 'stopLossLimitPrice',
+                type: ['number', 'null'],
+                description: 'Price at which the stop loss order will be executed.  If not specified, the order will be a market order.',
+            },
+        ],
+    },
+    {
         name: 'createPositionWithTakeProfitAndOrStopLossOrderAttached',
         description: [
             'Create a futures position with take profit and/or stop loss orders attached to it.  (This is sometimes called a futures OTOCO order.)',

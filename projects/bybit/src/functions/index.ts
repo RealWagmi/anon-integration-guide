@@ -3,6 +3,7 @@ export { createConditionalOrder } from './createConditionalOrder';
 export { createPositionWithTakeProfitAndOrStopLossOrderAttached } from './createPositionWithTakeProfitAndOrStopLossOrderAttached';
 export { attachTakeProfitAndOrStopLossOrderToExistingPosition } from './attachTakeProfitAndOrStopLossOrderToExistingPosition';
 export { createSpotEntryOrderWithTakeProfitAndOrStopLossAttached } from './createSpotEntryOrderWithTakeProfitAndOrStopLossAttached';
+export { createSpotTakeProfitAndOrStopLossOrder } from './createSpotTakeProfitAndOrStopLossOrder';
 // export { createTrailingStopOrder } from './createTrailingStopOrder';
 export { closePosition } from './closePosition';
 export { setUserMarginMode } from './setUserMarginMode';
