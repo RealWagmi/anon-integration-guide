@@ -363,6 +363,29 @@ export const tools: AiTool[] = [
         ],
     },
     {
+        name: 'attachTrailingStopToExistingPosition',
+        description: 'Attach a trailing stop to an existing futures position.  Pass 0 as the trailing distance to cancel any existing trailing stop attached to the position.',
+        required: ['market', 'marketType', 'trailingStopDistance', 'activationPrice'],
+        props: [
+            {
+                name: 'market',
+                type: 'string',
+                description: FUTURES_MARKET_DESCRIPTION,
+            },
+            MARKET_TYPE_PARAMETER_FUTURES_ONLY,
+            {
+                name: 'trailingStopDistance',
+                type: 'number',
+                description: 'Distance (absolute price) at which the trailing stop will be activated.  Pass 0 to cancel any existing trailing stop attached to the position.',
+            },
+            {
+                name: 'activationPrice',
+                type: ['number', 'null'],
+                description: 'Optional activation price; ignored if trailingDist is 0.',
+            },
+        ],
+    },
+    {
         name: 'createSpotEntryOrderWithTakeProfitAndOrStopLossAttached',
         description: [
             'Create a PRIMARY buy/sell order WITH take profit and/or stop loss attached (OTOCO order).',

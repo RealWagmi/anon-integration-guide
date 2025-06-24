@@ -4,7 +4,7 @@ export { createPositionWithTakeProfitAndOrStopLossOrderAttached } from './create
 export { attachTakeProfitAndOrStopLossOrderToExistingPosition } from './attachTakeProfitAndOrStopLossOrderToExistingPosition';
 export { createSpotEntryOrderWithTakeProfitAndOrStopLossAttached } from './createSpotEntryOrderWithTakeProfitAndOrStopLossAttached';
 export { createSpotTakeProfitAndOrStopLossOrder } from './createSpotTakeProfitAndOrStopLossOrder';
-// export { createTrailingStopOrder } from './createTrailingStopOrder';
+export { attachTrailingStopToExistingPosition } from './attachTrailingStopToExistingPosition';
 export { closePosition } from './closePosition';
 export { setUserMarginMode } from './setUserMarginMode';
 export { setUserLeverageOnMarket } from './setUserLeverageOnMarket';

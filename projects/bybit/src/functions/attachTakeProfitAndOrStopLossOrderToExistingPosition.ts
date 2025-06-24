@@ -16,7 +16,7 @@ interface Props {
 }
 
 /**
- * Attach take profit and/or stop loss orders to an existing futures position
+ * Attach take profit and/or stop loss orders to an existing futures position.  Pass 0 as the price to cancel any existing TP/SL orders attached to the position.
  *
  * @param props - The function input parameters
  * @param props.market - Symbol of the futures market

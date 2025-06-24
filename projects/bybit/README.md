@@ -173,18 +173,15 @@ When it is clear from context that the TP and SL orders are attached to a positi
 
 ### Futures - Trailing stop orders
 
-- TO DO: Place an order to long 1 BTC with USDT with a 0.5% trailing stop
-- TO DO: Place a reduce-only order to long 1 BTC with USDT with a 0.5% trailing stop
-- TO DO: Place an order to long 1 BTC with USDT with a 0.5% trailing stop, with activation at 95,000 USDT
-- TO DO: Place an order to short 1 BTC with USDT with a 8% trailing stop
-- TO DO: Place a reduce-only order to short 1 BTC with USDT with a 8% trailing stop
-- TO DO: Place an order to short 1 BTC with USDT with a 8% trailing stop, with activation at 130,000 USDT
+- Set a 10,000 USDT trailing stop on my BTC/USDT position
+- When BTC price crosses 150,000 USDT, set a 10,000 USDT trailing stop on my BTC/USDT position
 
-<!-- Please note that:
+Please note that:
 
-1. The trailing percent must be a number between 0.1% and 10%.
-2. The trailing stop order will be triggered as a market order once the price moves by the specified percentage in the desired direction.
-3. Contrary to spot, on futures you cannot specify whether the trailing stop order is SL or TP. -->
+1. The trailing stop order will close the position at market price once the price moves by the specified distance in the desired direction.
+2. Activation price should be in the direction favorable to the position (higher if long, lower if short)
+3. In Bybit, there's no notion whether a trailing spot order is a take profit or a stop loss order.
+4. Bybit API does not support to specify trailing stop by percentage: it requires an absolute price distance
 
 ### Futures - Close positions
 
@@ -224,7 +221,7 @@ pnpm ask-bybit "Show me the price of BTC/USDT:USDT" --debug-llm
 
 ## Bybit specific behaviors
 
-- This integration embraces the Bybit Unified Trading Account approach in its latest version ([UTA 2.0 Pro](https://bybit-exchange.github.io/docs/v5/acct-mode)). This has several implications:
+- **UTA 2.0 Pro:** This integration embraces the Bybit Unified Trading Account approach in its latest version ([UTA 2.0 Pro](https://bybit-exchange.github.io/docs/v5/acct-mode)). This has several implications:
 
     - the integration works seamlessly across both spot and perpetual markets
     - the `exchange` object must have the `enableUnifiedAccount` option set to `true` ([Discord](https://discord.com/channels/690203284119617602/690203284727660739/1267775046366007339))
@@ -234,50 +231,55 @@ pnpm ask-bybit "Show me the price of BTC/USDT:USDT" --debug-llm
     - the LLM has to do some inference to determine the market type from the market symbol, see `MARKET_DESCRIPTION`
     - many tools require the `marketType` parameter to be explicitly provided, e.g. `getCurrencyMarketsOfGivenType`
 
-- The assistant will try to classify buy/sell orders as spot orders, and long/short orders as futures orders. If it is not clear from the context, or the market symbol, it will ask the user for clarification.
+- **Market type inference:** The assistant will try to classify buy/sell orders as spot orders, and long/short orders as futures orders. If it is not clear from the context, or the market symbol, it will ask the user for clarification.
 
-- In general, the LLM will suffer more cognitive load to distinguish between spot and futures orders. To reduce the token cost and risk of hallucinations, with respect to the Binance integration, we have moved the margin calculation & take profit/stop loss inferences to the tools implementation level, relieving the LLM of this burden (see parameters `amountCurrency`, `takeProfitType`, `stopLossType`).
+- **LLM cognitive load:** In general, the LLM will suffer more cognitive load to distinguish between spot and futures orders. To reduce the token cost and risk of hallucinations, with respect to the Binance integration, we have moved the margin calculation & take profit/stop loss inferences to the tools implementation level, relieving the LLM of this burden (see parameters `amountCurrency`, `takeProfitType`, `stopLossType`).
 
-- Bybit [no longer supports](https://bybit-exchange.github.io/docs/v5/position/cross-isolate) setting margin mode at the market level, but only at the account level, hence the tools `getUserMarginMode` and `setUserMarginMode` do not have a `market` parameter. The main effect is that if you change the margin mode (e.g. from cross to isolated), the new margin mode will be applied to all of your open positions regardless of the market. The leverage, instead, is still set at the market level, hence the tools `getUserLeverageOnMarket` and `setUserLeverageOnMarket` have a `market` parameter.
+- **Margin mode:** Bybit [no longer supports](https://bybit-exchange.github.io/docs/v5/position/cross-isolate) setting margin mode at the market level, but only at the account level, hence the tools `getUserMarginMode` and `setUserMarginMode` do not have a `market` parameter. The main effect is that if you change the margin mode (e.g. from cross to isolated), the new margin mode will be applied to all of your open positions regardless of the market. The leverage, instead, is still set at the market level, hence the tools `getUserLeverageOnMarket` and `setUserLeverageOnMarket` have a `market` parameter.
 
-- On the contrary, Bybit DOES allow you to change leverage at the market level, just like Binance and most exchanges.
+- **Leverage:** On the contrary, Bybit DOES allow you to change leverage at the market level, just like Binance and most exchanges.
 
-- Bybit supports OCO orders only for SPOT markets, and only at the UI level. There's no explicit support for OCO orders at the API level ([link](https://www.bybit.com/en/help-center/article/One-Cancels-the-Other-OCO-Orders)). However, this is a semantic distinction, as Bybit's TP/SL orders which can be attached to a position or a spot entry order, can be thought as OCO orders. More precisely, when you create a spot limit order with TP/SL attached, or when you create a position with TP/SL attached, you are performing an OTOCO order (one-triggers-a-one-cancels-the-other-order). Instead, when you add a TP/SL order to an existing position, you are performing an OCO order (one-cancels-the-other-order). On the contrary, there currently does not seem to be a way to create a simple OCO order (that is, a simultaneousTP/SL order without an entry order) for spot markets at the API level. In this integration we implement all these different types of orders in the following way:
+- **OCO orders:** Bybit supports OCO orders only for SPOT markets, and only at the UI level. There's no explicit support for OCO orders at the API level ([link](https://www.bybit.com/en/help-center/article/One-Cancels-the-Other-OCO-Orders)). However, this is a semantic distinction, as Bybit's TP/SL orders which can be attached to a position or a spot entry order, can be thought as OCO orders. More precisely, when you create a spot limit order with TP/SL attached, or when you create a position with TP/SL attached, you are performing an OTOCO order (one-triggers-a-one-cancels-the-other-order). Instead, when you add a TP/SL order to an existing position, you are performing an OCO order (one-cancels-the-other-order). On the contrary, there currently does not seem to be a way to create a simple OCO order (that is, a simultaneousTP/SL order without an entry order) for spot markets at the API level. In this integration we implement all these different types of orders in the following way:
 
     - Futures OTOCO order: `createPositionWithTakeProfitAndOrStopLossOrderAttached`
     - Futures OCO order: `attachTakeProfitAndOrStopLossOrderToExistingPosition`
     - Spot OTOCO order: `createSpotEntryOrderWithTakeProfitAndOrStopLossAttached`. Can only be a limit order.
     - Spot OCO order: not implemented directy, as it is not supported by the API, but can be simulated as two separate TP and SL orders via repeated calls to the tool `createConditionalOrder` (which does not utilize your balance until triggered)
 
-- Bybit however supports creating a FUTURES position with a TP/SL order attached, via the TP/SL checkbox ([screenshot](https://d.pr/i/v4jUor)), and this is what we have implemented in the `createPositionWithTakeProfitAndOrStopLossOrderAttached` tool, using the CCXT feature described [here](https://docs.ccxt.com/#/README?id=stoploss-and-takeprofit-orders-attached-to-a-position).
+- **Futures TP/SL:** Bybit however supports creating a FUTURES position with a TP/SL order attached, via the TP/SL checkbox ([screenshot](https://d.pr/i/v4jUor)), and this is what we have implemented in the `createPositionWithTakeProfitAndOrStopLossOrderAttached` tool, using the CCXT feature described [here](https://docs.ccxt.com/#/README?id=stoploss-and-takeprofit-orders-attached-to-a-position).
 
-- Bybit allows switching margin mode (at the account level) as long as the trader has sufficient margin and the change itself doesn't trigger immediate liquidation.
+- **Margin mode:** Bybit allows switching margin mode (at the account level) as long as the trader has sufficient margin and the change itself doesn't trigger immediate liquidation.
 
-- The Bybit API upon order creation only returns the order ID, not the order object ([docs](https://bybit-exchange.github.io/docs/v5/order/create-order)). Hence, after creating an order, we always use the `getOrderById` tool to fetch the order object.
+- **Order object:** The Bybit API upon order creation only returns the order ID, not the order object ([docs](https://bybit-exchange.github.io/docs/v5/order/create-order)). Hence, after creating an order, we always use the `getOrderById` tool to fetch the order object.
 
-- Trigger direction is needed when placing trigger orders (https://discord.com/channels/690203284119617602/690203284727660739/1367189081418633389)
+- **Trigger direction:** Trigger direction is needed when placing trigger orders (https://discord.com/channels/690203284119617602/690203284727660739/1367189081418633389)
 
-- Limit orders with TP/SL (regardless of spot or futures) appear as a single order both in the API and in the UI; for futures orders, the "Trade Type" is set to "Open long" or "Open short" ([spot screenshot](https://d.pr/i/n1b05r), [futures screenshot](https://d.pr/i/nWzWRG)). When the main order is filled, the TP/SL orders will still appear as a single separate TP/SL order ([spot screenshot](https://d.pr/i/yJtL3X)); for futures orders it will have the "Trade Type" set to "Close long" or "Close short".
+- **Limit orders with TP/SL:** Limit orders with TP/SL (regardless of spot or futures) appear as a single order both in the API and in the UI; for futures orders, the "Trade Type" is set to "Open long" or "Open short" ([spot screenshot](https://d.pr/i/n1b05r), [futures screenshot](https://d.pr/i/nWzWRG)). When the main order is filled, the TP/SL orders will still appear as a single separate TP/SL order ([spot screenshot](https://d.pr/i/yJtL3X)); for futures orders it will have the "Trade Type" set to "Close long" or "Close short".
 
-- When adding a TP/SL order to an existing position (or creating a new position with TP/SL attached) the TP/SL will appear in the UI as a single order (see [screenshot](https://d.pr/i/CgH0vF)).
+- **TP/SL order in UI:** When adding a TP/SL order to an existing position (or creating a new position with TP/SL attached) the TP/SL will appear in the UI as a single order (see [screenshot](https://d.pr/i/CgH0vF)).
 
-- When listing orders and positions, Bybit requires the `settleCoin` parameter, therefore it is needed to loop through settlement coins. This integration supports USDC and USDT as settlement coins, via the `SUPPORTED_SETTLE_CURRENCIES` constant.
+- **Settlement coin:** When listing orders and positions, Bybit requires the `settleCoin` parameter, therefore it is needed to loop through settlement coins. This integration supports USDC and USDT as settlement coins, via the `SUPPORTED_SETTLE_CURRENCIES` constant.
 
-- Orders that are not in the last 500 orders (of any status) are not accessible via the API.
+- **Trailing stop:** For futures, a trailing stop is treated as a position-level stop-loss rather than a standalone order, with the endpoint /v5/position/trading-stop. You cannot place a trailing stop as part of an initial order; instead, you set or update a trailing stop after a position is open (this mirrors the web UI, where trailing stop is a closing strategy on open positions). For spot markets, trailing stop orders are placed as standalone conditional orders, via the endpoint /v5/order/create.
 
-- To fetch information about a specific order, it is not sufficient to know the ID and the market symbol: we also need to specify whether the order is a trigger order or not.
+- **Trailing stop:** For both spot and futures, the trailing stop has to be indicated as an absolute distance from the current price.
 
-- The `fetchLeverageTiers` method is supported by CCXT, but it takes forever as it goes through 40 pages of markets, so we just infer the max leverage from the market object, without showing the actual tier for that leverage.
+- **Order visibility:** Orders that are not in the last 500 orders (of any status) are not accessible via the API.
 
-- Had to implement the following functions in [exchange.ts](./src/helpers/exchange.ts) to cover the gaps in CCXT:
+- **Order information:** To fetch information about a specific order, it is not sufficient to know the ID and the market symbol: we also need to specify whether the order is a trigger order or not.
+
+- **Leverage tiers:** The `fetchLeverageTiers` method is supported by CCXT, but it takes forever as it goes through 40 pages of markets, so we just infer the max leverage from the market object, without showing the actual tier for that leverage.
+
+- **CCXT gaps:** Had to implement the following functions in [exchange.ts](./src/helpers/exchange.ts) to cover the gaps in CCXT:
 
     - `attachTakeProfitAndOrStopLossOrderToExistingPosition`
+    - `attachTrailingStopToExistingPosition`
     - `getAccountMarginMode`
     - `addOrReducePositionMargin`
     - `getUserOpenOrders`
     - `getOrderById`
 
-- Bybit API keys expire after 3 months unless one adds IP whitelisting
+- **API key expiration:** Bybit API keys expire after 3 months unless one adds IP whitelisting
 
 ## Reference
 

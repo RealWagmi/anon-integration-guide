@@ -41,20 +41,6 @@ export const EXCHANGE_SUPPORTS_LIMIT_PRICE_FOR_TRAILING_STOP_ORDERS = false;
 export const EXCHANGE_SUPPORTS_SETTING_MARGIN_MODE_AT_MARKET_LEVEL = false;
 
 /**
- * Minimum trailing percentage for trailing stop orders
- *
- * @link https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api
- */
-export const EXCHANGE_MIN_TRAILING_PERCENT = 0.1;
-
-/**
- * Maximum trailing percentage for trailing stop orders
- *
- * @link https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api
- */
-export const EXCHANGE_MAX_TRAILING_PERCENT = 10;
-
-/**
  * Settlement currencies supported by this HeyAnon integration.  We need to
  * specify them here because Bybit endpoint to query the user's position requires
  * the settleCoin parameter (https://bybit-exchange.github.io/docs/v5/position).
@@ -146,8 +132,9 @@ export async function addOrReducePositionMargin(
 }
 
 /**
- * Attach take profit and/or stop loss orders to an existing position,
- * using the /v5/position/trading-stop endpoint of the Bybit API.
+ * Add, update or cancel take profit and/or stop loss orders to an
+ * existing position, using the /v5/position/trading-stop endpoint
+ * of the Bybit API.
  *
  * @throws {Error} If something goes wrong
  * @link https://bybit-exchange.github.io/docs/v5/position/trading-stop
@@ -167,7 +154,7 @@ export async function attachTakeProfitAndOrStopLossOrderToExistingPosition(
     const params: Record<string, any> = {
         category: 'linear', // Only supporting linear for now
         symbol: marketObject.id, // Use the exchange-specific symbol ID
-        tpslMode: 'Full', // Using Full mode as the most common, meaning that the TP/SL will close the position
+        tpslMode: 'Full', // TP/SL will close the position
         positionIdx: '0', // Assuming one-way mode (0). Would need to check position mode for hedge mode support
     };
     if (takeProfitPrice !== null) {
@@ -191,6 +178,53 @@ export async function attachTakeProfitAndOrStopLossOrderToExistingPosition(
     const response = await (exchange as bybit).privatePostV5PositionTradingStop(params);
     if (response.retMsg !== 'OK') {
         throw new Error(`Could not attach TP/SL orders to position: ${response.retMsg}`);
+    }
+}
+
+/**
+ * Add, update or cancel a trailing stop on an open futures position.
+ * Wrapper around POST /v5/position/trading-stop.
+ *
+ * @param trailingDist Distance (absolute price). ≥0. Use 0 to cancel.
+ * @param activationPrice Optional activation price; ignored if trailingDist is null.
+ *
+ * @throws Error - If neither set nor cancel action is requested, or API reply ≠ OK.
+ */
+export async function attachTrailingStopToExistingPosition(
+    exchange: Exchange,
+    marketObject: MarketInterface,
+    trailingDist: number,
+    activationPrice: number | null = null,
+): Promise<void> {
+    // Validation
+    if (trailingDist < 0) {
+        throw new Error('trailingDist cannot be negative per Bybit spec.');
+    }
+
+    // Build request
+    const params: Record<string, any> = {
+        category: 'linear', // only supporting linear for now
+        symbol: marketObject.id, // Use the exchange-specific symbol ID
+        tpslMode: 'Full', // trailing stop is always on the whole position
+        positionIdx: 0, // one-way mode; expose as param if you support hedge
+    };
+
+    // Set or cancel
+    if (trailingDist === 0) {
+        params.trailingStop = '0'; // Cancel
+    } else {
+        params.trailingStop = exchange.priceToPrecision(marketObject.symbol, trailingDist);
+    }
+
+    // Only include activation price when distance > 0
+    if (trailingDist > 0 && activationPrice !== null) {
+        params.activePrice = exchange.priceToPrecision(marketObject.symbol, activationPrice);
+    }
+
+    // Call API
+    const resp = await (exchange as bybit).privatePostV5PositionTradingStop(params);
+    if (resp.retMsg !== 'OK') {
+        throw new Error(`Trailing-stop update failed: ${resp.retMsg}`);
     }
 }
 
