@@ -1,6 +1,6 @@
 import { FunctionReturn, toResult } from '@heyanon/sdk';
 import { FunctionOptionsWithExchange } from '../overrides';
-import { fromCcxtMarketToMarketType, getMarketObject } from '../helpers/markets';
+import { fromCcxtMarketToMarketType, getMarketLastPriceBySymbol, getMarketObject } from '../helpers/markets';
 import { getUserOpenPositionBySymbol } from '../helpers/positions';
 
 import { SUPPORTED_MARKET_TYPES, attachTrailingStopToExistingPosition as attachTrailingStopToExistingPositionHelper } from '../helpers/exchange';
@@ -9,6 +9,7 @@ interface Props {
     market: string;
     marketType: (typeof SUPPORTED_MARKET_TYPES)[number];
     trailingStopDistance: number;
+    trailingStopDistanceType: 'absolute' | 'percentage';
     activationPrice: number | null;
 }
 
@@ -18,14 +19,15 @@ interface Props {
  * @param props - The function input parameters
  * @param props.market - Symbol of the futures market
  * @param props.trailingStopDistance - Distance (absolute price) at which the trailing stop will be activated.  Pass 0 to cancel any existing trailing stop attached to the position.
+ * @param props.trailingStopDistanceType - Whether trailingStopDistance is an absolute price or a percentage from current price.
  * @param props.marketType - Type of market (futures or spot)
  * @param props.activationPrice - Optional activation price; ignored if trailingDist is 0.
  * @param options HeyAnon SDK options
  * @returns A message confirming the operation or an error description
  */
 export async function attachTrailingStopToExistingPosition(
-    { market, marketType, trailingStopDistance, activationPrice }: Props,
-    { exchange }: FunctionOptionsWithExchange,
+    { market, marketType, trailingStopDistance, trailingStopDistanceType, activationPrice }: Props,
+    { exchange, notify }: FunctionOptionsWithExchange,
 ): Promise<FunctionReturn> {
     try {
         // Validate the market type
@@ -42,6 +44,14 @@ export async function attachTrailingStopToExistingPosition(
         const position = await getUserOpenPositionBySymbol(exchange, market);
         if (!position) {
             return toResult(`No open position found on ${market}. Please open a position first before attaching TP/SL orders.`, true);
+        }
+
+        // Convert trailing stop distance to absolute price if needed
+        if (trailingStopDistanceType === 'percentage') {
+            const percentage = trailingStopDistance / 100;
+            const lastPrice = await getMarketLastPriceBySymbol(market, exchange);
+            trailingStopDistance = lastPrice * percentage;
+            notify(`Converted ${percentage * 100}% trailing stop to ${trailingStopDistance} ${marketObject.quote}`);
         }
 
         // Create the orders

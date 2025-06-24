@@ -365,7 +365,7 @@ export const tools: AiTool[] = [
     {
         name: 'attachTrailingStopToExistingPosition',
         description: 'Attach a trailing stop to an existing futures position.  Pass 0 as the trailing distance to cancel any existing trailing stop attached to the position.',
-        required: ['market', 'marketType', 'trailingStopDistance', 'activationPrice'],
+        required: ['market', 'marketType', 'trailingStopDistance', 'trailingStopDistanceType', 'activationPrice'],
         props: [
             {
                 name: 'market',
@@ -379,9 +379,15 @@ export const tools: AiTool[] = [
                 description: 'Distance (absolute price) at which the trailing stop will be activated.  Pass 0 to cancel any existing trailing stop attached to the position.',
             },
             {
+                name: 'trailingStopDistanceType',
+                type: 'string',
+                enum: ['absolute', 'percentage'],
+                description: 'Whether trailingStopDistance is an absolute price or a percentage from current price.',
+            },
+            {
                 name: 'activationPrice',
                 type: ['number', 'null'],
-                description: 'Optional activation price; ignored if trailingDist is 0.',
+                description: 'Optional activation price; ignored if trailingStopDistance is 0.',
             },
         ],
     },

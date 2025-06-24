@@ -82,12 +82,7 @@ Please note that Bybit APIs do not to allow to place simultaneous spot TP/SL ord
 
 ### Spot - Trailing stop orders
 
-- TO DO: Place an order to sell 1 BTC for USDT with a trailing take profit of 10%
-- TO DO: Place an order to sell 1 BTC @ 100,000 USDT with a trailing take profit of 10%
-- TO DO: Place an order to sell 1 BTC for USDT with a trailing take loss of 10%
-- TO DO: Place an order to sell 1 BTC @ 50,000 USDT with a trailing take loss of 10%
-- TO DO: Place an order to buy 1 BTC with USDT with a trailing take profit of 10%
-- TO DO: Place an order to buy 1 BTC with USDT with a trailing stop loss of 10%
+Bybit does not support trailing stop orders for spot markets at the API level.
 
 ## Futures trading commands
 
@@ -164,16 +159,14 @@ Please note that you can also cancel any existing TP/SL order:
 
 - Cancel the TP order on my BTC/USDT position
 - Cancel the SL order on my BTC/USDT position
-
-#### Reduce only
-
-When it is clear from context that the TP and SL orders are attached to a position, they will be issued as **reduce-only** orders, to prevent accidentally increase the position size or open a new position. To force a reduce only order, just ask for it, e.g.
-
-- TO DO: Long 1 BTC when the price crosses 50,000 USDT, _reduce only_
+- Cancel all of my TP/SL orders on my BTC/USDT position
 
 ### Futures - Trailing stop orders
 
 - Set a 10,000 USDT trailing stop on my BTC/USDT position
+- Set a 5% trailing stop on my BTC/USDT position
+- Create a 10x BTC/USDT short with 100 USDT and set a 5% trailing stop
+- Cancel the trailing stop on my BTC/USDT position
 - When BTC price crosses 150,000 USDT, set a 10,000 USDT trailing stop on my BTC/USDT position
 
 Please note that:
@@ -181,7 +174,7 @@ Please note that:
 1. The trailing stop order will close the position at market price once the price moves by the specified distance in the desired direction.
 2. Activation price should be in the direction favorable to the position (higher if long, lower if short)
 3. In Bybit, there's no notion whether a trailing spot order is a take profit or a stop loss order.
-4. Bybit API does not support to specify trailing stop by percentage: it requires an absolute price distance
+4. Bybit API does not support to specify trailing stop by percentage: it requires an absolute price distance. The tool will automatically convert any given percentage to an absolute price. This is done at order creation time and won't be updated as the price changes.
 
 ### Futures - Close positions
 

@@ -59,7 +59,7 @@ export async function createSimpleOrder(
             exchange,
         });
         if (amountCurrency === 'spend') {
-            notify(`${amount} ${amountCurrency} converted to ${baseAmount} base currency`);
+            notify(`Order amount in base currency: ${baseAmount} ${marketObject.base}`);
         }
         // Create the order
         const order = await createSimpleOrderHelper(exchange, market, ccxtSide, baseAmount, limitPrice === null ? undefined : limitPrice);

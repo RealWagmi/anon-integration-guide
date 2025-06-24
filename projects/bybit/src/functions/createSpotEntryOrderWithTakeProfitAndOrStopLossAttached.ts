@@ -71,7 +71,7 @@ export async function createSpotEntryOrderWithTakeProfitAndOrStopLossAttached(
             exchange,
         });
         if (amountCurrency === 'spend') {
-            notify(`${amount} ${marketObject.quote} converted to ${baseAmount} ${marketObject.base}`);
+            notify(`Order amount in base currency: ${baseAmount} ${marketObject.base}`);
         }
 
         // Convert TP percentage values to absolute prices if needed

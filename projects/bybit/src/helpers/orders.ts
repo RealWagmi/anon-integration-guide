@@ -103,10 +103,6 @@ export async function createPositionWithTakeProfitAndOrStopLossOrderAttached(
     if (marketObject.type === 'spot') {
         throw new Error(`Cannot create positions in spot markets`);
     }
-    // Check if exchange supports reduce only orders
-    if (params?.reduceOnly === true && !exchange.has['createReduceOnlyOrder']) {
-        throw new Error(`Reduce-only orders not supported on exchange ${exchange.name}`);
-    }
     // Make sure that at least one of the stop loss or take profit prices is provided
     if (!takeProfitPrice && !stopLossPrice) {
         throw new Error('At least one of the stop loss or take profit prices must be provided');

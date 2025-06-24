@@ -70,7 +70,7 @@ export async function createConditionalOrder(
             exchange,
         });
         if (amountCurrency === 'spend') {
-            notify(`${amount} ${amountCurrency} converted to ${baseAmount} base currency`);
+            notify(`Order amount in base currency: ${baseAmount} ${marketObject.base}`);
         }
         // Create the order
         const order = await createConditionalOrderHelper(exchange, market, ccxtSide, baseAmount, triggerPrice, triggerDirection, limitPrice === null ? undefined : limitPrice);
