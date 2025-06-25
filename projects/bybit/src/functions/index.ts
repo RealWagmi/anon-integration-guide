@@ -5,6 +5,7 @@ export { attachTakeProfitAndOrStopLossOrderToExistingPosition } from './attachTa
 export { createSpotEntryOrderWithTakeProfitAndOrStopLossAttached } from './createSpotEntryOrderWithTakeProfitAndOrStopLossAttached';
 export { createSpotTakeProfitAndOrStopLossOrder } from './createSpotTakeProfitAndOrStopLossOrder';
 export { attachTrailingStopToExistingPosition } from './attachTrailingStopToExistingPosition';
+export { createSpotTrailingStopOrder } from './createSpotTrailingStopOrder';
 export { closePosition } from './closePosition';
 export { setUserMarginMode } from './setUserMarginMode';
 export { setUserLeverageOnMarket } from './setUserLeverageOnMarket';

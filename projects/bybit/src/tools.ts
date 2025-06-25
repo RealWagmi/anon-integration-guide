@@ -392,6 +392,34 @@ export const tools: AiTool[] = [
         ],
     },
     {
+        name: 'createSpotTrailingStopOrder',
+        description: 'Create a trailing stop order for a spot market.  This is not supported by Bybit API, therefore this tool will just notify the user that it is not supported.',
+        required: ['market', 'side', 'amount', 'trailingStopDistance'],
+        props: [
+            {
+                name: 'market',
+                type: 'string',
+                description: SPOT_MARKET_DESCRIPTION,
+            },
+            {
+                name: 'side',
+                type: 'string',
+                enum: ['buy', 'sell'],
+                description: 'Side of the order',
+            },
+            {
+                name: 'amount',
+                type: 'number',
+                description: AMOUNT_DESCRIPTION,
+            },
+            {
+                name: 'trailingStopDistance',
+                type: 'number',
+                description: 'Distance (absolute price) at which the trailing stop will be activated',
+            },
+        ],
+    },
+    {
         name: 'createSpotEntryOrderWithTakeProfitAndOrStopLossAttached',
         description: [
             'Create a PRIMARY buy/sell order WITH take profit and/or stop loss attached (OTOCO order).',

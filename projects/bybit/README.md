@@ -82,7 +82,7 @@ Please note that Bybit APIs do not to allow to place simultaneous spot TP/SL ord
 
 ### Spot - Trailing stop orders
 
-Bybit does not support trailing stop orders for spot markets at the API level.
+Bybit does not support trailing stop orders for spot markets at the API level. Trying to create a trailing stop order will result in a message explaining that it is not supported.
 
 ## Futures trading commands
 
