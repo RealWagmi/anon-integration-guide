@@ -76,7 +76,7 @@ Please note that Bybit requires a limit price to be always set for spot OTOCO or
 - Set a 10% TP and a 15% SL to sell 1 BTC/USDT
 - Set a 10% TP and a 15% SL to buy 1 BTC/USDT
 - Set a 10% TP to sell 1 BTC/USDT
-- Set a SL triggering at 200,000 USDT to sell 1 BTC at a limit price of 200,000 USDT
+- Set a SL triggering at 200,000 USDT to sell 1 BTC at a limit price of 250,000 USDT
 
 Please note that Bybit APIs do not to allow to place simultaneous spot TP/SL orders in isolation, without an entry (that is, it is not possible to send an OCO order via API). Under the hood, commands like "Set a 10% TP and a 15% SL to sell 0.5 BTC for USDT" will be translated into two conditional orders, which do not utilize the user balance until triggered.
 
