@@ -40,7 +40,7 @@ export const MAX_POSITIONS_IN_RESULTS = 25;
  * Set to a few permille to allow for some deviation that might happens due to
  * current price fluctuations while the order is being placed.
  */
-export const LIMIT_PRICE_TOLERANCE = 0.005;
+export const LIMIT_PRICE_TOLERANCE = 0.001;
 
 /**
  * Account types supported by CCXT
