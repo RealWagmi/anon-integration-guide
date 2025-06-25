@@ -44,7 +44,7 @@ export async function attachTakeProfitAndOrStopLossOrderToExistingPosition(
 
         // Get the existing position
         const position = await getUserOpenPositionBySymbol(exchange, market);
-        if (!position) {
+        if (!position?.contracts && !position?.side) {
             return toResult(`No open position found on ${market}. Please open a position first before attaching TP/SL orders.`, true);
         }
 

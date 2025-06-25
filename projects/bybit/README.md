@@ -10,7 +10,7 @@ Integration between HeyAnon.ai and Bybit Spot & Future trading, including perpet
 - Show all BTC spot markets
 - Show last price and volume of BTC/USDT
 - Show last price and volume of perpetual market BTC/USDT
-- Show details on market BTC/USD:BTC-250926
+- Show details on market BTC/USDT:USDT-250627
 - Show max leverage for BTC/USDT perps
 
 Please note that asking for future markets (e.g. "Show all BTC future markets") will return both perpetual and delivery (a.k.a. expiry) markets.
@@ -45,7 +45,7 @@ Plese note that Bybit uses a Unified Trading Account (UTA) approach, so the retu
 - Market buy 1 BTC with USDT
 - Spend 500 USDT to buy BTC
 - Buy 1 BTC at a limit price of 40,000 USDT
-- Sell half of my BTC at a limit price of 150,000 USDT
+- Sell half of my BTC at a limit price of 200,000 USDT
 - Market buy BTC with all my USDT
 
 The LLM will try to classify buy/sell orders as spot orders, and long/short orders as futures orders. If it is not clear from the context, it will ask the user for clarification.
@@ -57,7 +57,7 @@ The LLM will try to classify buy/sell orders as spot orders, and long/short orde
 
 Please note that on Bybit, conditional orders have the desirable property of not utilizing your balance until triggered. This allows you to simultaneously place both a take profit and a stop loss order to sell all of your balance, similar to an OCO order but without the automatic cancellation:
 
-- Place a conditional order to sell 1 BTC at 100,000 USDT, and 1 BTC at 150,000 USDT
+- Place a conditional order to sell 1 BTC at 100,000 USDT, and 1 BTC at 200,000 USDT
 
 ### Spot - Take profit and stop loss (TP/SL)
 
@@ -65,8 +65,8 @@ On Bybit spot markets, you can create a entry order with TP/SL orders attached, 
 
 #### Create an entry order with TP/SL attached (OTOCO)
 
-- Sell 1 BTC/USDT at a limit price 150,000 with a 10% take profit and a 15% stop loss
-- Sell all of my BTC at 150,000 USDT with a 10% take profit and a 15% stop loss
+- Sell 1 BTC/USDT at a limit price 200,000 with a 10% take profit and a 15% stop loss
+- Sell all of my BTC at 200,000 USDT with a 10% take profit and a 15% stop loss
 - Market buy BTC with 100 USDT, then place a 10% take profit and a 15% stop loss
 
 Please note that Bybit requires a limit price to be always set for spot OTOCO orders. If your prompt does not specify a limit price, the tool will automatically set the limit price slightly below/above the current market price to ensure the order is executed.
@@ -76,7 +76,7 @@ Please note that Bybit requires a limit price to be always set for spot OTOCO or
 - Set a 10% TP and a 15% SL to sell 1 BTC/USDT
 - Set a 10% TP and a 15% SL to buy 1 BTC/USDT
 - Set a 10% TP to sell 1 BTC/USDT
-- Set a SL triggering at 150,000 USDT to sell 1 BTC at a limit price of 200,000 USDT
+- Set a SL triggering at 200,000 USDT to sell 1 BTC at a limit price of 200,000 USDT
 
 Please note that Bybit APIs do not to allow to place simultaneous spot TP/SL orders in isolation, without an entry (that is, it is not possible to send an OCO order via API). Under the hood, commands like "Set a 10% TP and a 15% SL to sell 0.5 BTC for USDT" will be translated into two conditional orders, which do not utilize the user balance until triggered.
 
@@ -100,7 +100,7 @@ By "futures" we mean both perpetual futures and delivery (aka "expiry") futures.
 - Long 1 BTC with USDT
 - 50x long 1 BTC with USDT
 - Long 1 BTC at limit price of 40,000 USDT
-- Short 1 BTC at limit price of 150,000 USDT
+- Short 1 BTC at limit price of 200,000 USDT
 
 You can also specify the position size in terms of margin;
 
@@ -112,7 +112,7 @@ You can also specify the position size in terms of margin;
 By default, the agent assumes you want to trade on perpetual markets. To use a delivery market instead, ask for it:
 
 - Long 1 BTC with USDT on the June 2025 delivery market
-- Long 1 BTC on BTC:USDT-250926
+- Long 1 BTC on BTC/USDT:USDT-250627
 
 **IMPORTANT:** If you specify a leverage (5x, 10x, etc) for your order, the specified leverage will be applied to the whole position, and not just to the amount you are adding/removing. This is because on Bybit the leverage is applied at the market level. The margin, instead, is applied at the account level, so be careful when specifying a different margin mode than the current one, because the change will be applied to all of your open positions.
 
@@ -136,7 +136,7 @@ Please note that:
 
 - Long 1 BTC when the price crosses 50,000 USDT
 - Long 1 BTC at 45,000 USDT when the price crosses 50,000 USDT
-- 100x short BTC with 100 USDT when the price crosses 150,000 USDT
+- 100x short BTC with 100 USDT when the price crosses 200,000 USDT
 
 ### Futures - Take profit & stop loss
 
@@ -167,7 +167,7 @@ Please note that you can also cancel any existing TP/SL order:
 - Set a 5% trailing stop on my BTC/USDT position
 - Create a 10x BTC/USDT short with 100 USDT and set a 5% trailing stop
 - Cancel the trailing stop on my BTC/USDT position
-- When BTC price crosses 150,000 USDT, set a 10,000 USDT trailing stop on my BTC/USDT position
+- When BTC price crosses 200,000 USDT, set a 10,000 USDT trailing stop on my BTC/USDT position
 
 Please note that:
 
@@ -178,7 +178,7 @@ Please note that:
 
 ### Futures - Close positions
 
-- Close my BTC/USDT position
+- Close my BTC/USDT perp
 - Close all my positions
 - Close all of my BTC positions
 
