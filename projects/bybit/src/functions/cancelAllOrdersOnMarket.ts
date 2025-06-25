@@ -4,7 +4,7 @@ import { formatOrderSingleLine } from '../helpers/format';
 import { MarketInterface } from 'ccxt';
 import { getUserOpenOrders } from '../helpers/exchange';
 import { getMarketObject } from '../helpers/markets';
-import { cancelAllOrders } from '../helpers/orders';
+import { cancelOrderById } from '../helpers/orders';
 
 interface Props {
     market: string | null;
@@ -41,7 +41,8 @@ export async function cancelAllOrdersOnMarket({ market }: Props, { exchange, not
         notify(`Orders to be cancelled:\n${ordersOnMarket.map((order) => formatOrderSingleLine(order, marketObject, false, '- ')).join('\n')}`);
 
         // Cancel the orders
-        await cancelAllOrders(exchange, market ?? undefined);
+        // NB: on Bybit, cancelAllOrders does not work, so we need to cancel each order individually
+        await Promise.all(ordersOnMarket.map((order) => cancelOrderById(exchange, order.id, market ?? undefined)));
 
         return toResult(`Cancelled all orders on market ${market} (${ordersOnMarket.length} in total)`);
     } catch (error) {
