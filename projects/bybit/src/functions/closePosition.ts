@@ -27,7 +27,7 @@ export async function closePosition({ market }: Props, { exchange, notify }: Fun
         // Get the order object
         const orderObject = await getOrderById(exchange, order.id, marketObject.symbol);
         // Return the order
-        return toResult(`Successfully sent order to close your ${market} position.  Order details:\n${formatOrderMultiLine(orderObject, marketObject, ' - ')}`);
+        return toResult(`Successfully sent order to close your ${market} position.  Order details:\n${formatOrderMultiLine(orderObject, marketObject, ' - ', undefined, true)}`);
     } catch (error) {
         return toResult(`Error closing position: ${error}`, true);
     }

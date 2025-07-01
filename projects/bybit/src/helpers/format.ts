@@ -143,18 +143,26 @@ function stringifyOrder(order: Order, market?: MarketInterface): StringOrder {
 /**
  * Format an order object into a multi-line string.
  */
-export function formatOrderMultiLine(order: Order, market?: MarketInterface, prefix: string = '', delimiter: string = '\n'): string {
+export function formatOrderMultiLine(order: Order, market?: MarketInterface, prefix: string = '', delimiter: string = '\n', isCloseOrder: boolean = false): string {
     const { id, timestamp, symbol, marketType, type, adjustedSide, price, triggerPrice, stopLossPrice, takeProfitPrice, amount, filled, status, reduceOnly } = stringifyOrder(
         order,
         market,
     );
+    let side = adjustedSide;
+    if (isCloseOrder) {
+        if (adjustedSide === 'long') {
+            side = 'close short';
+        } else if (adjustedSide === 'short') {
+            side = 'close long';
+        }
+    }
     const rows = [
         `${prefix}Order ID: ${id}`,
         `${prefix}Timestamp: ${timestamp}`,
         `${prefix}Market: ${symbol}`,
         `${prefix}Market Type: ${marketType}`,
         `${prefix}Order type: ${type}`,
-        `${prefix}Side: ${adjustedSide}`,
+        `${prefix}Side: ${side}`,
         `${prefix}Reduce Only: ${reduceOnly !== 'N/A' ? 'Yes' : 'No'}`,
         `${prefix}Price: ${price}`,
         `${prefix}Trigger: ${triggerPrice}`,
