@@ -49,9 +49,9 @@ async function getUserPositionBySymbolFromAllPositions(exchange: Exchange, symbo
  * position by symbol.  In this case, we will fetch all open positions
  * and filter them by symbol.
  */
-export async function closeUserOpenPositionBySymbol(exchange: Exchange, symbol: string): Promise<Order> {
+export async function closeUserOpenPositionBySymbol(exchange: Exchange, symbol: string, position?: Position): Promise<Order> {
     if (!exchange.has['closePosition']) {
-        return await closeUserPositionBySendingOppositeMarketOrder(exchange, symbol);
+        return await closeUserPositionBySendingOppositeMarketOrder(exchange, symbol, position);
     }
     return await exchange.closePosition(symbol);
 }
@@ -59,9 +59,11 @@ export async function closeUserOpenPositionBySymbol(exchange: Exchange, symbol: 
 /**
  * Close a position by sending an opposite market order
  */
-async function closeUserPositionBySendingOppositeMarketOrder(exchange: Exchange, symbol: string): Promise<Order> {
+async function closeUserPositionBySendingOppositeMarketOrder(exchange: Exchange, symbol: string, position?: Position): Promise<Order> {
     // Fetch the position
-    const position = await getUserOpenPositionBySymbol(exchange, symbol);
+    if (!position) {
+        position = await getUserOpenPositionBySymbol(exchange, symbol);
+    }
     if (!position) {
         throw new Error(`Could not find position for symbol ${symbol}`);
     }

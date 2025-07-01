@@ -165,14 +165,14 @@ export function formatOrderMultiLine(order: Order, market?: MarketInterface, pre
         `${prefix}Side: ${side}`,
         `${prefix}Reduce Only: ${reduceOnly !== 'N/A' ? 'Yes' : 'No'}`,
         `${prefix}Price: ${price}`,
-        `${prefix}Trigger: ${triggerPrice}`,
-        `${prefix}Take Profit: ${takeProfitPrice}`,
-        `${prefix}Stop Loss: ${stopLossPrice}`,
+        `${triggerPrice !== 'N/A' ? `${prefix}Trigger: ${triggerPrice}` : ''}`,
+        `${takeProfitPrice !== 'N/A' ? `${prefix}Take Profit: ${takeProfitPrice}` : ''}`,
+        `${stopLossPrice !== 'N/A' ? `${prefix}Stop Loss: ${stopLossPrice}` : ''}`,
         `${prefix}Amount: ${amount}`,
         `${prefix}Filled: ${filled}`,
         `${prefix}Status: ${status}`,
     ];
-    return rows.join(delimiter);
+    return rows.filter(Boolean).join(delimiter);
 }
 
 /**
