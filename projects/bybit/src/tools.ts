@@ -79,9 +79,23 @@ const MARKET_TYPE_INSTRUCTIONS = [
  * General instructions for handling futures positions (long/short orders)
  */
 const FUTURES_POSITION_INSTRUCTIONS = [
-    'LEVERAGE HANDLING (FUTURES ONLY):',
+    'CRITICAL PREREQUISITES FOR FUTURES POSITIONS:',
+    '',
+    'MARGIN MODE HANDLING:',
+    '- If the user specifies a margin mode (e.g., "isolated", "cross"), ALWAYS call setUserMarginMode FIRST',
+    '- If setUserMarginMode fails, DO NOT proceed with position creation - explain the error to the user',
+    '- NEVER create a position in a different margin mode than the user requested',
+    '',
+    'LEVERAGE HANDLING:',
     '- If leverage is specified in the prompt (e.g., "10x", "with 50x leverage"), ALWAYS call setUserLeverageOnMarket FIRST',
+    '- If setUserLeverageOnMarket fails, DO NOT proceed with position creation - explain the error to the user',
     "- If leverage is NOT specified, proceed without setting it (the user's current leverage will be used)",
+    '',
+    'IMPORTANT: Both margin mode and leverage settings are BLOCKING operations. If either fails, you MUST:',
+    '1. Stop immediately',
+    '2. Explain the error to the user',
+    '3. Ask the user how they want to proceed',
+    '4. DO NOT create any position until these prerequisites are successfully met',
 ].join('\n');
 
 /**
