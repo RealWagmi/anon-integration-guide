@@ -278,7 +278,7 @@ export const tools: AiTool[] = [
     {
         name: 'createPositionWithTakeProfitAndOrStopLossOrderAttached',
         description: [
-            'Create a futures position with take profit and/or stop loss orders attached to it.  (This is sometimes called a futures OTOCO order.)',
+            'Create a futures position with take profit and/or stop loss orders attached to it.   Use this tool ONLY if the user explicitly specifies take profit and/or stop loss targets.  If no TP/SL is specified, use createSimpleOrder instead.',
             '',
             FUTURES_POSITION_INSTRUCTIONS,
         ].join('\n'),

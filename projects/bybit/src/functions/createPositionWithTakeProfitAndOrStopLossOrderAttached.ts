@@ -5,6 +5,7 @@ import { formatOrderSingleLine } from '../helpers/format';
 import { getOrderById, SUPPORTED_MARKET_TYPES } from '../helpers/exchange';
 import { fromCcxtMarketToMarketType, getMarketObject } from '../helpers/markets';
 import { convertToBaseAmount, convertTargetToAbsolutePrice } from '../helpers/amount';
+import { createSimpleOrder } from './createSimpleOrder';
 
 interface Props {
     market: string;
@@ -42,8 +43,17 @@ interface Props {
  */
 export async function createPositionWithTakeProfitAndOrStopLossOrderAttached(
     { market, marketType, side, amount, amountCurrency, takeProfitPrice, takeProfitType, stopLossPrice, stopLossType, limitPrice, reduceOnly }: Props,
-    { exchange, notify }: FunctionOptionsWithExchange,
+    options: FunctionOptionsWithExchange,
 ): Promise<FunctionReturn> {
+    const { exchange, notify } = options;
+    // Sometimes the LLM gets confused and calls this tool even if no
+    // TP/SL is specified.  In that case, we'll just create a simple order.
+    if (!takeProfitPrice && !stopLossPrice) {
+        notify('No TP/SL specified: creating a simple order');
+        return createSimpleOrder({ market, marketType, side, amount, amountCurrency, limitPrice }, options);
+    }
+
+    // Normal flow
     try {
         // Convert the mixed side to a CCXT side
         const ccxtSide = toCcxtSide(side);
