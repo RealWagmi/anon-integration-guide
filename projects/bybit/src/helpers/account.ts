@@ -1,4 +1,4 @@
-import { Exchange, Balances } from 'ccxt';
+import { Exchange, Balances, DepositAddress } from 'ccxt';
 import { ACCOUNT_TYPES } from '../constants';
 
 /**
@@ -11,4 +11,22 @@ export async function getUserBalance(exchange: Exchange, accountType?: (typeof A
     }
     const balanceData = await exchange.fetchBalance({ type: accountType });
     return balanceData;
+}
+
+/**
+ * Get the user deposit address for a given currency and network.
+ *
+ * The returned object has the following properties:
+ * - address: the deposit address
+ * - currency: the currency
+ * - network: the network
+ * - tag: the tag (if any)
+ * - info: the raw response from the exchange
+ */
+export async function getUserDepositAddress(exchange: Exchange, currency: string, network: string): Promise<DepositAddress> {
+    if (!exchange.has['fetchDepositAddress']) {
+        throw new Error(`Exchange ${exchange.name} does not support fetching user deposit addresses.`);
+    }
+    const depositAddress = await exchange.fetchDepositAddress(currency, { network });
+    return depositAddress;
 }

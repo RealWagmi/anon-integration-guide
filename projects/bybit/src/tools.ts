@@ -680,4 +680,28 @@ export const tools: AiTool[] = [
             },
         ],
     },
+    {
+        name: 'getUserDepositAddress',
+        description: [
+            'Get the user deposit address for a given currency and chain.',
+            'A deposit address is a unique address that can be used to deposit funds into an exchange.',
+            'The tool will also return the tag / memo / paymentId for chains that require it (e.g. XRP, XMR, ...).',
+            '',
+            'IMPORTANT: Leave the currency and chain parameters as they are specified in the prompt.  Do not change them.',
+        ].join('\n'),
+        required: ['currency', 'chain'],
+        props: [
+            {
+                name: 'currency',
+                type: 'string',
+                description: 'Currency to get deposit address for, e.g. "BTC" or "USDT".',
+            },
+            {
+                name: 'chain',
+                type: ['string', 'null'],
+                description:
+                    'Chain to get deposit address for, e.g. "BTC" for Bitcoin blockchain or "ERC20" for Ethereum blockchain.  If not provided, the tool will automatically infer it.',
+            },
+        ],
+    },
 ];

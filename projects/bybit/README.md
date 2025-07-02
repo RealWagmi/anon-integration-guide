@@ -22,6 +22,21 @@ Please note that asking for future markets (e.g. "Show all BTC future markets") 
 
 Plese note that Bybit uses a Unified Trading Account (UTA) approach, so the returned balance is the total available balance regardless of the product type (spot, futures, etc).
 
+### Show deposit address
+
+- Show my deposit address for BTC
+- Show my USDT deposit address on Ethereum
+- Show my AVAX deposit address on AvaxC chain
+- Show my HMSTR deposit address
+
+Please note that if the deposit chain is not specified, the tool will:
+
+- if there is only one available deposit chain, use it (e.g. HMSTR on TON)
+- failing that, try to infer it from the currency name (e.g. if currency is BTC, the chain is BTC)
+- failing that, ask the user to specify the chain
+
+Furthermore, if the deposit chain requires a tag / memo / paymentId (like XRP and Monero), the tool will return it.
+
 ### Info on open orders
 
 - Show all my open orders

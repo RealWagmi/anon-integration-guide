@@ -22,3 +22,4 @@ export { getCurrencyMarketsOfGivenType } from './getCurrencyMarketsOfGivenType';
 export { getMarketInfo } from './getMarketInfo';
 export { getUserMarginMode } from './getUserMarginMode';
 export { getUserLeverageOnMarket } from './getUserLeverageOnMarket';
+export { getUserDepositAddress } from './getUserDepositAddress';
