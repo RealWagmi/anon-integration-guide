@@ -3,7 +3,7 @@ import { FunctionOptionsWithExchange } from '../overrides';
 import { formatOrderMultiLine } from '../helpers/format';
 import { closeUserOpenPositionBySymbol, getUserOpenPositionBySymbol } from '../helpers/positions';
 import { getMarketObject } from '../helpers/markets';
-import { getOrderById } from '../helpers/exchange';
+import { getOrderById, getPositionRealizedPnl } from '../helpers/exchange';
 
 interface Props {
     market: string;
@@ -28,7 +28,7 @@ export async function closePosition({ market }: Props, { exchange, notify }: Fun
         }
         // Get position PNL
         const unrealizedPnl = Number(position.unrealizedPnl ?? 0);
-        const realizedPnl = Number(position.realizedPnl ?? position?.info?.curRealisedPnl ?? 0); // second one is Bybit specific
+        const realizedPnl = getPositionRealizedPnl(position) ?? 0;
         const totalPnl = unrealizedPnl + realizedPnl;
         // Send the order to close the position
         const order = await closeUserOpenPositionBySymbol(exchange, market, position);
@@ -54,7 +54,7 @@ export async function closePosition({ market }: Props, { exchange, notify }: Fun
         const pnlString = actualPnl !== 0 ? `, with a P&L of approximately ${actualPnl.toFixed(2)} ${marketObject.settle}` : '';
         // Return the result
         if (filledPercent === 1) {
-            return toResult(`Successfully closed your ${market} position${pnlString}.`);
+            return toResult(`Successfully closed your ${market} position${pnlString}.\nOrder details:\n${orderString}`);
         } else {
             return toResult(`Only ${(filledPercent * 100).toFixed(2)}% of the position was closed${pnlString}.\nOrder details:\n${orderString}`);
         }

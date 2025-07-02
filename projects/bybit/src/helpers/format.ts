@@ -1,6 +1,6 @@
 import { Balances, Leverage, LeverageTiers, MarketInterface, Order, Position, Ticker } from 'ccxt';
 import { fromCcxtMarketToMarketType, getMarketExpiry } from './markets';
-import { getUiInitialMargin } from './exchange';
+import { getPositionTrailingStopPrice, getUiInitialMargin } from './exchange';
 
 /**
  * A stringified order object
@@ -36,6 +36,9 @@ interface StringPosition {
     contractSize: string;
     entryPrice: string;
     markPrice: string;
+    takeProfitPrice: string;
+    stopLossPrice: string;
+    trailingStopPrice: string;
     unrealizedPnl: string;
     unrealizedPnlPercentage: string;
     notional: string;
@@ -272,6 +275,7 @@ function stringifyPosition(position: Position, market?: MarketInterface): String
     const quoteSymbol = market ? ` ${market.quote}` : '';
     const settleSymbol = market ? ` ${market.settle}` : '';
     const initialMargin = getUiInitialMargin(position);
+    const trailingStopPrice = getPositionTrailingStopPrice(position);
 
     return {
         id: position.id?.toString() || 'N/A',
@@ -282,6 +286,9 @@ function stringifyPosition(position: Position, market?: MarketInterface): String
         contractSize: position.contractSize !== undefined ? position.contractSize.toString() : 'N/A',
         entryPrice: position.entryPrice !== undefined ? position.entryPrice.toString() + quoteSymbol : 'N/A',
         markPrice: position.markPrice !== undefined ? position.markPrice.toString() + quoteSymbol : 'N/A',
+        takeProfitPrice: position.takeProfitPrice ? position.takeProfitPrice.toString() + quoteSymbol : 'N/A',
+        stopLossPrice: position.stopLossPrice ? position.stopLossPrice.toString() + quoteSymbol : 'N/A',
+        trailingStopPrice: trailingStopPrice ? trailingStopPrice.toString() + quoteSymbol : 'N/A',
         unrealizedPnl: position.unrealizedPnl !== undefined ? position.unrealizedPnl.toString() + settleSymbol : 'N/A',
         unrealizedPnlPercentage: position.percentage !== undefined ? position.percentage.toString() + '%' : 'N/A',
         notional: position.notional !== undefined ? position.notional.toString() + settleSymbol : 'N/A',
@@ -307,6 +314,9 @@ export function formatPositionMultiLine(position: Position, market?: MarketInter
         contracts,
         contractSize,
         entryPrice,
+        takeProfitPrice,
+        stopLossPrice,
+        trailingStopPrice,
         unrealizedPnl,
         unrealizedPnlPercentage,
         notional,
@@ -326,8 +336,11 @@ export function formatPositionMultiLine(position: Position, market?: MarketInter
         `${prefix}Entry Price: ${entryPrice}`,
         `${prefix}Liquidation Price: ${liquidationPrice}`,
         `${prefix}Notional: ${notional}`,
-        `${prefix}PnL: ${unrealizedPnl}`,
-        `${prefix}PnL Percentage: ${unrealizedPnlPercentage}`,
+        `${takeProfitPrice !== 'N/A' ? `${prefix}Take Profit: ${takeProfitPrice}` : ''}`,
+        `${stopLossPrice !== 'N/A' ? `${prefix}Stop Loss: ${stopLossPrice}` : ''}`,
+        `${trailingStopPrice !== 'N/A' ? `${prefix}Trailing Stop: ${trailingStopPrice}` : ''}`,
+        `${prefix}P&L: ${unrealizedPnl}`,
+        `${unrealizedPnlPercentage !== 'N/A' ? `${prefix}P&L Percentage: ${unrealizedPnlPercentage}` : ''}`,
         `${prefix}Margin Mode: ${marginMode}`,
         `${prefix}Initial Margin: ${initialMargin}`,
         // `${position.marginMode === 'isolated' ? `${prefix}Collateral (margin + PnL): ${collateral}` : ''}`,
@@ -355,6 +368,9 @@ export function formatPositionSingleLine(position: Position, market?: MarketInte
         // entryPrice,
         // markPrice,
         // unrealizedPnl,
+        takeProfitPrice,
+        stopLossPrice,
+        trailingStopPrice,
         unrealizedPnlPercentage,
         notional,
         // marginRatio, // CCXT margin ratio does not seem to be reliable enough to show
@@ -371,6 +387,9 @@ export function formatPositionSingleLine(position: Position, market?: MarketInte
     let parts = [
         `${titleCase(side)}${baseSymbol}${shortMarketType ? ` ${shortMarketType}` : ''} position${id !== 'N/A' ? ` with ID ${id}` : ''} worth ${notional}`,
         ` (`,
+        `${takeProfitPrice !== 'N/A' ? `TP: ${takeProfitPrice}, ` : ''}`,
+        `${stopLossPrice !== 'N/A' ? `SL: ${stopLossPrice}, ` : ''}`,
+        `${trailingStopPrice !== 'N/A' ? `TS: ${trailingStopPrice}, ` : ''}`,
         // `${marginRatio !== 'N/A' ? `margin ratio: ${marginRatio}, ` : ''}${collateral !== 'N/A' ? `collateral: ${collateral}, ` : ''}`,
         `${marginMode !== 'N/A' ? `${marginMode} margin, ` : ''}`,
         `${initialMargin !== 'N/A' ? `IM: ${initialMargin}, ` : ''}`,

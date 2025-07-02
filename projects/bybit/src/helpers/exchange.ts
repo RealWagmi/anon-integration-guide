@@ -381,6 +381,28 @@ export async function getUserOpenOrders(exchange: Exchange): Promise<Order[]> {
 }
 
 /**
+ * Extract trailing stop price from a position object
+ */
+export function getPositionTrailingStopPrice(position: Position): number | undefined {
+    const asString = position?.info?.trailingStop;
+    if (asString === undefined) {
+        return undefined;
+    }
+    return Number(asString);
+}
+
+/**
+ * Extract realized P&L from a position object
+ */
+export function getPositionRealizedPnl(position: Position): number | undefined {
+    const asString = position?.realizedPnl ?? position?.info?.curRealisedPnl;
+    if (asString === undefined) {
+        return undefined;
+    }
+    return Number(asString);
+}
+
+/**
  * Specify here any option to apply to the exchange object
  */
 export function applyExchangeOptions(exchange: Exchange): Exchange {
