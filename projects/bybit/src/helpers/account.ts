@@ -1,4 +1,4 @@
-import { Exchange, Balances, DepositAddress, TransferEntry } from 'ccxt';
+import { Exchange, Balances, DepositAddress, TransferEntry, Transaction } from 'ccxt';
 import { ACCOUNT_TYPES } from '../constants';
 
 interface TransferOptions {
@@ -59,4 +59,25 @@ export async function transfer(exchange: Exchange, options: TransferOptions): Pr
     }
 
     return exchange.transfer(options.currency.toUpperCase(), options.amount, options.from, options.to);
+}
+
+/**
+ * Withdraw funds from the user's funding account to an on-chain wallet address.
+ *
+ * @link https://docs.ccxt.com/#/README?id=withdrawal
+ */
+export async function withdraw(
+    exchange: Exchange,
+    currency: string,
+    chain: string,
+    amount: number,
+    address: string,
+    tag?: string,
+    params?: Record<string, any>,
+): Promise<Transaction> {
+    if (!exchange.has['withdraw']) {
+        throw new Error(`Withdraw is not supported by exchange ${exchange.name}`);
+    }
+    const transaction = await exchange.withdraw(currency, amount, address, tag, { ...params, network: chain });
+    return transaction;
 }

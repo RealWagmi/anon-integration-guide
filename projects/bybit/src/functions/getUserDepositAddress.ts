@@ -21,9 +21,8 @@ export async function getUserDepositAddress({ currency, chain }: Props, { exchan
         // Sanitize the input
         const sanitizedCurrency = currency.toUpperCase();
         let sanitizedChain = chain?.toUpperCase();
-        // Special case for ETH, which is supported on Bybit as ERC20
+        // Special case for ETH, which is supported as ERC20
         if (sanitizedChain === 'ETH' || sanitizedChain === 'ETHEREUM') {
-            notify(`Using ERC20 as deposit chain (same as ${sanitizedChain} on Bybit)...`);
             sanitizedChain = 'ERC20';
         }
         // Get supported deposit chains for the given currency
@@ -40,14 +39,14 @@ export async function getUserDepositAddress({ currency, chain }: Props, { exchan
         });
         // If no chain supports the currency, return an error
         if (activeChainsForCurrency.length === 0) {
-            return toResult(`Currency ${sanitizedCurrency} cannot currently be deposited to ${exchange.name}`, true);
+            return toResult(`Currency ${sanitizedCurrency} cannot currently be deposited from ${exchange.name}`, true);
         }
         // If no chain is specified, try to infer it from the currency, otherwise
         // ask the user to specify one from the list
         if (!sanitizedChain) {
             if (activeChainsForCurrency.length === 1) {
                 // If there is only one active chain, use it
-                notify(`Assuming deposit chain is ${activeChainsForCurrency[0]} (the only...`);
+                notify(`Assuming deposit chain is ${activeChainsForCurrency[0]} (the only one...`);
                 sanitizedChain = activeChainsForCurrency[0];
             } else if (activeChainsForCurrency.includes(sanitizedCurrency)) {
                 // Try to infer the chain from the currency, e.g. if currency is BTC, the chain is BTC
@@ -60,19 +59,18 @@ export async function getUserDepositAddress({ currency, chain }: Props, { exchan
         // If the chain is specified, but isn't supported, ask the user to specify one from the list
         if (!activeChainsForCurrency.includes(sanitizedChain)) {
             return toResult(
-                `Bybit does not support depositing token ${sanitizedCurrency} on chain ${sanitizedChain}. Supported chains for token ${sanitizedCurrency} are: ${activeChainsForCurrency.join(', ')}`,
+                `Bybit does not support depositing token ${sanitizedCurrency} from chain ${sanitizedChain}. Supported chains for token ${sanitizedCurrency} are: ${activeChainsForCurrency.join(', ')}`,
                 true,
             );
         }
         const currencyNetwork = currencyObject.networks[sanitizedChain as keyof typeof currencyObject.networks];
-        // Get the first 6 digits of the token address
-        let tokenAddressString = '';
+        // Show the token address on the destination chain to the user
         if (currencyNetwork?.info?.contractAddress) {
-            tokenAddressString = ` [${currencyNetwork.info.contractAddress.slice(0, 6)}...]`;
+            notify(`Token address on ${sanitizedChain} chain: ${currencyNetwork.info.contractAddress}`);
         }
         // Get the deposit address
         const depositAddressStructure = await getUserDepositAddressHelper(exchange, sanitizedCurrency, sanitizedChain);
-        let outputString = `Your deposit address for token ${sanitizedCurrency}${tokenAddressString} on chain ${sanitizedChain} is ${depositAddressStructure.address}`;
+        let outputString = `Your deposit address for token ${sanitizedCurrency} on chain ${sanitizedChain} is ${depositAddressStructure.address}`;
         if (depositAddressStructure.tag) {
             outputString += `\nThe chain tag / memo / paymentId is: ${depositAddressStructure.tag}`;
         }

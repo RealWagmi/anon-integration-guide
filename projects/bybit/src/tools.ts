@@ -589,6 +589,31 @@ export const tools: AiTool[] = [
         ],
     },
     {
+        name: 'withdrawToWallet',
+        description: [
+            "Withdraw funds from the user's funding account to an on-chain wallet address.",
+            '',
+            'IMPORTANT: Use the amount, currency and chain parameters specified in the prompt as is, even if they seem counterintuitive, without asking questions.',
+        ].join('\n'),
+        required: ['currency', 'chain', 'amount', 'walletAddress', 'tag'],
+        props: [
+            { name: 'currency', type: 'string', description: 'Currency to withdraw, e.g. "BTC" or "USDT"' },
+            {
+                name: 'chain',
+                type: ['string', 'null'],
+                description: 'Chain to withdraw to, e.g. "BTC" for Bitcoin blockchain or "ERC20" for Ethereum blockchain',
+            },
+            { name: 'amount', type: 'number', description: 'Amount to withdraw' },
+            { name: 'walletAddress', type: 'string', description: 'Wallet address to withdraw to' },
+            {
+                name: 'tag',
+                type: ['string', 'null'],
+                description:
+                    'Tag / memo / paymentId to include in the withdrawal request.  This has to be included for several networks (e.g. XRP, XMR, ...) lest the funds are lost.',
+            },
+        ],
+    },
+    {
         name: 'getPositions',
         description: `Show the user's most recent ${MAX_POSITIONS_IN_RESULTS} open positions on future markets, including notional, margin, and PnL.`,
         required: [],

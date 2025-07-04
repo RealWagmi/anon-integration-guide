@@ -14,6 +14,7 @@ export { reduceMarginFromPosition } from './reduceMarginFromPosition';
 export { cancelAllOrdersOnMarket } from './cancelAllOrdersOnMarket';
 export { cancelOrderByIdAndMarket } from './cancelOrderByIdAndMarket';
 export { transferFundsTo } from './transferFundsTo';
+export { withdrawToWallet } from './withdrawToWallet';
 export { getBalance } from './getBalance';
 export { getPositions } from './getPositions';
 export { getPositionOnMarket } from './getPositionOnMarket';

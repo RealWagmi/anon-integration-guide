@@ -46,6 +46,17 @@ Please note that if the deposit chain is not specified, the tool will:
 
 Furthermore, if the deposit chain requires a tag / memo / paymentId (like XRP and Monero), the tool will return it.
 
+### Withdraw funds to wallet
+
+- Withdraw 100 USDT to address 0x175A9431374bF1A5Ae15Ac2051a7B1a6e0b26D67 on ZKSYNC Chain
+- Withdraw 5 SOL to address pWvDXKu6CpbKKvKQkZvDA66hgsTB6X2AgFxksYogHLV on SOL chain
+- Withdraw all of my USDT to address TRjE1H8dxypKM1NZRdysbs9wo7huR4bdNz on TRX chain
+- Withdraw 500 XRP to address rw2ciyaNshpHe7bCHo4bRWq6pqqynnWKQg on XRP chain with tag 3896575436
+
+Please note that withdrawals will be be performed from the funding account. You can transfer funds from the trading account to the funding account with a simple command:
+
+- Transfer 100 USDT to the funding account
+
 ### Info on open orders
 
 - Show all my open orders
@@ -307,6 +318,7 @@ pnpm ask-bybit "Show me the price of BTC/USDT:USDT" --debug-llm
 - [Bybit guide to open a testnet account](https://www.bybit.com/en/help-center/article/How-to-Request-Test-Coins-on-Testnet)
 - [Bybit Postman collection](https://github.com/bybit-exchange/QuickStartWithPostman)
 - [Bybit margin mode FAQ](https://www.bybit.com/en/help-center/article/What-is-Isolated-Margin-Cross-Margin)
+- [Bybit whitelisted withdrawal addresses and addresses book](https://www.bybit.com/ro-RO/help-center/article/How-to-Manage-Your-Withdrawal-Address-Book#a)
 - [CCXT leverage tiers](https://docs.ccxt.com/#/README?id=leverage-tiers)
 - [CCXT Order structure](https://docs.ccxt.com/#/?id=order-structure)
 - [CCXT Querying orders](https://docs.ccxt.com/#/README?id=querying-orders)
