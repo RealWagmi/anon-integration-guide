@@ -27,8 +27,9 @@ Plese note that Bybit uses a Unified Trading Account (UTA) approach, so the retu
 
 ### Transfer funds between accounts
 
-- Transfer 100 USDT from my funding account to the trading account
-- Transfer half of my USDT from the trading account to the funding account
+- Transfer 100 USDT to the trading account
+- Transfer 100 USDT to the funding account
+- Transfer half of my USDT in the trading account to the funding account
 
 ### Show deposit address
 
