@@ -45,4 +45,4 @@ export const LIMIT_PRICE_TOLERANCE = 0.001;
 /**
  * Account types supported by CCXT
  */
-export const ACCOUNT_TYPES = ['main', 'spot', 'funding', 'margin', 'cross', 'future', 'delivery', 'linear', 'swap', 'inverse', 'option'] as const;
+export const ACCOUNT_TYPES = ['main', 'spot', 'funding', 'margin', 'cross', 'future', 'delivery', 'linear', 'swap', 'inverse', 'option', 'unified'] as const;

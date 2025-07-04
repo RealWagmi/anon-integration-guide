@@ -578,6 +578,17 @@ export const tools: AiTool[] = [
         props: [{ name: 'market', type: 'string', description: MARKET_DESCRIPTION }],
     },
     {
+        name: 'transferFundsTo',
+        description:
+            'Transfer funds to the funding account or the unified trading account (UTA).  Bybit only has these two accounts, therefore there is no need to specify the source account.',
+        required: ['currency', 'amount', 'destinationAccount'],
+        props: [
+            { name: 'currency', type: 'string', description: 'Currency to transfer, e.g. "USDT"' },
+            { name: 'amount', type: 'number', description: 'Amount to transfer' },
+            { name: 'destinationAccount', type: 'string', enum: ['funding', 'trading'], description: 'Account to transfer to' },
+        ],
+    },
+    {
         name: 'getPositions',
         description: `Show the user's most recent ${MAX_POSITIONS_IN_RESULTS} open positions on future markets, including notional, margin, and PnL.`,
         required: [],
@@ -621,13 +632,20 @@ export const tools: AiTool[] = [
     },
     {
         name: 'getBalance',
-        description: 'Get the unified user balance.  This does not include open positions.  For each currency, show how much is available to trade (free).',
-        required: ['currency'],
+        description:
+            'Get the user balance, for either the funding account or the unified trading account (UTA).  The returned balance does not include open positions.  For each currency, show how much is available to use.  If the user generically asks for the balance or explicitly asks for TOTAL balance, call this function twice, once for the funding account and once for the trading account.',
+        required: ['currency', 'account'],
         props: [
             {
                 name: 'currency',
                 type: ['string', 'null'],
                 description: 'Optionally, specify a currency to show balance just for that currency, e.g. "BTC"',
+            },
+            {
+                name: 'account',
+                type: ['string', 'null'],
+                enum: ['funding', 'trading'],
+                description: 'Account to get balance for; defaults to "trading"',
             },
         ],
     },

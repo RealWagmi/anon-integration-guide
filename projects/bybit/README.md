@@ -17,10 +17,18 @@ Please note that asking for future markets (e.g. "Show all BTC future markets") 
 
 ### Info on balance
 
-- Show my balance
-- Show my BTC balance
+- Show my trading account balance
+- Show my funding account balance
+- Show my BTC balance on the trading account
+- Show my total balance
+- Show my total BTC balance
 
-Plese note that Bybit uses a Unified Trading Account (UTA) approach, so the returned balance is the total available balance regardless of the product type (spot, futures, etc).
+Plese note that Bybit uses a Unified Trading Account (UTA) approach, so the returned balance for the trading Account is the total available balance regardless of the product type (spot, futures, etc).
+
+### Transfer funds between accounts
+
+- Transfer 100 USDT from my funding account to the trading account
+- Transfer half of my USDT from the trading account to the funding account
 
 ### Show deposit address
 
@@ -235,7 +243,7 @@ pnpm ask-bybit "Show me the price of BTC/USDT:USDT" --debug-llm
     - the `exchange` object must have the `enableUnifiedAccount` option set to `true` ([Discord](https://discord.com/channels/690203284119617602/690203284727660739/1267775046366007339))
     - the `getBalance` tool will return a total balance, across all account types (spot, futures, etc)
     - there is no need to move funds from spot to futures and viceversa (this is why there's no `transferFunds` tool)
-    - the only transfer needed is from the funding wallet to the trading wallet, which we assume is done by the user
+    - the only transfer needed is from the funding wallet to the trading wallet, which can be done with the `transferFundsTo` tool
     - the LLM has to do some inference to determine the market type from the market symbol, see `MARKET_DESCRIPTION`
     - many tools require the `marketType` parameter to be explicitly provided, e.g. `getCurrencyMarketsOfGivenType`
 

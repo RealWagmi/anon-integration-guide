@@ -1,5 +1,12 @@
-import { Exchange, Balances, DepositAddress } from 'ccxt';
+import { Exchange, Balances, DepositAddress, TransferEntry } from 'ccxt';
 import { ACCOUNT_TYPES } from '../constants';
+
+interface TransferOptions {
+    currency: string;
+    amount: number;
+    from: string;
+    to: string;
+}
 
 /**
  * Return the balance of the user on the given exchange
@@ -29,4 +36,27 @@ export async function getUserDepositAddress(exchange: Exchange, currency: string
     }
     const depositAddress = await exchange.fetchDepositAddress(currency, { network });
     return depositAddress;
+}
+
+/**
+ * Transfer funds from an account (e.g. spot) to another account (e.g. future)
+ * with the given exchange
+ *
+ * @link https://docs.ccxt.com/#/README?id=transfers
+ */
+export async function transfer(exchange: Exchange, options: TransferOptions): Promise<TransferEntry> {
+    if (!exchange.has['transfer']) {
+        throw new Error(`Transfer is not supported by exchange ${exchange.name}`);
+    }
+
+    const allowedAccounts = exchange.options['accountsByType'];
+    if (!allowedAccounts[options.from]) {
+        throw new Error(`Account with name '${options.from}' does not exist on ${exchange.name}.  Allowed accounts: ${Object.keys(allowedAccounts).join(', ')}.`);
+    }
+
+    if (!allowedAccounts[options.to]) {
+        throw new Error(`Account with name '${options.to}' does not exist on ${exchange.name}.  Allowed accounts: ${Object.keys(allowedAccounts).join(', ')}.`);
+    }
+
+    return exchange.transfer(options.currency.toUpperCase(), options.amount, options.from, options.to);
 }
