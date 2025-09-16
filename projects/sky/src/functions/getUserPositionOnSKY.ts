@@ -1,16 +1,16 @@
 import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
-import { Address, formatUnits } from 'viem';
+import { formatUnits } from 'viem';
 import { ssrAbi, strAbi } from '../abis';
 import { SSR_ADDRESS, STR_ADDRESS, supportedChains } from '../constants';
 
 interface Props {
 	chainName: string;
-	account: Address;
 }
 
 const { getChainFromName } = EVM.utils;
 
-export async function getUserPositionOnSKY({ chainName, account }: Props, { evm: { getProvider } }: FunctionOptions): Promise<FunctionReturn> {
+export async function getUserPositionOnSKY({ chainName }: Props, { evm: { getProvider, getAddress } }: FunctionOptions): Promise<FunctionReturn> {
+	const account = await getAddress();
 	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 	if (!supportedChains.includes(chainId)) return toResult(`Sky protocol is not supported on ${chainName}`, true);

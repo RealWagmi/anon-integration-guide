@@ -1,17 +1,21 @@
 import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
-import { Address, encodeFunctionData } from 'viem';
+import { encodeFunctionData } from 'viem';
 import { strAbi } from '../abis';
 import { STR_ADDRESS, supportedChains } from '../constants';
 
 interface Props {
 	chainName: string;
-	account: Address;
 }
 
 const { getChainFromName } = EVM.utils;
 
-export async function exitSTR({ chainName, account }: Props, { notify, evm: { sendTransactions, getProvider } }: FunctionOptions): Promise<FunctionReturn> {
-	if (!account) return toResult('Wallet not connected', true);
+export async function exitSTR({ chainName }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+	// Check wallet connection
+	const account = await options.evm.getAddress();
+	const {
+		notify,
+		evm: { sendTransactions, getProvider },
+	} = options;
 
 	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
@@ -50,5 +54,5 @@ export async function exitSTR({ chainName, account }: Props, { notify, evm: { se
 	const result = await sendTransactions({ chainId, account, transactions: [tx] });
 	const exitMessage = result.data[result.data.length - 1];
 
-	return toResult(result.isMultisig ? exitMessage.message : `Successfully exited from STR (withdrawn all + claimed rewards). ${exitMessage.message}`);
+	return toResult(`Successfully exited from STR (withdrawn all + claimed rewards). ${exitMessage.message}`);
 }

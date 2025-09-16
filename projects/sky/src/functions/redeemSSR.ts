@@ -1,18 +1,21 @@
 import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
-import { Address, encodeFunctionData, formatUnits, parseUnits } from 'viem';
+import { encodeFunctionData, formatUnits, parseUnits } from 'viem';
 import { ssrAbi } from '../abis';
 import { SSR_ADDRESS, supportedChains } from '../constants';
 
 interface Props {
 	chainName: string;
-	account: Address;
 	shares: string;
 }
 
 const { getChainFromName } = EVM.utils;
 
-export async function redeemSSR({ chainName, account, shares }: Props, { evm: { sendTransactions, getProvider } }: FunctionOptions): Promise<FunctionReturn> {
-	if (!account) return toResult('Wallet not connected', true);
+export async function redeemSSR({ chainName, shares }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+	// Check wallet connection
+	const account = await options.evm.getAddress();
+	const {
+		evm: { sendTransactions, getProvider },
+	} = options;
 
 	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
@@ -49,5 +52,5 @@ export async function redeemSSR({ chainName, account, shares }: Props, { evm: { 
 	const result = await sendTransactions({ chainId, account, transactions });
 	const redeemMessage = result.data[result.data.length - 1];
 
-	return toResult(result.isMultisig ? redeemMessage.message : `Successfully redeemed ${shares} sUSDS. ${redeemMessage.message}`);
+	return toResult(`Successfully redeemed ${shares} sUSDS. ${redeemMessage.message}`);
 }

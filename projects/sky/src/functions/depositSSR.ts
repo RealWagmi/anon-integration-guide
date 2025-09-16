@@ -1,19 +1,23 @@
 import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
-import { Address, encodeFunctionData, parseUnits } from 'viem';
+import { encodeFunctionData, parseUnits } from 'viem';
 import { ssrAbi } from '../abis';
 import { SSR_ADDRESS, USDS_ADDRESS, supportedChains } from '../constants';
 
 interface Props {
 	chainName: string;
-	account: Address;
 	amount: string;
 	referral?: number;
 }
 
 const { checkToApprove, getChainFromName } = EVM.utils;
 
-export async function depositSSR({ chainName, account, amount }: Props, { notify, evm: { getProvider, sendTransactions } }: FunctionOptions): Promise<FunctionReturn> {
-	if (!account) return toResult('Wallet not connected', true);
+export async function depositSSR({ chainName, amount }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+	// Check wallet connection
+	const account = await options.evm.getAddress();
+	const {
+		notify,
+		evm: { getProvider, sendTransactions },
+	} = options;
 
 	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
@@ -56,5 +60,5 @@ export async function depositSSR({ chainName, account, amount }: Props, { notify
 	const result = await sendTransactions({ chainId, account, transactions });
 	const depositMessage = result.data[result.data.length - 1];
 
-	return toResult(result.isMultisig ? depositMessage.message : `Successfully deposited ${amount} USDS to SSR. ${depositMessage.message}`);
+	return toResult(`Successfully deposited ${amount} USDS to SSR. ${depositMessage.message}`);
 }

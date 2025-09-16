@@ -1,17 +1,21 @@
 import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
-import { Address, encodeFunctionData } from 'viem';
+import { encodeFunctionData } from 'viem';
 import { strAbi } from '../abis';
 import { STR_ADDRESS, supportedChains } from '../constants';
 
 interface Props {
 	chainName: string;
-	account: Address;
 }
 
 const { getChainFromName } = EVM.utils;
 
-export async function claimRewardSTR({ chainName, account }: Props, { notify, evm: { getProvider, sendTransactions } }: FunctionOptions): Promise<FunctionReturn> {
-	if (!account) return toResult('Wallet not connected', true);
+export async function claimRewardSTR({ chainName }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+	// Check wallet connection
+	const account = await options.evm.getAddress();
+	const {
+		notify,
+		evm: { getProvider, sendTransactions },
+	} = options;
 
 	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
@@ -48,5 +52,5 @@ export async function claimRewardSTR({ chainName, account }: Props, { notify, ev
 	const result = await sendTransactions({ chainId, account, transactions: [tx] });
 	const claimMessage = result.data[result.data.length - 1];
 
-	return toResult(result.isMultisig ? claimMessage.message : `Successfully claimed SKY rewards. ${claimMessage.message}`);
+	return toResult(`Successfully claimed SKY rewards. ${claimMessage.message}`);
 }

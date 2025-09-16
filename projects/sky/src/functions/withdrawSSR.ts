@@ -1,19 +1,23 @@
 import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
-import { Address, encodeFunctionData, formatUnits, parseUnits } from 'viem';
+import { encodeFunctionData, formatUnits, parseUnits } from 'viem';
 import { erc20Abi } from 'viem';
 import { ssrAbi } from '../abis';
 import { SSR_ADDRESS, SUSDS_ADDRESS, supportedChains } from '../constants';
 
 interface Props {
 	chainName: string;
-	account: Address;
 	amount: string;
 }
 
 const { getChainFromName } = EVM.utils;
 
-export async function withdrawSSR({ chainName, account, amount }: Props, { notify, evm: { getProvider, sendTransactions } }: FunctionOptions): Promise<FunctionReturn> {
-	if (!account) return toResult('Wallet not connected', true);
+export async function withdrawSSR({ chainName, amount }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+	// Check wallet connection
+	const account = await options.evm.getAddress();
+	const {
+		notify,
+		evm: { getProvider, sendTransactions },
+	} = options;
 
 	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
@@ -45,5 +49,5 @@ export async function withdrawSSR({ chainName, account, amount }: Props, { notif
 	const result = await sendTransactions({ chainId, account, transactions: [tx] });
 	const withdrawMessage = result.data[result.data.length - 1];
 
-	return toResult(result.isMultisig ? withdrawMessage.message : `Successfully withdrawn ${amount} USDS from SSR. ${withdrawMessage.message}`);
+	return toResult(`Successfully withdrawn ${amount} USDS from SSR. ${withdrawMessage.message}`);
 }

@@ -1,18 +1,22 @@
 import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
-import { Address, encodeFunctionData, parseUnits } from 'viem';
+import { encodeFunctionData, parseUnits } from 'viem';
 import { strAbi } from '../abis';
 import { STR_ADDRESS, USDS_ADDRESS, supportedChains } from '../constants';
 
 interface Props {
 	chainName: string;
-	account: Address;
 	amount: string;
 }
 
 const { checkToApprove, getChainFromName } = EVM.utils;
 
-export async function stakeSTR({ chainName, account, amount }: Props, { evm: { sendTransactions, getProvider }, notify }: FunctionOptions): Promise<FunctionReturn> {
-	if (!account) return toResult('Wallet not connected', true);
+export async function stakeSTR({ chainName, amount }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+	// Check wallet connection
+	const account = await options.evm.getAddress();
+	const {
+		evm: { sendTransactions, getProvider },
+		notify,
+	} = options;
 
 	const chainId = getChainFromName(chainName as EvmChain);
 	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
@@ -54,5 +58,5 @@ export async function stakeSTR({ chainName, account, amount }: Props, { evm: { s
 	const result = await sendTransactions({ chainId, account, transactions });
 	const stakeMessage = result.data[result.data.length - 1];
 
-	return toResult(result.isMultisig ? stakeMessage.message : `Successfully staked ${amount} USDS in STR. ${stakeMessage.message}`);
+	return toResult(`Successfully staked ${amount} USDS in STR. ${stakeMessage.message}`);
 }

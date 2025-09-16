@@ -1,0 +1,12 @@
+export { createSimpleOrder } from './createSimpleOrder';
+export { createTriggerOrder } from './createTriggerOrder';
+export { createTakeProfitStopLossOrder } from './createTakeProfitStopLossOrder';
+export { createTrailingStopOrder } from './createTrailingStopOrder';
+export { cancelOrderByIdAndMarket } from './cancelOrderByIdAndMarket';
+export { cancelAllOrdersOnMarket } from './cancelAllOrdersOnMarket';
+export { transferFunds } from './transferFunds';
+export { getBalance } from './getBalance';
+export { getOpenOrders } from './getOpenOrders';
+export { getOrderByIdAndMarket } from './getOrderByIdAndMarket';
+export { getCurrencyMarkets } from './getCurrencyMarkets';
+export { getMarketInfo } from './getMarketInfo';

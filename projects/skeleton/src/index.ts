@@ -5,4 +5,7 @@ export default {
 	tools,
 	functions: {},
 	description: 'An example project that demonstrates how to create a new project.',
+	tags: [],
+	chains: [],
+	executableFunctions: [],
 } satisfies AdapterExport;

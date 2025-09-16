@@ -1,3 +1,3 @@
-import { AiTool } from '@heyanon/sdk';
+import { AdapterExport } from '@heyanon/sdk';
 
-export const tools: AiTool[] = [];
+export const tools = [] satisfies AdapterExport['tools'];

@@ -32,8 +32,7 @@
 		"typescript": "^5.7.3"
 	},
 	"dependencies": {
-		"@heyanon/sdk": "^2.0.2",
-		"vitest": "^2.1.8",
-		"viem": "2.22.9"
+		"@heyanon/sdk": "2.3.1",
+		"vitest": "^2.1.8"
 	}
 }
