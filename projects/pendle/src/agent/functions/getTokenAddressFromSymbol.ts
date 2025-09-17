@@ -16,7 +16,7 @@ interface Props {
  */
 export async function getTokenAddressFromSymbol({ chainName, symbol }: Props): Promise<FunctionReturn> {
     const chainId = EVM.utils.getChainFromName(chainName as EvmChain);
-    if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
+    if (!chainId) return toResult(`Unsupported chain: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Chain ${chainName} is not supported`, true);
 
     // Look for the token with the exact symbol
