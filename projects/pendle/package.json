@@ -41,6 +41,7 @@
     },
     "dependencies": {
         "@heyanon/sdk": "2.3.1",
+        "axios": "^1.12.2",
         "vitest": "^2.1.8"
     }
 }

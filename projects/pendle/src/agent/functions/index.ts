@@ -1,5 +1,5 @@
 /**
- * Functions that only ask-beefy (and not HeyAnon) will be able to use.
+ * Functions that only the agent (and not HeyAnon) will be able to use.
  *
  * They are here to avoid conflicts with HeyAnon's own resolvers.
  */
