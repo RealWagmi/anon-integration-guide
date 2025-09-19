@@ -23,13 +23,11 @@ export async function getAddressPositionsPortfolio({ address }: Props, { notify 
     const firstNPositions = flattenedResult.positions.slice(0, MAX_POSITIONS_IN_RESULTS);
     const formattedOutput = formatFlattenedPositions(firstNPositions, ' - ');
 
-    // Initial summary
+    // Build and return output string
     const parts = [
         `Found ${flattenedResult.totalPositions} positions in the portfolio of ${address}, worth a total of $${flattenedResult.totalValuation.toFixed(2)}`,
         firstNPositions.length !== flattenedResult.totalPositions ? `Showing the top ${MAX_POSITIONS_IN_RESULTS} positions by value:` : '',
         formattedOutput,
     ];
-
-    // Return the result
     return toResult(parts.filter(Boolean).join('\n'));
 }

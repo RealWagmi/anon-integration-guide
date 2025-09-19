@@ -1,6 +1,7 @@
 import { EVM, EvmChain } from '@heyanon/sdk';
 import * as chains from 'viem/chains';
 import { supportedChains } from '../constants';
+import { toTitleCase } from './format';
 
 const { getChainName } = EVM.utils;
 
@@ -9,7 +10,20 @@ const { getChainName } = EVM.utils;
  */
 export function getChainNameFromChainId(chainId: number, titleCase: boolean = true): string {
     const chainName = getChainName(chainId);
-    return titleCase ? chainName.charAt(0).toUpperCase() + chainName.slice(1) : chainName;
+    if (!chainName) {
+        throw new Error(`Chain id ${chainId} not found`);
+    }
+    return titleCase ? toTitleCase(chainName) : chainName;
+}
+
+/**
+ * Get the chain id from the chain name
+ */
+export function getChainIdFromChainName(chainName: string): number {
+    if (!chainName) {
+        throw new Error(`Chain name '${chainName}' not supported`);
+    }
+    return EVM.utils.getChainFromName(chainName as EvmChain);
 }
 
 /**

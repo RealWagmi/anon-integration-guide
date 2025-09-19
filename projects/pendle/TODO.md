@@ -5,6 +5,7 @@
 ## Minor
 
 - Update `executableFunctions` in `index.ts`
+- Update supported chains!
 
 ## Future
 

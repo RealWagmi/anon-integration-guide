@@ -1,5 +1,7 @@
-import { AdapterExport } from '@heyanon/sdk';
-import { MAX_POSITIONS_IN_RESULTS } from './constants';
+import { AdapterExport, EVM } from '@heyanon/sdk';
+import { MAX_LIQUIDITY_POOLS_IN_RESULTS, MAX_POSITIONS_IN_RESULTS, MIN_LIQUIDITY_FOR_MARKET, supportedChains } from './constants';
+
+const { getChainName } = EVM.utils;
 
 export const tools = [
     {
@@ -31,6 +33,30 @@ export const tools = [
                     },
                 },
                 required: ['address'],
+                additionalProperties: false,
+            },
+        },
+    },
+    {
+        type: 'function',
+        function: {
+            name: 'getLiquidityPoolsWithHighestApy',
+            description: `Show the top ${MAX_LIQUIDITY_POOLS_IN_RESULTS} liquidity pools with the highest yield, on the given chain. For each liquidity pool, show its name, TVL, and yield. For safety reasons only pools with a minimum liquidity of $${MIN_LIQUIDITY_FOR_MARKET} are shown.`,
+            strict: true,
+            parameters: {
+                type: 'object',
+                properties: {
+                    chainName: {
+                        type: 'string',
+                        enum: supportedChains.map(getChainName),
+                        description: 'Chain name',
+                    },
+                    filterTokenSymbol: {
+                        type: ['string', 'null'],
+                        description: 'Optionally, filter the pools by name (e.g. "ETH", "stETH", "USDC")',
+                    },
+                },
+                required: ['chainName', 'filterTokenSymbol'],
                 additionalProperties: false,
             },
         },
