@@ -3,15 +3,17 @@ import { PendleClient } from '../helpers/client';
 import { flattenAndSortPositions, formatFlattenedPositions } from '../helpers/positions';
 import { MAX_POSITIONS_IN_RESULTS } from '../constants';
 
-interface Props {}
+interface Props {
+    address: `0x${string}`;
+}
 
-export async function getMyPositionsPortfolio(_props: Props, { notify, evm: { getAddress } }: FunctionOptions): Promise<FunctionReturn> {
+export async function getAddressPositionsPortfolio({ address }: Props, { notify }: FunctionOptions): Promise<FunctionReturn> {
     // Get positions
-    await notify('Checking portfolio...');
+    await notify(`Checking portfolio of ${address}...`);
     const pendleClient = new PendleClient();
-    const positionsForAllChains = await pendleClient.getAddressPositions(await getAddress());
+    const positionsForAllChains = await pendleClient.getAddressPositions(address);
     if (!positionsForAllChains || positionsForAllChains.length === 0) {
-        return toResult('No positions found in your portfolio');
+        return toResult(`No Pendle positions found for ${address}`);
     }
 
     // Flatten and sort all positions by valuation
@@ -23,7 +25,7 @@ export async function getMyPositionsPortfolio(_props: Props, { notify, evm: { ge
 
     // Initial summary
     const parts = [
-        `Found ${flattenedResult.totalPositions} positions in your portfolio, worth a total of $${flattenedResult.totalValuation.toFixed(2)}`,
+        `Found ${flattenedResult.totalPositions} positions in the portfolio of ${address}, worth a total of $${flattenedResult.totalValuation.toFixed(2)}`,
         firstNPositions.length !== flattenedResult.totalPositions ? `Showing the top ${MAX_POSITIONS_IN_RESULTS} positions by value:` : '',
         formattedOutput,
     ];

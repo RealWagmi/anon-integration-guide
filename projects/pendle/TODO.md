@@ -6,9 +6,9 @@
 
 ## Minor
 
-- Include total TVL + limit number of positions in `getMyPositionsPortfolio`
-- Include closed positions in `getMyPositionsPortfolio`
-- Include SY positions in `getMyPositionsPortfolio`
+- Include APY in `getMyPositionsPortfolio`
 - Update `executableFunctions` in `index.ts`
 
 ## Future
+
+- Include SY positions in `getMyPositionsPortfolio`
