@@ -1,0 +1,47 @@
+{
+    "name": "@heyanon/project-pendle",
+    "version": "1.0.0",
+    "license": "MIT",
+    "main": "dist/index.js",
+    "typings": "dist/index.d.ts",
+    "module": "dist/index.mjs",
+    "files": [
+        "dist"
+    ],
+    "engines": {
+        "node": ">=18"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "start": "tsup --watch",
+        "build": "tsup",
+        "test": "vitest --run",
+        "lint": "tsdx lint",
+        "prepare": "pnpm run build",
+        "size": "size-limit",
+        "analyze": "size-limit --why",
+        "format": "prettier --write \"*/**/*.ts\"",
+        "ask-pendle": "tsup src/agent/run.ts > /dev/null && node dist/run.js"
+    },
+    "devDependencies": {
+        "@size-limit/preset-small-lib": "^9.0.0",
+        "@types/big.js": "^6.2.0",
+        "@types/jest": "^29.5.12",
+        "chalk": "^5.6.2",
+        "commander": "^14.0.1",
+        "dotenv": "^17.2.2",
+        "openai": "^5.20.3",
+        "prettier": "^3.6.2",
+        "tsdx": "^0.14.1",
+        "tslib": "^2.6.2",
+        "tsup": "^7.2.0",
+        "typescript": "^5.7.3"
+    },
+    "dependencies": {
+        "@heyanon/sdk": "2.3.1",
+        "axios": "^1.12.2",
+        "vitest": "^2.1.8"
+    }
+}
