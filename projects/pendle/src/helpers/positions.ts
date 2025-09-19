@@ -12,7 +12,7 @@ export type FlattenedTokenPosition = {
     /** Token type: PT, YT, or LP */
     tokenType: 'PT' | 'YT' | 'LP';
     /** Position type: open or closed */
-    positionType: 'open' | 'closed';
+    positionStatus: 'open' | 'closed';
     /** Valuation in USD */
     valuation: number;
     /** Token balance */
@@ -24,9 +24,13 @@ export type FlattenedTokenPosition = {
     /** Chain name */
     chainName: string;
     /** Market name */
-    marketName?: string;
+    marketName: string;
     /** Market expiry date */
-    marketExpiry?: string;
+    marketExpiry: string;
+    /** Market APY for LPing, including yield, swap fee and Pendle rewards without boosting */
+    marketLpNonBoostedApy?: number;
+    /** Market implied APY, that is, the APY at which the market trades (different from underlying APY) */
+    marketImpliedApy?: number;
     /** Full market details (optional) */
     market?: MarketCompactData;
 };
@@ -66,31 +70,36 @@ export async function flattenAndSortPositions(
         market: MarketPosition,
         chain: ChainPositions,
         chainName: string,
-        positionType: 'open' | 'closed',
+        positionStatus: 'open' | 'closed',
         marketDetails: Map<string, MarketCompactData>,
     ) => {
         // Get market details
         const marketAddress = market.marketId.split('-')[1];
         const marketData = marketDetails.get(marketAddress);
+        if (!marketData) {
+            throw new Error(`Market data not found for market ${marketAddress}`);
+        }
 
         // Process each token type (PT, YT, LP)
         const tokenTypes: Array<'pt' | 'yt' | 'lp'> = ['pt', 'yt', 'lp'];
 
         for (const tokenKey of tokenTypes) {
             const token = market[tokenKey];
-            if (token && (includeZeroPositions || token.valuation > 0)) {
+            if (token && (includeZeroPositions || token.balance !== '0')) {
                 flattenedPositions.push({
                     chainId: chain.chainId,
                     chainName,
                     marketId: market.marketId,
                     tokenType: tokenKey.toUpperCase() as 'PT' | 'YT' | 'LP',
-                    positionType,
+                    positionStatus,
                     valuation: token.valuation || 0,
                     balance: token.balance,
                     activeBalance: token.activeBalance,
                     claimTokenAmounts: token.claimTokenAmounts,
-                    marketName: marketData?.name,
-                    marketExpiry: marketData?.expiry,
+                    marketName: marketData.name,
+                    marketExpiry: marketData.expiry,
+                    marketLpNonBoostedApy: marketData.details.aggregatedApy,
+                    marketImpliedApy: marketData.details.impliedApy,
                     market: marketData,
                 });
 
@@ -129,7 +138,7 @@ export async function flattenAndSortPositions(
     flattenedPositions.sort((a, b) => b.valuation - a.valuation);
 
     // Count non-zero positions
-    const totalPositions = flattenedPositions.filter((p) => p.valuation > 0).length;
+    const totalPositions = flattenedPositions.filter((p) => p.balance !== '0').length;
 
     return {
         positions: flattenedPositions,
@@ -151,16 +160,31 @@ export function formatFlattenedPositions(flattenedPositions: FlattenedTokenPosit
 
     for (const position of flattenedPositions) {
         // Skip zero-value positions unless they were explicitly included
-        if (position.valuation === 0) {
+        if (position.balance === '0') {
             continue;
         }
 
+        let apyString = '';
+        switch (position.tokenType) {
+            case 'LP':
+                if (position.marketLpNonBoostedApy) {
+                    apyString = `(unboosted APY: ${(100 * position.marketLpNonBoostedApy).toFixed(2)}%)`;
+                }
+                break;
+            case 'YT':
+                if (position.marketImpliedApy) {
+                    apyString = `(implied APY: ${(100 * position.marketImpliedApy).toFixed(2)}%)`;
+                }
+                break;
+            case 'PT':
+                break;
+        }
+
         let parts: string[] = [
-            `${position.tokenType} position`,
-            position.marketName ? `in ${position.marketName}` : '',
+            `$${position.valuation.toFixed(2)}`,
+            `${position.marketName}-${position.tokenType} ${position.positionStatus} position`,
             `on ${position.chainName} chain`,
-            `worth $${position.valuation.toFixed(2)}`,
-            `(${position.positionType})`,
+            `${apyString}`,
         ].filter(Boolean); // Remove empty strings
 
         // Add expiry if available

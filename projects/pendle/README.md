@@ -10,7 +10,6 @@ More information on Pendle Finance can be found on their own academy page: https
 
     - Show all my positions on Pendle
     - Show all positions of wallet 0x5e014aa0649102e07c074f498845f01bcd520317 on Pendle
-    - [TODO] Show APY of all my positions on Pendle
     - My total TVL on Pendle
     - Show my YTs on Pendle
     - Show my pools on Pendle
